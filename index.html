@@ -375,11 +375,10 @@ body.cv-lock{overflow:hidden}
   <!-- BRIEFING -->
   <section id="view-brief" class="view" hidden>
     <div class="viewhead">
-      <h1 data-i18n="signals">Signals</h1>
       <div class="livebar" id="liveBar"></div>
     </div>
     <div id="countryStatus" class="cstatus" role="group" aria-label="Country status" hidden></div>
-    <p class="lede" id="briefMeta"></p>
+    <p class="lede" id="briefMeta" hidden></p>
     <div id="aiBrief"></div>
 
     <div class="seg" id="rangeSeg" role="group" aria-label="Time range" hidden>
@@ -422,7 +421,6 @@ body.cv-lock{overflow:hidden}
   <!-- SAVED -->
   <section id="view-saved" class="view" hidden>
     <div class="viewhead"><h1 data-i18n="saved">Saved</h1></div>
-    <p class="lede" data-i18n="savedLede">Stories you've saved stay here even after they'd normally drop off Signals after 24 hours.</p>
     <div id="savedList"></div>
   </section>
 
@@ -444,11 +442,6 @@ body.cv-lock{overflow:hidden}
       <button id="csvBtn" class="btn block" data-i18n="downloadCsv">Download CSV</button>
     </div>
 
-    <h2 data-i18n="onThisPhone">On this phone</h2>
-    <div class="panel">
-      <p id="storeInfo"></p>
-      <button id="clearBtn" class="btn small danger" data-i18n="clearAllData">Clear all data</button>
-    </div>
   </section>
 </main>
 

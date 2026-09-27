@@ -2171,8 +2171,6 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     }).join('');
   }
   async function renderExport() {
-    const n = S.items.length;
-    $('#storeInfo').textContent = n + (n === 1 ? ' item you added is' : ' items you added are') + ' stored on this phone and never uploaded. ' + S.live.length + ' live stories come from the feed.';
     $$('#exportSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === S.exportRange));
     const c = all().filter(i => inRange(i, S.exportRange)).length;
     $('#exportCount').textContent = c + (c === 1 ? ' item' : ' items') + ' in this period';
@@ -2408,11 +2406,6 @@ Give a concise, event-specific analysis - decide for yourself which structure be
   $('#syncInput').addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); $('#syncUse').click(); } });
   $('#pdfBtn').addEventListener('click', exportPDF);
   $('#csvBtn').addEventListener('click', exportCSV);
-  $('#clearBtn').addEventListener('click', async () => {
-    if (!S.items.length) { toast('There is nothing to clear.'); return; }
-    if (!confirm('Delete the ' + S.items.length + ' items you added on this phone? Live stories are not affected. This cannot be undone.')) return;
-    await DB.clear(); S.items = []; S.open.clear(); renderAll(); toast('All data cleared.');
-  });
 
 
   /* ---------- live feed and AI briefing (Phase 2) ---------- */
