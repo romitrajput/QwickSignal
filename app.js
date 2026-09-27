@@ -568,7 +568,8 @@ if (typeof document !== 'undefined') (function () {
       exportLede: "Save a report or the raw table. Files go to your phone's Downloads.",
       downloadPdf: 'Download QwickSignal PDF', downloadCsv: 'Download CSV',
       onThisPhone: 'On this phone', clearAllData: 'Clear all data',
-      refresh: 'Refresh', loadSample: 'Load sample data'
+      refresh: 'Refresh', loadSample: 'Load sample data',
+      loginToLinkChannels: 'Log in to link Telegram channels.'
     },
     hi: {
       linkPages: 'लिंक पेज', signals: 'सिग्नल्स', saved: 'सेव किए गए', export: 'एक्सपोर्ट',
@@ -588,7 +589,8 @@ if (typeof document !== 'undefined') (function () {
       exportLede: 'रिपोर्ट या रॉ टेबल सेव करें। फ़ाइलें आपके फोन के डाउनलोड्स में जाएंगी।',
       downloadPdf: 'QwickSignal PDF डाउनलोड करें', downloadCsv: 'CSV डाउनलोड करें',
       onThisPhone: 'इस फोन पर', clearAllData: 'सारा डेटा हटाएं',
-      refresh: 'रिफ्रेश करें', loadSample: 'नमूना डेटा लोड करें'
+      refresh: 'रिफ्रेश करें', loadSample: 'नमूना डेटा लोड करें',
+      loginToLinkChannels: 'टेलीग्राम चैनल लिंक करने के लिए साइन इन करें।'
     },
     mr: {
       linkPages: 'लिंक पेजेस', signals: 'सिग्नल्स', saved: 'सेव्ह केलेले', export: 'एक्सपोर्ट',
@@ -608,7 +610,8 @@ if (typeof document !== 'undefined') (function () {
       exportLede: 'अहवाल किंवा रॉ टेबल सेव्ह करा. फाइल्स तुमच्या फोनच्या डाउनलोड्समध्ये जातील.',
       downloadPdf: 'QwickSignal PDF डाउनलोड करा', downloadCsv: 'CSV डाउनलोड करा',
       onThisPhone: 'या फोनवर', clearAllData: 'सर्व डेटा काढा',
-      refresh: 'रिफ्रेश करा', loadSample: 'नमुना डेटा लोड करा'
+      refresh: 'रिफ्रेश करा', loadSample: 'नमुना डेटा लोड करा',
+      loginToLinkChannels: 'टेलिग्राम चॅनेल लिंक करण्यासाठी साइन इन करा.'
     },
     gu: {
       linkPages: 'લિંક પેજીસ', signals: 'સિગ્નલ્સ', saved: 'સેવ કરેલ', export: 'એક્સપોર્ટ',
@@ -628,7 +631,8 @@ if (typeof document !== 'undefined') (function () {
       exportLede: 'રિપોર્ટ અથવા રો ટેબલ સેવ કરો. ફાઇલો તમારા ફોનના ડાઉનલોડ્સમાં જશે.',
       downloadPdf: 'QwickSignal PDF ડાઉનલોડ કરો', downloadCsv: 'CSV ડાઉનલોડ કરો',
       onThisPhone: 'આ ફોન પર', clearAllData: 'બધો ડેટા કાઢી નાખો',
-      refresh: 'રિફ્રેશ કરો', loadSample: 'નમૂના ડેટા લોડ કરો'
+      refresh: 'રિફ્રેશ કરો', loadSample: 'નમૂના ડેટા લોડ કરો',
+      loginToLinkChannels: 'ટેલિગ્રામ ચેનલ લિંક કરવા સાઇન ઇન કરો.'
     }
   };
   let currentLang = 'en';
@@ -1177,6 +1181,12 @@ if (typeof document !== 'undefined') (function () {
   }
   const Channels = {
     async propose(raw) {
+      // Linking a NEW channel now requires an account - guests can still follow/unfollow whatever is already
+      // in the shared pool (see follow()/unfollow() below and the default-channel model), but adding a fresh
+      // one is gated on sign-in, per the owner's request. Enforced here (not just in the UI) so this can't be
+      // bypassed by calling propose() some other way; there is no further Firestore-side check for this,
+      // since qs_channels stays an open-create collection for any signed-in identity (see firestore.rules).
+      if (!Auth.uid) { toast(t('loginToLinkChannels')); return false; }
       const name = normalizeChannel(raw);
       if (!CHANNEL_RX.test(name)) { toast('Use the form t/channelname \u2013 letters, numbers and underscores only.'); return false; }
       try {
@@ -2117,10 +2127,20 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     if (el) el.textContent = S.syncCode || '\u2026';
   }
 
+  // Linking a NEW channel needs an account (see the note on Channels.propose(), which is the actual block -
+  // this only keeps the "log in to link" note in sync with sign-in state). The input/button stay enabled
+  // while signed out, on purpose: tapping Add while signed out is what triggers propose()'s toast telling the
+  // person to log in, rather than a disabled control they can't interact with at all.
+  function renderTelegramGate() {
+    const note = $('#tgGateNote');
+    if (note) note.hidden = !!Auth.uid;
+  }
+
   let approvedChannelsCache = null;   // re-fetched whenever a channel is linked, so the new one appears right away
   async function renderChannels() {
     const box = $('#tgList'), note = $('#tgSyncNote');
     if (!box) return;
+    renderTelegramGate();
     if (note) note.textContent = Sync.ready ? '' : 'Working from this device only until the sync service is reachable.';
     if (approvedChannelsCache === null) approvedChannelsCache = await Channels.listApproved();
     if (defaultChannelsCache === null) await DefaultChannels.load();
@@ -2531,7 +2551,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
         else toast('Shared text was too short to use.');
       });
     }
-    setTab('inbox'); renderAll(); renderLiveBar(); renderAccount();
+    setTab('brief'); renderAll(); renderLiveBar(); renderAccount();
     loadLive();
     // The default-channels list is public read, so it loads independently of sign-in - a guest should never
     // see a blank feed while waiting for anything auth-related.
