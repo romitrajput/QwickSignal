@@ -62,6 +62,7 @@ settings:
   # Headline images: attach a real news photo to important stories (needs GOOGLE_SEARCH_API_KEY and
   # GOOGLE_SEARCH_CX, see .env.example). Uncomment any of these to change the defaults.
   #image_enabled: true                        # false switches image search off completely
-  #image_importance: [Critical, High]         # add Medium to cover more stories (uses more of the daily query budget)
+  #image_importance: [Critical, High, Medium, Low]   # every story is searched by default; narrow this list
+                                               # to spend the daily query budget on fewer, more important stories instead
   #image_max_per_run: 8                       # searches per pipeline run (cadence set by pipeline.yml's cron)
   #image_daily_query_budget: 95               # Google's free tier is 100 queries/day; this keeps a safety margin

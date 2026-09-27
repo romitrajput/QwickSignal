@@ -541,6 +541,120 @@ if (typeof document !== 'undefined') (function () {
   const $ = (s, r) => (r || document).querySelector(s);
   const $$ = (s, r) => [...(r || document).querySelectorAll(s)];
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  /* ---------- Multilingual UI (per the user's request: UI chrome only, not the live news content itself -
+     headlines/summaries keep coming from the source in whatever language they were posted in; translating
+     those live would need a translation API call per story per language, which is a separate, bigger feature).
+     A small dictionary + a t(key) lookup, applied to static markup via data-i18n/-placeholder/-aria attributes
+     and to JS-generated strings by calling t() instead of writing English directly. Add a language by adding
+     one more key to I18N and one more <option> in index.html's #langSelect - everything else picks it up. */
+  const LANG_KEY = 'qs-lang-v1';
+  const I18N = {
+    en: {
+      linkPages: 'Link Pages', signals: 'Signals', saved: 'Saved', export: 'Export',
+      account: 'Account', accountSub: "Optional. Sign in to keep your own saved articles, dismissed items and followed channels tied to your account instead of a code - and separate from anyone else's.",
+      signInEmail: 'Email', signInPassword: 'Password (6+ characters)', signIn: 'Sign in', createAccount: 'Create account',
+      signOut: 'Sign out', signedInAs: 'Signed in as',
+      telegram: 'Telegram', tgPlaceholder: 't/channelname', addBtn: '+ Add',
+      following: 'Following', follow: 'Follow', remove: 'Remove', setDefault: 'Set default', removeDefault: 'Remove default', defaultBadge: 'Default',
+      noChannelsYet: 'No channels yet. Add one above to start following it.',
+      couldntLoadChannels: 'Couldn’t load the channel list right now.', checkConnection: 'Check your connection.',
+      syncHeading: 'Sync across your devices', syncSub: 'This code links your saved articles and followed channels on another phone or browser. Anyone with the code can use it, so keep it to yourself and your own devices.',
+      copyBtn: 'Copy', syncInputPlaceholder: 'Enter a code from another device', useCodeBtn: 'Use this code',
+      searchPlaceholder: 'Search headlines, companies, text',
+      allPriorities: 'All priorities', critical: 'Critical', high: 'High', medium: 'Medium', low: 'Low',
+      clearFilters: 'Clear filters',
+      savedLede: "Stories you've saved stay here even after they'd normally drop off Signals after 24 hours.",
+      exportLede: "Save a report or the raw table. Files go to your phone's Downloads.",
+      downloadPdf: 'Download QwickSignal PDF', downloadCsv: 'Download CSV',
+      onThisPhone: 'On this phone', clearAllData: 'Clear all data',
+      refresh: 'Refresh', loadSample: 'Load sample data'
+    },
+    hi: {
+      linkPages: 'लिंक पेज', signals: 'सिग्नल्स', saved: 'सेव किए गए', export: 'एक्सपोर्ट',
+      account: 'खाता', accountSub: 'वैकल्पिक। अपने सेव किए गए लेख, हटाए गए आइटम और फॉलो किए गए चैनल किसी कोड की बजाय अपने खाते से जोड़ने के लिए साइन इन करें - और बाकी सभी से अलग रखें।',
+      signInEmail: 'ईमेल', signInPassword: 'पासवर्ड (6+ अक्षर)', signIn: 'साइन इन करें', createAccount: 'खाता बनाएं',
+      signOut: 'साइन आउट', signedInAs: 'इस रूप में साइन इन है',
+      telegram: 'टेलीग्राम', tgPlaceholder: 't/channelname', addBtn: '+ जोड़ें',
+      following: 'फॉलो कर रहे हैं', follow: 'फॉलो करें', remove: 'हटाएं', setDefault: 'डिफ़ॉल्ट बनाएं', removeDefault: 'डिफ़ॉल्ट हटाएं', defaultBadge: 'डिफ़ॉल्ट',
+      noChannelsYet: 'अभी कोई चैनल नहीं है। फॉलो करने के लिए ऊपर एक जोड़ें।',
+      couldntLoadChannels: 'अभी चैनल सूची लोड नहीं हो सकी।', checkConnection: 'अपना कनेक्शन जांचें।',
+      syncHeading: 'अपने डिवाइस में सिंक करें', syncSub: 'यह कोड आपके सेव किए गए लेख और फॉलो किए गए चैनल किसी दूसरे फोन या ब्राउज़र से जोड़ता है। कोड जिसके पास भी है वह इसे इस्तेमाल कर सकता है, इसलिए इसे अपने और अपने डिवाइस तक सीमित रखें।',
+      copyBtn: 'कॉपी करें', syncInputPlaceholder: 'दूसरे डिवाइस का कोड डालें', useCodeBtn: 'यह कोड इस्तेमाल करें',
+      searchPlaceholder: 'हेडलाइन, कंपनियां, टेक्स्ट खोजें',
+      allPriorities: 'सभी प्राथमिकताएं', critical: 'गंभीर', high: 'उच्च', medium: 'मध्यम', low: 'निम्न',
+      clearFilters: 'फ़िल्टर हटाएं',
+      savedLede: 'आपके सेव किए गए लेख यहां बने रहते हैं, भले ही वे 24 घंटे बाद सिग्नल्स से हट जाते हों।',
+      exportLede: 'रिपोर्ट या रॉ टेबल सेव करें। फ़ाइलें आपके फोन के डाउनलोड्स में जाएंगी।',
+      downloadPdf: 'QwickSignal PDF डाउनलोड करें', downloadCsv: 'CSV डाउनलोड करें',
+      onThisPhone: 'इस फोन पर', clearAllData: 'सारा डेटा हटाएं',
+      refresh: 'रिफ्रेश करें', loadSample: 'नमूना डेटा लोड करें'
+    },
+    mr: {
+      linkPages: 'लिंक पेजेस', signals: 'सिग्नल्स', saved: 'सेव्ह केलेले', export: 'एक्सपोर्ट',
+      account: 'खाते', accountSub: 'ऐच्छिक. तुमचे सेव्ह केलेले लेख, हटवलेल्या गोष्टी आणि फॉलो केलेले चॅनेल्स कोडऐवजी तुमच्या खात्याशी जोडण्यासाठी साइन इन करा - आणि इतरांपासून वेगळे ठेवा.',
+      signInEmail: 'ईमेल', signInPassword: 'पासवर्ड (6+ अक्षरे)', signIn: 'साइन इन करा', createAccount: 'खाते तयार करा',
+      signOut: 'साइन आउट', signedInAs: 'साइन इन केले आहे',
+      telegram: 'टेलिग्राम', tgPlaceholder: 't/channelname', addBtn: '+ जोडा',
+      following: 'फॉलो करत आहात', follow: 'फॉलो करा', remove: 'काढा', setDefault: 'डीफॉल्ट करा', removeDefault: 'डीफॉल्ट काढा', defaultBadge: 'डीफॉल्ट',
+      noChannelsYet: 'अजून कोणतेही चॅनेल नाही. फॉलो करण्यासाठी वर एक जोडा.',
+      couldntLoadChannels: 'सध्या चॅनेल यादी लोड होऊ शकली नाही.', checkConnection: 'तुमचे कनेक्शन तपासा.',
+      syncHeading: 'तुमच्या डिव्हाइसेसवर सिंक करा', syncSub: 'हा कोड तुमचे सेव्ह केलेले लेख आणि फॉलो केलेले चॅनेल दुसऱ्या फोन किंवा ब्राउझरशी जोडतो. हा कोड ज्याच्याकडेही असेल तो वापरू शकतो, त्यामुळे तो फक्त स्वतःपुरता आणि स्वतःच्या डिव्हाइसेसपुरता ठेवा.',
+      copyBtn: 'कॉपी करा', syncInputPlaceholder: 'दुसऱ्या डिव्हाइसचा कोड टाका', useCodeBtn: 'हा कोड वापरा',
+      searchPlaceholder: 'हेडलाइन, कंपन्या, मजकूर शोधा',
+      allPriorities: 'सर्व प्राधान्ये', critical: 'गंभीर', high: 'उच्च', medium: 'मध्यम', low: 'कमी',
+      clearFilters: 'फिल्टर्स साफ करा',
+      savedLede: 'तुम्ही सेव्ह केलेल्या बातम्या 24 तासांनंतर सिग्नल्समधून निघून गेल्या तरी इथे राहतात.',
+      exportLede: 'अहवाल किंवा रॉ टेबल सेव्ह करा. फाइल्स तुमच्या फोनच्या डाउनलोड्समध्ये जातील.',
+      downloadPdf: 'QwickSignal PDF डाउनलोड करा', downloadCsv: 'CSV डाउनलोड करा',
+      onThisPhone: 'या फोनवर', clearAllData: 'सर्व डेटा काढा',
+      refresh: 'रिफ्रेश करा', loadSample: 'नमुना डेटा लोड करा'
+    },
+    gu: {
+      linkPages: 'લિંક પેજીસ', signals: 'સિગ્નલ્સ', saved: 'સેવ કરેલ', export: 'એક્સપોર્ટ',
+      account: 'ખાતું', accountSub: 'વૈકલ્પિક. તમારા સેવ કરેલા લેખો, કાઢી નાખેલી વસ્તુઓ અને ફોલો કરેલા ચેનલ્સ કોડને બદલે તમારા ખાતા સાથે જોડવા માટે સાઇન ઇન કરો - અને બીજા બધાથી અલગ રાખો.',
+      signInEmail: 'ઇમેઇલ', signInPassword: 'પાસવર્ડ (6+ અક્ષરો)', signIn: 'સાઇન ઇન કરો', createAccount: 'ખાતું બનાવો',
+      signOut: 'સાઇન આઉટ', signedInAs: 'આ રીતે સાઇન ઇન છે',
+      telegram: 'ટેલિગ્રામ', tgPlaceholder: 't/channelname', addBtn: '+ ઉમેરો',
+      following: 'ફોલો કરો છો', follow: 'ફોલો કરો', remove: 'કાઢી નાખો', setDefault: 'ડિફોલ્ટ બનાવો', removeDefault: 'ડિફોલ્ટ કાઢો', defaultBadge: 'ડિફોલ્ટ',
+      noChannelsYet: 'હજુ કોઈ ચેનલ નથી. ફોલો કરવા માટે ઉપર એક ઉમેરો.',
+      couldntLoadChannels: 'હાલમાં ચેનલ યાદી લોડ થઈ શકી નથી.', checkConnection: 'તમારું જોડાણ તપાસો.',
+      syncHeading: 'તમારા ડિવાઇસ પર સિંક કરો', syncSub: 'આ કોડ તમારા સેવ કરેલા લેખો અને ફોલો કરેલા ચેનલ્સને બીજા ફોન કે બ્રાઉઝર સાથે જોડે છે. આ કોડ જેની પાસે પણ હોય તે તેનો ઉપયોગ કરી શકે છે, તેથી તેને ફક્ત તમારા પોતાના ડિવાઇસ પૂરતો રાખો.',
+      copyBtn: 'કૉપિ કરો', syncInputPlaceholder: 'બીજા ડિવાઇસનો કોડ દાખલ કરો', useCodeBtn: 'આ કોડ વાપરો',
+      searchPlaceholder: 'હેડલાઇન, કંપનીઓ, ટેક્સ્ટ શોધો',
+      allPriorities: 'બધી પ્રાથમિકતાઓ', critical: 'ગંભીર', high: 'ઊંચી', medium: 'મધ્યમ', low: 'નીચી',
+      clearFilters: 'ફિલ્ટર્સ સાફ કરો',
+      savedLede: 'તમે સેવ કરેલી સ્ટોરીઝ 24 કલાક પછી સિગ્નલ્સમાંથી નીકળી જાય તો પણ અહીં રહે છે.',
+      exportLede: 'રિપોર્ટ અથવા રો ટેબલ સેવ કરો. ફાઇલો તમારા ફોનના ડાઉનલોડ્સમાં જશે.',
+      downloadPdf: 'QwickSignal PDF ડાઉનલોડ કરો', downloadCsv: 'CSV ડાઉનલોડ કરો',
+      onThisPhone: 'આ ફોન પર', clearAllData: 'બધો ડેટા કાઢી નાખો',
+      refresh: 'રિફ્રેશ કરો', loadSample: 'નમૂના ડેટા લોડ કરો'
+    }
+  };
+  let currentLang = 'en';
+  function loadLang() {
+    try { return localStorage.getItem(LANG_KEY) || 'en'; } catch (e) { return 'en'; }
+  }
+  function t(key) {
+    return (I18N[currentLang] && I18N[currentLang][key]) || I18N.en[key] || key;
+  }
+  function applyI18n() {
+    document.documentElement.lang = currentLang;
+    $$('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+    $$('[data-i18n-placeholder]').forEach(el => { el.placeholder = t(el.dataset.i18nPlaceholder); });
+    $$('[data-i18n-aria]').forEach(el => { el.setAttribute('aria-label', t(el.dataset.i18nAria)); });
+    const sel = $('#langSelect');
+    if (sel) sel.value = currentLang;
+    // Re-render the bits built dynamically in JS (their strings come from t() at render time, so a plain
+    // re-render is enough - no separate translation pass needed for them).
+    renderAccount(); renderChannels(); renderExport();
+  }
+  function setLang(lang) {
+    currentLang = I18N[lang] ? lang : 'en';
+    try { localStorage.setItem(LANG_KEY, currentLang); } catch (e) { /* private browsing etc. */ }
+    applyI18n();
+  }
+
   const URLS = {
     jspdf: 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'
   };
@@ -682,7 +796,11 @@ if (typeof document !== 'undefined') (function () {
       INVALID_EMAIL: 'That doesn’t look like a valid email address.',
       TOO_MANY_ATTEMPTS_TRY_LATER: 'Too many attempts – wait a bit and try again.',
       USER_DISABLED: 'This account has been disabled.',
-      OPERATION_NOT_ALLOWED: 'Email/password sign-in isn’t turned on for this app yet (Firebase console → Authentication → Sign-in method).'
+      OPERATION_NOT_ALLOWED: 'Email/password sign-in isn’t turned on for this app yet (Firebase console → Authentication → Sign-in method).',
+      // Different from OPERATION_NOT_ALLOWED above: this means Firebase Authentication itself has never been
+      // switched on for this project (nobody has clicked "Get started" on the Authentication tab yet), so
+      // there is no sign-in configuration at all yet, not just a disabled provider.
+      CONFIGURATION_NOT_FOUND: 'Sign-in isn’t set up yet for this app (Firebase console → Authentication → click “Get started”, then enable Email/Password under Sign-in method).'
     };
     return MAP[code] || (code ? code.replace(/_/g, ' ').toLowerCase() : 'Something went wrong. Try again.');
   }
@@ -914,20 +1032,20 @@ if (typeof document !== 'undefined') (function () {
     const box = $('#accountBox');
     if (!box) return;
     if (Auth.uid) {
-      box.innerHTML = `<p class="acct-signed">Signed in as <b>${esc(Auth.email || '')}</b></p>
-        <button id="signOutBtn" class="btn small">Sign out</button>`;
+      box.innerHTML = `<p class="acct-signed">${t('signedInAs')} <b>${esc(Auth.email || '')}</b></p>
+        <button id="signOutBtn" class="btn small">${t('signOut')}</button>`;
       $('#signOutBtn').addEventListener('click', signOut);
       $('#syncBlock').hidden = true;     // the account is now this device's identity; the manual code is redundant
     } else {
       box.innerHTML = `
         <form id="authForm" class="acct-form">
-          <label class="vh" for="authEmail">Email</label>
+          <label class="vh" for="authEmail">${t('signInEmail')}</label>
           <input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com" required>
-          <label class="vh" for="authPass">Password</label>
-          <input id="authPass" type="password" autocomplete="current-password" placeholder="Password (6+ characters)" minlength="6" required>
+          <label class="vh" for="authPass">${t('signInPassword')}</label>
+          <input id="authPass" type="password" autocomplete="current-password" placeholder="${esc(t('signInPassword'))}" minlength="6" required>
           <div class="acct-buttons">
-            <button type="submit" data-mode="signin" class="btn primary small">Sign in</button>
-            <button type="submit" data-mode="signup" class="btn small">Create account</button>
+            <button type="submit" data-mode="signin" class="btn primary small">${t('signIn')}</button>
+            <button type="submit" data-mode="signup" class="btn small">${t('createAccount')}</button>
           </div>
         </form>
         <div id="googleBtn" class="acct-google" hidden></div>`;
@@ -1923,12 +2041,12 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     if (defaultChannelsCache === null) await DefaultChannels.load();
     const linked = approvedChannelsCache || [];
     if (approvedChannelsCache === null) {
-      box.innerHTML = '<p class="lp-empty">Couldn\u2019t load the channel list right now.' +
-        (lastChannelError ? ' <br><span class="lp-errdetail">' + esc(lastChannelError) + '</span>' : ' Check your connection.') + '</p>';
+      box.innerHTML = '<p class="lp-empty">' + esc(t('couldntLoadChannels')) +
+        (lastChannelError ? ' <br><span class="lp-errdetail">' + esc(lastChannelError) + '</span>' : ' ' + esc(t('checkConnection'))) + '</p>';
       return;
     }
     if (!linked.length) {
-      box.innerHTML = '<p class="lp-empty">No channels yet. Add one above to start following it.</p>';
+      box.innerHTML = '<p class="lp-empty">' + esc(t('noChannelsYet')) + '</p>';
       return;
     }
     const owner = isOwner();
@@ -1938,11 +2056,11 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       const following = S.myChannels.has(lower);
       const isDefault = defaults.includes(lower);
       return `<div class="lp-row">
-      <span class="name">t/${esc(name)}${isDefault ? ' <span class="lp-defaultbadge" title="Shown by default to guests and to signed-in users who haven\u2019t followed any channel of their own yet">Default</span>' : ''}</span>
+      <span class="name">t/${esc(name)}${isDefault ? ' <span class="lp-defaultbadge">' + esc(t('defaultBadge')) + '</span>' : ''}</span>
       <div class="lp-rowbtns">
-        <button class="follow${following ? ' on' : ''}" data-act="tgfollow" data-v="${esc(name)}">${following ? 'Following' : 'Follow'}</button>
-        ${owner ? `<button class="follow lp-default" data-act="tgdefault" data-v="${esc(name)}">${isDefault ? 'Remove default' : 'Set default'}</button>` : ''}
-        ${owner ? `<button class="follow lp-remove" data-act="tgremove" data-v="${esc(name)}" aria-label="Remove t/${esc(name)} for everyone">Remove</button>` : ''}
+        <button class="follow${following ? ' on' : ''}" data-act="tgfollow" data-v="${esc(name)}">${following ? esc(t('following')) : esc(t('follow'))}</button>
+        ${owner ? `<button class="follow lp-default" data-act="tgdefault" data-v="${esc(name)}">${isDefault ? esc(t('removeDefault')) : esc(t('setDefault'))}</button>` : ''}
+        ${owner ? `<button class="follow lp-remove" data-act="tgremove" data-v="${esc(name)}" aria-label="${esc(t('remove'))} t/${esc(name)}">${esc(t('remove'))}</button>` : ''}
       </div>
     </div>`;
     }).join('');
@@ -2312,6 +2430,10 @@ Give a concise, event-specific analysis - decide for yourself which structure be
 
   /* ---------- start ---------- */
   (async function start() {
+    currentLang = loadLang();
+    applyI18n();
+    const langSel = $('#langSelect');
+    if (langSel) langSel.addEventListener('change', ev => setLang(ev.target.value));
     $('#today').textContent = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
     const ok = await DB.init();
     if (ok) S.items = await DB.all(); else toast('Storage is blocked in this browser. Items will be lost when you close the page.');

@@ -44,6 +44,7 @@ button,select,input,textarea{font:inherit;color:inherit}
 .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px;letter-spacing:-.02em}
 .brand svg{flex:none}
 .top .right{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;opacity:.9}
+.lang-select{background:transparent;color:var(--ink);border:1.5px solid var(--line);border-radius:7px;font-size:12px;font-weight:700;padding:4px 6px;-webkit-appearance:none;appearance:none}
 .tiny{min-height:32px;padding:0 12px;border-radius:8px;border:1.5px solid currentColor;background:transparent;font-weight:600;font-size:13px}
 
 main{max-width:720px;margin:0 auto;padding:16px}
@@ -323,40 +324,49 @@ body.cv-lock{overflow:hidden}
     </svg>
     <span>QwickSignal</span>
   </div>
-  <div class="right"><span id="today"></span><button class="tiny" data-install hidden>Install</button></div>
+  <div class="right">
+    <label class="vh" for="langSelect">Language</label>
+    <select id="langSelect" class="lang-select" aria-label="Language">
+      <option value="en">EN</option>
+      <option value="hi">हिंदी</option>
+      <option value="mr">मराठी</option>
+      <option value="gu">ગુજરાતી</option>
+    </select>
+    <span id="today"></span><button class="tiny" data-install hidden>Install</button>
+  </div>
 </header>
 
 <main>
   <!-- INBOX -->
   <section id="view-inbox" class="view">
-    <h1>Link Pages</h1>
+    <h1 data-i18n="linkPages">Link Pages</h1>
 
     <div class="lp-block">
-      <h2 class="lp-h">Account</h2>
-      <p class="lp-sub">Optional. Sign in to keep your own saved articles, dismissed items and followed channels tied to your account instead of a code - and separate from anyone else's.</p>
+      <h2 class="lp-h" data-i18n="account">Account</h2>
+      <p class="lp-sub" data-i18n="accountSub">Optional. Sign in to keep your own saved articles, dismissed items and followed channels tied to your account instead of a code - and separate from anyone else's.</p>
       <div id="accountBox"></div>
     </div>
 
     <div class="lp-block">
-      <h2 class="lp-h">Telegram</h2>
+      <h2 class="lp-h" data-i18n="telegram">Telegram</h2>
       <div class="lp-add">
-        <input id="tgInput" type="text" inputmode="text" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="t/channelname">
-        <button id="tgAdd" class="btn primary">+ Add</button>
+        <input id="tgInput" type="text" inputmode="text" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="t/channelname" data-i18n-placeholder="tgPlaceholder">
+        <button id="tgAdd" class="btn primary" data-i18n="addBtn">+ Add</button>
       </div>
       <div id="tgSyncNote" class="lp-syncnote"></div>
       <div id="tgList" class="lp-list" aria-live="polite"></div>
     </div>
 
     <div class="lp-block" id="syncBlock">
-      <h2 class="lp-h">Sync across your devices</h2>
-      <p class="lp-sub">This code links your saved articles and followed channels on another phone or browser. Anyone with the code can use it, so keep it to yourself and your own devices.</p>
+      <h2 class="lp-h" data-i18n="syncHeading">Sync across your devices</h2>
+      <p class="lp-sub" data-i18n="syncSub">This code links your saved articles and followed channels on another phone or browser. Anyone with the code can use it, so keep it to yourself and your own devices.</p>
       <div class="lp-sync">
-        <code id="syncCodeShow">\u2026</code>
-        <button id="syncCopy" class="btn small">Copy</button>
+        <code id="syncCodeShow">&hellip;</code>
+        <button id="syncCopy" class="btn small" data-i18n="copyBtn">Copy</button>
       </div>
       <div class="lp-add" style="margin-top:10px">
-        <input id="syncInput" type="text" inputmode="text" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="Enter a code from another device">
-        <button id="syncUse" class="btn small">Use this code</button>
+        <input id="syncInput" type="text" inputmode="text" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="Enter a code from another device" data-i18n-placeholder="syncInputPlaceholder">
+        <button id="syncUse" class="btn small" data-i18n="useCodeBtn">Use this code</button>
       </div>
     </div>
   </section>
@@ -364,7 +374,7 @@ body.cv-lock{overflow:hidden}
   <!-- BRIEFING -->
   <section id="view-brief" class="view" hidden>
     <div class="viewhead">
-      <h1>Signals</h1>
+      <h1 data-i18n="signals">Signals</h1>
       <div class="livebar" id="liveBar"></div>
     </div>
     <div id="countryStatus" class="cstatus" role="group" aria-label="Country status" hidden></div>
@@ -380,17 +390,17 @@ body.cv-lock{overflow:hidden}
     </div>
 
     <div class="tools">
-      <input type="search" id="q" placeholder="Search headlines, companies, text" aria-label="Search">
+      <input type="search" id="q" placeholder="Search headlines, companies, text" aria-label="Search" data-i18n-placeholder="searchPlaceholder">
       <div class="strip" id="impchips" hidden></div>
       <div id="filterBox" class="filters">
         <select id="countryFilter" class="filter-dropdown" aria-label="Filter by country"></select>
         <select id="sectorFilter" class="filter-dropdown" aria-label="Filter by sector"></select>
         <select id="viewFilter" class="filter-dropdown" aria-label="Filter by priority">
-          <option value="">All priorities</option>
-          <option value="Critical">Critical</option>
-          <option value="High">High</option>
-          <option value="Medium">Medium</option>
-          <option value="Low">Low</option>
+          <option value="" data-i18n="allPriorities">All priorities</option>
+          <option value="Critical" data-i18n="critical">Critical</option>
+          <option value="High" data-i18n="high">High</option>
+          <option value="Medium" data-i18n="medium">Medium</option>
+          <option value="Low" data-i18n="low">Low</option>
         </select>
       </div>
       <div class="strip" id="countries" aria-label="Countries" hidden></div>
@@ -403,22 +413,22 @@ body.cv-lock{overflow:hidden}
       <button data-v="country" aria-pressed="false">By country</button>
       <button data-v="sector" aria-pressed="false">By sector</button>
     </div>
-    <p style="margin:10px 0 0" id="hasFilter" hidden><button class="link" style="border:0;width:auto;padding:4px 0" data-act="reset">Clear filters</button></p>
+    <p style="margin:10px 0 0" id="hasFilter" hidden><button class="link" style="border:0;width:auto;padding:4px 0" data-act="reset" data-i18n="clearFilters">Clear filters</button></p>
 
     <div id="list"></div>
   </section>
 
   <!-- SAVED -->
   <section id="view-saved" class="view" hidden>
-    <div class="viewhead"><h1>Saved</h1></div>
-    <p class="lede">Stories you've saved stay here even after they'd normally drop off Signals after 24 hours.</p>
+    <div class="viewhead"><h1 data-i18n="saved">Saved</h1></div>
+    <p class="lede" data-i18n="savedLede">Stories you've saved stay here even after they'd normally drop off Signals after 24 hours.</p>
     <div id="savedList"></div>
   </section>
 
   <!-- EXPORT -->
   <section id="view-export" class="view" hidden>
-    <h1>Export</h1>
-    <p class="lede">Save a report or the raw table. Files go to your phone's Downloads.</p>
+    <h1 data-i18n="export">Export</h1>
+    <p class="lede" data-i18n="exportLede">Save a report or the raw table. Files go to your phone's Downloads.</p>
 
     <div class="seg" id="exportSeg" role="group" aria-label="Period" hidden>
      <!-- <button data-v="today" aria-pressed="true">Today</button> -->
@@ -429,23 +439,23 @@ body.cv-lock{overflow:hidden}
     </div>
     <p class="muted" id="exportCount" style="margin:8px 0 12px"></p>
     <div class="stack">
-      <button id="pdfBtn" class="btn primary block">Download QwickSignal PDF</button>
-      <button id="csvBtn" class="btn block">Download CSV</button>
+      <button id="pdfBtn" class="btn primary block" data-i18n="downloadPdf">Download QwickSignal PDF</button>
+      <button id="csvBtn" class="btn block" data-i18n="downloadCsv">Download CSV</button>
     </div>
 
-    <h2>On this phone</h2>
+    <h2 data-i18n="onThisPhone">On this phone</h2>
     <div class="panel">
       <p id="storeInfo"></p>
-      <button id="clearBtn" class="btn small danger">Clear all data</button>
+      <button id="clearBtn" class="btn small danger" data-i18n="clearAllData">Clear all data</button>
     </div>
   </section>
 </main>
 
 <nav class="tabs" role="tablist" aria-label="Sections">
-  <button role="tab" data-tab="inbox" aria-selected="true">Link Pages</button>
-  <button role="tab" data-tab="brief" aria-selected="false">Signals</button>
-  <button role="tab" data-tab="saved" aria-selected="false">Saved</button>
-  <button role="tab" data-tab="export" aria-selected="false">Export</button>
+  <button role="tab" data-tab="inbox" aria-selected="true" data-i18n="linkPages">Link Pages</button>
+  <button role="tab" data-tab="brief" aria-selected="false" data-i18n="signals">Signals</button>
+  <button role="tab" data-tab="saved" aria-selected="false" data-i18n="saved">Saved</button>
+  <button role="tab" data-tab="export" aria-selected="false" data-i18n="export">Export</button>
 </nav>
 <div id="toast" role="status" aria-live="polite"></div>
 <div class="vmodal" id="videoModal" role="dialog" aria-modal="true" aria-labelledby="vmTitle" hidden>

@@ -33,7 +33,8 @@ from pathlib import Path
 # Every value can be overridden under "settings:" in sources.yml.
 DEFAULTS = {
     "image_enabled": True,                     # master switch (it also needs GOOGLE_SEARCH_API_KEY + GOOGLE_SEARCH_CX)
-    "image_importance": ["Critical", "High"],  # add "Medium" to cover more stories (uses more of the daily query budget)
+    "image_importance": ["Critical", "High", "Medium", "Low"],  # every story is searched; image_daily_query_budget
+                                                # (not this list) is what actually paces things within the free tier
     "image_max_age_hours": 36,                 # only stories newer than this get an image search
     "image_max_per_run": 8,                    # searches per pipeline run (cadence set by pipeline.yml's cron)
     "image_max_attempts": 3,                   # tries per story before giving up
