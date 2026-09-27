@@ -542,11 +542,8 @@ if (typeof document !== 'undefined') (function () {
   const $$ = (s, r) => [...(r || document).querySelectorAll(s)];
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const URLS = {
-    pdfjs: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',
-    pdfWorker: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js',
     jspdf: 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'
   };
-  const MAX_PDF_PAGES = 80;
 
   const S = {
     items: [],
@@ -556,7 +553,6 @@ if (typeof document !== 'undefined') (function () {
     videoMeta: null,
     brief: null,
     lastLive: 0,
-    files: [],
     tab: 'inbox',
     open: new Set(),
     exportRange: 'today',
@@ -801,6 +797,27 @@ if (typeof document !== 'undefined') (function () {
       }
     },
 
+    // Unlinks a channel for everyone: the pipeline stops fetching it on its next run. Per
+    // firestore.rules, any client can delete any channel document (no ownership check),
+    // matching the no-review-step model used for adding one.
+    async remove(name) {
+      try {
+        const url = `${FS_BASE}/qs_channels/${encodeURIComponent(name.toLowerCase())}?key=${FIREBASE.apiKey}`;
+        const r = await fetch(url, { method: 'DELETE' });
+        if (!r.ok && r.status !== 404) { const why = await describeFailure(r, null); toast('Couldn’t remove t/' + name + ': ' + why); return false; }
+        approvedChannelsCache = null;   // force the next channel-list render to drop it
+        S.myChannels.delete(name.toLowerCase());
+        Sync.pushSoon();
+        toast('t/' + name + ' removed — the pipeline will stop fetching it on its next run.');
+        renderChannels();
+        return true;
+      } catch (e) {
+        const why = await describeFailure(null, e);
+        toast('Couldn’t remove t/' + name + ': ' + why);
+        return false;
+      }
+    },
+
     follow(name) { S.myChannels.add(name.toLowerCase()); Sync.pushSoon(); },
     unfollow(name) { S.myChannels.delete(name.toLowerCase()); Sync.pushSoon(); }
   };
@@ -888,62 +905,6 @@ if (typeof document !== 'undefined') (function () {
     if (fresh) fresh.push(item);
   }
 
-  async function readPDF(file, onProgress) {
-    await loadScript(URLS.pdfjs);
-    const lib = window.pdfjsLib;
-    lib.GlobalWorkerOptions.workerSrc = URLS.pdfWorker;
-    const pdf = await lib.getDocument({ data: await file.arrayBuffer() }).promise;
-    const n = Math.min(pdf.numPages, MAX_PDF_PAGES);
-    const pages = [];
-    for (let p = 1; p <= n; p++) {
-      const page = await pdf.getPage(p);
-      const tc = await page.getTextContent();
-      const lines = []; let line = '';
-      tc.items.forEach(it => { line += it.str; if (it.hasEOL) { lines.push(line); line = ''; } });
-      if (line) lines.push(line);
-      pages.push(lines.join('\n'));
-      if (onProgress) onProgress(p, n);
-      if (p % 4 === 0) await tick();
-    }
-    return { text: pages.join('\n\n'), pages: pdf.numPages, read: n };
-  }
-
-  async function handleFile(f, fresh) {
-    const st = newStats();
-    const ext = (f.name.split('.').pop() || '').toLowerCase();
-    const byPara = $('#byPara').checked;
-    if (ext === 'pdf' || f.type === 'application/pdf') {
-      const line = log('Reading ' + f.name + '\u2026');
-      let r;
-      try { r = await readPDF(f, (p, n) => { line.textContent = 'Reading ' + f.name + ', page ' + p + ' of ' + n + '\u2026'; }); }
-      catch (e) {
-        line.className = 'err';
-        line.textContent = f.name + ': the PDF reader could not load. Connect to the internet once and try again. It is saved for offline use afterwards.';
-        return st;
-      }
-      if (r.text.replace(/\s/g, '').length < 60) {
-        line.className = 'warn';
-        line.textContent = f.name + ': no selectable text found. Scanned PDFs need OCR, which comes in Phase 2.';
-        return st;
-      }
-      await addDoc({ text: r.text, source: f.name, pdf: true, fallbackTitle: f.name.replace(/\.pdf$/i, '') }, st, fresh);
-      line.className = 'ok';
-      line.textContent = f.name + ': ' + summariseStats(st) + (r.pages > r.read ? ' (first ' + r.read + ' of ' + r.pages + ' pages read)' : '');
-    } else if (['txt', 'md', 'log'].includes(ext) || (f.type || '').startsWith('text/plain')) {
-      const t = await f.text();
-      let parts = E.splitMessages(t, byPara);
-      if (!parts.length && t.trim().length >= 12) parts = [t.trim()];
-      for (const [i, p] of parts.entries()) { await addDoc({ text: p, source: f.name }, st, fresh); if (i % 20 === 19) await tick(); }
-      log(f.name + ': ' + summariseStats(st), st.added + st.dup ? 'ok' : 'warn');
-    } else if (['csv', 'tsv'].includes(ext) || (f.type || '').includes('csv')) {
-      const docs = E.csvToDocs(await f.text(), f.name);
-      for (const [i, d] of docs.entries()) { await addDoc(d, st, fresh); if (i % 20 === 19) await tick(); }
-      log(f.name + ': ' + (docs.length ? summariseStats(st) + ' from ' + docs.length + ' rows' : 'no usable rows found'), docs.length ? 'ok' : 'warn');
-    } else {
-      log(f.name + ': this file type is not supported yet. Word, Excel and images come in Phase 2.', 'warn');
-    }
-    return st;
-  }
   const summariseStats = st => {
     const bits = [st.added + ' new'];
     if (st.dup) bits.push(st.dup + ' duplicate' + (st.dup > 1 ? 's' : '') + ' merged');
@@ -951,48 +912,24 @@ if (typeof document !== 'undefined') (function () {
     return bits.join(', ');
   };
 
-  function log(msg, cls) {
-    const p = document.createElement('p');
-    p.textContent = msg; if (cls) p.className = cls;
-    $('#log').appendChild(p);
-    return p;
-  }
-
-  async function runIngest() {
-    const pasted = $('#paste').value.trim();
-    if (!pasted && !S.files.length) { toast('Paste some text or choose a file first.'); return; }
-    const btn = $('#addBtn'); btn.disabled = true;
-    $('#log').innerHTML = ''; $('#fresh').innerHTML = '';
-    const total = newStats(); const fresh = [];
-    try {
-      if (pasted) {
-        const st = newStats();
-        let parts = E.splitMessages(pasted, $('#byPara').checked);
-        if (!parts.length && pasted.length >= 12) parts = [pasted];
-        if (!parts.length) log('The pasted text is too short to use.', 'warn');
-        for (const p of parts) await addDoc({ text: p, source: 'Pasted text' }, st, fresh);
-        if (parts.length) log('Pasted text: ' + summariseStats(st), 'ok');
-        addStats(total, st);
-        $('#paste').value = '';
-      }
-      for (const f of S.files) addStats(total, await handleFile(f, fresh));
-      S.files = []; renderFiles();
-    } catch (e) {
-      log('Something went wrong: ' + e.message, 'err');
-    } finally { btn.disabled = false; }
-    renderFresh(fresh);
-    renderAll();
-    if (total.added + total.dup) toast(summariseStats(total));
-  }
-
+  // Manual ingest (paste/upload) was removed from Link Pages - Telegram channels and Sync are now the
+  // only ways content enters the app, aside from this loadSample() helper (still used by the Signals
+  // empty-state "Load sample data" button and by test_phaseb.py) and ingestText() (used by the
+  // web-share-target flow in start(), below).
   async function loadSample() {
     const st = newStats(); const fresh = [];
-    $('#log').innerHTML = '';
     for (const t of E.SAMPLES) await addDoc({ text: t, source: 'Sample data' }, st, fresh);
-    log('Sample data: ' + summariseStats(st), 'ok');
-    log('These are made-up examples for testing, not real news.', 'warn');
-    renderFresh(fresh); renderAll();
-    toast(summariseStats(st));
+    renderAll();
+    toast(summariseStats(st) + ' (made-up examples for testing, not real news)');
+  }
+
+  async function ingestText(text, source) {
+    const st = newStats(); const fresh = [];
+    let parts = E.splitMessages(text, false);
+    if (!parts.length && text.trim().length >= 12) parts = [text.trim()];
+    for (const p of parts) await addDoc({ text: p, source }, st, fresh);
+    renderAll();
+    return st;
   }
 
   /* ---------- rendering ---------- */
@@ -1479,12 +1416,6 @@ Please explain:
     $('#hasFilter').hidden = !(S.f.country || S.f.sector || S.f.imp || S.f.q);
   }
 
-  function renderFresh(fresh) {
-    $('#fresh').innerHTML = fresh.length ? `<h2 class="grp">Just added${'<span class="n">' + fresh.length + '</span>'}</h2>` + fresh.slice().sort(byPriority).slice(0, 12).map(entryHTML).join('') : '';
-  }
-  function renderFiles() {
-    $('#fileChips').innerHTML = S.files.map((f, i) => `<span class="fchip">${esc(f.name)}<button aria-label="Remove ${esc(f.name)}" data-act="rmfile" data-i="${i}">\u00d7</button></span>`).join('');
-  }
 
   function renderSyncCode() {
     const el = $('#syncCodeShow');
@@ -1511,7 +1442,10 @@ Please explain:
       const following = S.myChannels.has(name.toLowerCase());
       return `<div class="lp-row">
       <span class="name">t/${esc(name)}</span>
-      <button class="follow${following ? ' on' : ''}" data-act="tgfollow" data-v="${esc(name)}">${following ? 'Following' : 'Follow'}</button>
+      <div class="lp-rowbtns">
+        <button class="follow${following ? ' on' : ''}" data-act="tgfollow" data-v="${esc(name)}">${following ? 'Following' : 'Follow'}</button>
+        <button class="follow lp-remove" data-act="tgremove" data-v="${esc(name)}" aria-label="Remove t/${esc(name)} for everyone">Remove</button>
+      </div>
     </div>`;
     }).join('');
   }
@@ -1646,11 +1580,17 @@ Please explain:
       else if (act === 'reset') { S.f = Object.assign(S.f, { country: '', sector: '', imp: '', q: '', range: 'all' }); $('#q').value = ''; renderControls(); renderList(); }
       else if (act === 'sample') { await loadSample(); setTab('brief'); }
       else if (act === 'refresh') { await loadLive(true); }
-      else if (act === 'rmfile') { S.files.splice(+el.dataset.i, 1); renderFiles(); }
       else if (act === 'tgfollow') {
         const name = el.dataset.v;
         if (S.myChannels.has(name.toLowerCase())) Channels.unfollow(name); else Channels.follow(name);
         renderChannels(); renderAll();
+      }
+      else if (act === 'tgremove') {
+        const name = el.dataset.v;
+        if (confirm('Remove t/' + name + ' for everyone? The pipeline will stop fetching it on its next run.')) {
+          await Channels.remove(name);
+          renderAll();
+        }
       }
       else if (act === 'save') { saveItem(el.dataset.id); }
       else if (act === 'unsave') { unsaveItem(el.dataset.id); }
@@ -1671,7 +1611,7 @@ Please explain:
         S.items = S.items.filter(i => i.id !== id);
         for (const i of S.items) if ((i.related || []).includes(id)) { i.related = i.related.filter(r => r !== id); await DB.put(i); }
         await DB.del(id); S.open.delete(id);
-        renderAll(); renderFresh([]);
+        renderAll();
       }
       return;
     }
@@ -1700,10 +1640,6 @@ Please explain:
     toast('Updated.');
   });
 
-  $('#files').addEventListener('change', e => {
-    S.files.push(...e.target.files); e.target.value = ''; renderFiles();
-  });
-  $('#addBtn').addEventListener('click', runIngest);
   document.addEventListener('change', ev => {
     const t = ev.target;
     if (!t || !t.id) return;
@@ -1747,7 +1683,7 @@ Please explain:
   $('#clearBtn').addEventListener('click', async () => {
     if (!S.items.length) { toast('There is nothing to clear.'); return; }
     if (!confirm('Delete the ' + S.items.length + ' items you added on this phone? Live stories are not affected. This cannot be undone.')) return;
-    await DB.clear(); S.items = []; S.open.clear(); $('#fresh').innerHTML = ''; renderAll(); toast('All data cleared.');
+    await DB.clear(); S.items = []; S.open.clear(); renderAll(); toast('All data cleared.');
   });
 
 
@@ -1873,10 +1809,13 @@ Please explain:
     const qs = new URLSearchParams(location.search);
     const shared = ['title', 'text', 'url'].map(k => qs.get(k)).filter(Boolean).join('\n');
     if (shared) {
-      $('#paste').value = shared; history.replaceState(null, '', location.pathname);
-      toast('Shared text is ready. Tap Add to briefing.');
+      history.replaceState(null, '', location.pathname);
+      ingestText(shared, 'Shared to QwickSignal').then(st => {
+        if (st.added + st.dup) { toast('Added shared text: ' + summariseStats(st)); setTab('brief'); }
+        else toast('Shared text was too short to use.');
+      });
     }
-    setTab('inbox'); renderFiles(); renderAll(); renderLiveBar();
+    setTab('inbox'); renderAll(); renderLiveBar();
     loadLive();
     Sync.init().then(() => { renderSyncCode(); renderChannels(); renderAll(); });   // never blocks the news feed while it loads
     if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {

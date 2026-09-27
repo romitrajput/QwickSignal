@@ -14,9 +14,13 @@
 //                       every "approved" doc and starts fetching it into the shared feed
 //                       for everyone. This is an intentional tradeoff (instant activation
 //                       over manual review) - see the note in index.html's Link Pages
-//                       screen. Once created, a channel document is immutable from the
-//                       client: nobody can rewrite someone else's entry or flip a channel
-//                       back to some other status.
+//                       screen. A channel document can't be rewritten by the client (no
+//                       update - status can't be flipped, ownership can't be changed), but
+//                       ANYONE can delete it: removing a channel is shared, like adding one
+//                       is. There is no per-user ownership check because these documents
+//                       don't record who can remove them, only who added them - so this
+//                       trades "anyone can accidentally/maliciously unlink a shared channel"
+//                       for simplicity, matching the no-review-step model above.
 //
 // To use: Firebase console -> Firestore Database -> Rules -> paste this file -> Publish.
 
@@ -49,10 +53,11 @@ service cloud.firestore {
         request.resource.data.added_by is string && request.resource.data.added_by.size() <= 32 &&
         request.resource.data.added_at is string;
 
-      // No client update/delete: once a channel is linked, nobody (including whoever added
-      // it) can rewrite or remove that document from the app. Changing or retiring a
-      // channel is a by-hand operation in the Firebase console.
-      allow update, delete: if false;
+      // No client update: once a channel is linked, nobody can rewrite its fields or flip
+      // its status. Delete IS allowed, from any client - "Remove" in Link Pages calls this
+      // directly, and there is no ownership check (see the note above the match block).
+      allow update: if false;
+      allow delete: if true;
     }
   }
 }

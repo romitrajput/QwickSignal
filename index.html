@@ -89,8 +89,10 @@ input[type=search]{width:100%;min-height:44px;padding:0 14px;border-radius:10px;
 .lp-row .status.approved{background:rgba(79,182,192,.16);color:var(--accent)}
 .lp-row .status.pending{background:rgba(156,174,189,.16);color:var(--ink2)}
 .lp-row .status.rejected{background:rgba(217,95,90,.14);color:#D95F5A}
+.lp-row .lp-rowbtns{display:flex;flex:none;gap:8px}
 .lp-row button.follow{flex:none;min-height:34px;padding:0 12px;border-radius:7px;border:1.5px solid var(--line);background:transparent;color:var(--ink);font-size:13px;font-weight:600;cursor:pointer}
 .lp-row button.follow.on{border-color:var(--accent);color:var(--accent)}
+.lp-row button.follow.lp-remove{border-color:var(--crit);color:var(--crit)}
 .lp-empty{color:var(--ink2);font-size:13.5px;padding:6px 2px}
 .lp-errdetail{color:var(--crit);font-size:12.5px}
 .lp-sync{display:flex;align-items:center;gap:10px}
@@ -279,35 +281,15 @@ body.noscroll{overflow:hidden}
   <!-- INBOX -->
   <section id="view-inbox" class="view">
     <h1>Link Pages</h1>
-    <p class="lede">Follow Telegram channels, or add a message or file. Each item is sorted by country, sector and importance.</p>
 
     <div class="lp-block">
       <h2 class="lp-h">Telegram</h2>
-      <p class="lp-sub">Add a public channel and it goes live for everyone on the next update (usually within about 15 minutes) &ndash; no review step. Anyone can follow a channel once it's been added.</p>
       <div class="lp-add">
         <input id="tgInput" type="text" inputmode="text" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="t/channelname">
         <button id="tgAdd" class="btn primary">+ Add</button>
       </div>
       <div id="tgSyncNote" class="lp-syncnote"></div>
       <div id="tgList" class="lp-list" aria-live="polite"></div>
-    </div>
-
-    <div class="lp-block">
-      <h2 class="lp-h">Paste or upload</h2>
-      <label class="vh" for="paste">Paste news or messages</label>
-      <textarea id="paste" placeholder="Paste news or a Telegram message here. To add several at once, put --- on its own line between them."></textarea>
-      <label class="check"><input type="checkbox" id="byPara"> Treat each paragraph as a separate message</label>
-
-      <input type="file" id="files" multiple hidden accept=".pdf,.txt,.csv,.tsv,.md,application/pdf,text/plain,text/csv">
-      <label class="pick" for="files">Choose files <small>PDF, TXT or CSV</small></label>
-      <div id="fileChips" class="fchips"></div>
-
-      <div class="row" style="margin-top:16px">
-        <button id="addBtn" class="btn primary">Add to Signals</button>
-      </div>
-
-      <div id="log" class="log" style="margin-top:18px" aria-live="polite"></div>
-      <div id="fresh"></div>
     </div>
 
     <div class="lp-block">
@@ -395,28 +377,10 @@ body.noscroll{overflow:hidden}
       <button id="csvBtn" class="btn block">Download CSV</button>
     </div>
 
-    <h2>Install on your phone</h2>
-    <div class="panel" id="installCard">
-      <p>Install it so it opens like an app, with no browser bar.</p>
-      <button class="btn small" data-install hidden>Install app</button>
-      <ol class="steps">
-        <li>In Chrome, tap the three-dot menu.</li>
-        <li>Choose <b>Install app</b> or <b>Add to Home screen</b>.</li>
-        <li>After installing, sharing text from Telegram may list this app as a target.</li>
-      </ol>
-    </div>
-
     <h2>On this phone</h2>
     <div class="panel">
       <p id="storeInfo"></p>
       <button id="clearBtn" class="btn small danger">Clear all data</button>
-    </div>
-
-    <h2>How items are sorted</h2>
-    <div class="panel">
-      <p>Items you paste or upload are sorted by keyword rules on your phone, not AI, so tap an item to correct it. Live stories and the AI briefing come from the Phase 2 pipeline, which reads your Telegram, X and RSS sources and summarises them with Claude.</p>
-      <p>Duplicates are merged into one item that lists every source. Items that cover the same story are linked as related.</p>
-      <p>PDF text reading and PDF export load a small library from the internet the first time, then work offline.</p>
     </div>
   </section>
 </main>
