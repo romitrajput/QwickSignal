@@ -1263,10 +1263,18 @@ if (typeof document !== 'undefined') (function () {
     }).join('');
   }
 
+  // S.cv keeps the whole ordered list of country groups (frozen at the moment the viewer opened, so the
+  // row doesn't reshuffle under the user's thumb mid-session as reviewed state changes reorder it), plus
+  // which country and which story within it is current - so ">" can walk off the end of one country
+  // straight into the next, the way swiping past the last status/story usually works.
+  function cvStories() { return S.cv.groups[S.cv.groupIdx].stories; }
+  function cvCountry() { return S.cv.groups[S.cv.groupIdx].country; }
+
   function openCountry(country) {
-    const g = countryGroups().find(x => x.country === country);
-    if (!g || !g.stories.length) return;
-    S.cv = { country, idx: 0, stories: g.stories };
+    const groups = countryGroups();
+    const gi = groups.findIndex(x => x.country === country);
+    if (gi === -1 || !groups[gi].stories.length) return;
+    S.cv = { groups, groupIdx: gi, idx: 0 };
     $('#countryViewer').hidden = false;
     document.body.classList.add('cv-lock');
     renderCountryViewer();
@@ -1283,7 +1291,7 @@ if (typeof document !== 'undefined') (function () {
 
   function markCurrentReviewed() {
     if (!S.cv) return;
-    const it = S.cv.stories[S.cv.idx];
+    const it = cvStories()[S.cv.idx];
     if (!it || S.reviewed.has(it.id)) return;
     S.reviewed.add(it.id);
     Sync.pushSoon();
@@ -1292,35 +1300,49 @@ if (typeof document !== 'undefined') (function () {
 
   function cvGo(delta) {
     if (!S.cv) return;
+    const stories = cvStories();
     const ni = S.cv.idx + delta;
-    if (ni < 0) return;                          // already at the first story: swiping/tapping back further is a no-op
-    if (ni >= S.cv.stories.length) { closeCountryViewer(); return; }   // past the last story: done with this country
-    S.cv.idx = ni;
+    if (ni >= 0 && ni < stories.length) {
+      S.cv.idx = ni;
+      renderCountryViewer();
+      markCurrentReviewed();
+      return;
+    }
+    // Past an edge: move on to the next (or previous) country's stories, starting from its near end,
+    // instead of just stopping - this is the ">" transition between countries.
+    const gi = S.cv.groupIdx + (delta > 0 ? 1 : -1);
+    if (gi < 0 || gi >= S.cv.groups.length) { closeCountryViewer(); return; }   // no more countries either way: done
+    S.cv.groupIdx = gi;
+    S.cv.idx = delta > 0 ? 0 : S.cv.groups[gi].stories.length - 1;
     renderCountryViewer();
     markCurrentReviewed();
   }
 
   function renderCountryViewer() {
     if (!S.cv) return;
-    const { country, idx, stories } = S.cv;
+    const country = cvCountry(), idx = S.cv.idx, stories = cvStories();
     const it = stories[idx];
     const dashes = stories.map((s, i) => {
       const cls = i < idx || (i === idx && S.reviewed.has(s.id)) ? 'seen' : (i === idx ? 'current' : '');
       return `<span class="cv-dash ${cls}"></span>`;
     }).join('');
     const facts = (it.facts || []).length ? `<ul class="facts">${it.facts.map(f => `<li>${esc(f)}</li>`).join('')}</ul>` : '';
-    const sources = (it.sources || []).map(s => s.url ? `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)}</a>` : esc(s.name)).join(', ');
+    // Phase C follow-up: the timestamp/sector subtext and the Sources line were cluttering what's meant to
+    // be a quick, at-a-glance story read (like a status/story card) - dropped, per feedback. The headline is
+    // the point; "why it matters"/facts stay since that's the actual analysis, not just metadata.
     $('#cvDashes').innerHTML = dashes;
-    $('#cvBody').innerHTML = `
+    const body = $('#cvBody');
+    body.innerHTML = `
       <div class="cv-flag">${flagOf(country)}</div>
       <div class="cv-country">${esc(country)}</div>
       <h2 class="cv-headline">${esc(it.headline)}</h2>
-      <div class="cv-meta"><span>${ago(it.addedAt)}</span><span class="sect">${esc(it.sector)}${it.subsector ? ' / ' + esc(it.subsector) : ''}</span></div>
       ${it.why ? `<p class="why"><b>Why it matters</b> ${esc(it.why)}</p>` : (it.summary ? `<p class="why">${esc(it.summary)}</p>` : '')}
       ${facts}
-      ${sources ? `<p class="cv-sources"><b>Sources</b> ${sources}</p>` : ''}
       <div class="cv-pos">${idx + 1} / ${stories.length}</div>
     `;
+    // A quick crossfade so moving between stories - and especially between countries - reads as a smooth
+    // transition rather than a hard cut.
+    body.classList.remove('cv-fade'); void body.offsetWidth; body.classList.add('cv-fade');
   }
 
   function cvTap(ev) {
