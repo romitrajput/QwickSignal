@@ -653,6 +653,88 @@ if (typeof document !== 'undefined') (function () {
     currentLang = I18N[lang] ? lang : 'en';
     try { localStorage.setItem(LANG_KEY, currentLang); } catch (e) { /* private browsing etc. */ }
     applyI18n();
+    renderAll(); renderCountryViewer();   // re-render the news itself too, not just the app chrome
+  }
+
+  /* ---------- Multilingual news content (headline/summary/why/facts) ----------
+     A follow-up to the UI-only translation above: the person asked for the news itself to translate too, not
+     just the app's own buttons and labels. This translates on top of whatever the source posted in - it does
+     not touch S.live/S.items (the original English stays there for search/filter/export), only what's shown
+     on screen via trOf()/trList() below.
+     Uses Google's public "gtx" translate endpoint (translate.googleapis.com) - the same unauthenticated
+     endpoint many browser extensions use. It needs no API key, which is why this can just work today, but
+     it is not an official, supported API: Google can rate-limit or change it without notice. If that becomes
+     a problem, the fix is to switch ensureTranslated() below to the paid Cloud Translation API (needs a
+     GOOGLE_TRANSLATE_API_KEY and a small budget tracker, the same pattern as image_intel.py's Budget) instead
+     of this endpoint - everything that calls trOf()/trList() stays the same either way. */
+  const TR_CACHE = new Map();     // "lang␟text" -> translated text (or the original, once we've tried)
+  const TR_PENDING = new Set();   // keys currently in flight, so a busy render doesn't fire duplicate requests
+  const TR_ENDPOINT = 'https://translate.googleapis.com/translate_a/single';
+
+  function trKey(text) { return currentLang + '␟' + text; }
+  // Synchronous lookup for use inside template strings: cached translation if we have one, else the original
+  // English text (so the UI never blocks on a network round trip - it just upgrades in place once ready).
+  function trOf(text) {
+    if (currentLang === 'en' || !text) return text;
+    const cached = TR_CACHE.get(trKey(text));
+    return cached === undefined ? text : cached;
+  }
+  function trList(arr) { return (arr || []).map(trOf); }
+
+  async function translateOne(text, lang) {
+    const url = `${TR_ENDPOINT}?client=gtx&sl=auto&tl=${encodeURIComponent(lang)}&dt=t&q=${encodeURIComponent(text)}`;
+    const r = await fetch(url);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    return (data[0] || []).map(seg => seg[0]).join('');
+  }
+
+  let trRenderQueued = false;
+  function trRefreshSoon() {
+    if (trRenderQueued) return;
+    trRenderQueued = true;
+    tick().then(() => { trRenderQueued = false; renderAll(); renderCountryViewer(); });
+  }
+
+  // Kicks off translation for whatever text is about to be shown on screen, with modest concurrency (the
+  // free endpoint above is unauthenticated, so this deliberately doesn't hammer it). Cards already show their
+  // English text immediately; each one silently swaps in its translation as soon as it lands, via the
+  // debounced re-render above - never a blocking spinner over the news itself.
+  const TR_CONCURRENCY = 4;
+  let trActive = 0;
+  const trQueue = [];
+  function trPump() {
+    while (trActive < TR_CONCURRENCY && trQueue.length) {
+      const text = trQueue.shift();
+      const key = trKey(text);
+      if (TR_CACHE.has(key) || TR_PENDING.has(key)) continue;
+      TR_PENDING.add(key);
+      trActive++;
+      translateOne(text, currentLang)
+        .then(out => TR_CACHE.set(key, out || text))
+        .catch(() => TR_CACHE.set(key, text))   // give up quietly for this string - it just stays in English
+        .finally(() => { TR_PENDING.delete(key); trActive--; trRefreshSoon(); trPump(); });
+    }
+  }
+  function ensureTranslated(texts) {
+    if (currentLang === 'en') return;
+    for (const text of texts) {
+      if (!text) continue;
+      const key = trKey(text);
+      if (!TR_CACHE.has(key) && !TR_PENDING.has(key) && !trQueue.includes(text)) trQueue.push(text);
+    }
+    trPump();
+  }
+  // Collects every translatable string out of a list of feed items, for one ensureTranslated() call per render.
+  function collectTranslatable(items) {
+    const out = [];
+    for (const it of items) {
+      if (it.headline) out.push(it.headline);
+      if (it.summary) out.push(it.summary);
+      if (it.why) out.push(it.why);
+      if (it.facts) out.push(...it.facts);
+    }
+    return out;
   }
 
   const URLS = {
@@ -1506,6 +1588,7 @@ if (typeof document !== 'undefined') (function () {
     if (!S.cv) return;
     const country = cvCountry(), idx = S.cv.idx, stories = cvStories();
     const it = stories[idx];
+    ensureTranslated(collectTranslatable([it]));   // just the current story - no need to translate every story in every country up front
     const dashes = stories.map((s, i) => {
       const cls = i < idx || (i === idx && S.reviewed.has(s.id)) ? 'seen' : (i === idx ? 'current' : '');
       return `<span class="cv-dash ${cls}"></span>`;
@@ -1521,7 +1604,7 @@ if (typeof document !== 'undefined') (function () {
       ${img}
       <div class="cv-flag">${flagOf(country)}</div>
       <div class="cv-country">${esc(country)}</div>
-      <h2 class="cv-headline">${esc(it.headline)}</h2>
+      <h2 class="cv-headline">${esc(trOf(it.headline))}</h2>
       <div class="cv-pos">${idx + 1} / ${stories.length}</div>
     `;
     // A quick crossfade so moving between stories - and especially between countries - reads as a smooth
@@ -1656,8 +1739,8 @@ if (typeof document !== 'undefined') (function () {
     const rel = (it.related || []).length;
     return `<article class="entry imp-${it.importance.toLowerCase()}${open ? ' open' : ''}" data-id="${it.id}">
       <div class="where"><span>${flagOf(it.country)} ${esc(it.country)}</span><span class="sect">${esc(it.sector)}${it.subsector ? ' / ' + esc(it.subsector) : ''}</span></div>
-      <h3 class="hl">${esc(it.headline)}</h3>
-      ${it.summary ? `<p class="sum">${esc(it.summary)}</p>` : ''}
+      <h3 class="hl">${esc(trOf(it.headline))}</h3>
+      ${it.summary ? `<p class="sum">${esc(trOf(it.summary))}</p>` : ''}
       ${videoHTML(it)}
       <div class="foot">${n > 1 ? `<span>${n} sources</span>` : ''}${rel ? `<span>${rel} related</span>` : ''}<span>${ago(it.addedAt)}</span></div>
       ${open ? detailsHTML(it) : ''}
@@ -1685,8 +1768,8 @@ if (typeof document !== 'undefined') (function () {
     const n = (it.sources || []).length;
     return `<article class="entry imp-${it.importance.toLowerCase()}${open ? ' open' : ''}" data-id="${it.id}">
       <div class="where"><span>${flagOf(it.country)} ${esc(it.country)}</span><span class="sect">${esc(it.sector)}${it.subsector ? ' / ' + esc(it.subsector) : ''}</span></div>
-      <h3 class="hl">${esc(it.headline)}</h3>
-      ${it.summary ? `<p class="sum">${esc(it.summary)}</p>` : ''}
+      <h3 class="hl">${esc(trOf(it.headline))}</h3>
+      ${it.summary ? `<p class="sum">${esc(trOf(it.summary))}</p>` : ''}
       ${videoHTML(it)}
       <div class="foot">${n > 1 ? `<span>${n} sources</span>` : ''}<span>${ago(it.addedAt)}</span></div>
       ${open ? detailsHTML(it, { inSaved: true }) : ''}
@@ -1887,8 +1970,8 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     return `<div class="details">
       ${quickacts}
       ${aiLinks(it)}
-      ${it.why ? `<p class="why"><b>Why it matters</b> ${esc(it.why)}</p>` : ''}
-      ${(it.facts || []).length ? `<ul class="facts">${it.facts.map(f => `<li>${esc(f)}</li>`).join('')}</ul>` : ''}
+      ${it.why ? `<p class="why"><b>Why it matters</b> ${esc(trOf(it.why))}</p>` : ''}
+      ${(it.facts || []).length ? `<ul class="facts">${trList(it.facts).map(f => `<li>${esc(f)}</li>`).join('')}</ul>` : ''}
       <dl class="kv">
         ${row('Also involved', (it.involved || []).map(c => flagOf(c) + ' ' + esc(c)).join(', '))}
         ${row('Companies', (it.companies || []).map(esc).join(', '))}
@@ -1920,6 +2003,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     // node out from under the pointer capture, so a re-render is deferred until the gesture ends.
     if (SWIPE.active) { SWIPE.renderPending = true; return; }
     const items = filtered().sort(byPriority);
+    ensureTranslated(collectTranslatable(items));
     const box = $('#list');
     if (!all().length) {
       box.innerHTML = `<div class="empty"><p>Nothing in the briefing yet.</p><p>Add a message or file in the Inbox, or load sample data to see how it works.</p><button class="btn primary" data-act="sample">Load sample data</button></div>`;
@@ -1955,6 +2039,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     const box = $('#savedList');
     if (!box) return;
     const items = savedItems();
+    ensureTranslated(collectTranslatable(items));
     if (!items.length) {
       box.innerHTML = `<div class="empty"><p>Nothing saved yet.</p><p>Swipe a story right, or tap Save, to keep it here past the normal 24-hour window.</p></div>`;
       return;
