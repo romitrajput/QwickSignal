@@ -43,6 +43,8 @@ button,select,input,textarea{font:inherit;color:inherit}
   padding:calc(10px + env(safe-area-inset-top)) 16px 10px}
 .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px;letter-spacing:-.02em}
 .brand svg{flex:none}
+.brand .livebar{margin:0;gap:0;font-size:0}
+.brand .livebar .iconbtn{width:30px;height:30px;background:transparent;border-color:currentColor;color:var(--head-ink);opacity:.85}
 .top .right{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;opacity:.9}
 .lang-select{background:transparent;color:var(--ink);border:1.5px solid var(--line);border-radius:7px;font-size:12px;font-weight:700;padding:4px 6px;-webkit-appearance:none;appearance:none}
 .tiny{min-height:32px;padding:0 12px;border-radius:8px;border:1.5px solid currentColor;background:transparent;font-weight:600;font-size:13px}
@@ -323,6 +325,7 @@ body.cv-lock{overflow:hidden}
       <circle cx="22.5" cy="10.5" r="3.2" fill="#F0604D" stroke="none"/>
     </svg>
     <span>QwickSignal</span>
+    <div class="livebar" id="liveBar"></div>
   </div>
   <div class="right">
     <label class="vh" for="langSelect">Language</label>
@@ -374,9 +377,6 @@ body.cv-lock{overflow:hidden}
 
   <!-- BRIEFING -->
   <section id="view-brief" class="view" hidden>
-    <div class="viewhead">
-      <div class="livebar" id="liveBar"></div>
-    </div>
     <div id="countryStatus" class="cstatus" role="group" aria-label="Country status" hidden></div>
     <p class="lede" id="briefMeta" hidden></p>
     <div id="aiBrief"></div>
