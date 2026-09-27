@@ -1,9 +1,10 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase2-11-v1';  // bumped: new always-visible "Remove" button on every channel row lets
-                                      // a signed-in user hide/delink a channel from their own list any time,
-                                      // even before following it - separate from the Follow/Following toggle
+const VERSION = 'gni-phase2-12-v1';  // bumped: +Add now accepts a pasted Telegram link (t.me/telegram.me,
+                                      // with or without www./https/a trailing slash or ?start= query string)
+                                      // in addition to the t/channelname shorthand, so a format mistake can't
+                                      // stop a channel from linking
 const SHELL = ['./', 'index.html', 'app.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {

@@ -555,7 +555,7 @@ if (typeof document !== 'undefined') (function () {
       account: 'Account', accountSub: "Optional. Sign in to keep your own saved articles, dismissed items and followed channels tied to your account instead of a code - and separate from anyone else's.",
       signInEmail: 'Email', signInPassword: 'Password (6+ characters)', signIn: 'Sign in', createAccount: 'Create account',
       signOut: 'Sign out', signedInAs: 'Signed in as',
-      telegram: 'Telegram', tgPlaceholder: 't/channelname', addBtn: '+ Add',
+      telegram: 'Telegram', tgPlaceholder: 't/channelname or t.me link', addBtn: '+ Add',
       following: 'Following', follow: 'Follow', remove: 'Remove', removeShared: 'Remove for everyone', setDefault: 'Set default', removeDefault: 'Remove default', defaultBadge: 'Default',
       noChannelsYet: 'No channels yet. Add one above to start following it.',
       couldntLoadChannels: 'Couldn’t load the channel list right now.', checkConnection: 'Check your connection.',
@@ -576,7 +576,7 @@ if (typeof document !== 'undefined') (function () {
       account: 'खाता', accountSub: 'वैकल्पिक। अपने सेव किए गए लेख, हटाए गए आइटम और फॉलो किए गए चैनल किसी कोड की बजाय अपने खाते से जोड़ने के लिए साइन इन करें - और बाकी सभी से अलग रखें।',
       signInEmail: 'ईमेल', signInPassword: 'पासवर्ड (6+ अक्षर)', signIn: 'साइन इन करें', createAccount: 'खाता बनाएं',
       signOut: 'साइन आउट', signedInAs: 'इस रूप में साइन इन है',
-      telegram: 'टेलीग्राम', tgPlaceholder: 't/channelname', addBtn: '+ जोड़ें',
+      telegram: 'टेलीग्राम', tgPlaceholder: 't/channelname या t.me लिंक', addBtn: '+ जोड़ें',
       following: 'फॉलो कर रहे हैं', follow: 'फॉलो करें', remove: 'हटाएं', removeShared: 'सभी के लिए हटाएं', setDefault: 'डिफ़ॉल्ट बनाएं', removeDefault: 'डिफ़ॉल्ट हटाएं', defaultBadge: 'डिफ़ॉल्ट',
       noChannelsYet: 'अभी कोई चैनल नहीं है। फॉलो करने के लिए ऊपर एक जोड़ें।',
       couldntLoadChannels: 'अभी चैनल सूची लोड नहीं हो सकी।', checkConnection: 'अपना कनेक्शन जांचें।',
@@ -597,7 +597,7 @@ if (typeof document !== 'undefined') (function () {
       account: 'खाते', accountSub: 'ऐच्छिक. तुमचे सेव्ह केलेले लेख, हटवलेल्या गोष्टी आणि फॉलो केलेले चॅनेल्स कोडऐवजी तुमच्या खात्याशी जोडण्यासाठी साइन इन करा - आणि इतरांपासून वेगळे ठेवा.',
       signInEmail: 'ईमेल', signInPassword: 'पासवर्ड (6+ अक्षरे)', signIn: 'साइन इन करा', createAccount: 'खाते तयार करा',
       signOut: 'साइन आउट', signedInAs: 'साइन इन केले आहे',
-      telegram: 'टेलिग्राम', tgPlaceholder: 't/channelname', addBtn: '+ जोडा',
+      telegram: 'टेलिग्राम', tgPlaceholder: 't/channelname किंवा t.me लिंक', addBtn: '+ जोडा',
       following: 'फॉलो करत आहात', follow: 'फॉलो करा', remove: 'काढा', removeShared: 'सर्वांसाठी काढा', setDefault: 'डीफॉल्ट करा', removeDefault: 'डीफॉल्ट काढा', defaultBadge: 'डीफॉल्ट',
       noChannelsYet: 'अजून कोणतेही चॅनेल नाही. फॉलो करण्यासाठी वर एक जोडा.',
       couldntLoadChannels: 'सध्या चॅनेल यादी लोड होऊ शकली नाही.', checkConnection: 'तुमचे कनेक्शन तपासा.',
@@ -618,7 +618,7 @@ if (typeof document !== 'undefined') (function () {
       account: 'ખાતું', accountSub: 'વૈકલ્પિક. તમારા સેવ કરેલા લેખો, કાઢી નાખેલી વસ્તુઓ અને ફોલો કરેલા ચેનલ્સ કોડને બદલે તમારા ખાતા સાથે જોડવા માટે સાઇન ઇન કરો - અને બીજા બધાથી અલગ રાખો.',
       signInEmail: 'ઇમેઇલ', signInPassword: 'પાસવર્ડ (6+ અક્ષરો)', signIn: 'સાઇન ઇન કરો', createAccount: 'ખાતું બનાવો',
       signOut: 'સાઇન આઉટ', signedInAs: 'આ રીતે સાઇન ઇન છે',
-      telegram: 'ટેલિગ્રામ', tgPlaceholder: 't/channelname', addBtn: '+ ઉમેરો',
+      telegram: 'ટેલિગ્રામ', tgPlaceholder: 't/channelname અથવા t.me લિંક', addBtn: '+ ઉમેરો',
       following: 'ફોલો કરો છો', follow: 'ફોલો કરો', remove: 'કાઢી નાખો', removeShared: 'બધા માટે કાઢી નાખો', setDefault: 'ડિફોલ્ટ બનાવો', removeDefault: 'ડિફોલ્ટ કાઢો', defaultBadge: 'ડિફોલ્ટ',
       noChannelsYet: 'હજુ કોઈ ચેનલ નથી. ફોલો કરવા માટે ઉપર એક ઉમેરો.',
       couldntLoadChannels: 'હાલમાં ચેનલ યાદી લોડ થઈ શકી નથી.', checkConnection: 'તમારું જોડાણ તપાસો.',
@@ -1158,10 +1158,17 @@ if (typeof document !== 'undefined') (function () {
      silently add a source for everyone" protection in exchange for channels going live immediately - see the
      note in the Link Pages screen. */
   const CHANNEL_RX = /^[a-z0-9_]{5,32}$/i;
+  // Accepts our own t/channelname shorthand, a bare @channelname, or a pasted Telegram link in any of its
+  // common forms (t.me, telegram.me, with or without "www.", http or https, with or without a trailing
+  // slash or a ?start=/?ref= query string) - "so the person doesn't have to get the exact t/channelname
+  // format right themselves, just paste the link Telegram gives them."
   function normalizeChannel(raw) {
     let s = (raw || '').trim();
     if (s.startsWith('t/')) s = s.slice(2);
-    s = s.replace(/^@/, '').replace(/^https?:\/\/t\.me\//i, '');
+    s = s.replace(/^@/, '');
+    s = s.replace(/^https?:\/\/(www\.)?(t|telegram)\.me\//i, '');
+    s = s.split('?')[0].split('#')[0];   // drop any ?start=xyz / ?ref=xyz / #fragment a pasted link carries
+    s = s.replace(/\/+$/, '');            // drop a trailing slash left over from the link
     return s.trim();
   }
   // Set whenever a Firestore call fails, so the UI can show *why* instead of just "check your connection" -
