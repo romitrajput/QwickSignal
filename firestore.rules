@@ -1,12 +1,17 @@
 // QwickSignal: Firestore Security Rules
 //
-// There is no login, so these rules are the only thing standing between "anyone on the
-// internet" and this data. Two collections, two different trust models:
+// Login (Phase E) is optional, so there are now three trust models side by side:
 //
-//   qs_sync/{code}      One record per sync code. Anyone who has the code can read and
-//                       write it (that IS the sharing mechanism - see Sync in app.js).
-//                       Rules here only stop abuse: wrong shape, oversized lists, or a
-//                       client trying to invent a new field.
+//   qs_sync/{code}      Guest mode, unchanged. One record per sync code. Anyone who has the
+//                       code can read and write it (that IS the sharing mechanism - see
+//                       Sync in app.js). Rules here only stop abuse: wrong shape, oversized
+//                       lists, or a client trying to invent a new field.
+//
+//   qs_users/{uid}      Signed-in mode (Phase E). Same shape as qs_sync, but the doc id is a
+//                       real Firebase Auth uid, and only that signed-in user can read or
+//                       write their own doc - the first real per-user security boundary in
+//                       this app, now that there's a real identity to check against. This
+//                       replaces "remember/share a code" with "sign in on any device."
 //
 //   qs_channels/{name}  One record per linked Telegram channel. Anyone can create a NEW
 //                       one directly as "approved" - there is no review step. The next
@@ -45,6 +50,21 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    match /qs_users/{uid} {
+      allow get: if request.auth != null && request.auth.uid == uid;
+
+      allow create, update: if
+        request.auth != null && request.auth.uid == uid &&
+        request.resource.data.keys().hasOnly(['saved', 'dismissed', 'channels', 'reviewed']) &&
+        request.resource.data.saved is list && request.resource.data.saved.size() <= 5000 &&
+        request.resource.data.dismissed is list && request.resource.data.dismissed.size() <= 5000 &&
+        request.resource.data.channels is list && request.resource.data.channels.size() <= 200 &&
+        (!('reviewed' in request.resource.data) ||
+          (request.resource.data.reviewed is list && request.resource.data.reviewed.size() <= 5000));
+
+      allow delete: if false;
+    }
+
     match /qs_channels/{name} {
       allow get, list: if true;
 
@@ -53,7 +73,7 @@ service cloud.firestore {
         request.resource.data.channel is string &&
         request.resource.data.channel.lower() == name &&
         request.resource.data.status == 'approved' &&
-        request.resource.data.added_by is string && request.resource.data.added_by.size() <= 32 &&
+        request.resource.data.added_by is string && request.resource.data.added_by.size() <= 128 &&
         request.resource.data.added_at is string;
 
       // No client update: once a channel is linked, nobody can rewrite its fields or flip

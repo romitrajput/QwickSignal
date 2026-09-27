@@ -93,6 +93,14 @@ input[type=search]{width:100%;min-height:44px;padding:0 14px;border-radius:10px;
 .lp-row button.follow{flex:none;min-height:34px;padding:0 12px;border-radius:7px;border:1.5px solid var(--line);background:transparent;color:var(--ink);font-size:13px;font-weight:600;cursor:pointer}
 .lp-row button.follow.on{border-color:var(--accent);color:var(--accent)}
 .lp-row button.follow.lp-remove{border-color:var(--crit);color:var(--crit)}
+
+/* Account (Phase E) */
+.acct-form{display:flex;flex-direction:column;gap:8px;max-width:340px}
+.acct-form input{min-height:44px;padding:0 12px;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font:inherit}
+.acct-form input:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.acct-buttons{display:flex;gap:8px;margin-top:2px}
+.acct-google{margin-top:12px}
+.acct-signed{margin:0 0 10px;font-size:14.5px}
 .lp-empty{color:var(--ink2);font-size:13.5px;padding:6px 2px}
 .lp-errdetail{color:var(--crit);font-size:12.5px}
 .lp-sync{display:flex;align-items:center;gap:10px}
@@ -321,6 +329,12 @@ body.cv-lock{overflow:hidden}
     <h1>Link Pages</h1>
 
     <div class="lp-block">
+      <h2 class="lp-h">Account</h2>
+      <p class="lp-sub">Optional. Sign in to keep your own saved articles, dismissed items and followed channels tied to your account instead of a code - and separate from anyone else's.</p>
+      <div id="accountBox"></div>
+    </div>
+
+    <div class="lp-block">
       <h2 class="lp-h">Telegram</h2>
       <div class="lp-add">
         <input id="tgInput" type="text" inputmode="text" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="t/channelname">
@@ -330,7 +344,7 @@ body.cv-lock{overflow:hidden}
       <div id="tgList" class="lp-list" aria-live="polite"></div>
     </div>
 
-    <div class="lp-block">
+    <div class="lp-block" id="syncBlock">
       <h2 class="lp-h">Sync across your devices</h2>
       <p class="lp-sub">This code links your saved articles and followed channels on another phone or browser. Anyone with the code can use it, so keep it to yourself and your own devices.</p>
       <div class="lp-sync">
