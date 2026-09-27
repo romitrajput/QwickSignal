@@ -1,8 +1,9 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase2-10-v1';  // bumped: Remove on a followed channel now reports it clearly if the save
-                                      // to your account fails, instead of silently reverting with no explanation
+const VERSION = 'gni-phase2-11-v1';  // bumped: new always-visible "Remove" button on every channel row lets
+                                      // a signed-in user hide/delink a channel from their own list any time,
+                                      // even before following it - separate from the Follow/Following toggle
 const SHELL = ['./', 'index.html', 'app.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {

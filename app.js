@@ -761,6 +761,7 @@ if (typeof document !== 'undefined') (function () {
     saved: new Set(),        // article ids saved by the user (Phase B, kept here so Sync can use it early)
     dismissed: new Set(),    // article ids dismissed by the user (Phase B)
     myChannels: new Set(),   // Telegram channels this user has chosen to follow (empty = follow everything)
+    hiddenChannels: new Set(), // channels this user has explicitly removed/hidden from their own Telegram list
     reviewed: new Set(),     // article ids the user has opened in the Country Status viewer (Phase C)
     cv: null                 // { country, idx, stories } while the Country Status viewer is open; not persisted
   };
@@ -995,7 +996,7 @@ if (typeof document !== 'undefined') (function () {
       this.code = code;
       S.syncCode = code;
       this.cacheWrite(null);
-      S.saved = new Set(); S.dismissed = new Set(); S.myChannels = new Set(); S.reviewed = new Set();
+      S.saved = new Set(); S.dismissed = new Set(); S.myChannels = new Set(); S.hiddenChannels = new Set(); S.reviewed = new Set();
       const ok = await this.pull();
       toast(ok ? 'Synced. This device now shares saved articles and channels with that code.' : 'Saved the code, but couldn\u2019t reach the sync service just now. It will sync when back online.');
       renderAll(); renderChannels();
@@ -1018,6 +1019,7 @@ if (typeof document !== 'undefined') (function () {
       S.saved = new Set(rec.saved || []);
       S.dismissed = new Set(rec.dismissed || []);
       S.myChannels = new Set(rec.channels || []);
+      S.hiddenChannels = new Set(rec.hiddenChannels || []);
       S.reviewed = new Set(rec.reviewed || []);
     },
 
@@ -1045,10 +1047,10 @@ if (typeof document !== 'undefined') (function () {
 
     async push() {
       if (!this.code && !Auth.uid) return false;
-      const rec = { saved: [...S.saved], dismissed: [...S.dismissed], channels: [...S.myChannels], reviewed: [...S.reviewed] };
+      const rec = { saved: [...S.saved], dismissed: [...S.dismissed], channels: [...S.myChannels], hiddenChannels: [...S.hiddenChannels], reviewed: [...S.reviewed] };
       if (!Auth.uid) this.cacheWrite(rec);
       try {
-        const fields = { saved: toFsValue(rec.saved), dismissed: toFsValue(rec.dismissed), channels: toFsValue(rec.channels), reviewed: toFsValue(rec.reviewed) };
+        const fields = { saved: toFsValue(rec.saved), dismissed: toFsValue(rec.dismissed), channels: toFsValue(rec.channels), hiddenChannels: toFsValue(rec.hiddenChannels), reviewed: toFsValue(rec.reviewed) };
         const headers = Object.assign({ 'Content-Type': 'application/json' }, await this.authHeaders());
         const r = await fetch(this.docUrl(), { method: 'PATCH', headers, body: JSON.stringify({ fields }) });
         if (!r.ok) throw new Error('HTTP ' + r.status);
@@ -1066,7 +1068,7 @@ if (typeof document !== 'undefined') (function () {
   // Runs right after a successful sign-up/sign-in/Google call. Auth.uid is already set at this point, so
   // Sync.pull() below reads this account's own qs_users/{uid} doc instead of the guest one.
   async function completeAuth() {
-    const hadGuestData = !!(S.saved.size || S.dismissed.size || S.myChannels.size || S.reviewed.size);
+    const hadGuestData = !!(S.saved.size || S.dismissed.size || S.myChannels.size || S.hiddenChannels.size || S.reviewed.size);
     await Sync.pull();
     // pull() found no existing doc for this account (a brand-new account, or a returning one that never
     // synced from this browser before) - S.* still holds whatever was there before the pull, i.e. the
@@ -1074,7 +1076,7 @@ if (typeof document !== 'undefined') (function () {
     // overwritten S.* with it - nothing to offer merging in, that data already IS what's now on screen.
     if (hadGuestData && !Sync.lastPullFoundDoc) {
       const bring = confirm('Bring your existing saved articles, dismissed items and followed channels into this account?');
-      if (!bring) { S.saved = new Set(); S.dismissed = new Set(); S.myChannels = new Set(); S.reviewed = new Set(); }
+      if (!bring) { S.saved = new Set(); S.dismissed = new Set(); S.myChannels = new Set(); S.hiddenChannels = new Set(); S.reviewed = new Set(); }
       else await Sync.push();
       toast('Signed in as ' + Auth.email + (bring ? '. Your existing data is now saved to this account.' : '.'));
     } else {
@@ -1085,7 +1087,7 @@ if (typeof document !== 'undefined') (function () {
 
   function signOut() {
     Auth.signOut();
-    S.saved = new Set(); S.dismissed = new Set(); S.myChannels = new Set(); S.reviewed = new Set();
+    S.saved = new Set(); S.dismissed = new Set(); S.myChannels = new Set(); S.hiddenChannels = new Set(); S.reviewed = new Set();
     renderAccount(); renderAll(); renderChannels();
     toast('Signed out. Back to guest mode on this device.');
     Sync.pull().then(() => { renderAll(); renderChannels(); });    // fall back to this browser's guest sync code
@@ -1194,7 +1196,10 @@ if (typeof document !== 'undefined') (function () {
         const existing = await fetch(url, { cache: 'no-store' });
         if (existing.ok) {
           // Already linked by someone (or by this device, previously): just follow it, no need to write again.
-          S.myChannels.add(name.toLowerCase()); Sync.pushSoon(); renderChannels();
+          // If this account had previously hidden/removed this exact channel, typing it into +Add again is
+          // how the user asked to bring it back (confirmed: "could still bring it back later via +Add") - so
+          // clear it from hiddenChannels here too, or it would keep disappearing from renderChannels().
+          S.myChannels.add(name.toLowerCase()); S.hiddenChannels.delete(name.toLowerCase()); Sync.pushSoon(); renderChannels();
           toast('t/' + name + ' is already linked \u2014 added it to your feed.');
           return true;
         }
@@ -1206,6 +1211,7 @@ if (typeof document !== 'undefined') (function () {
         if (!r.ok) { const why = await describeFailure(r, null); toast('Couldn\u2019t link that channel: ' + why); return false; }
         approvedChannelsCache = null;        // force the next channel-list render to pick up the new one
         S.myChannels.add(name.toLowerCase());
+        S.hiddenChannels.delete(name.toLowerCase());
         Sync.pushSoon();
         toast('t/' + name + ' linked. The next pipeline run (within ~5 min) will start fetching it for everyone.');
         renderChannels();
@@ -2172,7 +2178,10 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     // Signed in: the full shared pool, with this account's own follow/unfollow plus (owner only) the
     // curation controls.
     if (approvedChannelsCache === null) approvedChannelsCache = await Channels.listApproved();
-    const linked = approvedChannelsCache || [];
+    // A channel this account has hidden (see the always-visible "Remove" button below) is left out of this
+    // account's own list entirely - it stays in the shared pool untouched for every other user, and this
+    // person can bring it back later by typing it into +Add again (see Channels.propose()'s un-hide step).
+    const linked = (approvedChannelsCache || []).filter(name => !S.hiddenChannels.has(name.toLowerCase()));
     if (approvedChannelsCache === null) {
       box.innerHTML = '<p class="lp-empty">' + esc(t('couldntLoadChannels')) +
         (lastChannelError ? ' <br><span class="lp-errdetail">' + esc(lastChannelError) + '</span>' : ' ' + esc(t('checkConnection'))) + '</p>';
@@ -2187,17 +2196,21 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       const lower = name.toLowerCase();
       const following = S.myChannels.has(lower);
       const isDefault = defaults.includes(lower);
-      // Every signed-in user gets full authority over their own linkages: Follow to add a channel to their
-      // feed, and once following, that same toggle reads "Remove" (not just "Following") so it's clear they
-      // can take it back out - this is a personal unfollow, private to their account, distinct from the
-      // owner-only "Remove" below which deletes the channel from the shared pool for every user.
+      // Follow/Following is a plain toggle again - it only ever adds or drops this channel from this
+      // account's OWN feed, and never removes the row itself. The always-visible "Remove" button below is
+      // the separate, personal delink/hide action: visible on every row regardless of follow state, so a
+      // user can get a channel out of their own list ("in case if the user don't want it") without first
+      // having to follow it. This is distinct from the owner-only button further right, which deletes the
+      // channel from the shared pool for every user.
       const mineBtn = following
-        ? `<button class="follow on" data-act="tgfollow" data-v="${esc(name)}" aria-label="${esc(t('remove'))} t/${esc(name)}">${esc(t('remove'))}</button>`
+        ? `<button class="follow on" data-act="tgfollow" data-v="${esc(name)}">${esc(t('following'))}</button>`
         : `<button class="follow" data-act="tgfollow" data-v="${esc(name)}">${esc(t('follow'))}</button>`;
+      const hideBtn = `<button class="follow lp-hide" data-act="tghide" data-v="${esc(name)}" aria-label="${esc(t('remove'))} t/${esc(name)}">${esc(t('remove'))}</button>`;
       return `<div class="lp-row">
       <span class="name">t/${esc(name)}${isDefault ? ' <span class="lp-defaultbadge">' + esc(t('defaultBadge')) + '</span>' : ''}</span>
       <div class="lp-rowbtns">
         ${mineBtn}
+        ${hideBtn}
         ${owner ? `<button class="follow lp-default" data-act="tgdefault" data-v="${esc(name)}">${isDefault ? esc(t('removeDefault')) : esc(t('setDefault'))}</button>` : ''}
         ${owner ? `<button class="follow lp-remove" data-act="tgremove" data-v="${esc(name)}" aria-label="${esc(t('removeShared'))} t/${esc(name)}">${esc(t('removeShared'))}</button>` : ''}
       </div>
@@ -2356,6 +2369,27 @@ Give a concise, event-specific analysis - decide for yourself which structure be
           if (wasFollowing) Channels.follow(name); else Channels.unfollow(name);
           renderChannels(); renderAll();
           toast('Couldn’t save that change to your account — check your connection (or sign in again if it keeps happening) and try again.');
+        }
+      }
+      else if (act === 'tghide') {
+        // The personal delink/hide action: always visible, regardless of follow state ("visible immediately,
+        // even before following" - confirmed with the user). This only removes the channel from THIS
+        // account's own list going forward; the shared pool, and every other user's list, is untouched. If
+        // this channel was also followed, unfollow it too so it actually disappears from the feed as well as
+        // the channel list, instead of a hidden-but-still-followed channel quietly continuing to show items.
+        const name = el.dataset.v;
+        const wasFollowing = S.myChannels.has(name.toLowerCase());
+        S.hiddenChannels.add(name.toLowerCase());
+        if (wasFollowing) Channels.unfollow(name);
+        renderChannels(); renderAll();
+        const ok = await Sync.push();
+        if (!ok) {
+          S.hiddenChannels.delete(name.toLowerCase());
+          if (wasFollowing) Channels.follow(name);
+          renderChannels(); renderAll();
+          toast('Couldn’t save that change to your account — check your connection (or sign in again if it keeps happening) and try again.');
+        } else {
+          toast('t/' + name + ' removed from your list. Add it again any time with +Add.');
         }
       }
       else if (act === 'tgremove') {
