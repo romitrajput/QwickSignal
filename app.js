@@ -2142,8 +2142,28 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     if (!box) return;
     renderTelegramGate();
     if (note) note.textContent = Sync.ready ? '' : 'Working from this device only until the sync service is reachable.';
-    if (approvedChannelsCache === null) approvedChannelsCache = await Channels.listApproved();
     if (defaultChannelsCache === null) await DefaultChannels.load();
+    const defaults = defaultChannelsCache || [];
+
+    // Signed out: read-only view of the owner-curated default channels only - no Follow/Add/Remove, since
+    // managing channel preferences requires an account (see the login-gate on Channels.propose() above, and
+    // the user's own architecture: "In case if user have not logged in, he/she will see only the information
+    // of the channels linked by default and is managed by owner"). Signing back out returns here automatically,
+    // since this whole branch is keyed off Auth.uid rather than any locally-cached list.
+    if (!Auth.uid) {
+      if (!defaults.length) {
+        box.innerHTML = '<p class="lp-empty">' + esc(t('noChannelsYet')) + '</p>';
+        return;
+      }
+      box.innerHTML = defaults.map(lower => `<div class="lp-row">
+      <span class="name">t/${esc(lower)} <span class="lp-defaultbadge">${esc(t('defaultBadge'))}</span></span>
+    </div>`).join('');
+      return;
+    }
+
+    // Signed in: the full shared pool, with this account's own follow/unfollow plus (owner only) the
+    // curation controls.
+    if (approvedChannelsCache === null) approvedChannelsCache = await Channels.listApproved();
     const linked = approvedChannelsCache || [];
     if (approvedChannelsCache === null) {
       box.innerHTML = '<p class="lp-empty">' + esc(t('couldntLoadChannels')) +
@@ -2155,7 +2175,6 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       return;
     }
     const owner = isOwner();
-    const defaults = defaultChannelsCache || [];
     box.innerHTML = linked.map(name => {
       const lower = name.toLowerCase();
       const following = S.myChannels.has(lower);
