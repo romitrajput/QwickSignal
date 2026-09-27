@@ -1,6 +1,6 @@
 // QwickSignal: Firestore Security Rules
 //
-// Login (Phase E) is optional, so there are now three trust models side by side:
+// Login (Phase E) is optional, so there are now four trust models side by side:
 //
 //   qs_sync/{code}      Guest mode, unchanged. One record per sync code. Anyone who has the
 //                       code can read and write it (that IS the sharing mechanism - see
@@ -13,19 +13,27 @@
 //                       this app, now that there's a real identity to check against. This
 //                       replaces "remember/share a code" with "sign in on any device."
 //
-//   qs_channels/{name}  One record per linked Telegram channel. Anyone can create a NEW
-//                       one directly as "approved" - there is no review step. The next
-//                       pipeline run (fetch_approved_channels() in pipeline.py) picks up
-//                       every "approved" doc and starts fetching it into the shared feed
-//                       for everyone. This is an intentional tradeoff (instant activation
-//                       over manual review) - see the note in index.html's Link Pages
-//                       screen. A channel document can't be rewritten by the client (no
-//                       update - status can't be flipped, ownership can't be changed), but
-//                       ANYONE can delete it: removing a channel is shared, like adding one
-//                       is. There is no per-user ownership check because these documents
-//                       don't record who can remove them, only who added them - so this
-//                       trades "anyone can accidentally/maliciously unlink a shared channel"
-//                       for simplicity, matching the no-review-step model above.
+//   qs_channels/{name}  One record per linked Telegram channel. Anyone (guest or signed in)
+//                       can still create a NEW one directly as "approved" - there is no
+//                       review step for adding a channel. The next pipeline run
+//                       (fetch_approved_channels() in pipeline.py) picks up every "approved"
+//                       doc and starts fetching it into the shared pool. A channel document
+//                       can't be rewritten by the client (no update - status can't be
+//                       flipped, ownership can't be changed). Delete USED to be open to
+//                       anyone; it is now restricted to the owner account only (see
+//                       OWNER_EMAIL below) - removing a channel that other people may be
+//                       following should not be a click any visitor can make.
+//
+//   qs_config/defaults  One doc: the owner-curated list of "default" channels shown to a
+//                       guest, or to a signed-in user who hasn't followed any channel of
+//                       their own yet (see app.js's DefaultChannels and the filtering in
+//                       filtered()/countryGroups()). Public read (so the feed isn't blank
+//                       for a first-time visitor), owner-only write.
+//
+// OWNER_EMAIL below must exactly match the OWNER_EMAIL constant in app.js - both are simple
+// string constants, not a secret (the value is already public in the shipped client code);
+// the real protection is that only Firebase Auth itself can produce a signed token asserting
+// "this request's email really is that address," which a visitor cannot forge.
 //
 // To use: Firebase console -> Firestore Database -> Rules -> paste this file -> Publish.
 
@@ -33,6 +41,10 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    function isOwner() {
+      return request.auth != null && request.auth.token.email == 'rrrajput2101@gmail.com';
+    }
 
     match /qs_sync/{code} {
       allow get: if true;
@@ -77,10 +89,20 @@ service cloud.firestore {
         request.resource.data.added_at is string;
 
       // No client update: once a channel is linked, nobody can rewrite its fields or flip
-      // its status. Delete IS allowed, from any client - "Remove" in Link Pages calls this
-      // directly, and there is no ownership check (see the note above the match block).
+      // its status. Delete is restricted to the owner account (see isOwner() above and the
+      // note at the top of this file) - app.js's Channels.remove() already checks this
+      // client-side too, but this is the check that actually matters.
       allow update: if false;
-      allow delete: if true;
+      allow delete: if isOwner();
+    }
+
+    match /qs_config/defaults {
+      allow get: if true;
+      allow create, update: if isOwner() &&
+        request.resource.data.keys().hasOnly(['channels']) &&
+        request.resource.data.channels is list &&
+        request.resource.data.channels.size() <= 200;
+      allow delete: if false;
     }
   }
 }

@@ -619,6 +619,15 @@ if (typeof document !== 'undefined') (function () {
   };
   const FS_BASE = `https://firestore.googleapis.com/v1/projects/${FIREBASE.projectId}/databases/(default)/documents`;
 
+  // The one account that owns this deployment - the only sign-in that can remove a shared channel or curate the
+  // "default channels" list guests (and logged-in users with no channels of their own) see. This is enforced for
+  // real in firestore.rules (request.auth.token.email == this same address); the check here only decides what the
+  // UI offers, exactly like googleClientId above - a client-side check is never real security by itself. If you
+  // sign in with a different email than this, change the value below AND the matching line in firestore.rules,
+  // then re-publish the rules.
+  const OWNER_EMAIL = 'rrrajput2101@gmail.com';
+  const isOwner = () => !!(Auth.uid && Auth.email && Auth.email.toLowerCase() === OWNER_EMAIL.toLowerCase());
+
   function newSyncCode() {
     const AB = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';   // no 0/O/1/I, so a code is easy to read and re-type
     let s = '';
@@ -1019,13 +1028,15 @@ if (typeof document !== 'undefined') (function () {
       }
     },
 
-    // Unlinks a channel for everyone: the pipeline stops fetching it on its next run. Per
-    // firestore.rules, any client can delete any channel document (no ownership check),
-    // matching the no-review-step model used for adding one.
+    // Unlinks a channel for everyone: the pipeline stops fetching it on its next run. Restricted to the
+    // owner account (see OWNER_EMAIL) - both here (so the person gets an immediate, friendly message
+    // instead of a bare permission error) and in firestore.rules (the real enforcement; this check alone
+    // is not security since any client-side code can be edited or bypassed).
     async remove(name) {
+      if (!isOwner()) { toast('Only the owner account can remove a shared channel.'); return false; }
       try {
         const url = `${FS_BASE}/qs_channels/${encodeURIComponent(name.toLowerCase())}?key=${FIREBASE.apiKey}`;
-        const r = await fetch(url, { method: 'DELETE' });
+        const r = await fetch(url, { method: 'DELETE', headers: await Sync.authHeaders() });
         if (!r.ok && r.status !== 404) { const why = await describeFailure(r, null); toast('Couldn’t remove t/' + name + ': ' + why); return false; }
         approvedChannelsCache = null;   // force the next channel-list render to drop it
         S.myChannels.delete(name.toLowerCase());
@@ -1042,6 +1053,51 @@ if (typeof document !== 'undefined') (function () {
 
     follow(name) { S.myChannels.add(name.toLowerCase()); Sync.pushSoon(); },
     unfollow(name) { S.myChannels.delete(name.toLowerCase()); Sync.pushSoon(); }
+  };
+
+  /* ---------- Default channels (owner-curated) ----------
+     Section 1 of Link Pages, from the user's own words: "By default channel which are linked to this app to
+     avoid showing blank when user visit this page. Kind of like guest mode. So owner will have the access to
+     link/remove the default pages." One shared doc, qs_config/defaults, holding the list of channel names a
+     guest (or a signed-in user who hasn't followed anything of their own yet) sees. Once that person follows
+     even one channel (S.myChannels.size > 0), this list stops mattering for them - see filtered() and
+     countryGroups(). Public read, owner-only write (see firestore.rules). */
+  let defaultChannelsCache = null;   // null = not loaded yet (treat as "no filter" so the feed never looks empty)
+  const DefaultChannels = {
+    async load() {
+      try {
+        const r = await fetch(`${FS_BASE}/qs_config/defaults?key=${FIREBASE.apiKey}`, { cache: 'no-store' });
+        if (r.status === 404) { defaultChannelsCache = []; return; }
+        if (!r.ok) return;   // leave defaultChannelsCache as null - try again on next call
+        const doc = await r.json();
+        const rec = fsFieldsToObject(doc.fields);
+        defaultChannelsCache = (rec.channels || []).map(c => String(c).toLowerCase());
+      } catch (e) { /* offline etc: leave as null, retry later */ }
+    },
+    async save(list) {
+      if (!isOwner()) { toast('Only the owner account can curate the default channels.'); return false; }
+      try {
+        const fields = { channels: toFsValue(list) };
+        const r = await fetch(`${FS_BASE}/qs_config/defaults?key=${FIREBASE.apiKey}`, {
+          method: 'PATCH', headers: Object.assign({ 'Content-Type': 'application/json' }, await Sync.authHeaders()), body: JSON.stringify({ fields })
+        });
+        if (!r.ok) { const why = await describeFailure(r, null); toast('Couldn’t update default channels: ' + why); return false; }
+        defaultChannelsCache = list.map(c => c.toLowerCase());
+        renderChannels(); renderAll();
+        return true;
+      } catch (e) {
+        const why = await describeFailure(null, e);
+        toast('Couldn’t update default channels: ' + why);
+        return false;
+      }
+    },
+    async toggle(name) {
+      const n = name.toLowerCase();
+      const list = (defaultChannelsCache || []).slice();
+      const i = list.indexOf(n);
+      if (i === -1) list.push(n); else list.splice(i, 1);
+      await this.save(list);
+    }
   };
 
   /* ---------- helpers ---------- */
@@ -1181,9 +1237,15 @@ if (typeof document !== 'undefined') (function () {
       const st = itemStatus(it);
       if (st === 'dismissed' || st === 'expired') return false;   // Saved tab reads S.saved directly, not this list
       if (st !== 'saved' && !inRange(it, f.range)) return false;   // a saved item stays visible even outside the date range
-      if (S.myChannels.size && it.live) {           // an empty "followed" list means "show everything" (no filter yet chosen)
+      if (it.live) {
         const ch = itemChannel(it);
-        if (ch && !S.myChannels.has(ch)) return false;
+        if (S.myChannels.size) {                    // followed at least one channel: show only those, everywhere
+          if (ch && !S.myChannels.has(ch)) return false;
+        } else if (defaultChannelsCache && defaultChannelsCache.length) {
+          // guest mode / no channels followed yet: fall back to the owner-curated default list, so the feed
+          // isn't blank on a fresh visit. If the list hasn't loaded yet (null) or is empty, show everything.
+          if (ch && !defaultChannelsCache.includes(ch)) return false;
+        }
       }
       if (skip !== 'country' && f.country && it.country !== f.country && !(it.involved || []).includes(f.country)) return false;
       if (skip !== 'sector' && f.sector && it.sector !== f.sector) return false;
@@ -1207,9 +1269,13 @@ if (typeof document !== 'undefined') (function () {
     const byCountry = new Map();
     for (const it of all()) {
       if (itemStatus(it) !== 'active') continue;         // saved/dismissed/expired don't appear here
-      if (S.myChannels.size && it.live) {
+      if (it.live) {
         const ch = itemChannel(it);
-        if (ch && !S.myChannels.has(ch)) continue;
+        if (S.myChannels.size) {
+          if (ch && !S.myChannels.has(ch)) continue;
+        } else if (defaultChannelsCache && defaultChannelsCache.length) {
+          if (ch && !defaultChannelsCache.includes(ch)) continue;
+        }
       }
       const c = it.country || 'Global';
       if (!byCountry.has(c)) byCountry.set(c, []);
@@ -1854,6 +1920,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     if (!box) return;
     if (note) note.textContent = Sync.ready ? '' : 'Working from this device only until the sync service is reachable.';
     if (approvedChannelsCache === null) approvedChannelsCache = await Channels.listApproved();
+    if (defaultChannelsCache === null) await DefaultChannels.load();
     const linked = approvedChannelsCache || [];
     if (approvedChannelsCache === null) {
       box.innerHTML = '<p class="lp-empty">Couldn\u2019t load the channel list right now.' +
@@ -1864,13 +1931,18 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       box.innerHTML = '<p class="lp-empty">No channels yet. Add one above to start following it.</p>';
       return;
     }
+    const owner = isOwner();
+    const defaults = defaultChannelsCache || [];
     box.innerHTML = linked.map(name => {
-      const following = S.myChannels.has(name.toLowerCase());
+      const lower = name.toLowerCase();
+      const following = S.myChannels.has(lower);
+      const isDefault = defaults.includes(lower);
       return `<div class="lp-row">
-      <span class="name">t/${esc(name)}</span>
+      <span class="name">t/${esc(name)}${isDefault ? ' <span class="lp-defaultbadge" title="Shown by default to guests and to signed-in users who haven\u2019t followed any channel of their own yet">Default</span>' : ''}</span>
       <div class="lp-rowbtns">
         <button class="follow${following ? ' on' : ''}" data-act="tgfollow" data-v="${esc(name)}">${following ? 'Following' : 'Follow'}</button>
-        <button class="follow lp-remove" data-act="tgremove" data-v="${esc(name)}" aria-label="Remove t/${esc(name)} for everyone">Remove</button>
+        ${owner ? `<button class="follow lp-default" data-act="tgdefault" data-v="${esc(name)}">${isDefault ? 'Remove default' : 'Set default'}</button>` : ''}
+        ${owner ? `<button class="follow lp-remove" data-act="tgremove" data-v="${esc(name)}" aria-label="Remove t/${esc(name)} for everyone">Remove</button>` : ''}
       </div>
     </div>`;
     }).join('');
@@ -2017,6 +2089,9 @@ Give a concise, event-specific analysis - decide for yourself which structure be
           await Channels.remove(name);
           renderAll();
         }
+      }
+      else if (act === 'tgdefault') {
+        await DefaultChannels.toggle(el.dataset.v);
       }
       else if (act === 'opencountry') { openCountry(el.dataset.c); }
       else if (act === 'cvclose') { closeCountryViewer(); }
@@ -2247,6 +2322,9 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     }
     setTab('inbox'); renderAll(); renderLiveBar(); renderAccount();
     loadLive();
+    // The default-channels list is public read, so it loads independently of sign-in - a guest should never
+    // see a blank feed while waiting for anything auth-related.
+    DefaultChannels.load().then(() => renderAll());
     // Phase E: restore any signed-in session first, so Sync.init() reads the right doc (account vs. guest
     // code) on the very first pull - neither ever blocks the news feed itself from loading.
     Auth.restore().then(() => Sync.init()).then(() => { renderAccount(); renderSyncCode(); renderChannels(); renderAll(); });
