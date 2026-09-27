@@ -556,7 +556,7 @@ if (typeof document !== 'undefined') (function () {
       signInEmail: 'Email', signInPassword: 'Password (6+ characters)', signIn: 'Sign in', createAccount: 'Create account',
       signOut: 'Sign out', signedInAs: 'Signed in as',
       telegram: 'Telegram', tgPlaceholder: 't/channelname', addBtn: '+ Add',
-      following: 'Following', follow: 'Follow', remove: 'Remove', setDefault: 'Set default', removeDefault: 'Remove default', defaultBadge: 'Default',
+      following: 'Following', follow: 'Follow', remove: 'Remove', removeShared: 'Remove for everyone', setDefault: 'Set default', removeDefault: 'Remove default', defaultBadge: 'Default',
       noChannelsYet: 'No channels yet. Add one above to start following it.',
       couldntLoadChannels: 'Couldn’t load the channel list right now.', checkConnection: 'Check your connection.',
       syncHeading: 'Sync across your devices', syncSub: 'This code links your saved articles and followed channels on another phone or browser. Anyone with the code can use it, so keep it to yourself and your own devices.',
@@ -577,7 +577,7 @@ if (typeof document !== 'undefined') (function () {
       signInEmail: 'ईमेल', signInPassword: 'पासवर्ड (6+ अक्षर)', signIn: 'साइन इन करें', createAccount: 'खाता बनाएं',
       signOut: 'साइन आउट', signedInAs: 'इस रूप में साइन इन है',
       telegram: 'टेलीग्राम', tgPlaceholder: 't/channelname', addBtn: '+ जोड़ें',
-      following: 'फॉलो कर रहे हैं', follow: 'फॉलो करें', remove: 'हटाएं', setDefault: 'डिफ़ॉल्ट बनाएं', removeDefault: 'डिफ़ॉल्ट हटाएं', defaultBadge: 'डिफ़ॉल्ट',
+      following: 'फॉलो कर रहे हैं', follow: 'फॉलो करें', remove: 'हटाएं', removeShared: 'सभी के लिए हटाएं', setDefault: 'डिफ़ॉल्ट बनाएं', removeDefault: 'डिफ़ॉल्ट हटाएं', defaultBadge: 'डिफ़ॉल्ट',
       noChannelsYet: 'अभी कोई चैनल नहीं है। फॉलो करने के लिए ऊपर एक जोड़ें।',
       couldntLoadChannels: 'अभी चैनल सूची लोड नहीं हो सकी।', checkConnection: 'अपना कनेक्शन जांचें।',
       syncHeading: 'अपने डिवाइस में सिंक करें', syncSub: 'यह कोड आपके सेव किए गए लेख और फॉलो किए गए चैनल किसी दूसरे फोन या ब्राउज़र से जोड़ता है। कोड जिसके पास भी है वह इसे इस्तेमाल कर सकता है, इसलिए इसे अपने और अपने डिवाइस तक सीमित रखें।',
@@ -598,7 +598,7 @@ if (typeof document !== 'undefined') (function () {
       signInEmail: 'ईमेल', signInPassword: 'पासवर्ड (6+ अक्षरे)', signIn: 'साइन इन करा', createAccount: 'खाते तयार करा',
       signOut: 'साइन आउट', signedInAs: 'साइन इन केले आहे',
       telegram: 'टेलिग्राम', tgPlaceholder: 't/channelname', addBtn: '+ जोडा',
-      following: 'फॉलो करत आहात', follow: 'फॉलो करा', remove: 'काढा', setDefault: 'डीफॉल्ट करा', removeDefault: 'डीफॉल्ट काढा', defaultBadge: 'डीफॉल्ट',
+      following: 'फॉलो करत आहात', follow: 'फॉलो करा', remove: 'काढा', removeShared: 'सर्वांसाठी काढा', setDefault: 'डीफॉल्ट करा', removeDefault: 'डीफॉल्ट काढा', defaultBadge: 'डीफॉल्ट',
       noChannelsYet: 'अजून कोणतेही चॅनेल नाही. फॉलो करण्यासाठी वर एक जोडा.',
       couldntLoadChannels: 'सध्या चॅनेल यादी लोड होऊ शकली नाही.', checkConnection: 'तुमचे कनेक्शन तपासा.',
       syncHeading: 'तुमच्या डिव्हाइसेसवर सिंक करा', syncSub: 'हा कोड तुमचे सेव्ह केलेले लेख आणि फॉलो केलेले चॅनेल दुसऱ्या फोन किंवा ब्राउझरशी जोडतो. हा कोड ज्याच्याकडेही असेल तो वापरू शकतो, त्यामुळे तो फक्त स्वतःपुरता आणि स्वतःच्या डिव्हाइसेसपुरता ठेवा.',
@@ -619,7 +619,7 @@ if (typeof document !== 'undefined') (function () {
       signInEmail: 'ઇમેઇલ', signInPassword: 'પાસવર્ડ (6+ અક્ષરો)', signIn: 'સાઇન ઇન કરો', createAccount: 'ખાતું બનાવો',
       signOut: 'સાઇન આઉટ', signedInAs: 'આ રીતે સાઇન ઇન છે',
       telegram: 'ટેલિગ્રામ', tgPlaceholder: 't/channelname', addBtn: '+ ઉમેરો',
-      following: 'ફોલો કરો છો', follow: 'ફોલો કરો', remove: 'કાઢી નાખો', setDefault: 'ડિફોલ્ટ બનાવો', removeDefault: 'ડિફોલ્ટ કાઢો', defaultBadge: 'ડિફોલ્ટ',
+      following: 'ફોલો કરો છો', follow: 'ફોલો કરો', remove: 'કાઢી નાખો', removeShared: 'બધા માટે કાઢી નાખો', setDefault: 'ડિફોલ્ટ બનાવો', removeDefault: 'ડિફોલ્ટ કાઢો', defaultBadge: 'ડિફોલ્ટ',
       noChannelsYet: 'હજુ કોઈ ચેનલ નથી. ફોલો કરવા માટે ઉપર એક ઉમેરો.',
       couldntLoadChannels: 'હાલમાં ચેનલ યાદી લોડ થઈ શકી નથી.', checkConnection: 'તમારું જોડાણ તપાસો.',
       syncHeading: 'તમારા ડિવાઇસ પર સિંક કરો', syncSub: 'આ કોડ તમારા સેવ કરેલા લેખો અને ફોલો કરેલા ચેનલ્સને બીજા ફોન કે બ્રાઉઝર સાથે જોડે છે. આ કોડ જેની પાસે પણ હોય તે તેનો ઉપયોગ કરી શકે છે, તેથી તેને ફક્ત તમારા પોતાના ડિવાઇસ પૂરતો રાખો.',
@@ -1441,22 +1441,37 @@ if (typeof document !== 'undefined') (function () {
     return (Date.now() - it.addedAt) < LIFECYCLE_MS ? 'active' : 'expired';
   }
 
-  function filtered(skip) {
-    const f = S.f, q = f.q.trim().toLowerCase();
+  // Whether a live item is currently in scope for this visitor's channel selection - the same rule Signals,
+  // Export/PDF/CSV and Country Status all need: followed channels win if any are followed, otherwise fall
+  // back to the owner-curated default list, otherwise (nothing loaded yet) show everything rather than a
+  // blank feed. Pulled out of filtered() so every list-of-items-shown-to-this-visitor call goes through one
+  // place - the PDF/CSV export used to skip this entirely and pull straight from all(), which is why it
+  // could show 80+ items while Signals (channel-filtered) showed only a handful for the same visitor.
+  function channelVisible(it) {
+    if (!it.live) return true;
+    const ch = itemChannel(it);
+    if (!ch) return true;
+    if (S.myChannels.size) return S.myChannels.has(ch);
+    if (defaultChannelsCache && defaultChannelsCache.length) return defaultChannelsCache.includes(ch);
+    return true;
+  }
+
+  // The set of items this visitor actually sees anywhere in the app: not dismissed/expired, and in scope for
+  // their channel selection. This is the base every view (Signals, Export/PDF/CSV, Country Status) filters
+  // down from, so none of them can drift out of sync with what the person is actually following.
+  function visibleItems() {
     return all().filter(it => {
       const st = itemStatus(it);
-      if (st === 'dismissed' || st === 'expired') return false;   // Saved tab reads S.saved directly, not this list
+      if (st === 'dismissed' || st === 'expired') return false;
+      return channelVisible(it);
+    });
+  }
+
+  function filtered(skip) {
+    const f = S.f, q = f.q.trim().toLowerCase();
+    return visibleItems().filter(it => {
+      const st = itemStatus(it);
       if (st !== 'saved' && !inRange(it, f.range)) return false;   // a saved item stays visible even outside the date range
-      if (it.live) {
-        const ch = itemChannel(it);
-        if (S.myChannels.size) {                    // followed at least one channel: show only those, everywhere
-          if (ch && !S.myChannels.has(ch)) return false;
-        } else if (defaultChannelsCache && defaultChannelsCache.length) {
-          // guest mode / no channels followed yet: fall back to the owner-curated default list, so the feed
-          // isn't blank on a fresh visit. If the list hasn't loaded yet (null) or is empty, show everything.
-          if (ch && !defaultChannelsCache.includes(ch)) return false;
-        }
-      }
       if (skip !== 'country' && f.country && it.country !== f.country && !(it.involved || []).includes(f.country)) return false;
       if (skip !== 'sector' && f.sector && it.sector !== f.sector) return false;
       if (skip !== 'imp' && f.imp && it.importance !== f.imp) return false;
@@ -1479,14 +1494,7 @@ if (typeof document !== 'undefined') (function () {
     const byCountry = new Map();
     for (const it of all()) {
       if (itemStatus(it) !== 'active') continue;         // saved/dismissed/expired don't appear here
-      if (it.live) {
-        const ch = itemChannel(it);
-        if (S.myChannels.size) {
-          if (ch && !S.myChannels.has(ch)) continue;
-        } else if (defaultChannelsCache && defaultChannelsCache.length) {
-          if (ch && !defaultChannelsCache.includes(ch)) continue;
-        }
-      }
+      if (!channelVisible(it)) continue;
       const c = it.country || 'Global';
       if (!byCountry.has(c)) byCountry.set(c, []);
       byCountry.get(c).push(it);
@@ -2179,19 +2187,26 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       const lower = name.toLowerCase();
       const following = S.myChannels.has(lower);
       const isDefault = defaults.includes(lower);
+      // Every signed-in user gets full authority over their own linkages: Follow to add a channel to their
+      // feed, and once following, that same toggle reads "Remove" (not just "Following") so it's clear they
+      // can take it back out - this is a personal unfollow, private to their account, distinct from the
+      // owner-only "Remove" below which deletes the channel from the shared pool for every user.
+      const mineBtn = following
+        ? `<button class="follow on" data-act="tgfollow" data-v="${esc(name)}" aria-label="${esc(t('remove'))} t/${esc(name)}">${esc(t('remove'))}</button>`
+        : `<button class="follow" data-act="tgfollow" data-v="${esc(name)}">${esc(t('follow'))}</button>`;
       return `<div class="lp-row">
       <span class="name">t/${esc(name)}${isDefault ? ' <span class="lp-defaultbadge">' + esc(t('defaultBadge')) + '</span>' : ''}</span>
       <div class="lp-rowbtns">
-        <button class="follow${following ? ' on' : ''}" data-act="tgfollow" data-v="${esc(name)}">${following ? esc(t('following')) : esc(t('follow'))}</button>
+        ${mineBtn}
         ${owner ? `<button class="follow lp-default" data-act="tgdefault" data-v="${esc(name)}">${isDefault ? esc(t('removeDefault')) : esc(t('setDefault'))}</button>` : ''}
-        ${owner ? `<button class="follow lp-remove" data-act="tgremove" data-v="${esc(name)}" aria-label="${esc(t('remove'))} t/${esc(name)}">${esc(t('remove'))}</button>` : ''}
+        ${owner ? `<button class="follow lp-remove" data-act="tgremove" data-v="${esc(name)}" aria-label="${esc(t('removeShared'))} t/${esc(name)}">${esc(t('removeShared'))}</button>` : ''}
       </div>
     </div>`;
     }).join('');
   }
   async function renderExport() {
     $$('#exportSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === S.exportRange));
-    const c = all().filter(i => inRange(i, S.exportRange)).length;
+    const c = visibleItems().filter(i => inRange(i, S.exportRange)).length;
     $('#exportCount').textContent = c + (c === 1 ? ' item' : ' items') + ' in this period';
   }
   function renderAll() {
@@ -2221,14 +2236,14 @@ Give a concise, event-specific analysis - decide for yourself which structure be
   const RANGE_LABEL = { today: 'Today', '7d': 'Last 7 days', all: 'All items' };
 
   function exportCSV() {
-    const items = all().filter(i => inRange(i, S.exportRange)).sort(byPriority);
+    const items = visibleItems().filter(i => inRange(i, S.exportRange)).sort(byPriority);
     if (!items.length) { toast('Nothing to export for that period.'); return; }
     download('qwicksignal-' + dayISO(Date.now()) + '.csv', E.toCSV(items), 'text/csv;charset=utf-8');
     toast('CSV saved to Downloads.');
   }
 
   async function exportPDF() {
-    const items = all().filter(i => inRange(i, S.exportRange)).sort(byPriority);
+    const items = visibleItems().filter(i => inRange(i, S.exportRange)).sort(byPriority);
     if (!items.length) { toast('Nothing to export for that period.'); return; }
     toast('Building the PDF\u2026');
     try { await loadScript(URLS.jspdf); }
@@ -2272,16 +2287,6 @@ Give a concise, event-specific analysis - decide for yourself which structure be
         if (it.summary) put(it.summary, { size: 9.5, indent: 14, after: 9 }); else y += 7;
       });
     }
-
-    heading('All developments by country');
-    const map = new Map();
-    items.forEach(i => { if (!map.has(i.country)) map.set(i.country, []); map.get(i.country).push(i); });
-    [...map.entries()].sort((a, b) => b[1].length - a[1].length).forEach(([c, g]) => {
-      need(40);
-      put(c + ' (' + g.length + ')', { size: 11, bold: true, after: 2 });
-      g.forEach(it => put('- ' + it.headline + '  [' + it.sector + ', ' + it.importance + ']', { size: 9.2, indent: 8, after: 2 }));
-      y += 5;
-    });
 
     const pages = doc.getNumberOfPages();
     for (let p = 1; p <= pages; p++) {

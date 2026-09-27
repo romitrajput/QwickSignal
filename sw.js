@@ -1,8 +1,8 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase2-7-v1';   // bumped: signed-in users now get a "Remove" control on their own channel
-                                      // linkages, not just "Following" - forces every installed client to refresh
+const VERSION = 'gni-phase2-8-v1';   // bumped: PDF report drops "All developments by country"; Export/PDF/CSV
+                                      // now respect the same followed/default-channel filter as Signals
 const SHELL = ['./', 'index.html', 'app.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {
