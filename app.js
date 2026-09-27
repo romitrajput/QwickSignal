@@ -560,7 +560,9 @@ if (typeof document !== 'undefined') (function () {
     syncCode: null,          // this device's sync code (also usable on other devices to share state)
     saved: new Set(),        // article ids saved by the user (Phase B, kept here so Sync can use it early)
     dismissed: new Set(),    // article ids dismissed by the user (Phase B)
-    myChannels: new Set()    // Telegram channels this user has chosen to follow (empty = follow everything)
+    myChannels: new Set(),   // Telegram channels this user has chosen to follow (empty = follow everything)
+    reviewed: new Set(),     // article ids the user has opened in the Country Status viewer (Phase C)
+    cv: null                 // { country, idx, stories } while the Country Status viewer is open; not persisted
   };
 
   /* ---------- storage (IndexedDB) ---------- */
@@ -667,7 +669,7 @@ if (typeof document !== 'undefined') (function () {
       this.code = code;
       S.syncCode = code;
       this.cacheWrite(null);
-      S.saved = new Set(); S.dismissed = new Set(); S.myChannels = new Set();
+      S.saved = new Set(); S.dismissed = new Set(); S.myChannels = new Set(); S.reviewed = new Set();
       const ok = await this.pull();
       toast(ok ? 'Synced. This device now shares saved articles and channels with that code.' : 'Saved the code, but couldn\u2019t reach the sync service just now. It will sync when back online.');
       renderAll(); renderChannels();
@@ -680,6 +682,7 @@ if (typeof document !== 'undefined') (function () {
       S.saved = new Set(rec.saved || []);
       S.dismissed = new Set(rec.dismissed || []);
       S.myChannels = new Set(rec.channels || []);
+      S.reviewed = new Set(rec.reviewed || []);
     },
 
     async pull() {
@@ -701,10 +704,10 @@ if (typeof document !== 'undefined') (function () {
 
     async push() {
       if (!this.code) return false;
-      const rec = { saved: [...S.saved], dismissed: [...S.dismissed], channels: [...S.myChannels] };
+      const rec = { saved: [...S.saved], dismissed: [...S.dismissed], channels: [...S.myChannels], reviewed: [...S.reviewed] };
       this.cacheWrite(rec);
       try {
-        const fields = { saved: toFsValue(rec.saved), dismissed: toFsValue(rec.dismissed), channels: toFsValue(rec.channels) };
+        const fields = { saved: toFsValue(rec.saved), dismissed: toFsValue(rec.dismissed), channels: toFsValue(rec.channels), reviewed: toFsValue(rec.reviewed) };
         const r = await fetch(this.docUrl(), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fields }) });
         if (!r.ok) throw new Error('HTTP ' + r.status);
         this.ready = true;
@@ -766,7 +769,7 @@ if (typeof document !== 'undefined') (function () {
         approvedChannelsCache = null;        // force the next channel-list render to pick up the new one
         S.myChannels.add(name.toLowerCase());
         Sync.pushSoon();
-        toast('t/' + name + ' linked. The next pipeline run (within ~15 min) will start fetching it for everyone.');
+        toast('t/' + name + ' linked. The next pipeline run (within ~5 min) will start fetching it for everyone.');
         renderChannels();
         return true;
       } catch (e) {
@@ -973,6 +976,156 @@ if (typeof document !== 'undefined') (function () {
 
   function savedItems() {
     return all().filter(it => S.saved.has(it.id)).sort(byPriority);
+  }
+
+  /* ---------- Phase C: Country Status ----------
+     A WhatsApp-Status-style row of country circles above the Signals list. Each circle's ring is
+     split into one segment per currently-active story for that country (latest first), colored by
+     whether the user has opened it in the story viewer yet (S.reviewed). This is deliberately
+     independent of the Signals search/filter controls - like a status bar, it always reflects
+     everything currently active, not the narrowed-down list underneath it. */
+  function countryGroups() {
+    const byCountry = new Map();
+    for (const it of all()) {
+      if (itemStatus(it) !== 'active') continue;         // saved/dismissed/expired don't appear here
+      if (S.myChannels.size && it.live) {
+        const ch = itemChannel(it);
+        if (ch && !S.myChannels.has(ch)) continue;
+      }
+      const c = it.country || 'Global';
+      if (!byCountry.has(c)) byCountry.set(c, []);
+      byCountry.get(c).push(it);
+    }
+    const groups = [...byCountry.entries()].map(([country, stories]) => {
+      stories.sort((a, b) => b.addedAt - a.addedAt);       // latest story first, per spec
+      return { country, stories, unread: stories.some(s => !S.reviewed.has(s.id)), latest: stories[0].addedAt };
+    });
+    // Countries with new stories float to the front; within each group, most recent activity first.
+    groups.sort((a, b) => (b.unread - a.unread) || (b.latest - a.latest));
+    return groups;
+  }
+
+  const RING_MAXSEG = 12, RING_GAP_DEG = 6;
+  function ringGradient(stories) {
+    const total = stories.length;
+    const segCount = Math.min(total, RING_MAXSEG);
+    // Below the cap, each segment maps 1:1 to a story (already sorted latest-first). Above it (an
+    // unusually newsy country), segments are apportioned by the unread/reviewed split instead of
+    // one-per-story, so the ring stays readable rather than turning into illegible slivers.
+    const direct = total <= RING_MAXSEG;
+    const unreadCount = stories.filter(s => !S.reviewed.has(s.id)).length;
+    const unreadSegs = direct ? null : Math.min(segCount, Math.round(segCount * unreadCount / total));
+    const per = 360 / segCount;
+    const stops = [];
+    let angle = 0;
+    for (let i = 0; i < segCount; i++) {
+      const isUnread = direct ? !S.reviewed.has(stories[i].id) : i < unreadSegs;
+      const color = isUnread ? 'var(--accent)' : 'var(--ink2)';
+      const start = angle, end = angle + per - RING_GAP_DEG;
+      stops.push(`${color} ${start}deg ${end}deg`, `transparent ${end}deg ${angle + per}deg`);
+      angle += per;
+    }
+    return `conic-gradient(${stops.join(', ')})`;
+  }
+
+  function renderCountryBar() {
+    const box = $('#countryStatus');
+    if (!box) return;
+    const groups = countryGroups();
+    box.hidden = !groups.length;
+    if (!groups.length) { box.innerHTML = ''; return; }
+    box.innerHTML = groups.map(g => {
+      const n = g.stories.length;
+      const label = esc(g.country) + ' – ' + n + (n === 1 ? ' story' : ' stories') + (g.unread ? ', new' : '');
+      return `<button class="cstop" data-act="opencountry" data-c="${esc(g.country)}" aria-label="${label}">
+        <span class="qs-ring" style="background:${ringGradient(g.stories)}"><span class="qs-ring-inner">${flagOf(g.country)}</span></span>
+        <span class="cstop-name">${esc(g.country)}</span>
+      </button>`;
+    }).join('');
+  }
+
+  function openCountry(country) {
+    const g = countryGroups().find(x => x.country === country);
+    if (!g || !g.stories.length) return;
+    S.cv = { country, idx: 0, stories: g.stories };
+    $('#countryViewer').hidden = false;
+    document.body.classList.add('cv-lock');
+    renderCountryViewer();
+    markCurrentReviewed();
+  }
+
+  function closeCountryViewer() {
+    if (!S.cv) return;
+    S.cv = null;
+    $('#countryViewer').hidden = true;
+    document.body.classList.remove('cv-lock');
+    renderCountryBar();     // ring segments may have flipped from unread to reviewed while open
+  }
+
+  function markCurrentReviewed() {
+    if (!S.cv) return;
+    const it = S.cv.stories[S.cv.idx];
+    if (!it || S.reviewed.has(it.id)) return;
+    S.reviewed.add(it.id);
+    Sync.pushSoon();
+    renderCountryViewer();   // update the dash for the now-reviewed story without a full re-render
+  }
+
+  function cvGo(delta) {
+    if (!S.cv) return;
+    const ni = S.cv.idx + delta;
+    if (ni < 0) return;                          // already at the first story: swiping/tapping back further is a no-op
+    if (ni >= S.cv.stories.length) { closeCountryViewer(); return; }   // past the last story: done with this country
+    S.cv.idx = ni;
+    renderCountryViewer();
+    markCurrentReviewed();
+  }
+
+  function renderCountryViewer() {
+    if (!S.cv) return;
+    const { country, idx, stories } = S.cv;
+    const it = stories[idx];
+    const dashes = stories.map((s, i) => {
+      const cls = i < idx || (i === idx && S.reviewed.has(s.id)) ? 'seen' : (i === idx ? 'current' : '');
+      return `<span class="cv-dash ${cls}"></span>`;
+    }).join('');
+    const facts = (it.facts || []).length ? `<ul class="facts">${it.facts.map(f => `<li>${esc(f)}</li>`).join('')}</ul>` : '';
+    const sources = (it.sources || []).map(s => s.url ? `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)}</a>` : esc(s.name)).join(', ');
+    $('#cvDashes').innerHTML = dashes;
+    $('#cvBody').innerHTML = `
+      <div class="cv-flag">${flagOf(country)}</div>
+      <div class="cv-country">${esc(country)}</div>
+      <h2 class="cv-headline">${esc(it.headline)}</h2>
+      <div class="cv-meta"><span>${ago(it.addedAt)}</span><span class="sect">${esc(it.sector)}${it.subsector ? ' / ' + esc(it.subsector) : ''}</span></div>
+      ${it.why ? `<p class="why"><b>Why it matters</b> ${esc(it.why)}</p>` : (it.summary ? `<p class="why">${esc(it.summary)}</p>` : '')}
+      ${facts}
+      ${sources ? `<p class="cv-sources"><b>Sources</b> ${sources}</p>` : ''}
+      <div class="cv-pos">${idx + 1} / ${stories.length}</div>
+    `;
+  }
+
+  function cvTap(ev) {
+    if (cvJustSwiped) return;                        // the preceding pointerup already paged the story
+    if (ev.target.closest('a,button')) return;      // links/buttons inside the body handle their own click
+    const rect = $('#cvBody').getBoundingClientRect();
+    const frac = (ev.clientX - rect.left) / rect.width;
+    cvGo(frac < 0.35 ? -1 : 1);                      // left third = previous, right two-thirds = next (IG/WA convention)
+  }
+
+  // A lightweight horizontal swipe on the viewer body, independent of the Signals-card swipe machinery
+  // above (that one saves/dismisses; this one just pages through stories). A real swipe sets cvJustSwiped
+  // so the click that always follows a pointerup doesn't also fire cvTap and page twice.
+  let cvSwipeStartX = null, cvSwipeStartY = null, cvJustSwiped = false;
+  function cvSwipeStart(ev) { cvSwipeStartX = ev.clientX; cvSwipeStartY = ev.clientY; }
+  function cvSwipeEnd(ev) {
+    if (cvSwipeStartX === null) return;
+    const dx = ev.clientX - cvSwipeStartX, dy = ev.clientY - cvSwipeStartY;
+    cvSwipeStartX = null;
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy)) {
+      cvJustSwiped = true;
+      setTimeout(() => { cvJustSwiped = false; }, 350);
+      cvGo(dx < 0 ? 1 : -1);
+    }
   }
 
   function saveItem(id) {
@@ -1228,18 +1381,50 @@ if (typeof document !== 'undefined') (function () {
   // silently aborts, leaving the card behaving as if nothing happened.
   $('#list').addEventListener('dragstart', ev => { if (SWIPE.active) ev.preventDefault(); });
 
-  /* ---------- Analyze with AI (headline is the only thing sent) ---------- */
+  /* ---------- Phase C: Country Status viewer navigation ---------- */
+  $('#cvBody').addEventListener('click', cvTap);
+  $('#cvBody').addEventListener('pointerdown', cvSwipeStart);
+  $('#cvBody').addEventListener('pointerup', cvSwipeEnd);
+  document.addEventListener('keydown', ev => {
+    if (!S.cv) return;
+    if (ev.key === 'Escape') closeCountryViewer();
+    else if (ev.key === 'ArrowLeft') cvGo(-1);
+    else if (ev.key === 'ArrowRight') cvGo(1);
+  });
+
+  /* ---------- Analyze with AI ----------
+     Phase D: this used to hand the external AI (ChatGPT/Claude) a fixed 5-question checklist for
+     every event, from a central-bank rate decision to a corporate merger to a border skirmish - the
+     same mechanical structure regardless of what actually happened. Per the Phase D brief, the AI
+     should decide the most useful structure for THIS kind of event, not fill in the same five
+     blanks every time. So instead of asking five fixed questions, this builds a short, event-aware
+     nudge (using the sector this story was already classified into) that names a few angles typical
+     of that kind of event as illustration, then explicitly leaves the actual structure to the
+     model's own judgement. A story that doesn't match any of the illustrated angles below still gets
+     a sensible generic nudge, not the old rigid checklist. */
+  const EVENT_ANGLES = {
+    'Banking': 'what changed, the monetary-policy or lending significance, market and currency implications, who it affects, and what to watch next',
+    'Finance': 'what changed, market/valuation implications, who gains or loses, and what to watch next',
+    'Geopolitics': 'what happened, the actors involved, the strategic significance, immediate consequences, and likely next developments',
+    'Defence': 'what happened, the military/strategic significance, the actors involved, and likely next developments',
+    'Technology': 'what changed, the competitive or security implications, who it affects, and what to watch next',
+    'Energy': 'what changed, the supply/demand or price implications, who it affects, and what to watch next',
+    'Economy': 'what changed, the macroeconomic significance, who it affects, and what to watch next',
+    'Climate': 'what happened, the environmental and economic significance, who it affects, and what to watch next'
+  };
+  function eventAngle(it) {
+    // Company-driven stories read as corporate news even when classified under a broader sector.
+    if ((it.companies || []).length) return 'the company action, its financial/business implications, competitors and supply chain, and likely market impact';
+    return EVENT_ANGLES[it.sector] || 'what happened, why it matters, who it affects, and what to watch next';
+  }
   function aiPrompt(it) {
+    const where = [it.country, ...(it.involved || [])].filter(Boolean).join(', ');
     return `Analyze this news/event:
 
 ${it.headline}
+${where ? `(Country/region: ${where}${it.sector ? '; sector: ' + it.sector : ''})` : (it.sector ? `(Sector: ${it.sector})` : '')}
 
-Please explain:
-1. What happened?
-2. Why is it important?
-3. What could be the impact?
-4. Which countries, industries and companies could be affected?
-5. What should be monitored next?`;
+Give a concise, event-specific analysis - decide for yourself which structure best fits what actually happened here, rather than forcing a generic template onto it. For this kind of story, that will likely mean covering things like ${eventAngle(it)} - but use your own judgement on what's actually relevant, and skip anything that isn't.`;
   }
 
   function aiLinks(it) {
@@ -1457,7 +1642,7 @@ Please explain:
     $('#exportCount').textContent = c + (c === 1 ? ' item' : ' items') + ' in this period';
   }
   function renderAll() {
-    renderControls(); renderList(); renderExport();
+    renderControls(); renderList(); renderExport(); renderCountryBar();
     if (S.tab === 'saved') renderSaved();
     // keep the just-added cards in sync when they are toggled
   }
@@ -1592,6 +1777,10 @@ Please explain:
           renderAll();
         }
       }
+      else if (act === 'opencountry') { openCountry(el.dataset.c); }
+      else if (act === 'cvclose') { closeCountryViewer(); }
+      else if (act === 'cvprev') { cvGo(-1); }
+      else if (act === 'cvnext') { cvGo(1); }
       else if (act === 'save') { saveItem(el.dataset.id); }
       else if (act === 'unsave') { unsaveItem(el.dataset.id); }
       else if (act === 'dismiss') { dismissItem(el.dataset.id); }
@@ -1794,7 +1983,7 @@ Please explain:
       </details>` : ''}
     </section>`;
   }
-  const AUTO_REFRESH_MS = 5 * 60e3;   // the pipeline publishes every 15 minutes; checking every 5 keeps the screen close behind it
+  const AUTO_REFRESH_MS = 2 * 60e3;   // the pipeline publishes every 5 minutes; checking every 2 keeps the screen close behind it
   document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - S.lastLive >= AUTO_REFRESH_MS) loadLive(); });
   setInterval(() => { if (!document.hidden && Date.now() - S.lastLive >= AUTO_REFRESH_MS) loadLive(); }, 60e3);
 
