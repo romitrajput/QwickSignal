@@ -2288,6 +2288,22 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       });
     }
 
+    // Medium/Low items: a plain list, same layout as Priority developments above - no per-country grouping
+    // or counts. The earlier "All developments by country" section (grouped headings like "Global (40)" with
+    // a bullet list under each) was removed per instruction; this replaces it with the flat listing so a
+    // report full of only Medium/Low items (a quiet news day) doesn't come out blank.
+    const rest = items.filter(i => i.importance !== 'Critical' && i.importance !== 'High');
+    if (rest.length) {
+      heading('Other developments');
+      rest.forEach(it => {
+        need(70);
+        doc.setFillColor(...COL[it.importance]); doc.rect(M, y + 2, 7, 9, 'F');
+        put(it.headline, { size: 11.5, bold: true, indent: 14, after: 1 });
+        put(it.country + '  |  ' + it.sector + (it.subsector ? ' / ' + it.subsector : '') + '  |  ' + it.importance + ((it.sources || []).length > 1 ? '  |  ' + it.sources.length + ' sources' : ''), { size: 8.5, color: GREY, indent: 14, after: 2 });
+        if (it.summary) put(it.summary, { size: 9.5, indent: 14, after: 9 }); else y += 7;
+      });
+    }
+
     const pages = doc.getNumberOfPages();
     for (let p = 1; p <= pages; p++) {
       doc.setPage(p); doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(120, 130, 140);
@@ -2324,9 +2340,23 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       else if (act === 'sample') { await loadSample(); setTab('brief'); }
       else if (act === 'refresh') { await loadLive(true); }
       else if (act === 'tgfollow') {
+        // Follow/unfollow used to fire-and-forget via Sync.pushSoon() (a 600ms-debounced background save) -
+        // the button flipped instantly, but if that background save then failed (an expired session, a
+        // network blip, or a permissions problem), nothing told the person: the change quietly never reached
+        // their account, and reappeared reverted the next time the screen re-rendered from server data. That
+        // looked exactly like "nothing happens" or "it flips back on its own". Awaiting Sync.push() here and
+        // reporting a real failure - reverting the UI back in step with an explanation, rather than letting it
+        // drift back on its own later - turns a silent, confusing revert into an honest one.
         const name = el.dataset.v;
-        if (S.myChannels.has(name.toLowerCase())) Channels.unfollow(name); else Channels.follow(name);
+        const wasFollowing = S.myChannels.has(name.toLowerCase());
+        if (wasFollowing) Channels.unfollow(name); else Channels.follow(name);
         renderChannels(); renderAll();
+        const ok = await Sync.push();
+        if (!ok) {
+          if (wasFollowing) Channels.follow(name); else Channels.unfollow(name);
+          renderChannels(); renderAll();
+          toast('Couldn’t save that change to your account — check your connection (or sign in again if it keeps happening) and try again.');
+        }
       }
       else if (act === 'tgremove') {
         const name = el.dataset.v;
