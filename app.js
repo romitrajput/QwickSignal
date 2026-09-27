@@ -549,9 +549,39 @@ if (typeof document !== 'undefined') (function () {
      and to JS-generated strings by calling t() instead of writing English directly. Add a language by adding
      one more key to I18N and one more <option> in index.html's #langSelect - everything else picks it up. */
   const LANG_KEY = 'qs-lang-v1';
+
+  /* ---------- Appearance (new default look vs. the original "classic" one) ----------
+     "Give me the option to retain the old version if I don't like it." A single client-side
+     preference, applied as a data-theme attribute on <html> - see the matching CSS in index.html
+     (":root" is the new look, ":root[data-theme=classic]" is the byte-for-byte original palette
+     and card styling). Nothing here is per-account or synced: it's a device-local display
+     preference, like the language picker, so switching it can never fail to save or need a
+     network round-trip. Applied as early as possible (right after this IIFE starts, before the
+     first render) so there's no visible flash of the wrong theme on load. */
+  const THEME_KEY = 'qs-theme-v1';
+  const Theme = {
+    get() { try { return localStorage.getItem(THEME_KEY) || 'new'; } catch (e) { return 'new'; } },
+    apply(name) {
+      const v = name === 'classic' ? 'classic' : 'new';
+      document.documentElement.setAttribute('data-theme', v);
+      const sw = $('#themeToggle');
+      if (sw) sw.setAttribute('aria-checked', v === 'new' ? 'true' : 'false');
+    },
+    set(name) {
+      const v = name === 'classic' ? 'classic' : 'new';
+      try { localStorage.setItem(THEME_KEY, v); } catch (e) { /* private browsing etc: still applies this session */ }
+      this.apply(v);
+    },
+    toggle() { this.set(this.get() === 'classic' ? 'new' : 'classic'); },
+    init() { this.apply(this.get()); }   // called immediately below, before first render
+  };
+  Theme.init();
+
   const I18N = {
     en: {
       linkPages: 'Link Pages', signals: 'Signals', saved: 'Saved', export: 'Export',
+      appearance: 'Appearance', appearanceSub: "Try the new look. If you'd rather have the original back, switch any time — nothing about your saved articles or channels changes either way.",
+      appearanceNewLabel: 'New look', appearanceClassicLabel: 'Classic',
       account: 'Account', accountSub: "Optional. Sign in to keep your own saved articles, dismissed items and followed channels tied to your account instead of a code - and separate from anyone else's.",
       signInEmail: 'Email', signInPassword: 'Password (6+ characters)', signIn: 'Sign in', createAccount: 'Create account',
       signOut: 'Sign out', signedInAs: 'Signed in as',
@@ -573,6 +603,8 @@ if (typeof document !== 'undefined') (function () {
     },
     hi: {
       linkPages: 'लिंक पेज', signals: 'सिग्नल्स', saved: 'सेव किए गए', export: 'एक्सपोर्ट',
+      appearance: 'दिखावट', appearanceSub: 'नया रूप आज़माएँ। अगर पुराना रूप ही पसंद है, तो कभी भी बदल लें — इससे आपके सेव किए गए लेख या चैनल पर कोई असर नहीं पड़ता।',
+      appearanceNewLabel: 'नया रूप', appearanceClassicLabel: 'क्लासिक',
       account: 'खाता', accountSub: 'वैकल्पिक। अपने सेव किए गए लेख, हटाए गए आइटम और फॉलो किए गए चैनल किसी कोड की बजाय अपने खाते से जोड़ने के लिए साइन इन करें - और बाकी सभी से अलग रखें।',
       signInEmail: 'ईमेल', signInPassword: 'पासवर्ड (6+ अक्षर)', signIn: 'साइन इन करें', createAccount: 'खाता बनाएं',
       signOut: 'साइन आउट', signedInAs: 'इस रूप में साइन इन है',
@@ -594,6 +626,8 @@ if (typeof document !== 'undefined') (function () {
     },
     mr: {
       linkPages: 'लिंक पेजेस', signals: 'सिग्नल्स', saved: 'सेव्ह केलेले', export: 'एक्सपोर्ट',
+      appearance: 'रूप', appearanceSub: 'नवीन लूक वापरून पहा. जुना आवडत असेल तर केव्हाही बदला — यामुळे तुमचे सेव्ह केलेले लेख किंवा चॅनेल्सवर काहीही परिणाम होत नाही.',
+      appearanceNewLabel: 'नवीन लूक', appearanceClassicLabel: 'क्लासिक',
       account: 'खाते', accountSub: 'ऐच्छिक. तुमचे सेव्ह केलेले लेख, हटवलेल्या गोष्टी आणि फॉलो केलेले चॅनेल्स कोडऐवजी तुमच्या खात्याशी जोडण्यासाठी साइन इन करा - आणि इतरांपासून वेगळे ठेवा.',
       signInEmail: 'ईमेल', signInPassword: 'पासवर्ड (6+ अक्षरे)', signIn: 'साइन इन करा', createAccount: 'खाते तयार करा',
       signOut: 'साइन आउट', signedInAs: 'साइन इन केले आहे',
@@ -615,6 +649,8 @@ if (typeof document !== 'undefined') (function () {
     },
     gu: {
       linkPages: 'લિંક પેજીસ', signals: 'સિગ્નલ્સ', saved: 'સેવ કરેલ', export: 'એક્સપોર્ટ',
+      appearance: 'દેખાવ', appearanceSub: 'નવો દેખાવ અજમાવો. જૂનો જ ગમે તો ગમે ત્યારે બદલો — તમારા સેવ કરેલા લેખો કે ચેનલ્સ પર તેની કોઈ અસર થતી નથી.',
+      appearanceNewLabel: 'નવો દેખાવ', appearanceClassicLabel: 'ક્લાસિક',
       account: 'ખાતું', accountSub: 'વૈકલ્પિક. તમારા સેવ કરેલા લેખો, કાઢી નાખેલી વસ્તુઓ અને ફોલો કરેલા ચેનલ્સ કોડને બદલે તમારા ખાતા સાથે જોડવા માટે સાઇન ઇન કરો - અને બીજા બધાથી અલગ રાખો.',
       signInEmail: 'ઇમેઇલ', signInPassword: 'પાસવર્ડ (6+ અક્ષરો)', signIn: 'સાઇન ઇન કરો', createAccount: 'ખાતું બનાવો',
       signOut: 'સાઇન આઉટ', signedInAs: 'આ રીતે સાઇન ઇન છે',
@@ -2627,6 +2663,8 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     applyI18n();
     const langSel = $('#langSelect');
     if (langSel) langSel.addEventListener('change', ev => setLang(ev.target.value));
+    const themeSw = $('#themeToggle');
+    if (themeSw) themeSw.addEventListener('click', () => Theme.toggle());
     $('#today').textContent = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
     const ok = await DB.init();
     if (ok) S.items = await DB.all(); else toast('Storage is blocked in this browser. Items will be lost when you close the page.');

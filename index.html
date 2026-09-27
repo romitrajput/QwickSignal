@@ -14,15 +14,47 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
+/* ============================================================
+   THEME SYSTEM
+   Two full palettes live side by side: the new default (an Apple-News-
+   inspired editorial look - warm paper, real elevated cards, a single
+   restrained red accent) and "classic" (the original dashboard look),
+   kept byte-for-byte as an opt-out - see the toggle in the Account
+   block and Theme.apply() in app.js. Nothing is deleted; data-theme on
+   <html> picks which block of variables (and, further down, which
+   small set of visual-only rules) is active.
+   ============================================================ */
 :root{
-  --paper:#E7ECEF; --surface:#F7F9FA; --ink:#0E2238; --ink2:#4A5D70; --line:#C6D2DA;
-  --head:#0E2238; --head-ink:#F2F6F8;
-  --accent:#17707A; --accent-ink:#FFFFFF;
-  --crit:#C8321F; --high:#C97A0E; --med:#4F7CA3; --low:#8795A2;
+  --paper:#F7F6F3; --surface:#FFFFFF; --ink:#1A1A1C; --ink2:#6E6E73; --line:#E3E1DC;
+  --head:#FFFFFF; --head-ink:#1A1A1C;
+  --accent:#D6392C; --accent-ink:#FFFFFF;
+  --crit:#D6392C; --high:#C2760A; --med:#3A6EA8; --low:#8A8A8E;
+  --card-shadow:0 1px 2px rgba(20,20,20,.04), 0 8px 24px -12px rgba(20,20,20,.14);
+  --card-shadow-hover:0 4px 10px rgba(20,20,20,.06), 0 16px 36px -14px rgba(20,20,20,.20);
+  --radius-card:16px; --radius-ctrl:11px;
+  --ease:cubic-bezier(.2,.7,.3,1);
   --font:'Public Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
 }
 @media (prefers-color-scheme:dark){
   :root{
+    --paper:#000000; --surface:#1C1C1E; --ink:#F2F2F3; --ink2:#98989D; --line:#2C2C2E;
+    --head:#111113; --head-ink:#F2F2F3;
+    --accent:#FF6259; --accent-ink:#1A0705;
+    --crit:#FF6259; --high:#F0A63C; --med:#6FA3CE; --low:#8A8A8E;
+    --card-shadow:0 1px 2px rgba(0,0,0,.5), 0 10px 28px -12px rgba(0,0,0,.65);
+    --card-shadow-hover:0 4px 12px rgba(0,0,0,.55), 0 20px 44px -14px rgba(0,0,0,.75);
+  }
+}
+:root[data-theme="classic"]{
+  --paper:#E7ECEF; --surface:#F7F9FA; --ink:#0E2238; --ink2:#4A5D70; --line:#C6D2DA;
+  --head:#0E2238; --head-ink:#F2F6F8;
+  --accent:#17707A; --accent-ink:#FFFFFF;
+  --crit:#C8321F; --high:#C97A0E; --med:#4F7CA3; --low:#8795A2;
+  --card-shadow:none; --card-shadow-hover:none;
+  --radius-card:0; --radius-ctrl:8px;
+}
+@media (prefers-color-scheme:dark){
+  :root[data-theme="classic"]{
     --paper:#08121D; --surface:#0F1E2D; --ink:#E6EEF4; --ink2:#9CAEBD; --line:#1F3446;
     --head:#0B1826; --head-ink:#E6EEF4;
     --accent:#4FB6C0; --accent-ink:#04202A;
@@ -32,16 +64,23 @@
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--paper);color:var(--ink);font:400 16px/1.45 var(--font);
-  padding-bottom:calc(72px + env(safe-area-inset-bottom))}
+  padding-bottom:calc(72px + env(safe-area-inset-bottom));
+  transition:background-color .25s var(--ease),color .25s var(--ease)}
 [hidden]{display:none!important}
 button,select,input,textarea{font:inherit;color:inherit}
+button{transition:transform .15s var(--ease),background-color .15s var(--ease),border-color .15s var(--ease),color .15s var(--ease),box-shadow .15s var(--ease)}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}}
 :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 
 /* header */
 .top{position:sticky;top:0;z-index:20;background:var(--head);color:var(--head-ink);
   display:flex;align-items:center;justify-content:space-between;gap:12px;
-  padding:calc(10px + env(safe-area-inset-top)) 16px 10px}
+  padding:calc(10px + env(safe-area-inset-top)) 16px 10px;
+  border-bottom:1px solid var(--line);
+  transition:background-color .25s var(--ease),border-color .25s var(--ease)}
+:root[data-theme="classic"] .top{border-bottom:0}
 .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px;letter-spacing:-.02em}
+.brand svg circle:first-child{transition:stroke .25s var(--ease)}
 .brand svg{flex:none}
 .brand .livebar{margin:0;gap:0;font-size:0}
 .brand .livebar .iconbtn{width:30px;height:30px;background:transparent;border-color:currentColor;color:var(--head-ink);opacity:.85}
@@ -56,15 +95,22 @@ h2{font-size:18px;font-weight:800;letter-spacing:-.01em;margin:26px 0 8px}
 .muted{color:var(--ink2);font-size:14px}
 
 /* buttons and inputs */
-.btn{min-height:46px;padding:0 18px;border-radius:10px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);font-weight:600;font-size:15px;cursor:pointer}
-.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn{min-height:46px;padding:0 18px;border-radius:var(--radius-ctrl);border:1.5px solid var(--ink);background:transparent;color:var(--ink);font-weight:600;font-size:15px;cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
 .btn.danger{border-color:var(--crit);color:var(--crit)}
 .btn.small{min-height:38px;font-size:14px;margin-top:12px}
 .btn.block{width:100%}
 .btn:disabled{opacity:.5}
-.btn:active{transform:translateY(1px)}
-textarea{width:100%;min-height:150px;padding:12px;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);resize:vertical;line-height:1.45}
-input[type=search]{width:100%;min-height:44px;padding:0 14px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface)}
+.btn:active{transform:translateY(1px) scale(.98)}
+@media (hover:hover){
+  .btn:not(:disabled):hover{transform:translateY(-1px)}
+  .btn.primary:not(:disabled):hover{box-shadow:0 4px 14px -4px color-mix(in srgb, var(--accent) 55%, transparent)}
+  .btn:not(.primary):not(:disabled):hover{border-color:var(--accent);color:var(--accent)}
+  .btn.danger:not(:disabled):hover{background:var(--crit);color:#fff}
+}
+textarea{width:100%;min-height:150px;padding:12px;border-radius:var(--radius-ctrl);border:1.5px solid var(--line);background:var(--surface);resize:vertical;line-height:1.45}
+input[type=search]{width:100%;min-height:44px;padding:0 14px;border-radius:var(--radius-ctrl);border:1.5px solid var(--line);background:var(--surface);transition:border-color .15s var(--ease),box-shadow .15s var(--ease)}
+input[type=search]:focus-visible{border-color:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb, var(--accent) 16%, transparent)}
 .check{display:flex;align-items:center;gap:10px;margin:10px 0 14px;font-size:14.5px;color:var(--ink2)}
 .check input{width:20px;height:20px;accent-color:var(--accent)}
 .row{display:flex;gap:10px;flex-wrap:wrap}
@@ -86,19 +132,35 @@ input[type=search]{width:100%;min-height:44px;padding:0 14px;border-radius:10px;
 .lp-add input:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .lp-syncnote{margin:8px 0 0;font-size:13px;color:var(--ink2)}
 .lp-list{display:flex;flex-direction:column;gap:8px;margin-top:12px}
-.lp-row{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface)}
+.lp-row{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:var(--radius-ctrl);border:1px solid var(--line);background:var(--surface);
+  box-shadow:var(--card-shadow);transition:box-shadow .2s var(--ease),transform .2s var(--ease)}
+@media (hover:hover){.lp-row:hover{box-shadow:var(--card-shadow-hover);transform:translateY(-1px)}}
 .lp-row .name{flex:1;min-width:0;font-weight:600;font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lp-row .status{flex:none;font-size:11.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:999px}
 .lp-row .status.approved{background:rgba(79,182,192,.16);color:var(--accent)}
 .lp-row .status.pending{background:rgba(156,174,189,.16);color:var(--ink2)}
 .lp-row .status.rejected{background:rgba(217,95,90,.14);color:#D95F5A}
 .lp-row .lp-rowbtns{display:flex;flex:none;gap:8px}
-.lp-row button.follow{flex:none;min-height:34px;padding:0 12px;border-radius:7px;border:1.5px solid var(--line);background:transparent;color:var(--ink);font-size:13px;font-weight:600;cursor:pointer}
-.lp-row button.follow.on{border-color:var(--accent);color:var(--accent)}
+.lp-row button.follow{flex:none;min-height:34px;padding:0 12px;border-radius:999px;border:1.5px solid var(--line);background:transparent;color:var(--ink);font-size:13px;font-weight:600;cursor:pointer}
+.lp-row button.follow.on{border-color:var(--accent);color:var(--accent);background:color-mix(in srgb, var(--accent) 10%, transparent)}
 .lp-row button.follow.lp-remove{border-color:var(--crit);color:var(--crit)}
 .lp-row button.follow.lp-default{border-color:var(--accent);color:var(--accent)}
 .lp-row button.follow.lp-hide{border-color:var(--ink2);color:var(--ink2)}
+@media (hover:hover){
+  .lp-row button.follow:not(.on):hover{border-color:var(--accent);color:var(--accent)}
+  .lp-row button.follow.lp-remove:hover{background:var(--crit);color:#fff}
+}
 .lp-defaultbadge{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;background:var(--accent);color:#fff;font-size:11px;font-weight:700;vertical-align:middle}
+
+/* Appearance toggle: a plain, obvious iOS-style switch between the new default look and the classic one -
+   "give me an option to retain the old version if I don't like it" - persisted client-side (see Theme in
+   app.js), nothing server-side or per-account about it, so it's instant and never fails to save. */
+.lp-theme-row{display:flex;align-items:center;gap:10px;margin-top:4px}
+.lp-theme-label{font-size:13.5px;font-weight:600;color:var(--ink2)}
+.qs-switch{flex:none;width:48px;height:28px;border-radius:999px;border:1.5px solid var(--line);background:var(--line);padding:2px;cursor:pointer;position:relative;transition:background-color .2s var(--ease),border-color .2s var(--ease)}
+.qs-switch[aria-checked="true"]{background:var(--accent);border-color:var(--accent)}
+.qs-switch-knob{display:block;width:21px;height:21px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .2s var(--ease)}
+.qs-switch[aria-checked="true"] .qs-switch-knob{transform:translateX(20px)}
 
 /* Account (Phase E) */
 .acct-form{display:flex;flex-direction:column;gap:8px;max-width:340px}
@@ -114,16 +176,21 @@ input[type=search]{width:100%;min-height:44px;padding:0 14px;border-radius:10px;
 .btn.small{min-height:44px;padding:0 14px;font-size:13.5px}
 
 /* segmented + chips */
-.seg{display:flex;border:1.5px solid var(--ink);border-radius:10px;overflow:hidden}
+.seg{display:flex;border:1.5px solid var(--ink);border-radius:var(--radius-ctrl);overflow:hidden}
 .seg button{flex:1;min-height:40px;border:0;background:transparent;font-weight:600;font-size:14px;cursor:pointer}
 .seg button+button{border-left:1.5px solid var(--ink)}
 .seg button[aria-pressed=true]{background:var(--ink);color:var(--paper)}
+@media (hover:hover){.seg button[aria-pressed=false]:hover{background:color-mix(in srgb, var(--ink) 8%, transparent)}}
 .strip{display:flex;gap:8px;overflow-x:auto;padding:2px 16px 6px;margin:0 -16px;scrollbar-width:none}
 .strip::-webkit-scrollbar{display:none}
-.chip{flex:none;min-height:36px;padding:0 12px;border-radius:18px;border:1.5px solid var(--line);background:var(--surface);font-weight:600;font-size:13.5px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.chip{flex:none;min-height:36px;padding:0 12px;border-radius:18px;border:1.5px solid var(--line);background:var(--surface);font-weight:600;font-size:13.5px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;transition:transform .15s var(--ease),border-color .15s var(--ease),background-color .15s var(--ease)}
 .chip b{font-weight:800;font-variant-numeric:tabular-nums;opacity:.75}
 .chip.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .chip .dot{width:9px;height:9px;border-radius:50%}
+@media (hover:hover){
+  .chip:not(.on):hover{border-color:var(--accent);color:var(--accent)}
+  .chip:active{transform:scale(.96)}
+}
 .impbar{display:flex;height:8px;border-radius:4px;overflow:hidden;background:var(--line);margin:8px 0 14px}
 .impbar i{display:block;min-width:4px}
 .tools{display:grid;gap:4px;margin:12px 0 2px}
@@ -133,11 +200,25 @@ input[type=search]{width:100%;min-height:44px;padding:0 14px;border-radius:10px;
 .grp .sw{width:10px;height:10px;flex:none}
 .grp .n{margin-left:auto;font-weight:600;font-size:13px;color:var(--ink2);font-variant-numeric:tabular-nums}
 .entry{--c:var(--low);background:var(--surface);border-left:5px solid var(--c);border-radius:0 8px 8px 0;padding:12px 14px;margin:0 0 10px;cursor:pointer}
+:root:not([data-theme="classic"]) .entry{
+  border-left:0;border-radius:var(--radius-card);box-shadow:var(--card-shadow);
+  padding:16px 18px;position:relative;overflow:hidden;
+  transition:box-shadow .2s var(--ease),transform .2s var(--ease)}
+:root:not([data-theme="classic"]) .entry::before{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--c);border-radius:4px 0 0 4px}
+@media (hover:hover){
+  :root:not([data-theme="classic"]) .entry:hover{box-shadow:var(--card-shadow-hover);transform:translateY(-2px)}
+}
 .entry.imp-critical{--c:var(--crit)} .entry.imp-high{--c:var(--high)} .entry.imp-medium{--c:var(--med)} .entry.imp-low{--c:var(--low)}
+/* Cards fade+rise in as the list renders, newest-looking-first feel without a real stagger cost per item */
+:root:not([data-theme="classic"]) .entrywrap{animation:qsCardIn .35s var(--ease) both}
+@keyframes qsCardIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 .where{display:flex;flex-wrap:wrap;gap:2px 0;font-size:13px;font-weight:600;color:var(--ink2)}
 .where .sect{margin-left:10px;padding-left:10px;border-left:1.5px solid var(--line)}
 .hl{font-size:17px;line-height:1.28;font-weight:800;letter-spacing:-.01em;margin:5px 0 6px}
+:root:not([data-theme="classic"]) .hl{font-size:18px;line-height:1.3}
 .sum{margin:0;font-size:14.5px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+:root:not([data-theme="classic"]) .sum{color:var(--ink2)}
 .entry.open .sum{display:block;-webkit-line-clamp:unset}
 .foot{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:9px;font-size:12.5px;color:var(--ink2);font-weight:600}
 .imp{display:inline-flex;align-items:center;gap:6px;color:var(--c)}
@@ -178,7 +259,7 @@ input[type=search]{width:100%;min-height:44px;padding:0 14px;border-radius:10px;
 .log p.ok{border-color:var(--accent)} .log p.warn{border-color:var(--high)} .log p.err{border-color:var(--crit)}
 
 /* cards for export tab */
-.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-top:10px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-card);padding:16px 18px;margin-top:10px;box-shadow:var(--card-shadow)}
 .panel p{margin:0 0 8px}
 .panel p:last-child{margin-bottom:0}
 ol.steps{margin:6px 0 0;padding-left:20px;font-size:14.5px}
@@ -188,7 +269,8 @@ ol.steps li{margin:4px 0}
 /* live feed and AI briefing */
 .livebar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:-6px 0 14px;font-size:13px;color:var(--ink2);font-weight:600}
 .link.inline{display:inline;width:auto;border:0;padding:8px 0;font-size:13px}
-.ai{background:var(--surface);border:1.5px solid var(--ink);border-radius:10px;padding:14px 16px;margin:0 0 18px}
+.ai{background:var(--surface);border:1.5px solid var(--ink);border-radius:var(--radius-card);padding:16px 18px;margin:0 0 18px;box-shadow:var(--card-shadow)}
+:root:not([data-theme="classic"]) .ai{border-color:var(--line)}
 .aihead{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
 .aihead h2{margin:0;font-size:18px}
 .aihead span{font-size:12.5px;color:var(--ink2);font-weight:600}
@@ -223,15 +305,17 @@ ol.steps li{margin:4px 0}
 .filters #countryFilter{grid-area:country}
 .filters #sectorFilter{grid-area:sector}
 .filters #viewFilter{grid-area:view}
-.filter-dropdown{width:100%;min-width:0;min-height:44px;padding:0 10px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font-size:14.5px;font-weight:600;text-overflow:ellipsis;cursor:pointer}
+.filter-dropdown{width:100%;min-width:0;min-height:44px;padding:0 10px;border-radius:var(--radius-ctrl);border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font-size:14.5px;font-weight:600;text-overflow:ellipsis;cursor:pointer;transition:border-color .15s var(--ease)}
 .filter-dropdown.on{border-color:var(--accent)}
 .filter-dropdown:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+@media (hover:hover){.filter-dropdown:hover{border-color:var(--accent)}}
 
 /* Screen title with the refresh icon on the same line */
 .viewhead{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .viewhead .livebar{margin:0}
-.iconbtn{flex:none;width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;border:1.5px solid var(--line);background:var(--surface);color:var(--accent);cursor:pointer}
+.iconbtn{flex:none;width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;border:1.5px solid var(--line);background:var(--surface);color:var(--accent);cursor:pointer;transition:transform .15s var(--ease),box-shadow .15s var(--ease),background-color .15s var(--ease)}
 .iconbtn:active{transform:scale(.94)}
+@media (hover:hover){.iconbtn:hover{box-shadow:var(--card-shadow-hover);background:color-mix(in srgb, var(--accent) 10%, var(--surface))}}
 .livebar.busy .iconbtn{pointer-events:none}
 .livebar.busy .iconbtn svg{animation:qsspin .9s linear infinite}
 @keyframes qsspin{to{transform:rotate(360deg)}}
@@ -267,11 +351,14 @@ body.noscroll{overflow:hidden}
 .vfoot a{color:var(--accent);font-weight:700}
 
 /* tabs and toast */
-.tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
-.tabs button{flex:1;min-height:58px;border:0;background:transparent;font-weight:600;font-size:14px;color:var(--ink2);cursor:pointer;position:relative}
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);
+  box-shadow:0 -1px 0 var(--line), 0 -10px 24px -14px rgba(0,0,0,.12)}
+.tabs button{flex:1;min-height:58px;border:0;background:transparent;font-weight:600;font-size:14px;color:var(--ink2);cursor:pointer;position:relative;transition:color .15s var(--ease)}
 .tabs button[aria-selected=true]{color:var(--accent)}
-.tabs button[aria-selected=true]::before{content:"";position:absolute;left:22%;right:22%;top:0;height:3px;background:var(--accent);border-radius:0 0 3px 3px}
-#toast{position:fixed;left:16px;right:16px;bottom:calc(76px + env(safe-area-inset-bottom));z-index:40;max-width:520px;margin:0 auto;background:var(--ink);color:var(--paper);padding:12px 16px;border-radius:10px;font-size:14px;font-weight:600;opacity:0;transform:translateY(8px);pointer-events:none;transition:opacity .2s,transform .2s}
+.tabs button[aria-selected=true]::before{content:"";position:absolute;left:22%;right:22%;top:0;height:3px;background:var(--accent);border-radius:0 0 3px 3px;
+  transition:left .2s var(--ease),right .2s var(--ease)}
+@media (hover:hover){.tabs button[aria-selected=false]:hover{color:var(--ink)}}
+#toast{position:fixed;left:16px;right:16px;bottom:calc(76px + env(safe-area-inset-bottom));z-index:40;max-width:520px;margin:0 auto;background:var(--ink);color:var(--paper);padding:12px 16px;border-radius:var(--radius-ctrl);font-size:14px;font-weight:600;opacity:0;transform:translateY(8px);pointer-events:none;transition:opacity .2s var(--ease),transform .2s var(--ease);box-shadow:0 12px 32px -8px rgba(0,0,0,.35)}
 #toast.show{opacity:1;transform:none;pointer-events:auto}
 #toast .link.inline{display:inline;width:auto;padding:0;border:0;margin-left:8px;color:var(--paper);text-decoration:underline;font-weight:800}
 .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
@@ -281,9 +368,10 @@ body.cv-lock{overflow:hidden}
 .cstatus{display:flex;gap:16px;overflow-x:auto;padding:2px 2px 14px;margin-bottom:6px;scrollbar-width:none}
 .cstatus::-webkit-scrollbar{display:none}
 .cstop{flex:none;display:flex;flex-direction:column;align-items:center;gap:6px;width:66px;border:0;background:transparent;cursor:pointer;color:inherit;padding:0}
-.qs-ring{width:60px;height:60px;border-radius:50%;padding:3px;display:flex;align-items:center;justify-content:center;transition:transform .15s ease}
+.qs-ring{width:60px;height:60px;border-radius:50%;padding:3px;display:flex;align-items:center;justify-content:center;transition:transform .15s var(--ease)}
 .cstop:active .qs-ring{transform:scale(.94)}
-.qs-ring-inner{width:100%;height:100%;border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:26px;box-shadow:0 0 0 1px var(--line) inset}
+@media (hover:hover){.cstop:hover .qs-ring{transform:scale(1.05)}}
+.qs-ring-inner{width:100%;height:100%;border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:26px;box-shadow:0 0 0 1px var(--line) inset,var(--card-shadow)}
 .cstop-name{font-size:11.5px;font-weight:600;color:var(--ink2);max-width:66px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* Country story viewer - a full-screen "status" reader: dashes at top, one story centered, tap zones either side */
@@ -344,6 +432,16 @@ body.cv-lock{overflow:hidden}
   <!-- INBOX -->
   <section id="view-inbox" class="view">
     <h1 data-i18n="linkPages">Link Pages</h1>
+
+    <div class="lp-block">
+      <h2 class="lp-h" data-i18n="appearance">Appearance</h2>
+      <p class="lp-sub" data-i18n="appearanceSub">Try the new look. If you'd rather have the original back, switch any time - nothing about your saved articles or channels changes either way.</p>
+      <div class="lp-theme-row">
+        <span class="lp-theme-label" data-i18n="appearanceNewLabel">New look</span>
+        <button id="themeToggle" class="qs-switch" role="switch" aria-checked="true" aria-label="Toggle appearance"><span class="qs-switch-knob"></span></button>
+        <span class="lp-theme-label" data-i18n="appearanceClassicLabel">Classic</span>
+      </div>
+    </div>
 
     <div class="lp-block">
       <h2 class="lp-h" data-i18n="account">Account</h2>

@@ -1,10 +1,10 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase2-12-v1';  // bumped: +Add now accepts a pasted Telegram link (t.me/telegram.me,
-                                      // with or without www./https/a trailing slash or ?start= query string)
-                                      // in addition to the t/channelname shorthand, so a format mistake can't
-                                      // stop a channel from linking
+const VERSION = 'gni-phase3-1-v1';   // bumped: full visual redesign (new default look - editorial cards,
+                                      // shadows, hover/press animations, a fresh palette) plus an Appearance
+                                      // toggle on Link Pages to switch back to the original "Classic" look
+                                      // any time, saved on-device
 const SHELL = ['./', 'index.html', 'app.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {
