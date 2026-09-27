@@ -1398,7 +1398,11 @@ if (typeof document !== 'undefined') (function () {
     // the point; "why it matters"/facts stay since that's the actual analysis, not just metadata.
     $('#cvDashes').innerHTML = dashes;
     const body = $('#cvBody');
+    // onerror hides a broken/expired image link instead of leaving a broken-image icon - a missing photo
+    // should never look like an app bug, the story still reads fine as headline-only.
+    const img = it.image ? `<div class="cv-img"><img src="${esc(it.image.url)}" alt="" loading="lazy" onerror="this.closest('.cv-img').hidden=true"></div>` : '';
     body.innerHTML = `
+      ${img}
       <div class="cv-flag">${flagOf(country)}</div>
       <div class="cv-country">${esc(country)}</div>
       <h2 class="cv-headline">${esc(it.headline)}</h2>
@@ -2230,7 +2234,11 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       text: (x.summary || '') + ' ' + (x.why_it_matters || ''), addedAt: t,
       sources: (x.sources || []).map(s => ({ name: s.name, url: s.url, at: Date.parse(s.at) || t })),
       related: (x.related || []).map(r => 'L' + r),
-      video: x.video || null
+      video: x.video || null,
+      // Headline images (image_intel.py): a real news photo Google's Custom Search index returned for this
+      // headline, or null if none was found (or none was searched for yet - only Critical/High stories get
+      // searched, see image_max_per_run/image_importance in sources.yml). Never re-hosted, just linked.
+      image: (x.image && x.image.status === 'found' && x.image.url) ? { url: x.image.url, source: x.image.source || '' } : null
     };
   }
   const readCache = k => { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } };

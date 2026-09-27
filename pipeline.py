@@ -75,6 +75,14 @@ try:
 except Exception:  # noqa: BLE001
     video_intel = None
 
+# Headline images (image_intel.py). Optional: without it, or without GOOGLE_SEARCH_API_KEY/GOOGLE_SEARCH_CX,
+# everything else works as before - stories just show without a photo.
+try:
+    import image_intel
+    DEFAULTS.update(image_intel.DEFAULTS)
+except Exception:  # noqa: BLE001
+    image_intel = None
+
 
 def log(msg: str) -> None:
     print(msg, flush=True)
@@ -1049,6 +1057,33 @@ def cmd_videos() -> int:
     return 0
 
 
+def cmd_images() -> int:
+    """Attach a real news photo to important, recent stories. Runs AFTER fetch has published the stories, so
+    images never delay the news, and it never fails the run: any problem is logged and the feed is left as it
+    was. Mirrors cmd_videos() above."""
+    if image_intel is None:
+        log("Image search: image_intel.py is not available, skipping.")
+        return 0
+    try:
+        cfg, state = load_config(), load_state()
+        feed = read_json(PATHS["feed"], {"items": []})
+        if not feed.get("items"):
+            log("Image search: the feed is empty, nothing to do.")
+            return 0
+        before = json.dumps(state.get("image"), sort_keys=True)
+        stats = image_intel.enrich_feed(feed, state, cfg["settings"], now=utcnow(), http=http_get, env=os.environ, log=log)
+        log(f"Image search: {stats['status']}, searched {stats['checked']} stories, {stats['found']} images attached, "
+            f"{stats['none']} without a match, {stats['queries']} queries used")
+        if stats["changed"]:
+            write_json(PATHS["feed"], feed)
+        if json.dumps(state.get("image"), sort_keys=True) != before:
+            write_json(PATHS["state"], state)
+    except Exception as exc:  # noqa: BLE001
+        secrets = [os.environ.get("GOOGLE_SEARCH_API_KEY", ""), os.environ.get("GOOGLE_SEARCH_CX", "")]
+        log(f"Image search skipped: {image_intel.redact(exc, secrets)}. The news feed is unaffected.")
+    return 0
+
+
 def cmd_check() -> int:
     cfg, state = load_config(), load_state()
     log("Keys found (values are never printed):")
@@ -1092,12 +1127,14 @@ def cmd_check() -> int:
         log(f"Telegram bot: {'working' if r.status_code == 200 else 'FAILED, HTTP ' + str(r.status_code)}")
     if video_intel is not None:
         video_intel.check(os.environ, ROOT, log, http_get)
+    if image_intel is not None:
+        image_intel.check(os.environ, log)
     return 1 if bad else 0
 
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("command", choices=["check", "fetch", "briefing", "all", "videos"])
+    ap.add_argument("command", choices=["check", "fetch", "briefing", "all", "videos", "images"])
     args = ap.parse_args(argv)
     load_dotenv()
     if args.command == "check":
@@ -1105,6 +1142,8 @@ def main(argv=None) -> int:
     code = 0
     if args.command == "videos":
         return cmd_videos()
+    if args.command == "images":
+        return cmd_images()
     if args.command in ("fetch", "all"):
         code = cmd_fetch()
     if args.command in ("briefing", "all"):
