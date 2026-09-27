@@ -1392,10 +1392,8 @@ if (typeof document !== 'undefined') (function () {
       const cls = i < idx || (i === idx && S.reviewed.has(s.id)) ? 'seen' : (i === idx ? 'current' : '');
       return `<span class="cv-dash ${cls}"></span>`;
     }).join('');
-    const facts = (it.facts || []).length ? `<ul class="facts">${it.facts.map(f => `<li>${esc(f)}</li>`).join('')}</ul>` : '';
-    // Phase C follow-up: the timestamp/sector subtext and the Sources line were cluttering what's meant to
-    // be a quick, at-a-glance story read (like a status/story card) - dropped, per feedback. The headline is
-    // the point; "why it matters"/facts stay since that's the actual analysis, not just metadata.
+    // Headlines only, per explicit feedback: no timestamp/sector subtext, no Sources line, and no
+    // why-it-matters/facts body copy either - just the flag, country, headline and (if found) an image.
     $('#cvDashes').innerHTML = dashes;
     const body = $('#cvBody');
     // onerror hides a broken/expired image link instead of leaving a broken-image icon - a missing photo
@@ -1406,8 +1404,6 @@ if (typeof document !== 'undefined') (function () {
       <div class="cv-flag">${flagOf(country)}</div>
       <div class="cv-country">${esc(country)}</div>
       <h2 class="cv-headline">${esc(it.headline)}</h2>
-      ${it.why ? `<p class="why"><b>Why it matters</b> ${esc(it.why)}</p>` : (it.summary ? `<p class="why">${esc(it.summary)}</p>` : '')}
-      ${facts}
       <div class="cv-pos">${idx + 1} / ${stories.length}</div>
     `;
     // A quick crossfade so moving between stories - and especially between countries - reads as a smooth
