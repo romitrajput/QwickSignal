@@ -1,8 +1,8 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-4-v1';   // landing screen now shows a brief pulsing-bars loading indicator
-                                      // before the sign-in form appears
+const VERSION = 'gni-phase3-5-v1';   // landing loader moved under the logo/title (tagline removed);
+                                      // Save-swipe is now green, Remove-swipe stays red
 const SHELL = ['./', 'index.html', 'app.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {

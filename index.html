@@ -28,7 +28,7 @@
   --paper:#F7F6F3; --surface:#FFFFFF; --ink:#1A1A1C; --ink2:#6E6E73; --line:#E3E1DC;
   --head:#FFFFFF; --head-ink:#1A1A1C;
   --accent:#D6392C; --accent-ink:#FFFFFF;
-  --crit:#D6392C; --high:#C2760A; --med:#3A6EA8; --low:#8A8A8E;
+  --crit:#D6392C; --high:#C2760A; --med:#3A6EA8; --low:#8A8A8E; --save:#2E9E5B;
   --card-shadow:0 1px 2px rgba(20,20,20,.04), 0 8px 24px -12px rgba(20,20,20,.14);
   --card-shadow-hover:0 4px 10px rgba(20,20,20,.06), 0 16px 36px -14px rgba(20,20,20,.20);
   --radius-card:16px; --radius-ctrl:11px;
@@ -40,7 +40,7 @@
     --paper:#000000; --surface:#1C1C1E; --ink:#F2F2F3; --ink2:#98989D; --line:#2C2C2E;
     --head:#111113; --head-ink:#F2F2F3;
     --accent:#FF6259; --accent-ink:#1A0705;
-    --crit:#FF6259; --high:#F0A63C; --med:#6FA3CE; --low:#8A8A8E;
+    --crit:#FF6259; --high:#F0A63C; --med:#6FA3CE; --low:#8A8A8E; --save:#3FBE74;
     --card-shadow:0 1px 2px rgba(0,0,0,.5), 0 10px 28px -12px rgba(0,0,0,.65);
     --card-shadow-hover:0 4px 12px rgba(0,0,0,.55), 0 20px 44px -14px rgba(0,0,0,.75);
   }
@@ -49,7 +49,7 @@
   --paper:#E7ECEF; --surface:#F7F9FA; --ink:#0E2238; --ink2:#4A5D70; --line:#C6D2DA;
   --head:#0E2238; --head-ink:#F2F6F8;
   --accent:#17707A; --accent-ink:#FFFFFF;
-  --crit:#C8321F; --high:#C97A0E; --med:#4F7CA3; --low:#8795A2;
+  --crit:#C8321F; --high:#C97A0E; --med:#4F7CA3; --low:#8795A2; --save:#2E8B4F;
   --card-shadow:none; --card-shadow-hover:none;
   --radius-card:0; --radius-ctrl:8px;
 }
@@ -58,7 +58,7 @@
     --paper:#08121D; --surface:#0F1E2D; --ink:#E6EEF4; --ink2:#9CAEBD; --line:#1F3446;
     --head:#0B1826; --head-ink:#E6EEF4;
     --accent:#4FB6C0; --accent-ink:#04202A;
-    --crit:#F0604D; --high:#EDA038; --med:#6FA3CE; --low:#7C8A97;
+    --crit:#F0604D; --high:#EDA038; --med:#6FA3CE; --low:#7C8A97; --save:#4CC585;
   }
 }
 *{box-sizing:border-box}
@@ -247,7 +247,7 @@ input[type=search]:focus-visible{border-color:var(--accent);box-shadow:0 0 0 4px
    uncovers it from the left edge, so "Save" sits there. Only the label matching the active direction shows. */
 .swipebg.left{justify-content:flex-end;background:var(--crit);color:#fff}
 .swipebg.left .sw-left{display:inline-flex}
-.swipebg.right{justify-content:flex-start;background:var(--accent);color:var(--accent-ink)}
+.swipebg.right{justify-content:flex-start;background:var(--save);color:#fff}
 .swipebg.right .sw-right{display:inline-flex}
 .swipebg svg{width:18px;height:18px}
 .quickacts{display:flex;gap:8px;margin:0 0 12px}
@@ -415,7 +415,6 @@ body.pre-app .top, body.pre-app main, body.pre-app .tabs{display:none}
 .landing-brand{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:6px}
 .landing-brand svg{color:var(--accent)}
 .landing-brand span{font-size:24px;font-weight:800;letter-spacing:-.02em;color:var(--ink)}
-.landing-tag{margin:0 0 28px;color:var(--ink2);font-size:14.5px;line-height:1.5}
 .landing-form{text-align:left}
 .landing-form .acct-buttons{flex-direction:column}
 .landing-form .acct-buttons .btn{flex:none}
@@ -468,8 +467,6 @@ body.pre-app .top, body.pre-app main, body.pre-app .tabs{display:none}
     <div class="landing-loader" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
 
     <div class="landing-content">
-      <p class="landing-tag" data-i18n="landingTag">Sort news, messages and reports by country, sector and importance.</p>
-
       <form id="landingAuthForm" class="acct-form landing-form">
         <label class="vh" for="landingEmail" data-i18n="signInEmail">Email</label>
         <input id="landingEmail" type="email" autocomplete="email" placeholder="you@example.com" required>
