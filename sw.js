@@ -1,8 +1,9 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-7-v1';   // tab icons now show hover/press feedback (a soft circular
-                                      // highlight plus a brief press-down scale)
+const VERSION = 'gni-phase3-8-v1';   // Classic is now the only theme (new-look removed); refresh button
+                                      // shows the equalizer bars instead of a spinner; language switching
+                                      // no longer rebuilds/bounces the whole list as translations land
 const SHELL = ['./', 'index.html', 'app.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {

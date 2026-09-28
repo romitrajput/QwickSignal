@@ -15,46 +15,22 @@
 <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
 /* ============================================================
-   THEME SYSTEM
-   Two full palettes live side by side: the new default (an Apple-News-
-   inspired editorial look - warm paper, real elevated cards, a single
-   restrained red accent) and "classic" (the original dashboard look),
-   kept byte-for-byte as an opt-out - see the toggle in the Account
-   block and Theme.apply() in app.js. Nothing is deleted; data-theme on
-   <html> picks which block of variables (and, further down, which
-   small set of visual-only rules) is active.
+   THEME
+   Classic (the original dashboard look) is the only theme - the newer
+   Apple-News-inspired look and its toggle have been removed, per request.
    ============================================================ */
 :root{
-  --paper:#F7F6F3; --surface:#FFFFFF; --ink:#1A1A1C; --ink2:#6E6E73; --line:#E3E1DC;
-  --head:#FFFFFF; --head-ink:#1A1A1C;
-  --accent:#D6392C; --accent-ink:#FFFFFF;
-  --crit:#D6392C; --high:#C2760A; --med:#3A6EA8; --low:#8A8A8E; --save:#2E9E5B;
-  --card-shadow:0 1px 2px rgba(20,20,20,.04), 0 8px 24px -12px rgba(20,20,20,.14);
-  --card-shadow-hover:0 4px 10px rgba(20,20,20,.06), 0 16px 36px -14px rgba(20,20,20,.20);
-  --radius-card:16px; --radius-ctrl:11px;
-  --ease:cubic-bezier(.2,.7,.3,1);
-  --font:'Public Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
-}
-@media (prefers-color-scheme:dark){
-  :root{
-    --paper:#000000; --surface:#1C1C1E; --ink:#F2F2F3; --ink2:#98989D; --line:#2C2C2E;
-    --head:#111113; --head-ink:#F2F2F3;
-    --accent:#FF6259; --accent-ink:#1A0705;
-    --crit:#FF6259; --high:#F0A63C; --med:#6FA3CE; --low:#8A8A8E; --save:#3FBE74;
-    --card-shadow:0 1px 2px rgba(0,0,0,.5), 0 10px 28px -12px rgba(0,0,0,.65);
-    --card-shadow-hover:0 4px 12px rgba(0,0,0,.55), 0 20px 44px -14px rgba(0,0,0,.75);
-  }
-}
-:root[data-theme="classic"]{
   --paper:#E7ECEF; --surface:#F7F9FA; --ink:#0E2238; --ink2:#4A5D70; --line:#C6D2DA;
   --head:#0E2238; --head-ink:#F2F6F8;
   --accent:#17707A; --accent-ink:#FFFFFF;
   --crit:#C8321F; --high:#C97A0E; --med:#4F7CA3; --low:#8795A2; --save:#2E8B4F;
   --card-shadow:none; --card-shadow-hover:none;
   --radius-card:0; --radius-ctrl:8px;
+  --ease:cubic-bezier(.2,.7,.3,1);
+  --font:'Public Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
 }
 @media (prefers-color-scheme:dark){
-  :root[data-theme="classic"]{
+  :root{
     --paper:#08121D; --surface:#0F1E2D; --ink:#E6EEF4; --ink2:#9CAEBD; --line:#1F3446;
     --head:#0B1826; --head-ink:#E6EEF4;
     --accent:#4FB6C0; --accent-ink:#04202A;
@@ -76,9 +52,8 @@ button{transition:transform .15s var(--ease),background-color .15s var(--ease),b
 .top{position:sticky;top:0;z-index:20;background:var(--head);color:var(--head-ink);
   display:flex;align-items:center;justify-content:space-between;gap:12px;
   padding:calc(10px + env(safe-area-inset-top)) 16px 10px;
-  border-bottom:1px solid var(--line);
+  border-bottom:0;
   transition:background-color .25s var(--ease),border-color .25s var(--ease)}
-:root[data-theme="classic"] .top{border-bottom:0}
 .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px;letter-spacing:-.02em}
 .brand svg circle:first-child{transition:stroke .25s var(--ease)}
 .brand svg{flex:none}
@@ -88,6 +63,7 @@ button{transition:transform .15s var(--ease),background-color .15s var(--ease),b
 .lang-select{background:transparent;color:var(--ink);border:1.5px solid var(--line);border-radius:7px;font-size:12px;font-weight:700;padding:4px 6px;-webkit-appearance:none;appearance:none}
 .tiny{min-height:32px;padding:0 12px;border-radius:8px;border:1.5px solid currentColor;background:transparent;font-weight:600;font-size:13px}
 
+@keyframes qsCardIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 main{max-width:720px;margin:0 auto;padding:16px}
 h1{font-size:26px;line-height:1.15;font-weight:800;letter-spacing:-.025em;margin:4px 0 4px}
 h2{font-size:18px;font-weight:800;letter-spacing:-.01em;margin:26px 0 8px}
@@ -152,16 +128,6 @@ input[type=search]:focus-visible{border-color:var(--accent);box-shadow:0 0 0 4px
 }
 .lp-defaultbadge{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;background:var(--accent);color:#fff;font-size:11px;font-weight:700;vertical-align:middle}
 
-/* Appearance toggle: a plain, obvious iOS-style switch between the new default look and the classic one -
-   "give me an option to retain the old version if I don't like it" - persisted client-side (see Theme in
-   app.js), nothing server-side or per-account about it, so it's instant and never fails to save. */
-.lp-theme-row{display:flex;align-items:center;gap:10px;margin-top:4px}
-.lp-theme-label{font-size:13.5px;font-weight:600;color:var(--ink2)}
-.qs-switch{flex:none;width:48px;height:28px;border-radius:999px;border:1.5px solid var(--line);background:var(--line);padding:2px;cursor:pointer;position:relative;transition:background-color .2s var(--ease),border-color .2s var(--ease)}
-.qs-switch[aria-checked="true"]{background:var(--accent);border-color:var(--accent)}
-.qs-switch-knob{display:block;width:21px;height:21px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .2s var(--ease)}
-.qs-switch[aria-checked="true"] .qs-switch-knob{transform:translateX(20px)}
-
 /* Account (Phase E) */
 .acct-form{display:flex;flex-direction:column;gap:8px;max-width:340px}
 .acct-form input{min-height:44px;padding:0 12px;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font:inherit}
@@ -200,25 +166,11 @@ input[type=search]:focus-visible{border-color:var(--accent);box-shadow:0 0 0 4px
 .grp .sw{width:10px;height:10px;flex:none}
 .grp .n{margin-left:auto;font-weight:600;font-size:13px;color:var(--ink2);font-variant-numeric:tabular-nums}
 .entry{--c:var(--low);background:var(--surface);border-left:5px solid var(--c);border-radius:0 8px 8px 0;padding:12px 14px;margin:0 0 10px;cursor:pointer}
-:root:not([data-theme="classic"]) .entry{
-  border-left:0;border-radius:var(--radius-card);box-shadow:var(--card-shadow);
-  padding:16px 18px;position:relative;overflow:hidden;
-  transition:box-shadow .2s var(--ease),transform .2s var(--ease)}
-:root:not([data-theme="classic"]) .entry::before{
-  content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--c);border-radius:4px 0 0 4px}
-@media (hover:hover){
-  :root:not([data-theme="classic"]) .entry:hover{box-shadow:var(--card-shadow-hover);transform:translateY(-2px)}
-}
 .entry.imp-critical{--c:var(--crit)} .entry.imp-high{--c:var(--high)} .entry.imp-medium{--c:var(--med)} .entry.imp-low{--c:var(--low)}
-/* Cards fade+rise in as the list renders, newest-looking-first feel without a real stagger cost per item */
-:root:not([data-theme="classic"]) .entrywrap{animation:qsCardIn .35s var(--ease) both}
-@keyframes qsCardIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 .where{display:flex;flex-wrap:wrap;gap:2px 0;font-size:13px;font-weight:600;color:var(--ink2)}
 .where .sect{margin-left:10px;padding-left:10px;border-left:1.5px solid var(--line)}
 .hl{font-size:17px;line-height:1.28;font-weight:800;letter-spacing:-.01em;margin:5px 0 6px}
-:root:not([data-theme="classic"]) .hl{font-size:18px;line-height:1.3}
 .sum{margin:0;font-size:14.5px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-:root:not([data-theme="classic"]) .sum{color:var(--ink2)}
 .entry.open .sum{display:block;-webkit-line-clamp:unset}
 .foot{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:9px;font-size:12.5px;color:var(--ink2);font-weight:600}
 .imp{display:inline-flex;align-items:center;gap:6px;color:var(--c)}
@@ -270,7 +222,6 @@ ol.steps li{margin:4px 0}
 .livebar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:-6px 0 14px;font-size:13px;color:var(--ink2);font-weight:600}
 .link.inline{display:inline;width:auto;border:0;padding:8px 0;font-size:13px}
 .ai{background:var(--surface);border:1.5px solid var(--ink);border-radius:var(--radius-card);padding:16px 18px;margin:0 0 18px;box-shadow:var(--card-shadow)}
-:root:not([data-theme="classic"]) .ai{border-color:var(--line)}
 .aihead{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
 .aihead h2{margin:0;font-size:18px}
 .aihead span{font-size:12.5px;color:var(--ink2);font-weight:600}
@@ -317,8 +268,18 @@ ol.steps li{margin:4px 0}
 .iconbtn:active{transform:scale(.94)}
 @media (hover:hover){.iconbtn:hover{box-shadow:var(--card-shadow-hover);background:color-mix(in srgb, var(--accent) 10%, var(--surface))}}
 .livebar.busy .iconbtn{pointer-events:none}
-.livebar.busy .iconbtn svg{animation:qsspin .9s linear infinite}
-@keyframes qsspin{to{transform:rotate(360deg)}}
+/* Refresh button: an always-visible little equalizer, same look as the landing screen's loading bars -
+   still while idle, pulsing in sequence while a refresh is in flight (see .livebar.busy below). */
+.iconbtn .refresh-bars{display:flex;align-items:center;justify-content:center;gap:3px;width:22px;height:22px}
+.iconbtn .refresh-bars i{display:block;width:3px;height:9px;border-radius:2px;background:currentColor;opacity:.55}
+.livebar.busy .iconbtn .refresh-bars i{animation:qsBarsBtn 1.1s ease-in-out infinite}
+.livebar.busy .iconbtn .refresh-bars i:nth-child(1){animation-delay:-1.0s}
+.livebar.busy .iconbtn .refresh-bars i:nth-child(2){animation-delay:-0.8s}
+.livebar.busy .iconbtn .refresh-bars i:nth-child(3){animation-delay:-0.6s}
+.livebar.busy .iconbtn .refresh-bars i:nth-child(4){animation-delay:-0.4s}
+.livebar.busy .iconbtn .refresh-bars i:nth-child(5){animation-delay:-0.2s}
+@keyframes qsBarsBtn{0%,40%,100%{height:6px;opacity:.55}20%{height:18px;opacity:1}}
+@media (prefers-reduced-motion:reduce){.livebar.busy .iconbtn .refresh-bars i{animation:none;height:14px;opacity:.9}}
 
 /* Links inside an opened story were dark blue on the dark theme */
 .details a{color:var(--accent);font-weight:600}
@@ -525,16 +486,6 @@ body.pre-app .top, body.pre-app main, body.pre-app .tabs{display:none}
        live here now, reached via the Settings tab instead of being the app's first/default screen) -->
   <section id="view-settings" class="view" hidden>
     <h1 data-i18n="settings">Settings</h1>
-
-    <div class="lp-block">
-      <h2 class="lp-h" data-i18n="appearance">Appearance</h2>
-      <p class="lp-sub" data-i18n="appearanceSub">Try the new look. If you'd rather have the original back, switch any time - nothing about your saved articles or channels changes either way.</p>
-      <div class="lp-theme-row">
-        <span class="lp-theme-label" data-i18n="appearanceNewLabel">New look</span>
-        <button id="themeToggle" class="qs-switch" role="switch" aria-checked="true" aria-label="Toggle appearance"><span class="qs-switch-knob"></span></button>
-        <span class="lp-theme-label" data-i18n="appearanceClassicLabel">Classic</span>
-      </div>
-    </div>
 
     <div class="lp-block">
       <h2 class="lp-h" data-i18n="account">Account</h2>
