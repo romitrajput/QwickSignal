@@ -2761,8 +2761,30 @@ Give a concise, event-specific analysis - decide for yourself which structure be
   document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - S.lastLive >= AUTO_REFRESH_MS) loadLive(); });
   setInterval(() => { if (!document.hidden && Date.now() - S.lastLive >= AUTO_REFRESH_MS) loadLive(); }, 60e3);
 
-  // The install-as-app prompt (beforeinstallprompt/data-install) was removed from the Export screen along with
-  // its UI; the browser's own install affordance (address-bar icon or menu item) still works without it.
+  // Install-as-app: the header's Install button stays hidden until the browser tells us installing is actually
+  // possible (beforeinstallprompt), then triggers the browser's real install flow. Chrome/Edge/most Android
+  // browsers fire this; iOS Safari never does (no native install prompt there - "Add to Home Screen" via the
+  // Share sheet is the only route, so the button stays hidden and isn't a bug on iOS).
+  let deferredInstallPrompt = null;
+  window.addEventListener('beforeinstallprompt', ev => {
+    ev.preventDefault();
+    deferredInstallPrompt = ev;
+    const btn = $('[data-install]');
+    if (btn) btn.hidden = false;
+  });
+  window.addEventListener('appinstalled', () => {
+    deferredInstallPrompt = null;
+    const btn = $('[data-install]');
+    if (btn) btn.hidden = true;
+  });
+  document.addEventListener('click', async ev => {
+    if (!ev.target.closest('[data-install]') || !deferredInstallPrompt) return;
+    const btn = $('[data-install]');
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    if (btn) btn.hidden = true;
+  });
 
   /* ---------- start ---------- */
   (async function start() {
