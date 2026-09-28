@@ -1161,42 +1161,53 @@ if (typeof document !== 'undefined') (function () {
     renderAccount(); renderAll(); renderChannels();
     toast('Signed out. Back to guest mode on this device.');
     Sync.pull().then(() => { renderAll(); renderChannels(); });    // fall back to this browser's guest sync code
+    Landing.clearGuestSeen();   // a stale guest flag from earlier this tab session shouldn't skip the screen below
     Landing.show();   // "once the user picks something" also unwinds on sign-out: ask again next time
   }
 
   /* ---------- Landing / sign-in screen ----------
      A new front door: "Login as user with id/password or google account or will login as guest. Once the
-     user gets into the site via user login or as a guest - land them on signal page." Shown once per device
-     until a choice is made (sign in, create account, Google, or Continue as guest), then remembered - see
-     LANDING_KEY - so a returning visitor goes straight to Signals, exactly like the language or appearance
-     choice. Signing out (above) clears the flag and brings this screen back, since at that point the person
-     is back to being logged-out and should get the same explicit choice again. */
-  const LANDING_KEY = 'qs-landing-seen-v1';
+     user gets into the site via user login or as a guest - land them on signal page." Shown until a choice
+     is made (sign in, create account, Google, or Continue as guest).
+     Signing in/up is remembered properly - Auth's own stored session (AUTH_KEY, checked via Auth.load())
+     is what lets a real account skip this screen next time, exactly like before.
+     Continuing as guest is now remembered only for the current tab/session (sessionStorage, GUEST_KEY) -
+     "if the tab/session is closed the user should be redirected to the login page again." Closing the tab,
+     or opening the app in a new tab, asks again; reloading the SAME tab does not (sessionStorage survives
+     a reload, just not a close). Signing out (below) clears both and brings this screen back either way. */
+  const GUEST_KEY = 'qs-landing-guest-v1';   // sessionStorage: guest choice, this tab only
   const Landing = {
-    seen() { try { return localStorage.getItem(LANDING_KEY) === '1'; } catch (e) { return false; } },
-    markSeen() { try { localStorage.setItem(LANDING_KEY, '1'); } catch (e) { /* private browsing etc. */ } },
+    guestSeen() { try { return sessionStorage.getItem(GUEST_KEY) === '1'; } catch (e) { return false; } },
+    markGuestSeen() { try { sessionStorage.setItem(GUEST_KEY, '1'); } catch (e) { /* private browsing etc. */ } },
+    clearGuestSeen() { try { sessionStorage.removeItem(GUEST_KEY); } catch (e) { /* private browsing etc. */ } },
+    // A signed-in account skips the landing screen via its own persisted session, same as always; a guest
+    // only skips it for as long as this tab/session stays open.
+    seen() { const rec = Auth.load(); return !!(rec && rec.uid) || this.guestSeen(); },
     show() {
       const el = $('#landing');
       if (el) el.hidden = false;
       document.body.classList.add('pre-app');
-      renderGoogleButton('landingGoogleBtn', async () => { await completeAuth(); Landing.dismiss(); });
+      renderGoogleButton('landingGoogleBtn', async () => { await completeAuth(); Landing.dismiss(false); });
       // Brief bars-loading indicator (see .landing-loader in index.html) before the sign-in form appears -
       // a short, fixed reveal rather than tied to any particular async step, so it never gets stuck showing
       // if something is slow and never flashes so fast it's pointless if everything is instant. Kept well
       // under half a second so it reads as a polish beat, not a delay someone has to wait through.
       if (el) setTimeout(() => el.classList.remove('landing-loading'), 350);
     },
-    dismiss() {
-      this.markSeen();
+    // asGuest=true records the session-only guest flag; a real sign-in/sign-up dismissal needs nothing
+    // extra here since Auth already persisted its own session by the time this runs.
+    dismiss(asGuest) {
+      if (asGuest) this.markGuestSeen();
       const el = $('#landing');
       if (el) el.hidden = true;
       document.body.classList.remove('pre-app');
     },
-    // Called once at boot: if this device already made a choice, skip straight past the landing screen
-    // (same "land them on Signals" outcome whether that choice was signing in or continuing as guest, since
-    // setTab('brief') already runs unconditionally elsewhere in start()). Otherwise show it and wire its
-    // controls - done here rather than unconditionally so a returning, already-decided visitor never pays
-    // for the Google button init or seeing the screen flash up first.
+    // Called once at boot: if this device/tab already has a reason to skip (a real signed-in session, or a
+    // guest choice made earlier in this same tab/session), skip straight past the landing screen (same
+    // "land them on Signals" outcome either way, since setTab('brief') already runs unconditionally
+    // elsewhere in start()). Otherwise show it and wire its controls - done here rather than
+    // unconditionally so a returning, already-decided visitor never pays for the Google button init or
+    // seeing the screen flash up first.
     init() {
       if (this.seen()) return;
       this.show();
@@ -1209,10 +1220,10 @@ if (typeof document !== 'undefined') (function () {
         const r = mode === 'signup' ? await Auth.signUp(email, pass) : await Auth.signIn(email, pass);
         if (!r.ok) { toast(r.error); return; }
         await completeAuth();
-        this.dismiss();
+        this.dismiss(false);
       });
       const guestBtn = $('#landingGuestBtn');
-      if (guestBtn) guestBtn.addEventListener('click', () => this.dismiss());
+      if (guestBtn) guestBtn.addEventListener('click', () => this.dismiss(true));
     }
   };
 
