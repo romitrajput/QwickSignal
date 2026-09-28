@@ -1,9 +1,7 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-9-v1';   // guest sessions no longer persist past closing the tab; the red
-                                      // accent is back as the permanent theme color; the refresh button's
-                                      // circle is gone and its bars animate smoothly (transform, not height)
+const VERSION = 'gni-phase3-10-v1';  // the left-swipe label now reads "Skip" instead of "Remove"
 const SHELL = ['./', 'index.html', 'app.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {

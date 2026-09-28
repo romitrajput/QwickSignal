@@ -1918,14 +1918,14 @@ if (typeof document !== 'undefined') (function () {
 
   // Swipe backgrounds only apply on the Signals list (swipe left = dismiss, right = save); the Saved tab has
   // its own card without swipe, since "swipe to dismiss" doesn't make sense once something is already saved.
-  // Only one label is ever shown at a time: sw-left is the "Remove" label revealed by a LEFT swipe (it sits on
+  // Only one label is ever shown at a time: sw-left is the "Skip" label revealed by a LEFT swipe (it sits on
   // the right edge, where the card uncovers it as it slides away), sw-right is "Save" revealed by a RIGHT swipe
   // (sits on the left edge). Both markers exist in the DOM; onSwipeMove toggles which one is visible via the
   // .left/.right class on the wrapper, so the two never show at once.
   function entryWrapHTML(it) {
     return `<div class="entrywrap">
       <div class="swipebg" aria-hidden="true">
-        <span class="sw-left">Remove <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg></span>
+        <span class="sw-left">Skip <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg></span>
         <span class="sw-right"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4V3z" fill="currentColor"/></svg> Save</span>
       </div>
       ${entryHTML(it)}
