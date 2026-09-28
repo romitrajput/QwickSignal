@@ -579,7 +579,10 @@ if (typeof document !== 'undefined') (function () {
 
   const I18N = {
     en: {
-      linkPages: 'Link Pages', signals: 'Signals', saved: 'Saved', export: 'Export',
+      linkPages: 'Link Pages', settings: 'Settings', signals: 'Signals', saved: 'Saved', export: 'Export',
+      landingTitle: 'QwickSignal', landingTag: 'Sort news, messages and reports by country, sector and importance.',
+      landingOr: 'or', continueAsGuest: 'Continue as guest',
+      landingGuestNote: "You can look around and follow the default channels without an account. Sign in any time later from Settings to keep your own saved articles and channels.",
       appearance: 'Appearance', appearanceSub: "Try the new look. If you'd rather have the original back, switch any time — nothing about your saved articles or channels changes either way.",
       appearanceNewLabel: 'New look', appearanceClassicLabel: 'Classic',
       account: 'Account', accountSub: "Optional. Sign in to keep your own saved articles, dismissed items and followed channels tied to your account instead of a code - and separate from anyone else's.",
@@ -602,7 +605,10 @@ if (typeof document !== 'undefined') (function () {
       loginToLinkChannels: 'Log in to link Telegram channels.'
     },
     hi: {
-      linkPages: 'लिंक पेज', signals: 'सिग्नल्स', saved: 'सेव किए गए', export: 'एक्सपोर्ट',
+      linkPages: 'लिंक पेज', settings: 'सेटिंग्स', signals: 'सिग्नल्स', saved: 'सेव किए गए', export: 'एक्सपोर्ट',
+      landingTitle: 'QwickSignal', landingTag: 'खबरों, संदेशों और रिपोर्ट को देश, क्षेत्र और महत्व के अनुसार छाँटें।',
+      landingOr: 'या', continueAsGuest: 'गेस्ट के रूप में जारी रखें',
+      landingGuestNote: 'आप बिना खाते के भी देख सकते हैं और डिफ़ॉल्ट चैनल फॉलो कर सकते हैं। बाद में कभी भी सेटिंग्स से साइन इन करके अपने सेव किए गए लेख और चैनल रख सकते हैं।',
       appearance: 'दिखावट', appearanceSub: 'नया रूप आज़माएँ। अगर पुराना रूप ही पसंद है, तो कभी भी बदल लें — इससे आपके सेव किए गए लेख या चैनल पर कोई असर नहीं पड़ता।',
       appearanceNewLabel: 'नया रूप', appearanceClassicLabel: 'क्लासिक',
       account: 'खाता', accountSub: 'वैकल्पिक। अपने सेव किए गए लेख, हटाए गए आइटम और फॉलो किए गए चैनल किसी कोड की बजाय अपने खाते से जोड़ने के लिए साइन इन करें - और बाकी सभी से अलग रखें।',
@@ -625,7 +631,10 @@ if (typeof document !== 'undefined') (function () {
       loginToLinkChannels: 'टेलीग्राम चैनल लिंक करने के लिए साइन इन करें।'
     },
     mr: {
-      linkPages: 'लिंक पेजेस', signals: 'सिग्नल्स', saved: 'सेव्ह केलेले', export: 'एक्सपोर्ट',
+      linkPages: 'लिंक पेजेस', settings: 'सेटिंग्ज', signals: 'सिग्नल्स', saved: 'सेव्ह केलेले', export: 'एक्सपोर्ट',
+      landingTitle: 'QwickSignal', landingTag: 'बातम्या, मेसेज आणि रिपोर्ट्स देश, क्षेत्र आणि महत्त्वानुसार क्रमवारी लावा.',
+      landingOr: 'किंवा', continueAsGuest: 'गेस्ट म्हणून सुरू ठेवा',
+      landingGuestNote: 'तुम्ही खात्याशिवायही पाहू शकता आणि डीफॉल्ट चॅनेल्स फॉलो करू शकता. नंतर कधीही सेटिंग्जमधून साइन इन करून तुमचे सेव्ह केलेले लेख आणि चॅनेल्स ठेवू शकता.',
       appearance: 'रूप', appearanceSub: 'नवीन लूक वापरून पहा. जुना आवडत असेल तर केव्हाही बदला — यामुळे तुमचे सेव्ह केलेले लेख किंवा चॅनेल्सवर काहीही परिणाम होत नाही.',
       appearanceNewLabel: 'नवीन लूक', appearanceClassicLabel: 'क्लासिक',
       account: 'खाते', accountSub: 'ऐच्छिक. तुमचे सेव्ह केलेले लेख, हटवलेल्या गोष्टी आणि फॉलो केलेले चॅनेल्स कोडऐवजी तुमच्या खात्याशी जोडण्यासाठी साइन इन करा - आणि इतरांपासून वेगळे ठेवा.',
@@ -648,7 +657,10 @@ if (typeof document !== 'undefined') (function () {
       loginToLinkChannels: 'टेलिग्राम चॅनेल लिंक करण्यासाठी साइन इन करा.'
     },
     gu: {
-      linkPages: 'લિંક પેજીસ', signals: 'સિગ્નલ્સ', saved: 'સેવ કરેલ', export: 'એક્સપોર્ટ',
+      linkPages: 'લિંક પેજીસ', settings: 'સેટિંગ્સ', signals: 'સિગ્નલ્સ', saved: 'સેવ કરેલ', export: 'એક્સપોર્ટ',
+      landingTitle: 'QwickSignal', landingTag: 'સમાચાર, સંદેશા અને અહેવાલોને દેશ, ક્ષેત્ર અને મહત્વ પ્રમાણે ગોઠવો.',
+      landingOr: 'અથવા', continueAsGuest: 'ગેસ્ટ તરીકે ચાલુ રાખો',
+      landingGuestNote: 'તમે ખાતા વગર પણ જોઈ શકો છો અને ડિફોલ્ટ ચેનલ્સ ફોલો કરી શકો છો. પછી ગમે ત્યારે સેટિંગ્સમાંથી સાઇન ઇન કરીને તમારા સેવ કરેલા લેખો અને ચેનલ્સ રાખી શકો છો.',
       appearance: 'દેખાવ', appearanceSub: 'નવો દેખાવ અજમાવો. જૂનો જ ગમે તો ગમે ત્યારે બદલો — તમારા સેવ કરેલા લેખો કે ચેનલ્સ પર તેની કોઈ અસર થતી નથી.',
       appearanceNewLabel: 'નવો દેખાવ', appearanceClassicLabel: 'ક્લાસિક',
       account: 'ખાતું', accountSub: 'વૈકલ્પિક. તમારા સેવ કરેલા લેખો, કાઢી નાખેલી વસ્તુઓ અને ફોલો કરેલા ચેનલ્સ કોડને બદલે તમારા ખાતા સાથે જોડવા માટે સાઇન ઇન કરો - અને બીજા બધાથી અલગ રાખો.',
@@ -1127,11 +1139,63 @@ if (typeof document !== 'undefined') (function () {
     renderAccount(); renderAll(); renderChannels();
     toast('Signed out. Back to guest mode on this device.');
     Sync.pull().then(() => { renderAll(); renderChannels(); });    // fall back to this browser's guest sync code
+    Landing.show();   // "once the user picks something" also unwinds on sign-out: ask again next time
   }
 
+  /* ---------- Landing / sign-in screen ----------
+     A new front door: "Login as user with id/password or google account or will login as guest. Once the
+     user gets into the site via user login or as a guest - land them on signal page." Shown once per device
+     until a choice is made (sign in, create account, Google, or Continue as guest), then remembered - see
+     LANDING_KEY - so a returning visitor goes straight to Signals, exactly like the language or appearance
+     choice. Signing out (above) clears the flag and brings this screen back, since at that point the person
+     is back to being logged-out and should get the same explicit choice again. */
+  const LANDING_KEY = 'qs-landing-seen-v1';
+  const Landing = {
+    seen() { try { return localStorage.getItem(LANDING_KEY) === '1'; } catch (e) { return false; } },
+    markSeen() { try { localStorage.setItem(LANDING_KEY, '1'); } catch (e) { /* private browsing etc. */ } },
+    show() {
+      const el = $('#landing');
+      if (el) el.hidden = false;
+      document.body.classList.add('pre-app');
+      renderGoogleButton('landingGoogleBtn', async () => { await completeAuth(); Landing.dismiss(); });
+    },
+    dismiss() {
+      this.markSeen();
+      const el = $('#landing');
+      if (el) el.hidden = true;
+      document.body.classList.remove('pre-app');
+    },
+    // Called once at boot: if this device already made a choice, skip straight past the landing screen
+    // (same "land them on Signals" outcome whether that choice was signing in or continuing as guest, since
+    // setTab('brief') already runs unconditionally elsewhere in start()). Otherwise show it and wire its
+    // controls - done here rather than unconditionally so a returning, already-decided visitor never pays
+    // for the Google button init or seeing the screen flash up first.
+    init() {
+      if (this.seen()) return;
+      this.show();
+      const form = $('#landingAuthForm');
+      if (form) form.addEventListener('submit', async ev => {
+        ev.preventDefault();
+        const mode = (ev.submitter && ev.submitter.dataset.mode) || 'signin';
+        const email = $('#landingEmail').value.trim(), pass = $('#landingPass').value;
+        if (!email || pass.length < 6) { toast('Enter an email and a password of at least 6 characters.'); return; }
+        const r = mode === 'signup' ? await Auth.signUp(email, pass) : await Auth.signIn(email, pass);
+        if (!r.ok) { toast(r.error); return; }
+        await completeAuth();
+        this.dismiss();
+      });
+      const guestBtn = $('#landingGuestBtn');
+      if (guestBtn) guestBtn.addEventListener('click', () => this.dismiss());
+    }
+  };
+
   let googleReady = false;
-  async function renderGoogleButton() {
-    const box = $('#googleBtn');
+  // Takes a container id so both the Settings account box (#googleBtn) and the landing page
+  // (#landingGoogleBtn) can share the same Google Identity Services init/render logic instead of
+  // duplicating it - each call re-initializes with its own callback, which is harmless (GIS supports it)
+  // and keeps completeAuth()'s post-sign-in flow identical no matter which button was used.
+  async function renderGoogleButton(containerId = 'googleBtn', onSignedIn = completeAuth) {
+    const box = $('#' + containerId);
     if (!box) return;
     if (!FIREBASE.googleClientId) { box.hidden = true; return; }   // not configured for this deployment
     box.hidden = false;
@@ -1142,7 +1206,7 @@ if (typeof document !== 'undefined') (function () {
         callback: async (resp) => {
           const r = await Auth.signInWithGoogleIdToken(resp.credential);
           if (!r.ok) { toast(r.error); return; }
-          await completeAuth();
+          await onSignedIn();
         }
       });
       box.innerHTML = '';
@@ -2276,10 +2340,15 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     S.tab = name;
     $$('.view').forEach(v => v.hidden = v.id !== 'view-' + name);
     $$('.tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === name));
-    if (name !== 'inbox' || true) window.scrollTo(0, 0);
+    window.scrollTo(0, 0);
     if (name === 'brief') { renderControls(); renderList(); }
     if (name === 'export') renderExport();
     if (name === 'saved') renderSaved();
+    // Settings used to be the app's default first screen ("Link Pages"), so its Account/Telegram/Appearance
+    // blocks were always rendered on load regardless of which tab was showing. Now that it's reached only via
+    // the Settings tab, re-render its dynamic bits on every visit so they're never stale (e.g. after signing
+    // in from the landing page while this tab wasn't open yet).
+    if (name === 'settings') { renderAccount(); renderChannels(); renderSyncCode(); }
   }
 
   /* ---------- export ---------- */
@@ -2678,6 +2747,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       });
     }
     setTab('brief'); renderAll(); renderLiveBar(); renderAccount();
+    Landing.init();   // shows the landing screen over everything above if this device hasn't chosen yet
     loadLive();
     // The default-channels list is public read, so it loads independently of sign-in - a guest should never
     // see a blank feed while waiting for anything auth-related.

@@ -1,10 +1,10 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-1-v1';   // bumped: full visual redesign (new default look - editorial cards,
-                                      // shadows, hover/press animations, a fresh palette) plus an Appearance
-                                      // toggle on Link Pages to switch back to the original "Classic" look
-                                      // any time, saved on-device
+const VERSION = 'gni-phase3-2-v1';   // bumped: new landing/sign-in screen (email+password, Google, or
+                                      // Continue as guest) shown once per device before the app; the old
+                                      // "Link Pages" tab is now "Settings" and holds Appearance, Account
+                                      // (name/email/sign-out), Telegram channels and cross-device Sync
 const SHELL = ['./', 'index.html', 'app.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {

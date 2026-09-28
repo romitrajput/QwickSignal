@@ -403,9 +403,65 @@ body.cv-lock{overflow:hidden}
 .cv-fade{animation:cvFadeIn .22s ease}
 @keyframes cvFadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}.cv-fade{animation:none}}
+
+/* Landing / sign-in screen: the app's own header, tabs and content stay in the DOM (so nothing has to
+   re-initialise once it's dismissed) but sit hidden behind it while body.pre-app is set - see Landing.show()/
+   hide() in app.js. */
+body.pre-app .top, body.pre-app main, body.pre-app .tabs{display:none}
+.landing{position:fixed;inset:0;z-index:200;background:var(--paper);display:flex;align-items:center;justify-content:center;
+  padding:max(24px,env(safe-area-inset-top)) 20px max(24px,env(safe-area-inset-bottom));overflow-y:auto}
+.landing-inner{width:100%;max-width:380px;display:flex;flex-direction:column;align-items:stretch;text-align:center;
+  animation:qsCardIn .4s var(--ease) both}
+.landing-brand{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:6px}
+.landing-brand svg{color:var(--accent)}
+.landing-brand span{font-size:24px;font-weight:800;letter-spacing:-.02em;color:var(--ink)}
+.landing-tag{margin:0 0 28px;color:var(--ink2);font-size:14.5px;line-height:1.5}
+.landing-form{text-align:left}
+.landing-form .acct-buttons{flex-direction:column}
+.landing-form .acct-buttons .btn{flex:none}
+.landing-google{display:flex;justify-content:center;margin-top:14px}
+.landing-divider{display:flex;align-items:center;gap:12px;margin:22px 0;color:var(--ink2);font-size:13px;font-weight:600}
+.landing-divider::before,.landing-divider::after{content:"";flex:1;height:1px;background:var(--line)}
+.landing-guest{border-style:dashed}
+.landing-guestnote{margin:12px 0 0;font-size:12.5px;line-height:1.5;color:var(--ink2)}
 </style>
 </head>
 <body>
+
+<!-- LANDING: shown once, before the app's own header/tabs, until the person picks sign-in, sign-up, Google
+     or Continue as guest (see Landing in app.js). Kept as a fixed full-screen overlay so it can cover the
+     header and tab bar too, not just the main content area - body.pre-app hides the app underneath while
+     it's up. The choice is remembered on-device, so this isn't shown again on the next visit; signing out
+     brings it back. -->
+<div id="landing" class="landing" hidden>
+  <div class="landing-inner">
+    <div class="landing-brand">
+      <svg width="40" height="40" viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6">
+        <circle cx="16" cy="16" r="12"/><ellipse cx="16" cy="16" rx="5" ry="12"/><path d="M4 16h24M6 9.5h20M6 22.5h20"/>
+        <circle cx="22.5" cy="10.5" r="3.2" fill="#F0604D" stroke="none"/>
+      </svg>
+      <span data-i18n="landingTitle">QwickSignal</span>
+    </div>
+    <p class="landing-tag" data-i18n="landingTag">Sort news, messages and reports by country, sector and importance.</p>
+
+    <form id="landingAuthForm" class="acct-form landing-form">
+      <label class="vh" for="landingEmail" data-i18n="signInEmail">Email</label>
+      <input id="landingEmail" type="email" autocomplete="email" placeholder="you@example.com" required>
+      <label class="vh" for="landingPass" data-i18n="signInPassword">Password (6+ characters)</label>
+      <input id="landingPass" type="password" autocomplete="current-password" placeholder="Password (6+ characters)" data-i18n-placeholder="signInPassword" minlength="6" required>
+      <div class="acct-buttons">
+        <button type="submit" data-mode="signin" class="btn primary block" data-i18n="signIn">Sign in</button>
+        <button type="submit" data-mode="signup" class="btn block" data-i18n="createAccount">Create account</button>
+      </div>
+    </form>
+    <div id="landingGoogleBtn" class="acct-google landing-google" hidden></div>
+
+    <div class="landing-divider"><span data-i18n="landingOr">or</span></div>
+
+    <button id="landingGuestBtn" class="btn block landing-guest" data-i18n="continueAsGuest">Continue as guest</button>
+    <p class="landing-guestnote" data-i18n="landingGuestNote">You can look around and follow the default channels without an account. Sign in any time later from Settings to keep your own saved articles and channels.</p>
+  </div>
+</div>
 
 <header class="top">
   <div class="brand">
@@ -429,9 +485,10 @@ body.cv-lock{overflow:hidden}
 </header>
 
 <main>
-  <!-- INBOX -->
-  <section id="view-inbox" class="view">
-    <h1 data-i18n="linkPages">Link Pages</h1>
+  <!-- SETTINGS (formerly "Link Pages" - Appearance, Account, Telegram channels and cross-device Sync all
+       live here now, reached via the Settings tab instead of being the app's first/default screen) -->
+  <section id="view-settings" class="view" hidden>
+    <h1 data-i18n="settings">Settings</h1>
 
     <div class="lp-block">
       <h2 class="lp-h" data-i18n="appearance">Appearance</h2>
@@ -545,10 +602,10 @@ body.cv-lock{overflow:hidden}
 </main>
 
 <nav class="tabs" role="tablist" aria-label="Sections">
-  <button role="tab" data-tab="inbox" aria-selected="true" data-i18n="linkPages">Link Pages</button>
-  <button role="tab" data-tab="brief" aria-selected="false" data-i18n="signals">Signals</button>
+  <button role="tab" data-tab="brief" aria-selected="true" data-i18n="signals">Signals</button>
   <button role="tab" data-tab="saved" aria-selected="false" data-i18n="saved">Saved</button>
   <button role="tab" data-tab="export" aria-selected="false" data-i18n="export">Export</button>
+  <button role="tab" data-tab="settings" aria-selected="false" data-i18n="settings">Settings</button>
 </nav>
 <div id="toast" role="status" aria-live="polite"></div>
 <div class="vmodal" id="videoModal" role="dialog" aria-modal="true" aria-labelledby="vmTitle" hidden>
