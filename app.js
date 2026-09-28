@@ -695,6 +695,7 @@ if (typeof document !== 'undefined') (function () {
     $$('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
     $$('[data-i18n-placeholder]').forEach(el => { el.placeholder = t(el.dataset.i18nPlaceholder); });
     $$('[data-i18n-aria]').forEach(el => { el.setAttribute('aria-label', t(el.dataset.i18nAria)); });
+    $$('[data-i18n-title]').forEach(el => { el.setAttribute('title', t(el.dataset.i18nTitle)); });
     const sel = $('#langSelect');
     if (sel) sel.value = currentLang;
     // Re-render the bits built dynamically in JS (their strings come from t() at render time, so a plain
