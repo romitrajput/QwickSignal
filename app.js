@@ -965,31 +965,54 @@ if (typeof document !== 'undefined') (function () {
       if (!rec || !rec.uid) { this.ready = true; return false; }
       this.uid = rec.uid; this.email = rec.email; this.idToken = rec.idToken;
       this.refreshToken = rec.refreshToken; this.expiresAt = rec.expiresAt || 0;
-      const ok = await this.refreshIfNeeded();
+      const result = await this.refreshIfNeeded();
       this.ready = true;
-      if (!ok) this.signOut();      // refresh token is dead (revoked/expired): don't keep pretending to be signed in
-      return ok;
+      // Only a DEFINITIVE rejection from Firebase itself (the refresh token was actually revoked or is
+      // invalid - e.g. the password was changed elsewhere, or the account was deleted) should sign the
+      // person out here. Anything else - offline for a moment, a slow connection, a transient network or
+      // CORS hiccup on load, which is common on mobile - must NOT wipe a real, valid session just because
+      // this one attempt to refresh it happened to fail. In that ambiguous case we keep the existing
+      // session as-is (still logged in, using the token already stored) and simply try again the next time
+      // something needs it; the worst case is one stale token retried shortly after, not a surprise logout.
+      if (result === 'invalid') this.signOut();
+      return result === 'ok' || result === 'unchanged';
     },
 
+    // Returns 'unchanged' (token still fresh, nothing to do), 'ok' (refreshed successfully), 'invalid'
+    // (Firebase explicitly rejected the refresh token - genuinely dead), or 'network' (couldn't reach
+    // Firebase to find out either way - NOT the same as invalid, see restore() above).
     async refreshIfNeeded() {
-      if (!this.refreshToken) return false;
-      if (Date.now() < this.expiresAt) return true;
+      if (!this.refreshToken) return 'invalid';
+      if (Date.now() < this.expiresAt) return 'unchanged';
       try {
         const r = await fetch(`${SECURETOKEN}?key=${FIREBASE.apiKey}`, {
           method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: 'grant_type=refresh_token&refresh_token=' + encodeURIComponent(this.refreshToken)
         });
-        if (!r.ok) return false;
+        if (!r.ok) {
+          // A 400 with a body naming the token as invalid/expired/revoked is Firebase actually saying
+          // "this session is over." Any other failure (5xx, a body we can't parse, etc.) is treated as
+          // network trouble, not a verdict on the session.
+          let code = '';
+          try { code = ((await r.json()).error || {}).message || ''; } catch (e) { /* not JSON */ }
+          const dead = /TOKEN_EXPIRED|INVALID_REFRESH_TOKEN|USER_DISABLED|USER_NOT_FOUND/.test(code);
+          return dead ? 'invalid' : 'network';
+        }
         const d = await r.json();
         this.applySession(d.user_id, this.email, d.id_token, d.refresh_token, d.expires_in);
-        return true;
-      } catch (e) { return false; }
+        return 'ok';
+      } catch (e) { return 'network'; }   // fetch itself failed: offline, blocked, timed out - not a rejection
     },
 
     // Always call this right before an authenticated Firestore request - it refreshes a stale token first.
+    // refreshIfNeeded() now returns a string ('unchanged'/'ok'/'invalid'/'network'), not a boolean - only
+    // 'unchanged' or 'ok' mean there's a good token to hand back.
     async bearerToken() {
       if (!this.uid) return null;
-      if (Date.now() >= this.expiresAt && !(await this.refreshIfNeeded())) return null;
+      if (Date.now() >= this.expiresAt) {
+        const result = await this.refreshIfNeeded();
+        if (result !== 'ok' && result !== 'unchanged') return null;
+      }
       return this.idToken;
     },
 

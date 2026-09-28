@@ -1,10 +1,10 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-2-v1';   // bumped: new landing/sign-in screen (email+password, Google, or
-                                      // Continue as guest) shown once per device before the app; the old
-                                      // "Link Pages" tab is now "Settings" and holds Appearance, Account
-                                      // (name/email/sign-out), Telegram channels and cross-device Sync
+const VERSION = 'gni-phase3-3-v1';   // bugfix: a signed-in session on the same device no longer gets wiped
+                                      // by a transient network hiccup while refreshing the token on reload -
+                                      // only a genuine "this session is dead" answer from Firebase itself now
+                                      // signs the person out; everything else keeps them logged in
 const SHELL = ['./', 'index.html', 'app.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {
@@ -34,4 +34,3 @@ self.addEventListener('fetch', e => {
     e.respondWith(caches.match(req).then(r => r || fetch(req).then(keep)));
   }
 });
-
