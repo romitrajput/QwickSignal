@@ -1584,11 +1584,18 @@ if (typeof document !== 'undefined') (function () {
        active     shows in Signals, normal lifecycle
        saved      always shows in Saved, regardless of age
        dismissed  hidden everywhere (soft-delete; Undo puts it back for a few seconds after dismissing)
-       expired    older than 24h, not saved, not dismissed - simply falls off the Signals feed */
+       expired    not saved, not dismissed, and no longer considered current - falls off the Signals feed
+       A live item's presence in the latest feed.json IS the freshness signal - the pipeline only keeps
+       genuinely current stories in there, so a live item is active for as long as it's still in S.live.
+       (It used to also require it.addedAt, the article's original publish time, to be under 24h old -
+       but a story picked up by the pipeline after it was already published elsewhere would then vanish
+       from Signals immediately, hiding most of every fetch. The 24h lifecycle now only applies to items
+       added manually (not live), which have no feed to fall out of and would otherwise linger forever. */
   const LIFECYCLE_MS = 24 * 3600e3;
   function itemStatus(it) {
     if (S.dismissed.has(it.id)) return 'dismissed';
     if (S.saved.has(it.id)) return 'saved';
+    if (it.live) return 'active';
     return (Date.now() - it.addedAt) < LIFECYCLE_MS ? 'active' : 'expired';
   }
 
