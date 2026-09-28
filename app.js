@@ -1181,6 +1181,11 @@ if (typeof document !== 'undefined') (function () {
       if (el) el.hidden = false;
       document.body.classList.add('pre-app');
       renderGoogleButton('landingGoogleBtn', async () => { await completeAuth(); Landing.dismiss(); });
+      // Brief bars-loading indicator (see .landing-loader in index.html) before the sign-in form appears -
+      // a short, fixed reveal rather than tied to any particular async step, so it never gets stuck showing
+      // if something is slow and never flashes so fast it's pointless if everything is instant. Kept well
+      // under half a second so it reads as a polish beat, not a delay someone has to wait through.
+      if (el) setTimeout(() => el.classList.remove('landing-loading'), 350);
     },
     dismiss() {
       this.markSeen();
