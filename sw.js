@@ -1,8 +1,8 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-6-v1';   // bottom nav tabs now use icons (Signals/Saved/Export/Settings)
-                                      // instead of text labels
+const VERSION = 'gni-phase3-7-v1';   // tab icons now show hover/press feedback (a soft circular
+                                      // highlight plus a brief press-down scale)
 const SHELL = ['./', 'index.html', 'app.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {
