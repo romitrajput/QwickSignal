@@ -1485,6 +1485,17 @@ if (typeof document !== 'undefined') (function () {
     if (h < 24) return h + ' h ago';
     return Math.round(h / 24) + ' d ago';
   }
+  // Absolute date+time next to the "X ago" relative label, e.g. "29 Sep 2026, 10:39 PM" - uses the
+  // viewer's own locale/timezone (Intl.DateTimeFormat with no timeZone override) rather than hardcoding
+  // IST, so it reads correctly for users outside India too.
+  function fmtDateTime(ts) {
+    try {
+      const d = new Date(ts);
+      const datePart = d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+      const timePart = d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', hour12: true });
+      return `${datePart}, ${timePart}`;
+    } catch (e) { return ''; }
+  }
   const all = () => S.items.concat(S.live);
   const flagOf = name => E.flag((E.COUNTRY_BY_NAME[name] || {}).code);
   const loaded = {};
@@ -1769,8 +1780,9 @@ if (typeof document !== 'undefined') (function () {
       const cls = i < idx || (i === idx && S.reviewed.has(s.id)) ? 'seen' : (i === idx ? 'current' : '');
       return `<span class="cv-dash ${cls}"></span>`;
     }).join('');
-    // Headlines only, per explicit feedback: no timestamp/sector subtext, no Sources line, and no
-    // why-it-matters/facts body copy either - just the flag, country, headline and (if found) an image.
+    // Headlines only, per explicit feedback: no sector subtext, no Sources line, and no why-it-matters/
+    // facts body copy - just the flag, country, headline, date/time and (if found) an image. A date+time
+    // stamp was added back per later feedback asking for it against every headline, feed included.
     $('#cvDashes').innerHTML = dashes;
     const body = $('#cvBody');
     // onerror hides a broken/expired image link instead of leaving a broken-image icon - a missing photo
@@ -1781,6 +1793,7 @@ if (typeof document !== 'undefined') (function () {
       <div class="cv-flag">${flagOf(country)}</div>
       <div class="cv-country">${esc(country)}</div>
       <h2 class="cv-headline">${esc(trOf(it.headline))}</h2>
+      <div class="cv-time">${esc(fmtDateTime(it.addedAt))}</div>
       <div class="cv-pos">${idx + 1} / ${stories.length}</div>
     `;
     // A quick crossfade so moving between stories - and especially between countries - reads as a smooth
@@ -1918,7 +1931,7 @@ if (typeof document !== 'undefined') (function () {
       <h3 class="hl">${esc(trOf(it.headline))}</h3>
       ${it.summary ? `<p class="sum">${esc(trOf(it.summary))}</p>` : ''}
       ${videoHTML(it)}
-      <div class="foot">${n > 1 ? `<span>${n} sources</span>` : ''}${rel ? `<span>${rel} related</span>` : ''}<span>${ago(it.addedAt)}</span></div>
+      <div class="foot">${n > 1 ? `<span>${n} sources</span>` : ''}${rel ? `<span>${rel} related</span>` : ''}<span title="${esc(fmtDateTime(it.addedAt))}">${ago(it.addedAt)}</span><span class="ts">${esc(fmtDateTime(it.addedAt))}</span></div>
       ${open ? detailsHTML(it) : ''}
     </article>`;
   }
@@ -1947,7 +1960,7 @@ if (typeof document !== 'undefined') (function () {
       <h3 class="hl">${esc(trOf(it.headline))}</h3>
       ${it.summary ? `<p class="sum">${esc(trOf(it.summary))}</p>` : ''}
       ${videoHTML(it)}
-      <div class="foot">${n > 1 ? `<span>${n} sources</span>` : ''}<span>${ago(it.addedAt)}</span></div>
+      <div class="foot">${n > 1 ? `<span>${n} sources</span>` : ''}<span title="${esc(fmtDateTime(it.addedAt))}">${ago(it.addedAt)}</span><span class="ts">${esc(fmtDateTime(it.addedAt))}</span></div>
       ${open ? detailsHTML(it, { inSaved: true }) : ''}
       ${open ? '' : `<button class="link unsave" data-act="unsave" data-id="${esc(it.id)}">Remove from Saved</button>`}
     </article>`;
