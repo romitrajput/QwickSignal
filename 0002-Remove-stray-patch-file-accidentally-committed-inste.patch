@@ -1,0 +1,535 @@
+From 593171e5b84d6903e3e80b2187edd975577a3fe7 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Wed, 30 Sep 2026 01:32:02 +0530
+Subject: [PATCH 2/2] Remove stray patch file accidentally committed instead of
+ applied
+
+---
+ ...r-image-only-Telegram-posts-and-date.patch | 515 ------------------
+ 1 file changed, 515 deletions(-)
+ delete mode 100644 0001-Add-image-OCR-for-image-only-Telegram-posts-and-date.patch
+
+diff --git a/0001-Add-image-OCR-for-image-only-Telegram-posts-and-date.patch b/0001-Add-image-OCR-for-image-only-Telegram-posts-and-date.patch
+deleted file mode 100644
+index c5bf40b..0000000
+--- a/0001-Add-image-OCR-for-image-only-Telegram-posts-and-date.patch
++++ /dev/null
+@@ -1,515 +0,0 @@
+-From f9c51fad76e201e4f2a1e3bf7e27cb2c065dd3c4 Mon Sep 17 00:00:00 2001
+-From: Claude <noreply@anthropic.com>
+-Date: Wed, 30 Sep 2026 01:27:30 +0530
+-Subject: [PATCH] Add image OCR for image-only Telegram posts, and
+- date/timestamp on headlines
+-
+-- image_ocr.py (new): local OCR via pytesseract (eng+hin) for Telegram posts
+-  that are a photo/screenshot with little or no caption text. These were
+-  previously dropped silently because the extraction pipeline only ever read
+-  post text. OCR output is fed into the same post["text"] field so it flows
+-  through the existing extraction/dedup/merge pipeline unchanged.
+-- pipeline.py: parse_telegram_html now detects a post's photo (Telegram
+-  renders it as a CSS background-image, not <img src>) and keeps image-only
+-  posts instead of dropping them; collect() runs OCR on them before the
+-  length/age filter. Never breaks the run if tesseract isn't installed.
+-- .github/workflows/pipeline.yml: install tesseract-ocr + tesseract-ocr-hin
+-  on the runner.
+-- requirements.txt, sources.yml, .env.example: new pytesseract/Pillow deps
+-  and ocr_enabled/ocr_languages/ocr_min_chars/ocr_max_per_run settings.
+-- app.js, index.html: show a date/timestamp against every headline in the
+-  main feed, Saved tab, and the country story viewer.
+----
+- .env.example                   |  19 +++++
+- .github/workflows/pipeline.yml |   9 +++
+- app.js                         |  56 +++++++++++--
+- image_ocr.py                   | 140 +++++++++++++++++++++++++++++++++
+- index.html                     |   8 +-
+- pipeline.py                    |  51 +++++++++++-
+- requirements.txt               |   5 ++
+- sources.yml                    |  10 +++
+- 8 files changed, 282 insertions(+), 16 deletions(-)
+- create mode 100644 image_ocr.py
+-
+-diff --git a/.env.example b/.env.example
+-index 1173e55..a2e0a9d 100644
+---- a/.env.example
+-+++ b/.env.example
+-@@ -35,6 +35,25 @@ X_BEARER_TOKEN=
+- # frontend — it is used only server-side, inside the GitHub Action.
+- YOUTUBE_API_KEY=
+- 
+-+# ---- Google Custom Search JSON API (headline images) ----
+-+# Free tier: 100 queries/day. One search = one query, so about 100 stories/day get a photo
+-+# search at no cost (image_intel.py's Budget stops just under that limit automatically).
+-+# 1) console.cloud.google.com -> enable "Custom Search API" on a project -> Credentials -> API key.
+-+# 2) programmablesearchengine.google.com/controlpanel/create -> "Search the entire web" -> Create,
+-+#    then turn on "Image search" for it and copy its Search engine ID (that's GOOGLE_SEARCH_CX).
+-+GOOGLE_SEARCH_API_KEY=
+-+GOOGLE_SEARCH_CX=
+-+
+-+# ---- Image OCR for image-only Telegram posts (image_ocr.py) ----
+-+# No API key and nothing to set here - it runs locally via pytesseract (in requirements.txt) and is
+-+# free. It DOES need the tesseract-ocr binary + language packs installed on whatever machine runs
+-+# pipeline.py; pipeline.yml installs tesseract-ocr + tesseract-ocr-hin automatically in GitHub
+-+# Actions. Running the pipeline locally instead? Install it yourself, e.g.:
+-+#   Debian/Ubuntu:  sudo apt-get install tesseract-ocr tesseract-ocr-hin
+-+#   macOS:          brew install tesseract tesseract-lang
+-+# Without it, image-only posts are just skipped, same as before this feature existed - see
+-+# ocr_enabled/ocr_languages under settings: in sources.yml to turn it off or change languages.
+-+
+- # ---- Firebase (Phase 3 — cross-device sync for Saved/Dismissed/Channels) ----
+- # This is the public web SDK config, not a secret. It is safe to commit and safe to ship
+- # to the browser; access control is entirely enforced by firestore.rules on the server
+-diff --git a/.github/workflows/pipeline.yml b/.github/workflows/pipeline.yml
+-index 85a4d7b..71d0ef4 100644
+---- a/.github/workflows/pipeline.yml
+-+++ b/.github/workflows/pipeline.yml
+-@@ -39,6 +39,15 @@ jobs:
+- 
+-       - run: pip install -r requirements.txt
+- 
+-+      # Image OCR (image_ocr.py): reads text printed on image-only Telegram posts (a screenshot or
+-+      # infographic with no caption). pytesseract (in requirements.txt) is just a Python wrapper - the
+-+      # actual OCR engine and its language data have to be installed on the runner itself. eng + hin
+-+      # covers the channels configured by default; add more tesseract-ocr-<lang> packages here if you
+-+      # add channels that post in other scripts. Never fails the run: image_ocr.py skips OCR cleanly
+-+      # if this step doesn't run or the packages aren't present.
+-+      - name: Install tesseract OCR
+-+        run: sudo apt-get update -qq && sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-hin
+-+
+-       # Node.js lets the video step read stories with the very same rules the app uses (app.js)
+-       - uses: actions/setup-node@v4
+-         with:
+-diff --git a/app.js b/app.js
+-index 828675e..64232cd 100644
+---- a/app.js
+-+++ b/app.js
+-@@ -1485,6 +1485,17 @@ if (typeof document !== 'undefined') (function () {
+-     if (h < 24) return h + ' h ago';
+-     return Math.round(h / 24) + ' d ago';
+-   }
+-+  // Absolute date+time next to the "X ago" relative label, e.g. "29 Sep 2026, 10:39 PM" - uses the
+-+  // viewer's own locale/timezone (Intl.DateTimeFormat with no timeZone override) rather than hardcoding
+-+  // IST, so it reads correctly for users outside India too.
+-+  function fmtDateTime(ts) {
+-+    try {
+-+      const d = new Date(ts);
+-+      const datePart = d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+-+      const timePart = d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', hour12: true });
+-+      return `${datePart}, ${timePart}`;
+-+    } catch (e) { return ''; }
+-+  }
+-   const all = () => S.items.concat(S.live);
+-   const flagOf = name => E.flag((E.COUNTRY_BY_NAME[name] || {}).code);
+-   const loaded = {};
+-@@ -1584,11 +1595,18 @@ if (typeof document !== 'undefined') (function () {
+-        active     shows in Signals, normal lifecycle
+-        saved      always shows in Saved, regardless of age
+-        dismissed  hidden everywhere (soft-delete; Undo puts it back for a few seconds after dismissing)
+--       expired    older than 24h, not saved, not dismissed - simply falls off the Signals feed */
+-+       expired    not saved, not dismissed, and no longer considered current - falls off the Signals feed
+-+       A live item's presence in the latest feed.json IS the freshness signal - the pipeline only keeps
+-+       genuinely current stories in there, so a live item is active for as long as it's still in S.live.
+-+       (It used to also require it.addedAt, the article's original publish time, to be under 24h old -
+-+       but a story picked up by the pipeline after it was already published elsewhere would then vanish
+-+       from Signals immediately, hiding most of every fetch. The 24h lifecycle now only applies to items
+-+       added manually (not live), which have no feed to fall out of and would otherwise linger forever. */
+-   const LIFECYCLE_MS = 24 * 3600e3;
+-   function itemStatus(it) {
+-     if (S.dismissed.has(it.id)) return 'dismissed';
+-     if (S.saved.has(it.id)) return 'saved';
+-+    if (it.live) return 'active';
+-     return (Date.now() - it.addedAt) < LIFECYCLE_MS ? 'active' : 'expired';
+-   }
+- 
+-@@ -1762,8 +1780,9 @@ if (typeof document !== 'undefined') (function () {
+-       const cls = i < idx || (i === idx && S.reviewed.has(s.id)) ? 'seen' : (i === idx ? 'current' : '');
+-       return `<span class="cv-dash ${cls}"></span>`;
+-     }).join('');
+--    // Headlines only, per explicit feedback: no timestamp/sector subtext, no Sources line, and no
+--    // why-it-matters/facts body copy either - just the flag, country, headline and (if found) an image.
+-+    // Headlines only, per explicit feedback: no sector subtext, no Sources line, and no why-it-matters/
+-+    // facts body copy - just the flag, country, headline, date/time and (if found) an image. A date+time
+-+    // stamp was added back per later feedback asking for it against every headline, feed included.
+-     $('#cvDashes').innerHTML = dashes;
+-     const body = $('#cvBody');
+-     // onerror hides a broken/expired image link instead of leaving a broken-image icon - a missing photo
+-@@ -1774,6 +1793,7 @@ if (typeof document !== 'undefined') (function () {
+-       <div class="cv-flag">${flagOf(country)}</div>
+-       <div class="cv-country">${esc(country)}</div>
+-       <h2 class="cv-headline">${esc(trOf(it.headline))}</h2>
+-+      <div class="cv-time">${esc(fmtDateTime(it.addedAt))}</div>
+-       <div class="cv-pos">${idx + 1} / ${stories.length}</div>
+-     `;
+-     // A quick crossfade so moving between stories - and especially between countries - reads as a smooth
+-@@ -1911,7 +1931,7 @@ if (typeof document !== 'undefined') (function () {
+-       <h3 class="hl">${esc(trOf(it.headline))}</h3>
+-       ${it.summary ? `<p class="sum">${esc(trOf(it.summary))}</p>` : ''}
+-       ${videoHTML(it)}
+--      <div class="foot">${n > 1 ? `<span>${n} sources</span>` : ''}${rel ? `<span>${rel} related</span>` : ''}<span>${ago(it.addedAt)}</span></div>
+-+      <div class="foot">${n > 1 ? `<span>${n} sources</span>` : ''}${rel ? `<span>${rel} related</span>` : ''}<span title="${esc(fmtDateTime(it.addedAt))}">${ago(it.addedAt)}</span><span class="ts">${esc(fmtDateTime(it.addedAt))}</span></div>
+-       ${open ? detailsHTML(it) : ''}
+-     </article>`;
+-   }
+-@@ -1940,7 +1960,7 @@ if (typeof document !== 'undefined') (function () {
+-       <h3 class="hl">${esc(trOf(it.headline))}</h3>
+-       ${it.summary ? `<p class="sum">${esc(trOf(it.summary))}</p>` : ''}
+-       ${videoHTML(it)}
+--      <div class="foot">${n > 1 ? `<span>${n} sources</span>` : ''}<span>${ago(it.addedAt)}</span></div>
+-+      <div class="foot">${n > 1 ? `<span>${n} sources</span>` : ''}<span title="${esc(fmtDateTime(it.addedAt))}">${ago(it.addedAt)}</span><span class="ts">${esc(fmtDateTime(it.addedAt))}</span></div>
+-       ${open ? detailsHTML(it, { inSaved: true }) : ''}
+-       ${open ? '' : `<button class="link unsave" data-act="unsave" data-id="${esc(it.id)}">Remove from Saved</button>`}
+-     </article>`;
+-@@ -2761,8 +2781,30 @@ Give a concise, event-specific analysis - decide for yourself which structure be
+-   document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - S.lastLive >= AUTO_REFRESH_MS) loadLive(); });
+-   setInterval(() => { if (!document.hidden && Date.now() - S.lastLive >= AUTO_REFRESH_MS) loadLive(); }, 60e3);
+- 
+--  // The install-as-app prompt (beforeinstallprompt/data-install) was removed from the Export screen along with
+--  // its UI; the browser's own install affordance (address-bar icon or menu item) still works without it.
+-+  // Install-as-app: the header's Install button stays hidden until the browser tells us installing is actually
+-+  // possible (beforeinstallprompt), then triggers the browser's real install flow. Chrome/Edge/most Android
+-+  // browsers fire this; iOS Safari never does (no native install prompt there - "Add to Home Screen" via the
+-+  // Share sheet is the only route, so the button stays hidden and isn't a bug on iOS).
+-+  let deferredInstallPrompt = null;
+-+  window.addEventListener('beforeinstallprompt', ev => {
+-+    ev.preventDefault();
+-+    deferredInstallPrompt = ev;
+-+    const btn = $('[data-install]');
+-+    if (btn) btn.hidden = false;
+-+  });
+-+  window.addEventListener('appinstalled', () => {
+-+    deferredInstallPrompt = null;
+-+    const btn = $('[data-install]');
+-+    if (btn) btn.hidden = true;
+-+  });
+-+  document.addEventListener('click', async ev => {
+-+    if (!ev.target.closest('[data-install]') || !deferredInstallPrompt) return;
+-+    const btn = $('[data-install]');
+-+    deferredInstallPrompt.prompt();
+-+    await deferredInstallPrompt.userChoice;
+-+    deferredInstallPrompt = null;
+-+    if (btn) btn.hidden = true;
+-+  });
+- 
+-   /* ---------- start ---------- */
+-   (async function start() {
+-diff --git a/image_ocr.py b/image_ocr.py
+-new file mode 100644
+-index 0000000..89db750
+---- /dev/null
+-+++ b/image_ocr.py
+-@@ -0,0 +1,140 @@
+-+#!/usr/bin/env python3
+-+"""QwickSignal: OCR for image-only Telegram posts.
+-+
+-+Some Telegram channels post news as a photo (a screenshot of a headline, a scanned clipping, an
+-+infographic) with little or no caption text. parse_telegram_html() in pipeline.py already finds the
+-+post's photo URL for these (see tg_photo_url()), but without any text the post has nothing for the
+-+extraction model to read, so it was previously dropped entirely (pipeline.py: "if not text: continue").
+-+
+-+This module downloads that photo and runs local OCR (pytesseract, no API key, no per-call cost) to
+-+pull out whatever text is printed on the image. The OCR text is then treated exactly like a normal
+-+caption - it goes through the same extract_batch() / Claude tool-call / dedup / merge pipeline as
+-+every other post, with no separate code path downstream.
+-+
+-+    Telegram photo-only post -> download image -> OCR (eng+hin) -> post["text"] -> normal pipeline
+-+
+-+Design rules (mirrored from video_intel.py / image_intel.py)
+-+    * Local and free: no external API, no key, no daily budget to manage.
+-+    * An OCR problem can never break the news feed: every failure in here is caught and logged, and
+-+      the post is skipped exactly like a caption-less post was before this module existed.
+-+    * OCR is noisy by nature (garbled words, wrong reading order on multi-column images, holes in
+-+      non-Latin scripts). It is not corrected here - the post's OCR text is handed to the same AI
+-+      extraction step used for every other post, which already writes English summaries from messy
+-+      source text and already treats post text as untrusted data.
+-+"""
+-+from __future__ import annotations
+-+
+-+import io
+-+import re
+-+
+-+# Every value can be overridden under "settings:" in sources.yml.
+-+DEFAULTS = {
+-+    "ocr_enabled": True,               # master switch (it also needs pytesseract + tesseract-ocr installed)
+-+    "ocr_languages": "eng+hin",        # tesseract language packs to use, e.g. "eng", "eng+hin"
+-+    "ocr_min_chars": 20,               # OCR results shorter than this are treated as "nothing readable"
+-+    "ocr_max_per_run": 40,             # image-only posts OCR'd per pipeline run (OCR is local/free, but not instant)
+-+    "ocr_timeout_seconds": 20,         # per-image download timeout
+-+}
+-+
+-+_WS = re.compile(r"[ \t]+")
+-+_BLANKLINES = re.compile(r"\n{3,}")
+-+
+-+
+-+class OcrUnavailable(Exception):
+-+    """pytesseract or the tesseract binary isn't installed. Caller should skip OCR for this run."""
+-+
+-+
+-+def _engine():
+-+    """Import pytesseract lazily so the whole pipeline still runs without it installed."""
+-+    try:
+-+        import pytesseract
+-+        from PIL import Image
+-+    except ImportError as exc:
+-+        raise OcrUnavailable(f"pytesseract/Pillow not installed: {exc}") from exc
+-+    return pytesseract, Image
+-+
+-+
+-+def clean_ocr_text(raw: str) -> str:
+-+    """Tidy up tesseract's raw output: collapse repeated spaces/blank lines, drop empty lines."""
+-+    lines = [ _WS.sub(" ", ln).strip() for ln in raw.splitlines() ]
+-+    text = "\n".join(ln for ln in lines if ln)
+-+    return _BLANKLINES.sub("\n\n", text).strip()
+-+
+-+
+-+def ocr_image_bytes(data: bytes, languages: str = "eng+hin") -> str:
+-+    """Run tesseract OCR on raw image bytes and return cleaned text (empty string if nothing found)."""
+-+    pytesseract, Image = _engine()
+-+    with Image.open(io.BytesIO(data)) as im:
+-+        im = im.convert("RGB")
+-+        try:
+-+            raw = pytesseract.image_to_string(im, lang=languages)
+-+        except pytesseract.TesseractError:
+-+            # A requested language pack (e.g. "hin") may not be installed on this runner - fall back
+-+            # to English only rather than losing the post entirely.
+-+            raw = pytesseract.image_to_string(im, lang="eng")
+-+    return clean_ocr_text(raw)
+-+
+-+
+-+def ocr_posts(posts: list[dict], settings: dict, http, log=lambda *a, **k: None) -> dict:
+-+    """For posts with an image_url and little/no caption text, fill in post["text"] from OCR.
+-+
+-+    posts: the list of post dicts collected this run (mutated in place - "text" and "ocr" keys are set
+-+           on posts that get OCR'd; posts with existing real text, or no image, are left untouched).
+-+    http:  the pipeline's own http_get(url) helper, reused so proxy/timeout/User-Agent handling stays
+-+           in one place.
+-+    Returns a small stats dict for logging. Never raises - any failure just means fewer posts get an
+-+    OCR pass this run, same fallback behaviour as video_intel.py / image_intel.py.
+-+    """
+-+    stats = {"attempted": 0, "ok": 0, "empty": 0, "failed": 0, "skipped_no_tesseract": 0}
+-+    if not settings.get("ocr_enabled", True):
+-+        return stats
+-+    min_chars = int(settings.get("ocr_min_chars", 20))
+-+    languages = settings.get("ocr_languages", "eng+hin")
+-+    budget = int(settings.get("ocr_max_per_run", 40))
+-+
+-+    candidates = [p for p in posts if p.get("image_url") and len(p.get("text") or "") < min_chars]
+-+    if not candidates:
+-+        return stats
+-+
+-+    try:
+-+        _engine()  # fail fast once, with one clear log line, instead of once per image
+-+    except OcrUnavailable as exc:
+-+        log(f"  ! OCR: {exc} - image-only posts will be skipped. Add pytesseract+Pillow to requirements.txt "
+-+            f"and 'tesseract-ocr tesseract-ocr-hin' to the CI runner to enable this.")
+-+        stats["skipped_no_tesseract"] = len(candidates)
+-+        return stats
+-+
+-+    for p in candidates[:budget]:
+-+        stats["attempted"] += 1
+-+        try:
+-+            r = http(p["image_url"])
+-+            if r.status_code != 200 or not r.content:
+-+                stats["failed"] += 1
+-+                continue
+-+            text = ocr_image_bytes(r.content, languages)
+-+        except Exception as exc:  # noqa: BLE001 - OCR must never take the whole run down
+-+            log(f"  ! OCR failed for {p.get('key', '?')}: {exc}")
+-+            stats["failed"] += 1
+-+            continue
+-+        if len(text) < min_chars:
+-+            stats["empty"] += 1
+-+            continue
+-+        # Keep any real caption the post already had (rare for image-only posts, but cheap to preserve)
+-+        # ahead of the OCR text, clearly labelled, so the extraction model can tell them apart.
+-+        existing = (p.get("text") or "").strip()
+-+        p["text"] = (existing + "\n\n[Text read from image]\n" + text).strip() if existing else text
+-+        p["ocr"] = True
+-+        stats["ok"] += 1
+-+    return stats
+-+
+-+
+-+def check(settings: dict, log=lambda *a, **k: None) -> None:
+-+    """Called by pipeline.py's 'check' command to report OCR readiness alongside the other integrations."""
+-+    if not settings.get("ocr_enabled", True):
+-+        log("Image OCR: disabled in settings")
+-+        return
+-+    try:
+-+        _engine()
+-+        log(f"Image OCR: pytesseract available (languages: {settings.get('ocr_languages', 'eng+hin')})")
+-+    except OcrUnavailable as exc:
+-+        log(f"Image OCR: NOT available - {exc}")
+-diff --git a/index.html b/index.html
+-index 0e9121a..5716949 100644
+---- a/index.html
+-+++ b/index.html
+-@@ -56,8 +56,6 @@ button{transition:transform .15s var(--ease),background-color .15s var(--ease),b
+-   border-bottom:0;
+-   transition:background-color .25s var(--ease),border-color .25s var(--ease)}
+- .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px;letter-spacing:-.02em}
+--.brand svg circle:first-child{transition:stroke .25s var(--ease)}
+--.brand svg{flex:none}
+- .brand .livebar{margin:0;gap:0;font-size:0}
+- .brand .livebar .iconbtn{width:30px;height:30px;background:transparent;border:0;color:var(--head-ink);opacity:.85}
+- .top .right{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;opacity:.9}
+-@@ -174,6 +172,7 @@ input[type=search]:focus-visible{border-color:var(--accent);box-shadow:0 0 0 4px
+- .sum{margin:0;font-size:14.5px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+- .entry.open .sum{display:block;-webkit-line-clamp:unset}
+- .foot{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:9px;font-size:12.5px;color:var(--ink2);font-weight:600}
+-+.foot .ts{color:var(--ink2);opacity:.8}
+- .imp{display:inline-flex;align-items:center;gap:6px;color:var(--c)}
+- .imp i{width:8px;height:8px;border-radius:50%;background:var(--c)}
+- .details{margin-top:12px;padding-top:12px;border-top:1px solid var(--line);cursor:default}
+-@@ -375,6 +374,7 @@ body.cv-lock{overflow:hidden}
+- .cv-flag{font-size:56px;line-height:1}
+- .cv-country{font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink2)}
+- .cv-headline{margin:2px 0 0;font-size:22px;line-height:1.25;font-weight:800;letter-spacing:-.01em}
+-+.cv-time{margin-top:6px;font-size:12.5px;font-weight:600;color:var(--ink2)}
+- .cv-body .why{margin:10px 0 0;font-size:15px;line-height:1.5;text-align:left}
+- .cv-body .facts{margin:6px 0 0;padding-left:20px;text-align:left;font-size:14.5px;line-height:1.6}
+- .cv-pos{margin-top:auto;padding-top:16px;font-size:12.5px;font-weight:700;color:var(--ink2)}
+-@@ -471,10 +471,6 @@ body.pre-app .top, body.pre-app main, body.pre-app .tabs{display:none}
+- 
+- <header class="top">
+-   <div class="brand">
+--    <svg width="26" height="26" viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8">
+--      <circle cx="16" cy="16" r="12"/><ellipse cx="16" cy="16" rx="5" ry="12"/><path d="M4 16h24M6 9.5h20M6 22.5h20"/>
+--      <circle cx="22.5" cy="10.5" r="3.2" fill="#F0604D" stroke="none"/>
+--    </svg>
+-     <span>QwickSignal</span>
+-     <div class="livebar" id="liveBar"></div>
+-   </div>
+-diff --git a/pipeline.py b/pipeline.py
+-index cb957d7..ae82426 100644
+---- a/pipeline.py
+-+++ b/pipeline.py
+-@@ -83,6 +83,15 @@ try:
+- except Exception:  # noqa: BLE001
+-     image_intel = None
+- 
+-+# Image-only Telegram posts (image_ocr.py): some channels post news as a screenshot/infographic with
+-+# no caption text. Optional: without it (or without pytesseract/tesseract-ocr installed), those posts
+-+# are skipped exactly as they were before, everything else works as before.
+-+try:
+-+    import image_ocr
+-+    DEFAULTS.update(image_ocr.DEFAULTS)
+-+except Exception:  # noqa: BLE001
+-+    image_ocr = None
+-+
+- 
+- def log(msg: str) -> None:
+-     print(msg, flush=True)
+-@@ -236,6 +245,22 @@ def load_state() -> dict:
+- 
+- 
+- # ----------------------------------------------------------------- source: Telegram public channels
+-+_BG_URL = re.compile(r"background-image:\s*url\(['\"]?(.*?)['\"]?\)")
+-+
+-+
+-+def tg_photo_url(msg) -> str | None:
+-+    """The post's photo, if any. Telegram's public preview renders a photo as a CSS background-image
+-+    on a .tgme_widget_message_photo_wrap div (there's no plain <img src> for it), and a post that is
+-+    just one photo with no caption has no .tgme_widget_message_text at all - so this is the only way
+-+    to notice these posts exist. Grouped/album posts show only the first photo; that's fine, the model
+-+    only needs enough of the image to read the story once OCR runs on it."""
+-+    wrap = msg.select_one(".tgme_widget_message_photo_wrap")
+-+    if not wrap or not wrap.get("style"):
+-+        return None
+-+    m = _BG_URL.search(wrap["style"])
+-+    return m.group(1) if m and m.group(1) else None
+-+
+-+
+- def parse_telegram_html(page: str, channel: str) -> list[dict]:
+-     """Parse https://t.me/s/<channel>, the public web preview of a channel."""
+-     soup = BeautifulSoup(page, "html.parser")
+-@@ -258,18 +283,25 @@ def parse_telegram_html(page: str, channel: str) -> list[dict]:
+-             if el and el.get_text().strip() and el.get_text().strip() not in " ".join(parts):
+-                 parts.append(el.get_text().strip())
+-         text = clean("\n".join(p for p in parts if p))
+--        if not text:
+-+        image_url = tg_photo_url(msg)
+-+        # A post with neither real text nor a photo has nothing for the AI (or OCR) to work with -
+-+        # skip it exactly as before. A photo-only post (text == "" but image_url is set) is now kept:
+-+        # image_ocr.py fills in "text" from the photo before this post reaches extraction.
+-+        if not text and not image_url:
+-             continue
+-         a = msg.select_one("a.tgme_widget_message_date")
+-         t = msg.select_one("a.tgme_widget_message_date time")
+-         published = parse_dt(t.get("datetime")) if t else None
+-         if not published:
+-             continue
+--        out.append({
+-+        post = {
+-             "key": f"tg:{chan}:{mid}", "type": "telegram", "source": f"Telegram: {chan}", "author": chan,
+-             "text": text, "url": (a.get("href") if a and a.get("href") else f"https://t.me/{data_post}"),
+-             "published": published, "mid": int(mid),
+--        })
+-+        }
+-+        if image_url:
+-+            post["image_url"] = image_url
+-+        out.append(post)
+-     return out
+- 
+- 
+-@@ -888,6 +920,17 @@ def collect(cfg: dict, state: dict, now: dt.datetime) -> tuple[list[dict], dict]
+-         except Exception as exc:  # noqa: BLE001
+-             log(f"  ! rss {e.get('url')}: {exc}")
+-             status["failed"] += 1
+-+    # Image-only Telegram posts (a screenshot/infographic with no caption): OCR fills in post["text"]
+-+    # here, before dedup/extraction, so everything downstream treats them exactly like a normal post.
+-+    # Never allowed to break the run - see image_ocr.py's own docstring for the fallback behaviour.
+-+    if image_ocr is not None:
+-+        try:
+-+            ocr_stats = image_ocr.ocr_posts(posts, s, http_get, log=log)
+-+            if ocr_stats["attempted"]:
+-+                log(f"  image OCR: {ocr_stats['ok']} read, {ocr_stats['empty']} unreadable, "
+-+                    f"{ocr_stats['failed']} failed (of {ocr_stats['attempted']} attempted)")
+-+        except Exception as exc:  # noqa: BLE001
+-+            log(f"  ! image OCR skipped: {exc}")
+-     return posts, status
+- 
+- 
+-@@ -1129,6 +1172,8 @@ def cmd_check() -> int:
+-         video_intel.check(os.environ, ROOT, log, http_get)
+-     if image_intel is not None:
+-         image_intel.check(os.environ, log)
+-+    if image_ocr is not None:
+-+        image_ocr.check(cfg["settings"], log)
+-     return 1 if bad else 0
+- 
+- 
+-diff --git a/requirements.txt b/requirements.txt
+-index be0092a..7d6bda9 100644
+---- a/requirements.txt
+-+++ b/requirements.txt
+-@@ -5,3 +5,8 @@ PyYAML>=6.0
+- pypdf>=4.0
+- # Optional, only for private Telegram channels (see the notes in pipeline.py):
+- # telethon>=1.36
+-+
+-+# Image OCR for image-only Telegram posts (image_ocr.py) - needs the tesseract-ocr system
+-+# binary too (pipeline.yml installs it in CI; see .env.example for running locally).
+-+pytesseract>=0.3.10
+-+Pillow>=10.0
+-diff --git a/sources.yml b/sources.yml
+-index 470481d..205ef63 100644
+---- a/sources.yml
+-+++ b/sources.yml
+-@@ -66,3 +66,13 @@ settings:
+-                                                # to spend the daily query budget on fewer, more important stories instead
+-   #image_max_per_run: 8                       # searches per pipeline run (cadence set by pipeline.yml's cron)
+-   #image_daily_query_budget: 95               # Google's free tier is 100 queries/day; this keeps a safety margin
+-+
+-+  # Image-only Telegram posts: some channels post news as a screenshot or infographic with little or no
+-+  # caption text. Without this, those posts are invisible to the pipeline. Local OCR (no API key, no
+-+  # cost) reads the text printed on the image and feeds it in as if it were the post's caption - needs
+-+  # pytesseract + Pillow (requirements.txt) and the tesseract-ocr binary + language packs on the runner
+-+  # (pipeline.yml installs eng + hin by default). Uncomment any of these to change the defaults.
+-+  #ocr_enabled: true                          # false switches image OCR off completely
+-+  #ocr_languages: eng+hin                     # tesseract language packs to read - add more if your channels use other scripts
+-+  #ocr_min_chars: 20                          # OCR results shorter than this are treated as "nothing readable" and dropped
+-+  #ocr_max_per_run: 40                        # image-only posts OCR'd per pipeline run (local/free, but not instant)
+--- 
+-2.43.0
+-
+-- 
+2.43.0
+
