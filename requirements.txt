@@ -5,3 +5,8 @@ PyYAML>=6.0
 pypdf>=4.0
 # Optional, only for private Telegram channels (see the notes in pipeline.py):
 # telethon>=1.36
+
+# Image OCR for image-only Telegram posts (image_ocr.py) - needs the tesseract-ocr system
+# binary too (pipeline.yml installs it in CI; see .env.example for running locally).
+pytesseract>=0.3.10
+Pillow>=10.0

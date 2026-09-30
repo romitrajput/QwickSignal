@@ -45,8 +45,9 @@ settings:
   #extraction_model: claude-haiku-4-5-20251001   # reads each post: fast and cheap
   #briefing_model: claude-sonnet-5               # writes the daily briefing (Sonnet 5 or Opus 5 both work)
   max_new_per_run: 100      # most posts analysed in one run
-  max_age_hours: 48        # ignore older posts
-  keep_days: 7             # how long stories stay in the app
+  max_age_hours: 24        # ignore older posts - was 48; kept in step with keep_days below
+  keep_days: 1              # how long stories stay in the app - was 7; the app's own UI always said 24h,
+                             # so the pipeline now actually matches that instead of quietly keeping a week
   telegram_pages: 5        # pages of about 20 posts read per channel per run
 
   # Phase 2.5, video intelligence: attach a verified news video to important stories (needs YOUTUBE_API_KEY, see .env.example).
@@ -66,3 +67,13 @@ settings:
                                                # to spend the daily query budget on fewer, more important stories instead
   #image_max_per_run: 8                       # searches per pipeline run (cadence set by pipeline.yml's cron)
   #image_daily_query_budget: 95               # Google's free tier is 100 queries/day; this keeps a safety margin
+
+  # Image-only Telegram posts: some channels post news as a screenshot or infographic with little or no
+  # caption text. Without this, those posts are invisible to the pipeline. Local OCR (no API key, no
+  # cost) reads the text printed on the image and feeds it in as if it were the post's caption - needs
+  # pytesseract + Pillow (requirements.txt) and the tesseract-ocr binary + language packs on the runner
+  # (pipeline.yml installs eng + hin by default). Uncomment any of these to change the defaults.
+  #ocr_enabled: true                          # false switches image OCR off completely
+  #ocr_languages: eng+hin                     # tesseract language packs to read - add more if your channels use other scripts
+  #ocr_min_chars: 20                          # OCR results shorter than this are treated as "nothing readable" and dropped
+  #ocr_max_per_run: 40                        # image-only posts OCR'd per pipeline run (local/free, but not instant)

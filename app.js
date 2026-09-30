@@ -542,6 +542,17 @@ if (typeof document !== 'undefined') (function () {
   const $$ = (s, r) => [...(r || document).querySelectorAll(s)];
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
+  /* ---------- usage tracking (GA4) ----------
+     One tiny wrapper around gtag() so every call site here reads as "log this interaction" rather than
+     repeating the same try/catch. window.gtag is defined by the inline snippet in index.html's <head>
+     (a real GA4 script if a Measurement ID is configured there, otherwise a harmless no-op stub) - either
+     way this can never throw or block the UI, which matters more than never missing an event. params is
+     a plain object of extra fields (e.g. { tab: 'saved' }); GA4's own event/param name limits apply. */
+  function track(action, params) {
+    try { if (typeof window.gtag === 'function') window.gtag('event', action, params || {}); }
+    catch (e) { /* analytics must never break the app */ }
+  }
+
   /* ---------- Multilingual UI (per the user's request: UI chrome only, not the live news content itself -
      headlines/summaries keep coming from the source in whatever language they were posted in; translating
      those live would need a translation API call per story per language, which is a separate, bigger feature).
@@ -1219,11 +1230,12 @@ if (typeof document !== 'undefined') (function () {
         if (!email || pass.length < 6) { toast('Enter an email and a password of at least 6 characters.'); return; }
         const r = mode === 'signup' ? await Auth.signUp(email, pass) : await Auth.signIn(email, pass);
         if (!r.ok) { toast(r.error); return; }
+        track(mode === 'signup' ? 'sign_up' : 'sign_in', { method: 'email' });
         await completeAuth();
         this.dismiss(false);
       });
       const guestBtn = $('#landingGuestBtn');
-      if (guestBtn) guestBtn.addEventListener('click', () => this.dismiss(true));
+      if (guestBtn) guestBtn.addEventListener('click', () => { track('continue_as_guest'); this.dismiss(true); });
     }
   };
 
@@ -1244,6 +1256,7 @@ if (typeof document !== 'undefined') (function () {
         callback: async (resp) => {
           const r = await Auth.signInWithGoogleIdToken(resp.credential);
           if (!r.ok) { toast(r.error); return; }
+          track('sign_in', { method: 'google' });
           await onSignedIn();
         }
       });
@@ -1412,8 +1425,8 @@ if (typeof document !== 'undefined') (function () {
       }
     },
 
-    follow(name) { S.myChannels.add(name.toLowerCase()); Sync.pushSoon(); },
-    unfollow(name) { S.myChannels.delete(name.toLowerCase()); Sync.pushSoon(); }
+    follow(name) { S.myChannels.add(name.toLowerCase()); Sync.pushSoon(); track('follow_channel', { channel: name }); },
+    unfollow(name) { S.myChannels.delete(name.toLowerCase()); Sync.pushSoon(); track('unfollow_channel', { channel: name }); }
   };
 
   /* ---------- Default channels (owner-curated) ----------
@@ -1831,11 +1844,13 @@ if (typeof document !== 'undefined') (function () {
     Sync.pushSoon();
     renderAll();
     toast('Saved. Find it any time under Saved.');
+    track('save_story', { id });
   }
   function unsaveItem(id) {
     S.saved.delete(id);
     Sync.pushSoon();
     renderAll();
+    track('unsave_story', { id });
   }
   function dismissItem(id) {
     S.saved.delete(id);
@@ -1843,6 +1858,7 @@ if (typeof document !== 'undefined') (function () {
     Sync.pushSoon();
     renderAll();
     toastAction('Dismissed. <button class="link inline" data-act="undo-dismiss" data-id="' + esc(id) + '">Undo</button>', 5000);
+    track('dismiss_story', { id });
   }
   function undoDismiss(id) {
     S.dismissed.delete(id);
@@ -1850,6 +1866,7 @@ if (typeof document !== 'undefined') (function () {
     renderAll();
     clearTimeout(toastTimer);
     $('#toast').classList.remove('show');
+    track('undo_dismiss', { id });
   }
 
   /* ---------- Video (Phase 2.5) ----------
@@ -1896,6 +1913,7 @@ if (typeof document !== 'undefined') (function () {
   function openVideo(it, opener) {
     const info = videoInfo(it), box = $('#videoModal'), frame = $('#vmFrame');
     if (!info || info.kind !== 'watch' || !box || !frame) return;
+    track('watch_video', { id: it.id });
     frame.innerHTML = '';
     const f = document.createElement('iframe');
     f.src = 'https://www.youtube-nocookie.com/embed/' + info.id + '?autoplay=1&rel=0&modestbranding=1&playsinline=1';
@@ -2395,6 +2413,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
 
   /* ---------- tabs ---------- */
   function setTab(name) {
+    if (name !== S.tab) track('tab_view', { tab: name });
     S.tab = name;
     $$('.view').forEach(v => v.hidden = v.id !== 'view-' + name);
     $$('.tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === name));
@@ -2423,12 +2442,14 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     if (!items.length) { toast('Nothing to export for that period.'); return; }
     download('qwicksignal-' + dayISO(Date.now()) + '.csv', E.toCSV(items), 'text/csv;charset=utf-8');
     toast('CSV saved to Downloads.');
+    track('export', { format: 'csv', range: S.exportRange, count: items.length });
   }
 
   async function exportPDF() {
     const items = visibleItems().filter(i => inRange(i, S.exportRange)).sort(byPriority);
     if (!items.length) { toast('Nothing to export for that period.'); return; }
     toast('Building the PDF\u2026');
+    track('export', { format: 'pdf', range: S.exportRange, count: items.length });
     try { await loadScript(URLS.jspdf); }
     catch (e) { toast('The PDF tool could not load. Connect to the internet once and try again.'); return; }
     const doc = new window.jspdf.jsPDF({ unit: 'pt', format: 'a4' });
@@ -2572,7 +2593,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       else if (act === 'tgdefault') {
         await DefaultChannels.toggle(el.dataset.v);
       }
-      else if (act === 'opencountry') { openCountry(el.dataset.c); }
+      else if (act === 'opencountry') { track('open_country_viewer', { country: el.dataset.c }); openCountry(el.dataset.c); }
       else if (act === 'cvclose') { closeCountryViewer(); }
       else if (act === 'cvprev') { cvGo(-1); }
       else if (act === 'cvnext') { cvGo(1); }
@@ -2603,7 +2624,9 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     const card = ev.target.closest('.entry');
     if (card && !ev.target.closest('select,button,a,label,.details')) {
       const id = card.dataset.id;
-      if (S.open.has(id)) S.open.delete(id); else S.open.add(id);
+      const opening = !S.open.has(id);
+      if (opening) S.open.add(id); else S.open.delete(id);
+      track(opening ? 'open_story' : 'close_story', { id });
       const it = all().find(i => i.id === id);
       if (it) card.outerHTML = card.closest('#savedList') ? savedCardHTML(it) : entryHTML(it);
     }
@@ -2806,8 +2829,23 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     if (btn) btn.hidden = true;
   });
 
+  /* ---------- splash ---------- */
+  // Shown on every cold start (see #splash in index.html, written inline in the HTML so the first paint
+  // already has it - no white flash while app.js loads/parses). Purely a brand beat: it never blocks or
+  // waits on anything else in start() below, it just sits on top for a fixed ~1.1s minimum, then fades.
+  // A minimum rather than "hide once ready" so it never flashes for 50ms on a fast device/warm cache -
+  // long enough to register as intentional, short enough not to feel like a delay.
+  const SPLASH_MIN_MS = 1100;
+  function dismissSplash() {
+    const el = $('#splash');
+    if (!el) return;
+    el.classList.add('splash-out');
+    setTimeout(() => el.remove(), 500);   // matches the CSS opacity transition, then drop it from the DOM
+  }
+
   /* ---------- start ---------- */
   (async function start() {
+    setTimeout(dismissSplash, SPLASH_MIN_MS);
     currentLang = loadLang();
     applyI18n();
     const langSel = $('#langSelect');

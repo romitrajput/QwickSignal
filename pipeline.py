@@ -60,8 +60,10 @@ DEFAULTS = {
     #"extraction_model": "claude-haiku-4-5-20251001",
     #"briefing_model": "claude-sonnet-5",
     "max_new_per_run": 100,    # posts sent to the AI per run; the rest wait for the next run
-    "max_age_hours": 48,      # ignore posts older than this
-    "keep_days": 7,           # how long items stay in feed.json
+    "max_age_hours": 24,      # ignore posts older than this (kept in step with keep_days below, and with
+                               # the app's own copy, which has always told users stories drop off after 24h)
+    "keep_days": 1,           # how long items stay in feed.json - was 7; the app's UI has always said 24h,
+                               # this brings the actual behaviour in line with that instead of the other way around
     "max_items": 600,
     "min_chars": 60,          # skip very short posts
     "batch_size": 20,
@@ -82,6 +84,15 @@ try:
     DEFAULTS.update(image_intel.DEFAULTS)
 except Exception:  # noqa: BLE001
     image_intel = None
+
+# Image-only Telegram posts (image_ocr.py): some channels post news as a screenshot/infographic with
+# no caption text. Optional: without it (or without pytesseract/tesseract-ocr installed), those posts
+# are skipped exactly as they were before, everything else works as before.
+try:
+    import image_ocr
+    DEFAULTS.update(image_ocr.DEFAULTS)
+except Exception:  # noqa: BLE001
+    image_ocr = None
 
 
 def log(msg: str) -> None:
@@ -236,6 +247,22 @@ def load_state() -> dict:
 
 
 # ----------------------------------------------------------------- source: Telegram public channels
+_BG_URL = re.compile(r"background-image:\s*url\(['\"]?(.*?)['\"]?\)")
+
+
+def tg_photo_url(msg) -> str | None:
+    """The post's photo, if any. Telegram's public preview renders a photo as a CSS background-image
+    on a .tgme_widget_message_photo_wrap div (there's no plain <img src> for it), and a post that is
+    just one photo with no caption has no .tgme_widget_message_text at all - so this is the only way
+    to notice these posts exist. Grouped/album posts show only the first photo; that's fine, the model
+    only needs enough of the image to read the story once OCR runs on it."""
+    wrap = msg.select_one(".tgme_widget_message_photo_wrap")
+    if not wrap or not wrap.get("style"):
+        return None
+    m = _BG_URL.search(wrap["style"])
+    return m.group(1) if m and m.group(1) else None
+
+
 def parse_telegram_html(page: str, channel: str) -> list[dict]:
     """Parse https://t.me/s/<channel>, the public web preview of a channel."""
     soup = BeautifulSoup(page, "html.parser")
@@ -258,18 +285,25 @@ def parse_telegram_html(page: str, channel: str) -> list[dict]:
             if el and el.get_text().strip() and el.get_text().strip() not in " ".join(parts):
                 parts.append(el.get_text().strip())
         text = clean("\n".join(p for p in parts if p))
-        if not text:
+        image_url = tg_photo_url(msg)
+        # A post with neither real text nor a photo has nothing for the AI (or OCR) to work with -
+        # skip it exactly as before. A photo-only post (text == "" but image_url is set) is now kept:
+        # image_ocr.py fills in "text" from the photo before this post reaches extraction.
+        if not text and not image_url:
             continue
         a = msg.select_one("a.tgme_widget_message_date")
         t = msg.select_one("a.tgme_widget_message_date time")
         published = parse_dt(t.get("datetime")) if t else None
         if not published:
             continue
-        out.append({
+        post = {
             "key": f"tg:{chan}:{mid}", "type": "telegram", "source": f"Telegram: {chan}", "author": chan,
             "text": text, "url": (a.get("href") if a and a.get("href") else f"https://t.me/{data_post}"),
             "published": published, "mid": int(mid),
-        })
+        }
+        if image_url:
+            post["image_url"] = image_url
+        out.append(post)
     return out
 
 
@@ -888,6 +922,17 @@ def collect(cfg: dict, state: dict, now: dt.datetime) -> tuple[list[dict], dict]
         except Exception as exc:  # noqa: BLE001
             log(f"  ! rss {e.get('url')}: {exc}")
             status["failed"] += 1
+    # Image-only Telegram posts (a screenshot/infographic with no caption): OCR fills in post["text"]
+    # here, before dedup/extraction, so everything downstream treats them exactly like a normal post.
+    # Never allowed to break the run - see image_ocr.py's own docstring for the fallback behaviour.
+    if image_ocr is not None:
+        try:
+            ocr_stats = image_ocr.ocr_posts(posts, s, http_get, log=log)
+            if ocr_stats["attempted"]:
+                log(f"  image OCR: {ocr_stats['ok']} read, {ocr_stats['empty']} unreadable, "
+                    f"{ocr_stats['failed']} failed (of {ocr_stats['attempted']} attempted)")
+        except Exception as exc:  # noqa: BLE001
+            log(f"  ! image OCR skipped: {exc}")
     return posts, status
 
 
@@ -1129,6 +1174,8 @@ def cmd_check() -> int:
         video_intel.check(os.environ, ROOT, log, http_get)
     if image_intel is not None:
         image_intel.check(os.environ, log)
+    if image_ocr is not None:
+        image_ocr.check(cfg["settings"], log)
     return 1 if bad else 0
 
 
