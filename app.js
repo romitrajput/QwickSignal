@@ -859,7 +859,7 @@ if (typeof document !== 'undefined') (function () {
     // both providers are OFF by default on a new Firebase project, and Auth.signUp/signIn will fail with
     // "OPERATION_NOT_ALLOWED" until Email/Password is turned on. Leaving googleClientId blank simply hides the
     // "Continue with Google" button - email/password accounts work regardless.
-    googleClientId: '978715847581-hvm03idi7qadhr9jdlbqumu2itfl9s27.apps.googleusercontent.com'
+    googleClientId: '434668496404-ivlniatcoq0b26bvcuk9ue1q40thtkfu.apps.googleusercontent.com'
   };
   const FS_BASE = `https://firestore.googleapis.com/v1/projects/${FIREBASE.projectId}/databases/(default)/documents`;
 
