@@ -2579,13 +2579,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       else if (act === 'dismiss') { dismissItem(el.dataset.id); }
       else if (act === 'undo-dismiss') { undoDismiss(el.dataset.id); }
       else if (act === 'goto') {
-        const id = el.dataset.id;
-        S.f = Object.assign(S.f, { country: '', sector: '', imp: '', q: '', range: 'all' }); $('#q').value = '';
-        S.open.add(id);
-        if (S.tab !== 'brief') setTab('brief');
-        renderControls(); renderList();
-        const t = document.querySelector('#view-brief .entry[data-id="' + id + '"]');
-        if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        gotoItem(el.dataset.id);
       }
       else if (act === 'del') {
         if (!confirm('Delete this item?')) return;
@@ -2737,8 +2731,12 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       S.liveMeta = feed ? { at: Date.parse(feed.generated_at) || 0, cached } : null;
       S.brief = brief;
       renderAll(); renderBrief();
+      // New-story detection runs on every load (manual pull or silent background poll), not just manual ones,
+      // so a story that arrives while the person isn't actively refreshing still surfaces a notification.
+      const freshItems = S.live.filter(i => !prevIds.has(i.id));
+      const fresh = freshItems.length;
+      if (!cached && fresh && prevIds.size) notifyNewStory(freshItems);
       if (manual) {
-        const fresh = S.live.filter(i => !prevIds.has(i.id)).length;
         toast(!S.liveMeta ? 'The live feed is not set up yet.'
           : cached ? 'No connection. Showing the saved copy (' + S.live.length + ' stories).'
           : fresh && prevIds.size ? fresh + (fresh === 1 ? ' new story.' : ' new stories.')
@@ -2748,6 +2746,51 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       liveBusy = false;
       $('#liveBar').classList.remove('busy');
     }
+  }
+
+  // Jumps to a specific item's card in the Signals list - same behaviour the "goto" tap action and the AI
+  // briefing's inline links use, factored out so the story-arrival notification can reuse it too.
+  function gotoItem(id) {
+    S.f = Object.assign(S.f, { country: '', sector: '', imp: '', q: '', range: 'all' }); $('#q').value = '';
+    S.open.add(id);
+    if (S.tab !== 'brief') setTab('brief');
+    renderControls(); renderList();
+    const t = document.querySelector('#view-brief .entry[data-id="' + id + '"]');
+    if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  let storyToastTimer = null;
+  // Pops the "Waveform Arrival" notification for a newly-arrived live story. If several arrived in the same
+  // poll, the single most important one is shown (matching how the manual-refresh toast instead gives a count).
+  function notifyNewStory(freshItems) {
+    if (!freshItems.length) return;
+    const wrap = $('#storyToast');
+    if (!wrap) return;
+    const it = freshItems.slice().sort(byPriority)[0];
+    const flag = flagOf(it.country);
+    const kicker = flag + ' ' + esc(it.country) + ' · ' + esc(it.sector);
+    wrap.classList.remove('show', 'hide');
+    wrap.innerHTML = `<div class="stcard" data-id="${esc(it.id)}" role="button" tabindex="0">
+        <div class="stsweep top"></div>
+        <div class="stsweep bottom"></div>
+        <div class="stwave"><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="stbody">
+          <div class="stkicker">${kicker}</div>
+          <div class="sthead">${esc(it.headline)}</div>
+        </div>
+        <button class="stgo" type="button">Check Now</button>
+      </div>`;
+    requestAnimationFrame(() => requestAnimationFrame(() => wrap.classList.add('show')));
+    const dismiss = () => {
+      if (!wrap.classList.contains('show')) return;
+      wrap.classList.remove('show'); wrap.classList.add('hide');
+      setTimeout(() => { wrap.innerHTML = ''; wrap.classList.remove('hide'); }, 300);
+    };
+    const open = () => { dismiss(); gotoItem(it.id); };
+    wrap.querySelector('.stgo').addEventListener('click', open);
+    wrap.querySelector('.stcard').addEventListener('click', open);
+    clearTimeout(storyToastTimer);
+    storyToastTimer = setTimeout(dismiss, 6000);
   }
   function renderLiveBar() {
     // Small equalizer bars instead of a spinning-arrows icon - still while idle, pulsing while a refresh

@@ -1,9 +1,10 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-16-v1';  // removed the leftover "Load sample data" empty-state/feature from
-                                      // app.js now that the app always has real feed content - bumped so
-                                      // the cached shell is refetched
+const VERSION = 'gni-phase3-18-v1';  // added the in-app "new story" notification (Waveform Arrival design):
+                                      // a toast pops when a new live story arrives (manual refresh or the
+                                      // silent background poll), and tapping "Check Now" jumps to that story -
+                                      // bumped so every visitor picks up the new index.html/app.js
 const SHELL = ['./', 'index.html', 'app.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {
