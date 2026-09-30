@@ -1,7 +1,9 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-12-v1';  // live items no longer expire off Signals based on their original publish date
+const VERSION = 'gni-phase3-13-v1';  // cream/red theme + splash screen + GA4 tracking + date/timestamp - bumped
+                                      // so every visitor's cached shell (index.html/app.js) is treated as stale
+                                      // and refetched immediately, instead of flashing the old dark theme first
 const SHELL = ['./', 'index.html', 'app.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {
