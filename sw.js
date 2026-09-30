@@ -1,9 +1,9 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-13-v1';  // cream/red theme + splash screen + GA4 tracking + date/timestamp - bumped
-                                      // so every visitor's cached shell (index.html/app.js) is treated as stale
-                                      // and refetched immediately, instead of flashing the old dark theme first
+const VERSION = 'gni-phase3-14-v1';  // new cream/red app icon (icon-192.png/icon-512.png) + manifest
+                                      // background_color/theme_color switched from navy to cream - bumped so
+                                      // the old cached icon files are dropped and the browser re-fetches them
 const SHELL = ['./', 'index.html', 'app.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {
