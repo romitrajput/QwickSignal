@@ -569,7 +569,7 @@ if (typeof document !== 'undefined') (function () {
       landingOr: 'or', continueAsGuest: 'Continue as guest',
       landingGuestNote: "You can look around and follow the default channels without an account. Sign in any time later from Settings to keep your own saved articles and channels.",
       account: 'Account', accountSub: "Optional. Sign in to keep your own saved articles, dismissed items and followed channels tied to your account instead of a code - and separate from anyone else's.",
-      signInEmail: 'Email', signInPassword: 'Password (6+ characters)', signIn: 'Sign in', createAccount: 'Create account',
+      signInEmail: 'Email', signInPassword: 'Password', signIn: 'Sign in', createAccount: 'Create account',
       signOut: 'Sign out', signedInAs: 'Signed in as',
       telegram: 'Telegram', tgPlaceholder: 't/channelname or t.me link', addBtn: '+ Add',
       following: 'Following', follow: 'Follow', remove: 'Remove', removeShared: 'Remove for everyone', setDefault: 'Set default', removeDefault: 'Remove default', defaultBadge: 'Default',
@@ -1279,7 +1279,7 @@ if (typeof document !== 'undefined') (function () {
       box.innerHTML = `
         <form id="authForm" class="acct-form">
           <label class="vh" for="authEmail">${t('signInEmail')}</label>
-          <input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com" required>
+          <input id="authEmail" type="email" autocomplete="email" placeholder="Enter your Gmail" required>
           <label class="vh" for="authPass">${t('signInPassword')}</label>
           <input id="authPass" type="password" autocomplete="current-password" placeholder="${esc(t('signInPassword'))}" minlength="6" required>
           <div class="acct-buttons">
