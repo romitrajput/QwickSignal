@@ -1,8 +1,9 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-15-v1';  // sign-in form placeholders updated ("Enter your Gmail", plain "Password")
-                                      // in index.html and app.js - bumped so the cached shell is refetched
+const VERSION = 'gni-phase3-16-v1';  // removed the leftover "Load sample data" empty-state/feature from
+                                      // app.js now that the app always has real feed content - bumped so
+                                      // the cached shell is refetched
 const SHELL = ['./', 'index.html', 'app.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {

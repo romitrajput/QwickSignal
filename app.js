@@ -511,25 +511,10 @@ const Engine = (function () {
     return '\uFEFF' + lines.join('\r\n');
   }
 
-  /* ---------- sample data (illustrative, not real news) ---------- */
-  const SAMPLES = [
-    'BREAKING: China announces additional export restrictions on semiconductor equipment, tightening controls on advanced lithography tools. The Ministry of Commerce said the measures take effect next month and target chip-making machinery used for advanced nodes.',
-    'China tightens semiconductor equipment export controls: what it means for the chip supply chain\nBeijing has widened export controls on semiconductor manufacturing equipment, adding advanced lithography and etching tools to its licensing list. Suppliers including ASML, Applied Materials and Tokyo Electron are expected to review shipments to Chinese fabs. Analysts at several brokerages estimate that equipment orders worth about $4 billion could be delayed over the next two quarters. Taiwan and South Korea, where TSMC and SK Hynix operate large foundry and memory fabs, may face longer lead times for tools and spare parts. The restrictions add to existing US export controls on advanced chips and could push manufacturers to diversify their semiconductor equipment sourcing. Japan is also reviewing its own licensing rules for chip-making machinery. The global chip supply chain remains tight for high-end memory used in AI servers.',
-    'China announces new export restrictions on semiconductor equipment. Beijing\'s commerce ministry said controls on advanced lithography tools will take effect next month, targeting chip-making machinery.',
-    'Tata Motors reports stronger-than-expected EV sales in August, with electric vehicle registrations up 34% year on year. The company said demand for its electric SUVs stayed strong in India, helped by new charging stations and lower battery costs.',
-    'US Federal Reserve cuts interest rates by 25 basis points as inflation eases. Policymakers signalled further rate cuts if the labour market cools, and Wall Street rallied after the decision.',
-    'Russia announces new restrictions on oil exports to countries that follow the price cap. Brent crude rose 3% to $91 a barrel as traders priced in tighter supply.',
-    'India and the European Union sign a new trade agreement covering textiles, pharmaceuticals and automobiles, cutting tariffs on more than 90% of traded goods. Negotiators from New Delhi and Brussels said the deal should lift bilateral trade over the next five years.',
-    'Copper prices climb to a record high after Chinese smelters announce output cuts. Electrical equipment makers warn of price increases, and automotive suppliers flag higher input costs for wiring harnesses and motors.',
-    'Global shipping rates surge as Red Sea disruptions force container vessels to reroute around the Cape of Good Hope, lifting freight costs on Asia-Europe routes by 40%.',
-    'Israel and Lebanon exchange missile strikes overnight, and Hezbollah claimed responsibility for a barrage on northern towns. Airlines suspended flights and several countries urged citizens to leave.',
-    'Weekly newsletter: opinion on consumer spending trends and retail brands, with a roundup of festive season marketing campaigns.'
-  ];
-
   return {
     analyze, compare, setOf, splitMessages, parseCSV, csvToDocs, toCSV, tokens, flag,
     classifyCountry, classifySector, classifyImportance, findCompanies, findDate,
-    COUNTRY_NAMES, COUNTRY_BY_NAME, SECTOR_NAMES, IMP_ORDER, impRank, SAMPLES, clip
+    COUNTRY_NAMES, COUNTRY_BY_NAME, SECTOR_NAMES, IMP_ORDER, impRank, clip
   };
 })();
 
@@ -584,7 +569,7 @@ if (typeof document !== 'undefined') (function () {
       exportLede: "Save a report or the raw table. Files go to your phone's Downloads.",
       downloadPdf: 'Download QwickSignal PDF', downloadCsv: 'Download CSV',
       onThisPhone: 'On this phone', clearAllData: 'Clear all data',
-      refresh: 'Refresh', loadSample: 'Load sample data',
+      refresh: 'Refresh',
       loginToLinkChannels: 'Log in to link Telegram channels.'
     },
     hi: {
@@ -608,7 +593,7 @@ if (typeof document !== 'undefined') (function () {
       exportLede: 'रिपोर्ट या रॉ टेबल सेव करें। फ़ाइलें आपके फोन के डाउनलोड्स में जाएंगी।',
       downloadPdf: 'QwickSignal PDF डाउनलोड करें', downloadCsv: 'CSV डाउनलोड करें',
       onThisPhone: 'इस फोन पर', clearAllData: 'सारा डेटा हटाएं',
-      refresh: 'रिफ्रेश करें', loadSample: 'नमूना डेटा लोड करें',
+      refresh: 'रिफ्रेश करें',
       loginToLinkChannels: 'टेलीग्राम चैनल लिंक करने के लिए साइन इन करें।'
     },
     mr: {
@@ -632,7 +617,7 @@ if (typeof document !== 'undefined') (function () {
       exportLede: 'अहवाल किंवा रॉ टेबल सेव्ह करा. फाइल्स तुमच्या फोनच्या डाउनलोड्समध्ये जातील.',
       downloadPdf: 'QwickSignal PDF डाउनलोड करा', downloadCsv: 'CSV डाउनलोड करा',
       onThisPhone: 'या फोनवर', clearAllData: 'सर्व डेटा काढा',
-      refresh: 'रिफ्रेश करा', loadSample: 'नमुना डेटा लोड करा',
+      refresh: 'रिफ्रेश करा',
       loginToLinkChannels: 'टेलिग्राम चॅनेल लिंक करण्यासाठी साइन इन करा.'
     },
     gu: {
@@ -656,7 +641,7 @@ if (typeof document !== 'undefined') (function () {
       exportLede: 'રિપોર્ટ અથવા રો ટેબલ સેવ કરો. ફાઇલો તમારા ફોનના ડાઉનલોડ્સમાં જશે.',
       downloadPdf: 'QwickSignal PDF ડાઉનલોડ કરો', downloadCsv: 'CSV ડાઉનલોડ કરો',
       onThisPhone: 'આ ફોન પર', clearAllData: 'બધો ડેટા કાઢી નાખો',
-      refresh: 'રિફ્રેશ કરો', loadSample: 'નમૂના ડેટા લોડ કરો',
+      refresh: 'રિફ્રેશ કરો',
       loginToLinkChannels: 'ટેલિગ્રામ ચેનલ લિંક કરવા સાઇન ઇન કરો.'
     }
   };
@@ -1576,16 +1561,9 @@ if (typeof document !== 'undefined') (function () {
   };
 
   // Manual ingest (paste/upload) was removed from Link Pages - Telegram channels and Sync are now the
-  // only ways content enters the app, aside from this loadSample() helper (still used by the Signals
-  // empty-state "Load sample data" button and by test_phaseb.py) and ingestText() (used by the
-  // web-share-target flow in start(), below).
-  async function loadSample() {
-    const st = newStats(); const fresh = [];
-    for (const t of E.SAMPLES) await addDoc({ text: t, source: 'Sample data' }, st, fresh);
-    renderAll();
-    toast(summariseStats(st) + ' (made-up examples for testing, not real news)');
-  }
-
+  // only ways content enters the app. ingestText() is still used by the web-share-target flow in
+  // start(), below. (The old "Load sample data" empty-state helper was removed now that the app always
+  // has real content from the live feed.)
   async function ingestText(text, source) {
     const st = newStats(); const fresh = [];
     let parts = E.splitMessages(text, false);
@@ -2213,7 +2191,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     ensureTranslated(collectTranslatable(items));
     const box = $('#list');
     if (!all().length) {
-      box.innerHTML = `<div class="empty"><p>Nothing in the briefing yet.</p><p>Add a message or file in the Inbox, or load sample data to see how it works.</p><button class="btn primary" data-act="sample">Load sample data</button></div>`;
+      box.innerHTML = `<div class="empty"><p>Nothing here right now.</p><p>Stories move here as they come in from your followed channels. Check back shortly, or pull down to refresh.</p><button class="btn" data-act="refresh">Refresh</button></div>`;
       return;
     }
     if (!items.length) {
@@ -2541,7 +2519,6 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       else if (act === 'fc') { S.f.country = S.f.country === v ? '' : v; renderControls(); renderList(); }
       else if (act === 'fs') { S.f.sector = S.f.sector === v ? '' : v; renderControls(); renderList(); }
       else if (act === 'reset') { S.f = Object.assign(S.f, { country: '', sector: '', imp: '', q: '', range: 'all' }); $('#q').value = ''; renderControls(); renderList(); }
-      else if (act === 'sample') { await loadSample(); setTab('brief'); }
       else if (act === 'refresh') { await loadLive(true); }
       else if (act === 'tgfollow') {
         // Follow/unfollow used to fire-and-forget via Sync.pushSoon() (a 600ms-debounced background save) -
