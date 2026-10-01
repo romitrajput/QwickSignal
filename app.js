@@ -1534,6 +1534,30 @@ if (typeof document !== 'undefined') (function () {
       } catch (e) { /* best-effort - still mark it off locally below */ }
       this.setOn(false);
       track('push_unsubscribe', {});
+    },
+
+    // Re-verifies and, if needed, re-writes this device's subscription on Firestore. Called once on every
+    // app load when the local "on" flag is set, because that flag alone is NOT proof the server actually
+    // has a working subscription for this device - it can only ever record what the last successful
+    // subscribe() call did, and several things can silently invalidate the real subscription afterward
+    // without this app being told: the pipeline prunes a subscription Firestore itself returns 404/410 for
+    // after a failed push, the browser can rotate or drop a push registration on its own (a Chrome update,
+    // storage pressure, "Clear browsing data"), and firestore.rules might not have been published yet the
+    // first time this device turned notifications on, which silently failed the write but had already
+    // flipped the local flag in an earlier version of this code. Re-subscribing when permission is already
+    // granted is a safe no-op from the browser's side (no new prompt, same endpoint most of the time) - the
+    // point here is making sure Firestore's copy actually matches it, every single app open.
+    async resync() {
+      if (!this.isOn() || !this.supported() || Notification.permission !== 'granted') return;
+      const r = await this.subscribe();
+      if (!r.ok) {
+        // A genuine, repeatable failure here (not just "offline right now") means Firestore does NOT have
+        // a working subscription for this device, whatever the local flag says - so the flag is corrected
+        // to match reality instead of going on silently claiming "on" every time Settings is opened.
+        console.warn('[QwickSignal] push resync failed:', r.error);
+        this.setOn(false);
+      }
+      if ($('#notifBox')) renderNotifBox();   // Settings may already be open and showing the stale state
     }
   };
 
@@ -3020,7 +3044,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     // code) on the very first pull - neither ever blocks the news feed itself from loading.
     Auth.restore().then(() => Sync.init()).then(() => { renderAccount(); renderSyncCode(); renderChannels(); renderAll(); });
     if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
-      window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => { }));
+      window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').then(() => Push.resync()).catch(() => { }));
       // A push notification's "Check Now" tap (see sw.js's notificationclick): an already-open tab gets
       // focused and sent this message directly instead of relying on the hash above.
       navigator.serviceWorker.addEventListener('message', ev => {
