@@ -197,7 +197,7 @@ DEFAULTS = {
                                # the app's own copy, which has always told users stories drop off after 24h)
     "keep_days": 1,           # how long items stay in feed.json - was 7; the app's UI has always said 24h,
                                # this brings the actual behaviour in line with that instead of the other way around
-    "max_items": 600,
+    "max_items": 2000,
     "min_chars": 60,          # skip very short posts
     "batch_size": 20,
     "telegram_pages": 5,      # pages of ~20 posts fetched per public channel
@@ -1386,8 +1386,16 @@ def rules_item(post: dict, headline: str, now: dt.datetime) -> dict:
 
 
 def prune(feed: dict, s: dict, now: dt.datetime) -> None:
+    # Cutoff is strictly 24h (keep_days) from each story's own FIRST-published time, not from its last
+    # update. A story used to be able to outlive this window indefinitely just by picking up new related
+    # posts (merge_record() bumps "updated" every time a dupe/related post comes in to keep a developing
+    # story from vanishing mid-event) - that's useful for staying "active" while still inside the 24h
+    # window, but it was also quietly keeping day-old stories alive forever whenever anything related kept
+    # trickling in, which is the opposite of what the app has always told users ("drops off after 24h").
+    # Using "published" here makes the 24h promise absolute: a story disappears exactly 24h after it first
+    # appeared, no matter how many later updates it collects in the meantime.
     cutoff = now - dt.timedelta(days=float(s["keep_days"]))
-    items = [i for i in feed["items"] if (parse_dt(i.get("updated")) or now) >= cutoff]
+    items = [i for i in feed["items"] if (parse_dt(i.get("published")) or now) >= cutoff]
     items.sort(key=lambda i: i["updated"], reverse=True)
     items = items[: int(s["max_items"])]
     ids = {i["id"] for i in items}
