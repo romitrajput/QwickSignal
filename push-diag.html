@@ -1,0 +1,168 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QS Push Diagnostic</title>
+<style>
+  body { font-family: -apple-system, system-ui, sans-serif; background: #0b0d12; color: #e8ecf1; padding: 16px; margin: 0; line-height: 1.5; }
+  h1 { font-size: 18px; margin: 0 0 16px; }
+  button { display: block; width: 100%; padding: 14px; margin: 10px 0; font-size: 16px; border-radius: 8px; border: none; background: #3b82f6; color: white; font-weight: 600; }
+  button:active { background: #2563eb; }
+  .log { background: #151822; border-radius: 8px; padding: 12px; margin-top: 12px; font-family: monospace; font-size: 12px; white-space: pre-wrap; word-break: break-all; max-height: 60vh; overflow-y: auto; }
+  .ok { color: #4ade80; }
+  .err { color: #f87171; }
+  .warn { color: #fbbf24; }
+</style>
+</head>
+<body>
+<h1>QwickSignal Push Diagnostic</h1>
+<button id="runBtn">Run full diagnostic</button>
+<div class="log" id="log">Tap the button above. This will show the REAL error at each step instead of hiding it.</div>
+
+<script>
+const FIREBASE_apiKey = 'AIzaSyBTix4TmUn9oVQrX0ByPra4FissOfAHefY';
+const FIREBASE_projectId = 'qwicksignal';
+const FS_BASE = `https://firestore.googleapis.com/v1/projects/${FIREBASE_projectId}/databases/(default)/documents`;
+const VAPID_PUBLIC_KEY = 'BLoqORqoNU8nV8DYIq70_t11_XaiwkhELAT_QBtFyoz9c8sWnYd0Ibg8Pp1sr_87C0s0iHq9FKQxZsk5wo4mh8w';
+
+const logEl = document.getElementById('log');
+function log(msg, cls) {
+  const line = document.createElement('div');
+  if (cls) line.className = cls;
+  line.textContent = msg;
+  logEl.appendChild(line);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+function clearLog() { logEl.innerHTML = ''; }
+
+function urlBase64ToUint8Array(base64) {
+  const pad = '='.repeat((4 - base64.length % 4) % 4);
+  const b64 = (base64 + pad).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = atob(b64);
+  const out = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+  return out;
+}
+function toFsValue(v) { return { stringValue: String(v) }; }
+function pushId() {
+  try {
+    let id = localStorage.getItem('qs-push-id-v1');
+    if (!id) { id = 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 10); localStorage.setItem('qs-push-id-v1', id); }
+    return id;
+  } catch (e) { return 'p' + Date.now().toString(36); }
+}
+
+document.getElementById('runBtn').addEventListener('click', async () => {
+  clearLog();
+  log('--- Step 1: Environment checks ---');
+  log('location.protocol = ' + location.protocol);
+  log('location.href = ' + location.href);
+  const hasSW = 'serviceWorker' in navigator;
+  const hasPush = 'PushManager' in window;
+  const hasNotif = 'Notification' in window;
+  log('serviceWorker supported: ' + hasSW, hasSW ? 'ok' : 'err');
+  log('PushManager supported: ' + hasPush, hasPush ? 'ok' : 'err');
+  log('Notification supported: ' + hasNotif, hasNotif ? 'ok' : 'err');
+  if (!hasSW || !hasPush || !hasNotif) { log('STOPPING: this browser/context does not support push at all here.', 'err'); return; }
+
+  log('Notification.permission = ' + Notification.permission, Notification.permission === 'granted' ? 'ok' : 'warn');
+
+  log('--- Step 2: Requesting permission (if needed) ---');
+  let perm = Notification.permission;
+  if (perm !== 'granted') {
+    try {
+      perm = await Notification.requestPermission();
+      log('requestPermission() returned: ' + perm);
+    } catch (e) {
+      log('requestPermission() threw: ' + e.message, 'err');
+      return;
+    }
+  }
+  if (perm !== 'granted') { log('STOPPING: permission not granted (' + perm + ')', 'err'); return; }
+  log('Permission OK', 'ok');
+
+  log('--- Step 3: Registering/locating service worker ---');
+  let reg;
+  try {
+    reg = await navigator.serviceWorker.register('sw.js');
+    log('register() resolved, scope = ' + reg.scope, 'ok');
+  } catch (e) {
+    log('serviceWorker.register("sw.js") THREW: ' + e.name + ': ' + e.message, 'err');
+    log('(This usually means sw.js is 404, or served with wrong MIME type, or blocked by HTTPS requirement)', 'warn');
+    return;
+  }
+  try {
+    reg = await navigator.serviceWorker.ready;
+    log('serviceWorker.ready resolved, active worker state = ' + (reg.active ? reg.active.state : 'none'), 'ok');
+  } catch (e) {
+    log('serviceWorker.ready THREW: ' + e.message, 'err');
+    return;
+  }
+
+  log('--- Step 4: Getting/creating push subscription ---');
+  let sub;
+  try {
+    sub = await reg.pushManager.getSubscription();
+    log('getSubscription() returned: ' + (sub ? 'existing subscription found' : 'null (none yet)'));
+  } catch (e) {
+    log('getSubscription() THREW: ' + e.message, 'err');
+    return;
+  }
+  if (!sub) {
+    try {
+      sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) });
+      log('subscribe() SUCCEEDED, endpoint = ' + sub.endpoint.slice(0, 60) + '...', 'ok');
+    } catch (e) {
+      log('pushManager.subscribe() THREW: ' + e.name + ': ' + e.message, 'err');
+      log('(AbortError/NotAllowedError here usually means no valid VAPID key, or push service unreachable, or permission revoked by OS)', 'warn');
+      return;
+    }
+  } else {
+    log('Reusing existing subscription, endpoint = ' + sub.endpoint.slice(0, 60) + '...', 'ok');
+  }
+
+  log('--- Step 5: Writing subscription to Firestore ---');
+  const j = sub.toJSON();
+  const id = pushId();
+  log('Device push id = ' + id + ' (length ' + id.length + ')');
+  const fields = {
+    endpoint: toFsValue(j.endpoint),
+    p256dh: toFsValue((j.keys || {}).p256dh || ''),
+    auth: toFsValue((j.keys || {}).auth || ''),
+    created_at: toFsValue(new Date().toISOString())
+  };
+  const url = `${FS_BASE}/qs_push_subs/${id}?key=${FIREBASE_apiKey}`;
+  log('PATCH url = ' + url);
+  try {
+    const r = await fetch(url, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fields })
+    });
+    log('fetch resolved, HTTP status = ' + r.status + ' ' + r.statusText, r.ok ? 'ok' : 'err');
+    const bodyText = await r.text();
+    log('Response body: ' + bodyText);
+    if (!r.ok) {
+      log('STOPPING: Firestore REJECTED the write. See response body above for the exact reason (e.g. PERMISSION_DENIED means firestore.rules is blocking it).', 'err');
+      return;
+    }
+    log('SUCCESS: Firestore accepted the subscription write.', 'ok');
+  } catch (e) {
+    log('fetch() THREW (network-level, never reached Firestore or response unreadable): ' + e.name + ': ' + e.message, 'err');
+    log('(This usually means CORS block, no network, or the request was blocked before it left the browser)', 'warn');
+    return;
+  }
+
+  log('--- Step 6: Reading it back to confirm ---');
+  try {
+    const r2 = await fetch(`${FS_BASE}/qs_push_subs/${id}?key=${FIREBASE_apiKey}`);
+    const t2 = await r2.text();
+    log('GET status ' + r2.status + ': ' + t2, r2.ok ? 'ok' : 'err');
+  } catch (e) {
+    log('Readback fetch threw: ' + e.message, 'err');
+  }
+
+  log('--- DONE ---', 'ok');
+});
+</script>
+</body>
+</html>
