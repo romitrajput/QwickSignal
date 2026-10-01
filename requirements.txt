@@ -3,6 +3,9 @@ requests>=2.31
 beautifulsoup4>=4.12
 PyYAML>=6.0
 pypdf>=4.0
+# Web Push notifications (pipeline.py's send_push_notifications): hand-rolled RFC 8291/8292
+# encryption using this instead of pywebpush, which this project's package index can't resolve.
+cryptography>=42.0
 # Optional, only for private Telegram channels (see the notes in pipeline.py):
 # telethon>=1.36
 

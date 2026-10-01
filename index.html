@@ -340,6 +340,48 @@ body.noscroll{overflow:hidden}
 .tabs button:active::after{opacity:.16;transform:scale(1.08)}
 .tabs button:active .tab-icon{transform:scale(.88)}
 #toast{position:fixed;left:16px;right:16px;bottom:calc(76px + env(safe-area-inset-bottom));z-index:40;max-width:520px;margin:0 auto;background:var(--ink);color:var(--paper);padding:12px 16px;border-radius:var(--radius-ctrl);font-size:14px;font-weight:600;opacity:0;transform:translateY(8px);pointer-events:none;transition:opacity .2s var(--ease),transform .2s var(--ease);box-shadow:0 12px 32px -8px rgba(0,0,0,.35)}
+
+/* Story-arrival notification ("Waveform Arrival" design) */
+#storyToast{position:fixed;left:0;right:0;top:max(14px,env(safe-area-inset-top));z-index:250;display:flex;justify-content:center;padding:0 14px;pointer-events:none}
+#storyToast .stcard{pointer-events:auto;width:min(94vw,420px);background:var(--ink);color:var(--paper);border-radius:14px;box-shadow:0 16px 40px -10px rgba(0,0,0,.45);display:flex;align-items:center;gap:11px;padding:12px 14px;transform:translateY(-14px);opacity:0;position:relative;overflow:hidden;cursor:pointer}
+#storyToast.show .stcard{animation:stIn .4s var(--ease) forwards}
+#storyToast.hide .stcard{animation:stOut .26s ease-in forwards}
+@keyframes stIn{to{transform:translateY(0);opacity:1}}
+@keyframes stOut{to{transform:translateY(-10px);opacity:0}}
+#storyToast .stsweep{position:absolute;left:0;right:0;height:1.5px;background:linear-gradient(90deg,transparent 0%,rgba(240,96,77,0) 0%,rgba(240,96,77,.9) 50%,rgba(240,96,77,0) 100%);background-size:55% 100%;background-repeat:no-repeat;background-position:-60% 0;opacity:0;pointer-events:none}
+#storyToast .stsweep.top{top:0}
+#storyToast .stsweep.bottom{bottom:0}
+#storyToast.show .stsweep{animation:stSweepIn .2s ease-out .45s forwards,stSweep 2.2s ease-in-out .5s infinite}
+@keyframes stSweepIn{to{opacity:1}}
+@keyframes stSweep{0%{background-position:-60% 0}100%{background-position:160% 0}}
+#storyToast .stwave{display:flex;align-items:center;gap:3px;height:26px;flex:none}
+#storyToast .stwave i{display:block;width:3.5px;border-radius:3px;background:#F0604D;transform:scaleY(0);transform-origin:center;opacity:.35}
+#storyToast.show .stwave i{animation-duration:.38s,1.6s;animation-timing-function:cubic-bezier(.3,1.4,.4,1),ease-in-out;animation-iteration-count:1,infinite;animation-fill-mode:forwards,both}
+#storyToast.show .stwave i:nth-child(1){height:10px;animation-delay:0s,.55s;animation-name:stRise1,stIdle1}
+#storyToast.show .stwave i:nth-child(2){height:20px;animation-delay:.06s,.55s;animation-name:stRise2,stIdle2}
+#storyToast.show .stwave i:nth-child(3){height:26px;animation-delay:.12s,.55s;animation-name:stRise3,stIdle3}
+#storyToast.show .stwave i:nth-child(4){height:16px;animation-delay:.18s,.55s;animation-name:stRise4,stIdle4}
+#storyToast.show .stwave i:nth-child(5){height:8px;animation-delay:.24s,.55s;animation-name:stRise5,stIdle5}
+@keyframes stRise1{to{transform:scaleY(1);opacity:1}}
+@keyframes stRise2{to{transform:scaleY(1);opacity:1}}
+@keyframes stRise3{to{transform:scaleY(1);opacity:1}}
+@keyframes stRise4{to{transform:scaleY(1);opacity:1}}
+@keyframes stRise5{to{transform:scaleY(1);opacity:1}}
+@keyframes stIdle1{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.55)}}
+@keyframes stIdle2{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.7)}}
+@keyframes stIdle3{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.8)}}
+@keyframes stIdle4{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.6)}}
+@keyframes stIdle5{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.45)}}
+#storyToast .stflag{font-size:17px;opacity:0;transform:scale(.5);flex:none}
+#storyToast.show .stflag{animation:stPop .3s cubic-bezier(.3,1.5,.4,1) .3s forwards}
+@keyframes stPop{to{opacity:1;transform:scale(1)}}
+#storyToast .stbody{min-width:0;flex:1}
+#storyToast .stkicker{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#F0604D}
+#storyToast .sthead{font-size:13px;font-weight:600;line-height:1.3;margin-top:2px;color:var(--paper);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+#storyToast .stgo{flex:none;font-size:11.5px;font-weight:800;color:var(--ink);background:var(--paper);padding:6px 13px;border-radius:999px;border:none;cursor:pointer;font-family:inherit}
+@media (prefers-reduced-motion:reduce){
+  #storyToast .stcard,#storyToast .stsweep,#storyToast .stwave i,#storyToast .stflag{animation:none!important;opacity:1!important;transform:none!important}
+}
 #toast.show{opacity:1;transform:none;pointer-events:auto}
 #toast .link.inline{display:inline;width:auto;padding:0;border:0;margin-left:8px;color:var(--paper);text-decoration:underline;font-weight:800}
 .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
@@ -536,6 +578,12 @@ body.pre-app .top, body.pre-app main, body.pre-app .tabs{display:none}
     </div>
 
     <div class="lp-block">
+      <h2 class="lp-h" data-i18n="notifHeading">Notifications</h2>
+      <p class="lp-sub" data-i18n="notifSub">Get a notification on this device when a new story arrives - even when the app isn't open.</p>
+      <div id="notifBox"></div>
+    </div>
+
+    <div class="lp-block">
       <h2 class="lp-h" data-i18n="telegram">Telegram</h2>
       <div class="lp-add">
         <input id="tgInput" type="text" inputmode="text" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="t/channelname" data-i18n-placeholder="tgPlaceholder">
@@ -645,6 +693,7 @@ body.pre-app .top, body.pre-app main, body.pre-app .tabs{display:none}
   </button>
 </nav>
 <div id="toast" role="status" aria-live="polite"></div>
+<div id="storyToast" role="status" aria-live="polite"></div>
 <div class="vmodal" id="videoModal" role="dialog" aria-modal="true" aria-labelledby="vmTitle" hidden>
   <div class="vback" data-act="vclose"></div>
   <div class="vpanel">
