@@ -63,23 +63,84 @@ SECTORS = ["Semiconductors", "Automotive", "Pharmaceuticals", "Healthcare", "Def
 IMPORTANCE = ["Critical", "High", "Medium", "Low"]
 RANK = {"Critical": 3, "High": 2, "Medium": 1, "Low": 0}
 
-# ISO 3166-1 alpha-2 codes for every name in COUNTRIES above, kept in step with app.js's COUNTRY_ROWS (the
-# frontend's own copy, used there for both flags and alias matching). Only used here to put a flag emoji in
-# a push notification's title (see push_flag() below) - nothing else in the pipeline needs a country code.
-COUNTRY_CODE = {
-    "United States": "US", "China": "CN", "India": "IN", "Russia": "RU", "Ukraine": "UA", "Japan": "JP",
-    "Germany": "DE", "France": "FR", "United Kingdom": "GB", "Italy": "IT", "Spain": "ES", "Netherlands": "NL",
-    "Switzerland": "CH", "Sweden": "SE", "Norway": "NO", "Denmark": "DK", "Poland": "PL", "Ireland": "IE",
-    "Greece": "GR", "Turkey": "TR", "European Union": "EU", "Canada": "CA", "Mexico": "MX", "Brazil": "BR",
-    "Argentina": "AR", "Chile": "CL", "Peru": "PE", "Colombia": "CO", "Venezuela": "VE", "Australia": "AU",
-    "New Zealand": "NZ", "South Korea": "KR", "North Korea": "KP", "Taiwan": "TW", "Singapore": "SG",
-    "Indonesia": "ID", "Malaysia": "MY", "Thailand": "TH", "Vietnam": "VN", "Philippines": "PH",
-    "Pakistan": "PK", "Bangladesh": "BD", "Sri Lanka": "LK", "Nepal": "NP", "Afghanistan": "AF",
-    "Myanmar": "MM", "Iran": "IR", "Iraq": "IQ", "Israel": "IL", "Palestine": "PS", "Lebanon": "LB",
-    "Syria": "SY", "Yemen": "YE", "Saudi Arabia": "SA", "UAE": "AE", "Qatar": "QA", "Kuwait": "KW",
-    "Oman": "OM", "Egypt": "EG", "South Africa": "ZA", "Nigeria": "NG", "Kenya": "KE", "Ethiopia": "ET",
-    "Ghana": "GH", "Morocco": "MA", "Algeria": "DZ", "Libya": "LY", "DR Congo": "CD",
-}
+# Port of app.js's COUNTRY_ROWS (code, name, match aliases) - kept in step with the frontend's own copy by
+# hand; used here only for classify_country_rules()/push_flag() below (free-mode push notifications - see
+# the module note above classify_importance_rules for why this exists at all). An alias prefixed "cs:" is
+# matched case-sensitively, same meaning as in app.js.
+COUNTRY_ROWS = [
+    ("US", "United States", ["United States", "cs:US", "cs:U.S.", "USA", "America", "American", "Americans", "Washington", "White House", "Federal Reserve", "FOMC", "cs:Fed", "Pentagon", "Wall Street", "Nasdaq", "S&P 500", "Dow Jones", "Capitol Hill", "US Treasury", "Treasury Department"]),
+    ("CN", "China", ["China", "Chinese", "Beijing", "PBOC", "People's Bank of China", "Shanghai", "Shenzhen", "Xi Jinping", "Yuan", "Renminbi", "Guangdong", "CSRC"]),
+    ("IN", "India", ["India", "Indian", "Indians", "New Delhi", "Delhi", "Mumbai", "RBI", "Reserve Bank of India", "SEBI", "Sensex", "Nifty", "Rupee", "NITI Aayog", "Lok Sabha", "Modi", "Bengaluru", "Bangalore", "Chennai", "Hyderabad", "Gujarat", "Maharashtra"]),
+    ("RU", "Russia", ["Russia", "Russian", "Moscow", "Kremlin", "Putin", "Rouble", "Ruble"]),
+    ("UA", "Ukraine", ["Ukraine", "Ukrainian", "Kyiv", "Kiev", "Zelensky", "Zelenskyy", "Donbas", "Crimea"]),
+    ("JP", "Japan", ["Japan", "Japanese", "Tokyo", "Bank of Japan", "cs:BOJ", "Nikkei", "Yen", "Osaka"]),
+    ("DE", "Germany", ["Germany", "German", "Berlin", "Bundesbank", "DAX", "Frankfurt", "Bavaria"]),
+    ("FR", "France", ["France", "French", "Paris", "Macron", "Elysee"]),
+    ("GB", "United Kingdom", ["United Kingdom", "cs:UK", "cs:U.K.", "Britain", "British", "London", "Bank of England", "cs:BoE", "FTSE", "Sterling", "Downing Street", "England", "Scotland"]),
+    ("IT", "Italy", ["Italy", "Italian", "Rome", "Milan"]),
+    ("ES", "Spain", ["Spain", "Spanish", "Madrid"]),
+    ("NL", "Netherlands", ["Netherlands", "Dutch", "Amsterdam", "The Hague"]),
+    ("CH", "Switzerland", ["Switzerland", "Swiss", "Zurich", "Geneva"]),
+    ("SE", "Sweden", ["Sweden", "Swedish", "Stockholm"]),
+    ("NO", "Norway", ["Norway", "Norwegian", "Oslo"]),
+    ("DK", "Denmark", ["Denmark", "Danish", "Copenhagen"]),
+    ("PL", "Poland", ["Poland", "Polish", "Warsaw"]),
+    ("IE", "Ireland", ["Ireland", "Irish", "Dublin"]),
+    ("GR", "Greece", ["Greece", "Greek", "Athens"]),
+    ("TR", "Turkey", ["Turkey", "Turkish", "Turkiye", "Ankara", "Istanbul"]),
+    ("EU", "European Union", ["European Union", "cs:EU", "Eurozone", "Euro area", "Brussels", "European Commission", "European Parliament", "ECB", "European Central Bank"]),
+    ("CA", "Canada", ["Canada", "Canadian", "Ottawa", "Toronto", "Bank of Canada"]),
+    ("MX", "Mexico", ["Mexico", "Mexican", "Mexico City", "Banxico"]),
+    ("BR", "Brazil", ["Brazil", "Brazilian", "Brasilia", "Sao Paulo"]),
+    ("AR", "Argentina", ["Argentina", "Argentine", "Buenos Aires"]),
+    ("CL", "Chile", ["Chile", "Chilean", "Santiago"]),
+    ("PE", "Peru", ["Peru", "Peruvian", "Lima"]),
+    ("CO", "Colombia", ["Colombia", "Colombian", "Bogota"]),
+    ("VE", "Venezuela", ["Venezuela", "Venezuelan", "Caracas"]),
+    ("AU", "Australia", ["Australia", "Australian", "Canberra", "Sydney", "Melbourne", "cs:RBA"]),
+    ("NZ", "New Zealand", ["New Zealand", "Wellington", "Auckland"]),
+    ("KR", "South Korea", ["South Korea", "South Korean", "Seoul", "KOSPI"]),
+    ("KP", "North Korea", ["North Korea", "North Korean", "Pyongyang"]),
+    ("TW", "Taiwan", ["Taiwan", "Taiwanese", "Taipei"]),
+    ("SG", "Singapore", ["Singapore", "Singaporean"]),
+    ("ID", "Indonesia", ["Indonesia", "Indonesian", "Jakarta"]),
+    ("MY", "Malaysia", ["Malaysia", "Malaysian", "Kuala Lumpur"]),
+    ("TH", "Thailand", ["Thailand", "Thai", "Bangkok"]),
+    ("VN", "Vietnam", ["Vietnam", "Vietnamese", "Hanoi"]),
+    ("PH", "Philippines", ["Philippines", "Philippine", "Filipino", "Manila"]),
+    ("PK", "Pakistan", ["Pakistan", "Pakistani", "Islamabad", "Karachi"]),
+    ("BD", "Bangladesh", ["Bangladesh", "Bangladeshi", "Dhaka"]),
+    ("LK", "Sri Lanka", ["Sri Lanka", "Sri Lankan", "Colombo"]),
+    ("NP", "Nepal", ["Nepal", "Nepali", "Kathmandu"]),
+    ("AF", "Afghanistan", ["Afghanistan", "Afghan", "Kabul", "Taliban"]),
+    ("MM", "Myanmar", ["Myanmar", "Burma", "Burmese", "Yangon"]),
+    ("IR", "Iran", ["Iran", "Iranian", "Tehran"]),
+    ("IQ", "Iraq", ["Iraq", "Iraqi", "Baghdad"]),
+    ("IL", "Israel", ["Israel", "Israeli", "Tel Aviv", "Jerusalem", "Knesset", "cs:IDF"]),
+    ("PS", "Palestine", ["Gaza", "Palestinian", "Palestinians", "Palestine", "West Bank", "Hamas"]),
+    ("LB", "Lebanon", ["Lebanon", "Lebanese", "Beirut", "Hezbollah"]),
+    ("SY", "Syria", ["Syria", "Syrian", "Damascus"]),
+    ("YE", "Yemen", ["Yemen", "Yemeni", "Houthi", "Houthis"]),
+    ("SA", "Saudi Arabia", ["Saudi Arabia", "Saudi", "Riyadh"]),
+    ("AE", "UAE", ["United Arab Emirates", "cs:UAE", "Dubai", "Abu Dhabi", "Emirati"]),
+    ("QA", "Qatar", ["Qatar", "Qatari", "Doha"]),
+    ("KW", "Kuwait", ["Kuwait", "Kuwaiti"]),
+    ("OM", "Oman", ["Oman", "Omani", "Muscat"]),
+    ("EG", "Egypt", ["Egypt", "Egyptian", "Cairo", "Suez"]),
+    ("ZA", "South Africa", ["South Africa", "South African", "Johannesburg", "Pretoria"]),
+    ("NG", "Nigeria", ["Nigeria", "Nigerian", "Lagos", "Abuja"]),
+    ("KE", "Kenya", ["Kenya", "Kenyan", "Nairobi"]),
+    ("ET", "Ethiopia", ["Ethiopia", "Ethiopian", "Addis Ababa"]),
+    ("GH", "Ghana", ["Ghana", "Ghanaian", "Accra"]),
+    ("MA", "Morocco", ["Morocco", "Moroccan", "Rabat"]),
+    ("DZ", "Algeria", ["Algeria", "Algerian", "Algiers"]),
+    ("LY", "Libya", ["Libya", "Libyan", "Tripoli"]),
+    ("CD", "DR Congo", ["Democratic Republic of Congo", "DR Congo", "cs:DRC", "Kinshasa"]),
+]
+COUNTRY_CODE = {name: code for code, name, _aliases in COUNTRY_ROWS}   # name -> ISO code, for push_flag()
+GLOBAL_CUES = ["global", "globally", "worldwide", "world economy", "across the world", "around the world",
+               "world trade", "international markets", "OPEC", "IMF", "World Bank", "WTO", "G20", "G7",
+               "oil prices", "shipping rates"]
 
 
 def push_flag(country: str) -> str:
@@ -88,6 +149,45 @@ def push_flag(country: str) -> str:
     if not code:
         return "\U0001F310"
     return "".join(chr(127397 + ord(ch)) for ch in code.upper())
+
+
+def classify_country_rules(headline: str, excerpt: str) -> str:
+    """Python port of app.js's classifyCountry(), for free-mode push notifications only (see the note
+    above classify_importance_rules - the app's own rendering always reclassifies fresh and never reads
+    this back). One accepted gap: the JS version also gives a small scoring bonus to a country whenever one
+    of a story's detected companies is headquartered there; that needs the full COMPANIES table (not
+    ported here, since it exists only to support this one minor bonus), so this version runs on text
+    matches alone. That only ever weakens an already-weak signal, so at most it can tip a toss-up from one
+    country to another or to Global - it does not change a confident country on its own."""
+    head = (headline or "") + "\n" + (excerpt or "")[:300]
+    text = (headline or "") + " " + (excerpt or "")
+    scores: dict[str, int] = {}
+    for _code, name, aliases in COUNTRY_ROWS:
+        s = 0
+        for alias in aliases:
+            in_head = _term_count(head, alias)
+            in_body = _term_count(text, alias)
+            if in_head:
+                s += 3
+            s += min(in_body, 4)
+        if s:
+            scores[name] = s
+    if not scores:
+        return "Global"
+    ranked = sorted(scores.items(), key=lambda kv: -kv[1])
+    strong = [kv for kv in ranked if kv[1] >= 2]
+    hl = headline or head.split("\n", 1)[0]
+    global_in_headline = any(_term_count(hl, g) > 0 for g in GLOBAL_CUES)
+    global_cue = any(_term_count(head, g) > 0 or _term_count(text, g) > 1 for g in GLOBAL_CUES)
+    alias_by_name = {name: aliases for _c, name, aliases in COUNTRY_ROWS}
+    in_hl = [name for name, _s in ranked if any(_term_count(hl, a) > 0 for a in alias_by_name[name])]
+    if global_in_headline:
+        return "Global"
+    if len(in_hl) == 1:
+        return in_hl[0]
+    if len(in_hl) >= 4 or (len(strong) >= 4 and ranked[0][1] < ranked[1][1] * 2) or (global_cue and ranked[0][1] < 5):
+        return "Global"
+    return ranked[0][0]
 
 DEFAULTS = {
     #"extraction_model": "claude-haiku-4-5-20251001",
@@ -263,10 +363,18 @@ def fetch_approved_channels() -> list[str]:
 VAPID_PUBLIC_KEY = os.environ.get("VAPID_PUBLIC_KEY", "")
 VAPID_PRIVATE_KEY = os.environ.get("VAPID_PRIVATE_KEY", "")
 VAPID_SUBJECT = os.environ.get("VAPID_SUBJECT", "mailto:rrrajput2101@gmail.com")
-# Importance floor for a push: every new story still gets the in-app toast (app.js's notifyNewStory, which
-# runs independently of this), but a real OS notification is reserved for stories worth interrupting someone
-# for. Change here (not in app.js) if that bar should move - this is the only place that decides it.
-PUSH_MIN_IMPORTANCE = {"Critical", "High"}
+# Importance floor for a push - the user asked for every priority (Critical/High/Medium/Low) to push, so
+# this now includes all four. Every new story still gets the in-app toast too (app.js's notifyNewStory,
+# independent of this). Change here (not in app.js) if that bar should move again - this is the only place
+# that decides it.
+PUSH_MIN_IMPORTANCE = {"Critical", "High", "Medium", "Low"}
+# One push PER new story (not one per run) - the user's explicit choice after being told the consequence: a
+# single run can publish dozens of new stories (84 in one observed run), which at one-push-per-story means
+# that many OS notifications firing back to back, to every subscribed device, in the same run. This cap is
+# a safety net, not a design choice the user asked for - it limits how bad a single unusually heavy run can
+# get, without silently reinstating a "one push per run" behaviour they explicitly didn't want. Raise it,
+# lower it, or remove the slice below entirely if the cap itself gets in the way.
+PUSH_MAX_PER_RUN = 25
 
 
 def _b64u(data: bytes) -> str:
@@ -390,38 +498,54 @@ def delete_push_subscription(doc_name: str) -> None:
 
 
 def send_push_notifications(new_items: list[dict]) -> None:
-    """Sends one real push per newly-published story worth interrupting someone for (see
-    PUSH_MIN_IMPORTANCE), to every device subscribed in qs_push_subs. Never raises - a push failure must
-    never fail the pipeline run itself (see the try/except around this call in cmd_fetch)."""
+    """Sends one real push PER newly-published story (see PUSH_MIN_IMPORTANCE - currently every priority),
+    to every device subscribed in qs_push_subs - the user's explicit choice, after being told a single run
+    can mean many notifications in a burst (see PUSH_MAX_PER_RUN, a safety cap on that, not a filter on
+    importance). Never raises - a push failure must never fail the pipeline run itself (see the try/except
+    around this call in cmd_fetch)."""
     worthy = [it for it in new_items if it.get("importance") in PUSH_MIN_IMPORTANCE]
     if not worthy:
+        # Not a bug: logged at this level of detail (not louder) so a quiet run doesn't spam the Actions
+        # log, but a "why didn't it push" question can still be answered from the log alone.
+        log(f"  push: {len(new_items)} new stor{'y' if len(new_items) == 1 else 'ies'} this run, none matched PUSH_MIN_IMPORTANCE - no push sent")
         return
     if not VAPID_PRIVATE_KEY or not VAPID_PUBLIC_KEY:
         log("  push: VAPID_PRIVATE_KEY/VAPID_PUBLIC_KEY not set, skipping (set them as GitHub Actions secrets to enable)")
         return
     subs = fetch_push_subscriptions()
     if not subs:
+        log("  push: no devices subscribed (qs_push_subs is empty) - nothing to send")
         return
-    log(f"  push: {len(worthy)} new storie(s) worth a notification, {len(subs)} device(s) subscribed")
-    # One push per device, for the single most important new story this run (matches the in-app toast's
-    # "show the most important one" behaviour when several arrive in the same run) - avoids a burst of
-    # several OS notifications landing at once for one pipeline run.
-    top = sorted(worthy, key=lambda it: (0 if it["importance"] == "Critical" else 1, it["published"]))[0]
-    country = top.get("country") or "Global"
-    flag = push_flag(country)
-    payload = {
-        "id": "L" + top["id"], "flag": flag, "country": country,
-        "sector": top.get("sector") or "", "headline": top.get("headline") or "",
-    }
-    sent = dead = 0
-    for sub in subs:
-        status = send_one_push(sub, payload)
-        if status in (201, 200, 204):
-            sent += 1
-        elif status in (404, 410):
-            delete_push_subscription(sub.get("name", ""))
-            dead += 1
-    log(f"  push: sent to {sent} device(s)" + (f", removed {dead} dead subscription(s)" if dead else ""))
+    # Most important first, so if PUSH_MAX_PER_RUN has to cut the list short, what gets dropped is the
+    # least important story, not an arbitrary one.
+    worthy.sort(key=lambda it: (-RANK.get(it.get("importance"), 0), it.get("published") or ""))
+    capped = worthy[:PUSH_MAX_PER_RUN]
+    if len(worthy) > len(capped):
+        log(f"  push: {len(worthy)} new storie(s) this run, capped to the top {len(capped)} (PUSH_MAX_PER_RUN) to avoid flooding devices, {len(subs)} device(s) subscribed")
+    else:
+        log(f"  push: {len(worthy)} new storie(s) this run, {len(subs)} device(s) subscribed")
+    total_sent = total_dead = 0
+    dead_names: set[str] = set()
+    for item in capped:
+        country = item.get("country") or "Global"
+        payload = {
+            "id": "L" + item["id"], "flag": push_flag(country), "country": country,
+            "sector": item.get("sector") or "", "headline": item.get("headline") or "",
+        }
+        sent = 0
+        for sub in subs:
+            if sub.get("name", "") in dead_names:
+                continue   # already found dead earlier in this same run - don't retry it per story
+            status = send_one_push(sub, payload)
+            if status in (201, 200, 204):
+                sent += 1
+            elif status in (404, 410):
+                delete_push_subscription(sub.get("name", ""))
+                dead_names.add(sub.get("name", ""))
+                total_dead += 1
+        total_sent += sent
+    log(f"  push: sent {total_sent} notification(s) across {len(capped)} stor{'y' if len(capped) == 1 else 'ies'}"
+        + (f", removed {total_dead} dead subscription(s)" if total_dead else ""))
 
 
 def load_config() -> dict:
@@ -1155,14 +1279,107 @@ def first_headline(text: str, channel: str = "") -> str:
     return strip_channel_name((re.sub(r"\s+", " ", EMOJI.sub("", text)).strip() or "Untitled post"), channel)[:HEADLINE_MAX]
 
 
+# ----------------------------------------------------------------- free-mode importance (for push only)
+# Free mode's real importance is computed client-side, fresh, every time the app renders a free-mode item
+# (app.js's mapRules() -> E.analyze() -> classifyImportance(), keyed off excerpt text) - it never reads
+# back anything from feed.json, so nothing here can affect what a person actually sees in the app. This is
+# a faithful port of that same classifyImportance() purely so send_push_notifications() below has
+# SOMETHING to filter on: without it, a free-mode item's item.get("importance") is always None, which
+# never matches PUSH_MIN_IMPORTANCE, so push silently never fires in free mode at all (the bug this was
+# added to fix - see the "importance" key stored on the item below). One known, accepted difference from
+# the client: app.js's version also adds +2 when a story spans 3+ countries (it knows the countries
+# involved; a free-mode item here doesn't carry that without running the client's full country classifier
+# too), so a borderline multi-country High story could rate Medium here. That only ever makes this
+# UNDER-notify at the margin, never spam - an acceptable trade next to actually working at all.
+IMP_TIERS = [
+    (6, ["war", "invasion", "invade*", "nuclear", "missile*", "airstrike*", "coup", "martial law", "terror*",
+         "collapse*", "default*", "blockade", "embargo", "pandemic", "bankruptcy", "insolvency", "blackout",
+         "cyberattack*", "ransomware", "explosion*", "assassinat*", "hostage*", "casualt*", "famine",
+         "meltdown", "bank run", "evacuat*"], None),
+    (3, ["sanction*", "tariff*", "export control*", "export ban*", "restriction*", "shortage*", "disruption*",
+         "plunge*", "plummet*", "soar*", "surge*", "spike*", "record high", "record low", "all-time high",
+         "crash*", "halt*", "suspend*", "probe", "investigation", "lawsuit*", "antitrust", "downgrade*",
+         "layoff*", "job cuts", "strike*", "crackdown", "merger*", "acquisition*", "takeover", "bailout",
+         "rate cut*", "rate hike*", "interest rate*", "recall*", "output cut*", "production cut*",
+         "price hike*", "trade deal*", "trade agreement*", "trade war", "ceasefire", "treaty", "ban",
+         "banned", "ruling", "fraud", "scandal", "breach*", "outage*", "crisis", "crises", "emergency",
+         "outbreak", "reroute*", "rerouting", "warn*", "monetary policy", "repo rate", "policy rate",
+         "rate decision*", "cut* output", "cut* production", "unrest", "evict*", "seiz*"], None),
+    (1, ["announce*", "launch*", "approve*", "plans", "expects", "forecast*", "expansion", "expand*",
+         "invest*", "partnership", "contract*", "orders", "sales", "results", "earnings", "growth",
+         "profit*", "revenue", "guidance", "quarter*", "deal*", "appoint*", "outlook", "signs", "signed",
+         "unveil*", "rise", "rises", "fall*", "drop*", "jump*", "slump*", "inflation", "GDP"], 4),
+]
+LOW_TERMS = ["opinion", "explainer", "newsletter", "weekly roundup", "webinar", "advertisement", "sponsored",
+             "podcast", "interview", "recap", "roundup"]
+_TERM_RX_CACHE: dict[str, re.Pattern] = {}
+
+
+def _term_rx(term: str) -> re.Pattern:
+    """Mirrors app.js's rx(): "sanction*" -> wildcard suffix, "cs:X" -> case-sensitive, a plain word also
+    matches a trailing s/es, all with word boundaries that don't require Python's \\b (which misbehaves on
+    a leading/trailing non-word char the same way app.js's lookaround-based version was written to avoid)."""
+    cached = _TERM_RX_CACHE.get(term)
+    if cached is not None:
+        return cached
+    t, cs = term, False
+    if t.startswith("cs:"):
+        cs, t = True, t[3:]
+    body = re.escape(t).replace(r"\*", "[A-Za-z0-9]*").replace(r"\ ", r"\s+")
+    if not cs and "*" not in t and re.fullmatch(r"[a-zA-Z][a-zA-Z &-]*[a-zA-Z]", t):
+        body += "(?:s|es)?"
+    pattern = r"(?<![A-Za-z0-9_])" + body + r"(?![A-Za-z0-9_])"
+    rx = re.compile(pattern, 0 if cs else re.IGNORECASE)
+    _TERM_RX_CACHE[term] = rx
+    return rx
+
+
+def _term_count(text: str, term: str) -> int:
+    return len(_term_rx(term).findall(text))
+
+
+def classify_importance_rules(headline: str, excerpt: str) -> str:
+    """Python port of app.js's classifyImportance() - see the module note above for the one known gap."""
+    head = (headline or "") + "\n" + (excerpt or "")[:300]
+    body = ((headline or "") + " " + (excerpt or ""))[:4000]
+    score = 0
+    crit_pts = 0
+    for weight, terms, cap in IMP_TIERS:
+        tier_pts = 0
+        for term in terms:
+            in_head = _term_count(head, term) > 0
+            in_body = in_head or _term_count(body, term) > 0
+            if not in_body:
+                continue
+            tier_pts += weight * (2 if in_head else 1)
+        if weight == 6:
+            crit_pts = tier_pts
+        score += min(tier_pts, cap) if cap else tier_pts
+    for term in LOW_TERMS:
+        if _term_count(head, term) > 0:
+            score -= 3
+    if crit_pts >= 12 or score >= 28:
+        return "Critical"
+    if score >= 5:
+        return "High"
+    if score >= 2:
+        return "Medium"
+    return "Low"
+
+
 def rules_item(post: dict, headline: str, now: dt.datetime) -> dict:
-    """Free mode: keep a short excerpt. The app sorts it with its keyword rules."""
+    """Free mode: keep a short excerpt. The app sorts it with its keyword rules (recomputed fresh client
+    side every render - see mapRules() in app.js). The "importance"/"country" fields stored here are a
+    second, independent server-side classification used only by send_push_notifications() (to decide
+    whether to push, and which flag to show); the app itself never reads them back."""
     group = [post] + post.get("dupes", [])
     channel = post.get("author") if post.get("type") == "telegram" else ""
     excerpt = re.sub(r"https?://\S+", "", post["text"])
     excerpt = strip_channel_name(re.sub(r"[ \t]+", " ", excerpt).strip(), channel)[:500]
     item = {"id": "s" + hashlib.sha1(post["key"].encode()).hexdigest()[:10], "ai": False, "headline": headline,
-            "excerpt": excerpt, "published": iso(min(p["published"] for p in group)), "updated": iso(now),
+            "excerpt": excerpt, "importance": classify_importance_rules(headline, excerpt),
+            "country": classify_country_rules(headline, excerpt),
+            "published": iso(min(p["published"] for p in group)), "updated": iso(now),
             "sources": [], "related": []}
     add_sources(item, group)
     return item
