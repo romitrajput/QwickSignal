@@ -1,0 +1,719 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>QwickSignal</title>
+<meta name="description" content="Sort news, messages and reports by country, sector and importance. Runs entirely on your phone.">
+<meta name="theme-color" content="#F9ECDC">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+
+<!-- Google Analytics 4 (usage tracking: which tabs/features people actually use). Measurement ID is the
+     QwickSignal GA4 web stream (analytics.google.com -> Admin -> Data Streams). gtag() calls throughout
+     app.js (see the track() helper) are harmless no-ops if this script fails to load, e.g. an ad-blocker -
+     window.gtag is still defined as a stub either way, so nothing ever errors. -->
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  gtag('js', new Date());
+  gtag('config', 'G-0HKSPP356T');
+</script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-0HKSPP356T"></script>
+<style>
+/* ============================================================
+   THEME
+   Cream/red palette matched to QwickSignal's marketing colors (cream
+   background, near-black text, a strong red accent) - this is the sole,
+   permanent look now; there is no toggle, no second palette, and no
+   dark-mode override, by explicit request.
+   ============================================================ */
+:root{
+  --paper:#F9ECDC; --surface:#FFF8EF; --ink:#241A12; --ink2:#7A6A57; --line:#E4D3B9;
+  --head:#F9ECDC; --head-ink:#241A12;
+  --accent:#D3131E; --accent-ink:#FFFFFF;
+  --crit:#D3131E; --high:#C97A0E; --med:#8A6A2E; --low:#9C8B72; --save:#2E8B4F;
+  --card-shadow:none; --card-shadow-hover:none;
+  --radius-card:0; --radius-ctrl:8px;
+  --ease:cubic-bezier(.2,.7,.3,1);
+  --font:'Public Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 16px/1.45 var(--font);
+  padding-bottom:calc(72px + env(safe-area-inset-bottom));
+  transition:background-color .25s var(--ease),color .25s var(--ease)}
+[hidden]{display:none!important}
+button,select,input,textarea{font:inherit;color:inherit}
+button{transition:transform .15s var(--ease),background-color .15s var(--ease),border-color .15s var(--ease),color .15s var(--ease),box-shadow .15s var(--ease)}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+/* header */
+.top{position:sticky;top:0;z-index:20;background:var(--head);color:var(--head-ink);
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:calc(10px + env(safe-area-inset-top)) 16px 10px;
+  border-bottom:0;
+  transition:background-color .25s var(--ease),border-color .25s var(--ease)}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px;letter-spacing:-.02em}
+.brand .livebar{margin:0;gap:0;font-size:0}
+.brand .livebar .iconbtn{width:30px;height:30px;background:transparent;border:0;color:var(--head-ink);opacity:.85}
+.top .right{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;opacity:.9}
+.lang-select{background:transparent;color:var(--ink);border:1.5px solid var(--line);border-radius:7px;font-size:12px;font-weight:700;padding:4px 6px;-webkit-appearance:none;appearance:none}
+.tiny{min-height:32px;padding:0 12px;border-radius:8px;border:1.5px solid currentColor;background:transparent;font-weight:600;font-size:13px}
+
+@keyframes qsCardIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+main{max-width:720px;margin:0 auto;padding:16px}
+h1{font-size:26px;line-height:1.15;font-weight:800;letter-spacing:-.025em;margin:4px 0 4px}
+h2{font-size:18px;font-weight:800;letter-spacing:-.01em;margin:26px 0 8px}
+.lede{margin:0 0 16px;color:var(--ink2);font-size:15px;max-width:60ch}
+.muted{color:var(--ink2);font-size:14px}
+
+/* buttons and inputs */
+.btn{min-height:46px;padding:0 18px;border-radius:var(--radius-ctrl);border:1.5px solid var(--ink);background:transparent;color:var(--ink);font-weight:600;font-size:15px;cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.btn.danger{border-color:var(--crit);color:var(--crit)}
+.btn.small{min-height:38px;font-size:14px;margin-top:12px}
+.btn.block{width:100%}
+.btn:disabled{opacity:.5}
+.btn:active{transform:translateY(1px) scale(.98)}
+@media (hover:hover){
+  .btn:not(:disabled):hover{transform:translateY(-1px)}
+  .btn.primary:not(:disabled):hover{box-shadow:0 4px 14px -4px color-mix(in srgb, var(--accent) 55%, transparent)}
+  .btn:not(.primary):not(:disabled):hover{border-color:var(--accent);color:var(--accent)}
+  .btn.danger:not(:disabled):hover{background:var(--crit);color:#fff}
+}
+textarea{width:100%;min-height:150px;padding:12px;border-radius:var(--radius-ctrl);border:1.5px solid var(--line);background:var(--surface);resize:vertical;line-height:1.45}
+input[type=search]{width:100%;min-height:44px;padding:0 14px;border-radius:var(--radius-ctrl);border:1.5px solid var(--line);background:var(--surface);transition:border-color .15s var(--ease),box-shadow .15s var(--ease)}
+input[type=search]:focus-visible{border-color:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb, var(--accent) 16%, transparent)}
+.check{display:flex;align-items:center;gap:10px;margin:10px 0 14px;font-size:14.5px;color:var(--ink2)}
+.check input{width:20px;height:20px;accent-color:var(--accent)}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row .btn{flex:1 1 150px}
+.pick{display:flex;align-items:center;justify-content:center;gap:8px;min-height:50px;margin:12px 0 0;border:1.5px dashed var(--ink2);border-radius:10px;font-weight:600;cursor:pointer;text-align:center;padding:0 12px}
+.pick small{font-weight:400;color:var(--ink2)}
+.fchips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 0}
+.fchip{display:inline-flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:4px 4px 4px 10px;font-size:13.5px;max-width:100%}
+.fchip button{border:0;background:transparent;font-size:20px;line-height:1;min-width:32px;min-height:32px;color:var(--ink2)}
+.stack>*+*{margin-top:12px}
+
+/* Link Pages (Phase A) */
+.lp-block{margin:0 0 26px;padding-bottom:22px;border-bottom:1px solid var(--line)}
+.lp-block:last-child{border-bottom:0}
+.lp-h{margin:0 0 4px;font-size:17px}
+.lp-sub{margin:0 0 12px;color:var(--ink2);font-size:13.5px;max-width:58ch;line-height:1.5}
+.lp-add{display:flex;gap:8px}
+.lp-add input{flex:1;min-width:0;min-height:44px;padding:0 12px;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font:inherit}
+.lp-add input:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.lp-syncnote{margin:8px 0 0;font-size:13px;color:var(--ink2)}
+.lp-list{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.lp-row{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:var(--radius-ctrl);border:1px solid var(--line);background:var(--surface);
+  box-shadow:var(--card-shadow);transition:box-shadow .2s var(--ease),transform .2s var(--ease)}
+@media (hover:hover){.lp-row:hover{box-shadow:var(--card-shadow-hover);transform:translateY(-1px)}}
+.lp-row .name{flex:1;min-width:0;font-weight:600;font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lp-row .status{flex:none;font-size:11.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:999px}
+.lp-row .status.approved{background:rgba(79,182,192,.16);color:var(--accent)}
+.lp-row .status.pending{background:rgba(156,174,189,.16);color:var(--ink2)}
+.lp-row .status.rejected{background:rgba(217,95,90,.14);color:#D95F5A}
+.lp-row .lp-rowbtns{display:flex;flex:none;gap:8px}
+.lp-row button.follow{flex:none;min-height:34px;padding:0 12px;border-radius:999px;border:1.5px solid var(--line);background:transparent;color:var(--ink);font-size:13px;font-weight:600;cursor:pointer}
+.lp-row button.follow.on{border-color:var(--accent);color:var(--accent);background:color-mix(in srgb, var(--accent) 10%, transparent)}
+.lp-row button.follow.lp-remove{border-color:var(--crit);color:var(--crit)}
+.lp-row button.follow.lp-default{border-color:var(--accent);color:var(--accent)}
+.lp-row button.follow.lp-hide{border-color:var(--ink2);color:var(--ink2)}
+@media (hover:hover){
+  .lp-row button.follow:not(.on):hover{border-color:var(--accent);color:var(--accent)}
+  .lp-row button.follow.lp-remove:hover{background:var(--crit);color:#fff}
+}
+.lp-defaultbadge{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;background:var(--accent);color:#fff;font-size:11px;font-weight:700;vertical-align:middle}
+
+/* Account (Phase E) */
+.acct-form{display:flex;flex-direction:column;gap:8px;max-width:340px}
+.acct-form input{min-height:44px;padding:0 12px;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font:inherit}
+.acct-form input:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.acct-buttons{display:flex;gap:8px;margin-top:2px}
+.acct-google{margin-top:12px}
+.acct-signed{margin:0 0 10px;font-size:14.5px}
+.lp-empty{color:var(--ink2);font-size:13.5px;padding:6px 2px}
+.lp-errdetail{color:var(--crit);font-size:12.5px}
+.lp-sync{display:flex;align-items:center;gap:10px}
+.lp-sync code{flex:1;min-width:0;padding:10px 12px;border-radius:8px;border:1.5px dashed var(--ink2);background:var(--surface);font:700 15px/1.2 ui-monospace,monospace;letter-spacing:.04em;overflow-x:auto;white-space:nowrap}
+.btn.small{min-height:44px;padding:0 14px;font-size:13.5px}
+
+/* segmented + chips */
+.seg{display:flex;border:1.5px solid var(--ink);border-radius:var(--radius-ctrl);overflow:hidden}
+.seg button{flex:1;min-height:40px;border:0;background:transparent;font-weight:600;font-size:14px;cursor:pointer}
+.seg button+button{border-left:1.5px solid var(--ink)}
+.seg button[aria-pressed=true]{background:var(--ink);color:var(--paper)}
+@media (hover:hover){.seg button[aria-pressed=false]:hover{background:color-mix(in srgb, var(--ink) 8%, transparent)}}
+.strip{display:flex;gap:8px;overflow-x:auto;padding:2px 16px 6px;margin:0 -16px;scrollbar-width:none}
+.strip::-webkit-scrollbar{display:none}
+.chip{flex:none;min-height:36px;padding:0 12px;border-radius:18px;border:1.5px solid var(--line);background:var(--surface);font-weight:600;font-size:13.5px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;transition:transform .15s var(--ease),border-color .15s var(--ease),background-color .15s var(--ease)}
+.chip b{font-weight:800;font-variant-numeric:tabular-nums;opacity:.75}
+.chip.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.chip .dot{width:9px;height:9px;border-radius:50%}
+@media (hover:hover){
+  .chip:not(.on):hover{border-color:var(--accent);color:var(--accent)}
+  .chip:active{transform:scale(.96)}
+}
+.impbar{display:flex;height:8px;border-radius:4px;overflow:hidden;background:var(--line);margin:8px 0 14px}
+.impbar i{display:block;min-width:4px}
+.tools{display:grid;gap:4px;margin:12px 0 2px}
+
+/* entries */
+.grp{display:flex;align-items:center;gap:8px;margin:24px 0 10px;font-size:16px}
+.grp .sw{width:10px;height:10px;flex:none}
+.grp .n{margin-left:auto;font-weight:600;font-size:13px;color:var(--ink2);font-variant-numeric:tabular-nums}
+.entry{--c:var(--low);background:var(--surface);border-left:5px solid var(--c);border-radius:0 8px 8px 0;padding:12px 14px;margin:0 0 10px;cursor:pointer}
+.entry.imp-critical{--c:var(--crit)} .entry.imp-high{--c:var(--high)} .entry.imp-medium{--c:var(--med)} .entry.imp-low{--c:var(--low)}
+.where{display:flex;flex-wrap:wrap;gap:2px 0;font-size:13px;font-weight:600;color:var(--ink2)}
+.where .sect{margin-left:10px;padding-left:10px;border-left:1.5px solid var(--line)}
+.hl{font-size:17px;line-height:1.28;font-weight:800;letter-spacing:-.01em;margin:5px 0 6px}
+.sum{margin:0;font-size:14.5px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.entry.open .sum{display:block;-webkit-line-clamp:unset}
+.foot{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:9px;font-size:12.5px;color:var(--ink2);font-weight:600}
+.foot .ts{color:var(--ink2);opacity:.8}
+.imp{display:inline-flex;align-items:center;gap:6px;color:var(--c)}
+.imp i{width:8px;height:8px;border-radius:50%;background:var(--c)}
+.details{margin-top:12px;padding-top:12px;border-top:1px solid var(--line);cursor:default}
+.facts{margin:0 0 10px;padding-left:18px;font-size:14px}
+.facts li{margin:3px 0}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:0 0 12px;font-size:13.5px}
+.kv dt{color:var(--ink2);font-weight:600}
+.kv dd{margin:0;overflow-wrap:anywhere}
+.rel{margin:0 0 12px;font-size:13.5px}
+.rel b{display:block;margin-bottom:4px}
+.link{display:block;width:100%;text-align:left;border:0;background:transparent;padding:8px 0;border-top:1px solid var(--line);color:var(--accent);font-weight:600;font-size:14px;cursor:pointer}
+.edit{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.edit label{display:grid;gap:4px;font-size:12.5px;font-weight:600;color:var(--ink2)}
+.edit select{min-height:42px;border-radius:8px;border:1.5px solid var(--line);background:var(--paper);padding:0 8px}
+.empty{padding:28px 4px;text-align:left}
+.empty p{margin:0 0 10px;max-width:46ch}
+
+/* swipe gestures + quick actions (Phase B) */
+.entrywrap{position:relative;margin:0 0 10px}
+.entrywrap .entry{margin:0;touch-action:pan-y;will-change:transform;-webkit-user-select:none;user-select:none;-webkit-user-drag:none}
+.swipebg{position:absolute;inset:0;border-radius:0 8px 8px 0;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font-weight:800;font-size:14px;opacity:0;pointer-events:none;background:var(--surface)}
+.swipebg .sw-left,.swipebg .sw-right{display:none;align-items:center;gap:6px}
+/* A left swipe uncovers the panel from the right edge, so its "Remove" label sits there; a right swipe
+   uncovers it from the left edge, so "Save" sits there. Only the label matching the active direction shows. */
+.swipebg.left{justify-content:flex-end;background:var(--crit);color:#fff}
+.swipebg.left .sw-left{display:inline-flex}
+.swipebg.right{justify-content:flex-start;background:var(--save);color:#fff}
+.swipebg.right .sw-right{display:inline-flex}
+.swipebg svg{width:18px;height:18px}
+.quickacts{display:flex;gap:8px;margin:0 0 12px}
+.quickacts .btn{flex:1}
+.unsave{border-top:0;padding:4px 0 0;font-size:13px}
+
+/* log */
+.log p{margin:6px 0;padding-left:12px;border-left:4px solid var(--low);font-size:14px}
+.log p.ok{border-color:var(--accent)} .log p.warn{border-color:var(--high)} .log p.err{border-color:var(--crit)}
+
+/* cards for export tab */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-card);padding:16px 18px;margin-top:10px;box-shadow:var(--card-shadow)}
+.panel p{margin:0 0 8px}
+.panel p:last-child{margin-bottom:0}
+ol.steps{margin:6px 0 0;padding-left:20px;font-size:14.5px}
+ol.steps li{margin:4px 0}
+
+
+/* live feed and AI briefing */
+.livebar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:-6px 0 14px;font-size:13px;color:var(--ink2);font-weight:600}
+.link.inline{display:inline;width:auto;border:0;padding:8px 0;font-size:13px}
+.ai{background:var(--surface);border:1.5px solid var(--ink);border-radius:var(--radius-card);padding:16px 18px;margin:0 0 18px;box-shadow:var(--card-shadow)}
+.aihead{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.aihead h2{margin:0;font-size:18px}
+.aihead span{font-size:12.5px;color:var(--ink2);font-weight:600}
+.ai .ov{margin:8px 0 4px;font-size:15px;line-height:1.55}
+.ai h3{font-size:14px;font-weight:800;margin:16px 0 6px}
+.ai ul{list-style:none;margin:0;padding:0}
+.tops li{padding:8px 0;border-top:1px solid var(--line)}
+.tops .link{border:0;padding:0 0 2px;font-size:15px;color:var(--ink);font-weight:800}
+.tops span{display:block;font-size:13.5px;color:var(--ink2)}
+.ai summary{cursor:pointer;font-weight:800;font-size:14px;margin-top:14px;min-height:36px;display:flex;align-items:center;color:var(--accent)}
+.themes li,.chains li{padding:10px 0;border-top:1px solid var(--line)}
+.themes p{margin:4px 0 0;font-size:14px}
+.themes .next{color:var(--ink2);font-size:13px}
+.conf{font-size:12px;font-weight:600;color:var(--ink2);margin-left:6px}
+.chain{list-style:none;margin:8px 0 0 6px;padding:0 0 0 14px;border-left:2px solid var(--accent)}
+.chain li{position:relative;padding:3px 0;border:0;font-size:14px}
+.chain li::before{content:"";position:absolute;left:-19px;top:11px;width:8px;height:8px;border-radius:50%;background:var(--accent)}
+.watch li{padding:4px 0;font-size:14px}
+.why{margin:0 0 10px;font-size:14px}
+
+/* AI Analysis buttons */
+.ai-actions{margin:0 0 14px;padding-bottom:12px;border-bottom:1px solid var(--line);font-size:14px}
+.ai-actions>b{display:block;margin-bottom:8px}
+.ai-buttons{display:flex;gap:12px;justify-content:flex-start}
+.btn-ai{flex:1;min-width:100px;min-height:38px;padding:8px 12px;border-radius:8px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);font-size:14px;font-weight:600;cursor:pointer;transition:all .2s}
+@media (hover:hover){.btn-ai:hover{border-color:var(--accent);background:var(--accent);color:var(--accent-ink)}}
+.btn-ai:active{transform:translateY(1px)}
+
+/* Country and sector drop-downs: one row, two equal halves, same look as the search box */
+.filters{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:2px 0 4px}
+.filters:has(#viewFilter){grid-template-columns:1fr 1fr;grid-template-areas:"country sector" "view view"}
+.filters #countryFilter{grid-area:country}
+.filters #sectorFilter{grid-area:sector}
+.filters #viewFilter{grid-area:view}
+.filter-dropdown{width:100%;min-width:0;min-height:44px;padding:0 10px;border-radius:var(--radius-ctrl);border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font-size:14.5px;font-weight:600;text-overflow:ellipsis;cursor:pointer;transition:border-color .15s var(--ease)}
+.filter-dropdown.on{border-color:var(--accent)}
+.filter-dropdown:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+@media (hover:hover){.filter-dropdown:hover{border-color:var(--accent)}}
+
+/* Screen title with the refresh icon on the same line */
+.viewhead{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.viewhead .livebar{margin:0}
+.iconbtn{flex:none;width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;border:0;background:transparent;color:var(--accent);cursor:pointer;transition:transform .15s var(--ease),opacity .15s var(--ease)}
+.iconbtn:active{transform:scale(.94)}
+@media (hover:hover){.iconbtn:hover{opacity:.75}}
+.livebar.busy .iconbtn{pointer-events:none}
+/* Refresh button: an always-visible little equalizer, same look as the landing screen's loading bars -
+   still while idle, pulsing in sequence while a refresh is in flight (see .livebar.busy below). */
+.iconbtn .refresh-bars{display:flex;align-items:center;justify-content:center;gap:3px;width:22px;height:22px}
+/* transform:scaleY() instead of animating height - height changes force a layout reflow on every frame for
+   all 5 bars at once, which is what was reading as choppy; scaleY is GPU-composited and stays smooth. Each
+   bar keeps its full 18px box (so the layout never shifts) and is visually squashed down via transform. */
+.iconbtn .refresh-bars i{display:block;width:3px;height:18px;border-radius:2px;background:currentColor;opacity:.55;
+  transform:scaleY(.33);transform-origin:center;will-change:transform}
+.livebar.busy .iconbtn .refresh-bars i{animation:qsBarsBtn 1.1s ease-in-out infinite}
+.livebar.busy .iconbtn .refresh-bars i:nth-child(1){animation-delay:-1.0s}
+.livebar.busy .iconbtn .refresh-bars i:nth-child(2){animation-delay:-0.8s}
+.livebar.busy .iconbtn .refresh-bars i:nth-child(3){animation-delay:-0.6s}
+.livebar.busy .iconbtn .refresh-bars i:nth-child(4){animation-delay:-0.4s}
+.livebar.busy .iconbtn .refresh-bars i:nth-child(5){animation-delay:-0.2s}
+@keyframes qsBarsBtn{0%,40%,100%{transform:scaleY(.33);opacity:.55}20%{transform:scaleY(1);opacity:1}}
+@media (prefers-reduced-motion:reduce){.livebar.busy .iconbtn .refresh-bars i{animation:none;transform:scaleY(.78);opacity:.9}}
+
+/* Links inside an opened story were dark blue on the dark theme */
+.details a{color:var(--accent);font-weight:600}
+
+/* Video (Phase 2.5): a quiet, secondary row under the story summary */
+.vid{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin-top:10px}
+.btn-watch{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:40px;padding:0 14px;border-radius:10px;border:1.5px solid var(--line);background:transparent;color:var(--ink);font:700 12.5px/1 var(--font);letter-spacing:.06em;text-transform:uppercase;text-decoration:none;cursor:pointer}
+.btn-watch svg{width:14px;height:14px;fill:currentColor;flex:none}
+@media (hover:hover){.btn-watch:hover{border-color:var(--accent);color:var(--accent)}}
+.btn-watch:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.vmeta{font-size:12.5px;font-weight:600;color:var(--ink2)}
+.vnote{margin:10px 0 0;font-size:12.5px;font-weight:600;color:var(--ink2)}
+.vnote.pending::after{content:"";display:inline-block;width:5px;height:5px;margin-left:6px;border-radius:50%;background:var(--accent);animation:qspulse 1.2s ease-in-out infinite;vertical-align:middle}
+@keyframes qspulse{0%,100%{opacity:.25}50%{opacity:1}}
+
+/* Video player: a 16:9 window over the app; the video is unloaded when it closes */
+body.noscroll{overflow:hidden}
+.vmodal{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;
+  padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))}
+.vback{position:absolute;inset:0;background:rgba(3,10,18,.8)}
+.vpanel{position:relative;width:min(100%,960px);max-height:100%;overflow:hidden;display:flex;flex-direction:column;background:var(--surface);color:var(--ink);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.vhead{display:flex;align-items:center;gap:10px;padding:8px 8px 8px 14px}
+.vtitle{flex:1;min-width:0;font-size:14px;font-weight:700;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.vclose{flex:none;width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;border:1.5px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+.vclose svg{width:18px;height:18px}
+.vstage{background:#000}
+.vframe{position:relative;width:min(100%,calc((100vh - 150px) * 1.7778));aspect-ratio:16/9;margin:0 auto;background:#000}
+.vframe iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.vfoot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 14px;padding:10px 14px 12px;font-size:12.5px;font-weight:600;color:var(--ink2)}
+.vfoot a{color:var(--accent);font-weight:700}
+
+/* tabs and toast */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);
+  box-shadow:0 -1px 0 var(--line), 0 -10px 24px -14px rgba(0,0,0,.12)}
+.tabs button{flex:1;min-height:58px;border:0;background:transparent;font-weight:600;font-size:14px;color:var(--ink2);cursor:pointer;position:relative;transition:color .15s var(--ease);
+  display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent}
+.tabs button[aria-selected=true]{color:var(--accent)}
+.tabs button[aria-selected=true]::before{content:"";position:absolute;left:22%;right:22%;top:0;height:3px;background:var(--accent);border-radius:0 0 3px 3px;
+  transition:left .2s var(--ease),right .2s var(--ease)}
+@media (hover:hover){.tabs button[aria-selected=false]:hover{color:var(--ink)}}
+.tab-icon{width:24px;height:24px;stroke:currentColor;fill:none;transition:stroke .15s var(--ease),transform .12s var(--ease)}
+.tab-icon-bars{fill:currentColor;stroke:none}
+
+/* Tap/hover feedback: a soft circular chip grows in behind the icon on hover, and briefly deepens with a
+   quick scale-down on press/click - gives every tab button a tactile response, not just the color swap
+   from the active-tab state above. */
+.tabs button::after{content:"";position:absolute;width:44px;height:44px;border-radius:50%;background:currentColor;
+  opacity:0;transform:scale(.6);transition:opacity .15s var(--ease),transform .15s var(--ease);pointer-events:none}
+@media (hover:hover){.tabs button:hover::after{opacity:.08;transform:scale(1)}}
+.tabs button:active::after{opacity:.16;transform:scale(1.08)}
+.tabs button:active .tab-icon{transform:scale(.88)}
+#toast{position:fixed;left:16px;right:16px;bottom:calc(76px + env(safe-area-inset-bottom));z-index:40;max-width:520px;margin:0 auto;background:var(--ink);color:var(--paper);padding:12px 16px;border-radius:var(--radius-ctrl);font-size:14px;font-weight:600;opacity:0;transform:translateY(8px);pointer-events:none;transition:opacity .2s var(--ease),transform .2s var(--ease);box-shadow:0 12px 32px -8px rgba(0,0,0,.35)}
+
+/* Story-arrival notification ("Waveform Arrival" design) */
+#storyToast{position:fixed;left:0;right:0;top:max(14px,env(safe-area-inset-top));z-index:250;display:flex;justify-content:center;padding:0 14px;pointer-events:none}
+#storyToast .stcard{pointer-events:auto;width:min(94vw,420px);background:var(--ink);color:var(--paper);border-radius:14px;box-shadow:0 16px 40px -10px rgba(0,0,0,.45);display:flex;align-items:center;gap:11px;padding:12px 14px;transform:translateY(-14px);opacity:0;position:relative;overflow:hidden;cursor:pointer}
+#storyToast.show .stcard{animation:stIn .4s var(--ease) forwards}
+#storyToast.hide .stcard{animation:stOut .26s ease-in forwards}
+@keyframes stIn{to{transform:translateY(0);opacity:1}}
+@keyframes stOut{to{transform:translateY(-10px);opacity:0}}
+#storyToast .stsweep{position:absolute;left:0;right:0;height:1.5px;background:linear-gradient(90deg,transparent 0%,rgba(240,96,77,0) 0%,rgba(240,96,77,.9) 50%,rgba(240,96,77,0) 100%);background-size:55% 100%;background-repeat:no-repeat;background-position:-60% 0;opacity:0;pointer-events:none}
+#storyToast .stsweep.top{top:0}
+#storyToast .stsweep.bottom{bottom:0}
+#storyToast.show .stsweep{animation:stSweepIn .2s ease-out .45s forwards,stSweep 2.2s ease-in-out .5s infinite}
+@keyframes stSweepIn{to{opacity:1}}
+@keyframes stSweep{0%{background-position:-60% 0}100%{background-position:160% 0}}
+#storyToast .stwave{display:flex;align-items:center;gap:3px;height:26px;flex:none}
+#storyToast .stwave i{display:block;width:3.5px;border-radius:3px;background:#F0604D;transform:scaleY(0);transform-origin:center;opacity:.35}
+#storyToast.show .stwave i{animation-duration:.38s,1.6s;animation-timing-function:cubic-bezier(.3,1.4,.4,1),ease-in-out;animation-iteration-count:1,infinite;animation-fill-mode:forwards,both}
+#storyToast.show .stwave i:nth-child(1){height:10px;animation-delay:0s,.55s;animation-name:stRise1,stIdle1}
+#storyToast.show .stwave i:nth-child(2){height:20px;animation-delay:.06s,.55s;animation-name:stRise2,stIdle2}
+#storyToast.show .stwave i:nth-child(3){height:26px;animation-delay:.12s,.55s;animation-name:stRise3,stIdle3}
+#storyToast.show .stwave i:nth-child(4){height:16px;animation-delay:.18s,.55s;animation-name:stRise4,stIdle4}
+#storyToast.show .stwave i:nth-child(5){height:8px;animation-delay:.24s,.55s;animation-name:stRise5,stIdle5}
+@keyframes stRise1{to{transform:scaleY(1);opacity:1}}
+@keyframes stRise2{to{transform:scaleY(1);opacity:1}}
+@keyframes stRise3{to{transform:scaleY(1);opacity:1}}
+@keyframes stRise4{to{transform:scaleY(1);opacity:1}}
+@keyframes stRise5{to{transform:scaleY(1);opacity:1}}
+@keyframes stIdle1{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.55)}}
+@keyframes stIdle2{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.7)}}
+@keyframes stIdle3{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.8)}}
+@keyframes stIdle4{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.6)}}
+@keyframes stIdle5{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.45)}}
+#storyToast .stflag{font-size:17px;opacity:0;transform:scale(.5);flex:none}
+#storyToast.show .stflag{animation:stPop .3s cubic-bezier(.3,1.5,.4,1) .3s forwards}
+@keyframes stPop{to{opacity:1;transform:scale(1)}}
+#storyToast .stbody{min-width:0;flex:1}
+#storyToast .stkicker{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#F0604D}
+#storyToast .sthead{font-size:13px;font-weight:600;line-height:1.3;margin-top:2px;color:var(--paper);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+#storyToast .stgo{flex:none;font-size:11.5px;font-weight:800;color:var(--ink);background:var(--paper);padding:6px 13px;border-radius:999px;border:none;cursor:pointer;font-family:inherit}
+@media (prefers-reduced-motion:reduce){
+  #storyToast .stcard,#storyToast .stsweep,#storyToast .stwave i,#storyToast .stflag{animation:none!important;opacity:1!important;transform:none!important}
+}
+#toast.show{opacity:1;transform:none;pointer-events:auto}
+#toast .link.inline{display:inline;width:auto;padding:0;border:0;margin-left:8px;color:var(--paper);text-decoration:underline;font-weight:800}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* Phase C: Country Status - a WhatsApp/Instagram-style row of story rings, in QwickSignal's own colours */
+body.cv-lock{overflow:hidden}
+.cstatus{display:flex;gap:16px;overflow-x:auto;padding:2px 2px 14px;margin-bottom:6px;scrollbar-width:none}
+.cstatus::-webkit-scrollbar{display:none}
+.cstop{flex:none;display:flex;flex-direction:column;align-items:center;gap:6px;width:66px;border:0;background:transparent;cursor:pointer;color:inherit;padding:0}
+.qs-ring{width:60px;height:60px;border-radius:50%;padding:3px;display:flex;align-items:center;justify-content:center;transition:transform .15s var(--ease)}
+.cstop:active .qs-ring{transform:scale(.94)}
+@media (hover:hover){.cstop:hover .qs-ring{transform:scale(1.05)}}
+.qs-ring-inner{width:100%;height:100%;border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:26px;box-shadow:0 0 0 1px var(--line) inset,var(--card-shadow)}
+.cstop-name{font-size:11.5px;font-weight:600;color:var(--ink2);max-width:66px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* Country story viewer - a full-screen "status" reader: dashes at top, one story centered, tap zones either side */
+.cviewer{position:fixed;inset:0;z-index:110;background:var(--head);color:var(--head-ink);display:flex;flex-direction:column;
+  padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(14px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))}
+.cv-dashes{display:flex;gap:5px;padding:4px 44px 0}
+.cv-dash{flex:1;height:3px;border-radius:3px;background:rgba(255,255,255,.25)}
+.cv-dash.seen{background:rgba(255,255,255,.55)}
+.cv-dash.current{background:var(--accent)}
+.cv-close{position:absolute;top:max(10px,env(safe-area-inset-top));right:max(10px,env(safe-area-inset-right));z-index:2;
+  width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;border:0;background:rgba(0,0,0,.25);color:var(--head-ink);cursor:pointer}
+.cv-close svg{width:18px;height:18px}
+/* Always visible (not just on hover-capable/desktop devices) - on a touch phone this is the only obvious,
+   discoverable way to move between stories and, at the end of one country, straight into the next. */
+.cv-nav{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:40px;height:40px;border-radius:50%;border:0;
+  background:rgba(0,0,0,.35);color:var(--head-ink);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.cv-nav svg{width:20px;height:20px}
+.cv-prev{left:8px}
+.cv-next{right:8px}
+.cv-body{flex:1;overflow-y:auto;display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;max-width:560px;margin:0 auto;padding:36px 20px 20px;width:100%}
+.cv-img{width:100%;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:var(--surface2,#00000010);margin-bottom:2px}
+.cv-img img{width:100%;height:100%;object-fit:cover;display:block}
+.cv-flag{font-size:56px;line-height:1}
+.cv-country{font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink2)}
+.cv-headline{margin:2px 0 0;font-size:22px;line-height:1.25;font-weight:800;letter-spacing:-.01em}
+.cv-time{margin-top:6px;font-size:12.5px;font-weight:600;color:var(--ink2)}
+.cv-body .why{margin:10px 0 0;font-size:15px;line-height:1.5;text-align:left}
+.cv-body .facts{margin:6px 0 0;padding-left:20px;text-align:left;font-size:14.5px;line-height:1.6}
+.cv-pos{margin-top:auto;padding-top:16px;font-size:12.5px;font-weight:700;color:var(--ink2)}
+.cv-fade{animation:cvFadeIn .22s ease}
+@keyframes cvFadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}.cv-fade{animation:none}}
+
+/* Landing / sign-in screen: the app's own header, tabs and content stay in the DOM (so nothing has to
+   re-initialise once it's dismissed) but sit hidden behind it while body.pre-app is set - see Landing.show()/
+   hide() in app.js. */
+body.pre-app .top, body.pre-app main, body.pre-app .tabs{display:none}
+.landing{position:fixed;inset:0;z-index:200;background:var(--paper);display:flex;align-items:center;justify-content:center;
+  padding:max(24px,env(safe-area-inset-top)) 20px max(24px,env(safe-area-inset-bottom));overflow-y:auto}
+.landing-inner{width:100%;max-width:380px;display:flex;flex-direction:column;align-items:stretch;text-align:center;
+  animation:qsCardIn .4s var(--ease) both}
+.landing-brand{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:6px}
+.landing-brand svg{color:var(--accent)}
+.landing-brand span{font-size:24px;font-weight:800;letter-spacing:-.02em;color:var(--ink)}
+.landing-form{text-align:left}
+.landing-form .acct-buttons{flex-direction:column}
+.landing-form .acct-buttons .btn{flex:none}
+.landing-google{display:flex;justify-content:center;margin-top:14px}
+.landing-divider{display:flex;align-items:center;gap:12px;margin:22px 0;color:var(--ink2);font-size:13px;font-weight:600}
+.landing-divider::before,.landing-divider::after{content:"";flex:1;height:1px;background:var(--line)}
+.landing-guest{border-style:dashed}
+.landing-guestnote{margin:12px 0 0;font-size:12.5px;line-height:1.5;color:var(--ink2)}
+
+/* Landing loading indicator: an equalizer-style row of bars pulsing at staggered heights, shown briefly
+   while the app initializes (checking for an already-remembered device choice, restoring any signed-in
+   session) before the sign-in form/Continue-as-guest content is revealed - see Landing.show() in app.js.
+   Pure CSS, no external animation file, so it can never break from a blocked CDN or a licensing issue. */
+.landing-loader{display:flex;align-items:center;justify-content:center;gap:6px;height:56px;margin:0 0 22px}
+/* transform:scaleY() instead of animating height - keeps this smooth/GPU-composited instead of forcing a
+   layout reflow on every frame for all 5 bars at once (the same fix applied to the refresh button's bars). */
+.landing-loader i{display:block;width:6px;height:44px;border-radius:3px;background:var(--accent);
+  transform:scaleY(.32);transform-origin:center;will-change:transform;
+  animation:qsBars 1.1s ease-in-out infinite}
+.landing-loader i:nth-child(1){animation-delay:-1.0s}
+.landing-loader i:nth-child(2){animation-delay:-0.8s}
+.landing-loader i:nth-child(3){animation-delay:-0.6s}
+.landing-loader i:nth-child(4){animation-delay:-0.4s}
+.landing-loader i:nth-child(5){animation-delay:-0.2s}
+@keyframes qsBars{0%,40%,100%{transform:scaleY(.32);opacity:.55}20%{transform:scaleY(1);opacity:1}}
+@media (prefers-reduced-motion:reduce){.landing-loader i{animation:none;transform:scaleY(.64);opacity:.8}}
+/* .landing-content fades/rises in once the loader's job is done; .landing-loading on #landing hides the
+   content and shows the loader instead, so the two never show at once. */
+.landing-content{animation:qsCardIn .35s var(--ease) both}
+#landing.landing-loading .landing-content{display:none}
+#landing:not(.landing-loading) .landing-loader{display:none}
+
+/* SPLASH: a brand moment shown on every cold start (unlike #landing, which only shows to a visitor who
+   hasn't chosen sign-in/guest yet) - the red QwickSignal mark plus the same equalizer-bar loader, bigger,
+   for about a second, then it fades out and is removed. Written inline/above-the-fold in the HTML itself
+   (not injected by JS) so there is no white flash before it: the very first paint already shows this. */
+#splash{position:fixed;inset:0;z-index:300;background:var(--paper);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:22px;transition:opacity .45s var(--ease)}
+#splash.splash-out{opacity:0;pointer-events:none}
+#splash .splash-brand{display:flex;flex-direction:column;align-items:center;gap:14px}
+#splash .splash-brand svg{color:var(--accent);width:64px;height:64px}
+#splash .splash-brand span{font-size:28px;font-weight:800;letter-spacing:-.02em;color:var(--ink)}
+#splash .splash-loader{display:flex;align-items:center;justify-content:center;gap:8px;height:64px}
+#splash .splash-loader i{display:block;width:7px;height:52px;border-radius:4px;background:var(--accent);
+  transform:scaleY(.28);transform-origin:center;will-change:transform;animation:qsBars 1.1s ease-in-out infinite}
+#splash .splash-loader i:nth-child(1){animation-delay:-1.0s}
+#splash .splash-loader i:nth-child(2){animation-delay:-0.8s}
+#splash .splash-loader i:nth-child(3){animation-delay:-0.6s}
+#splash .splash-loader i:nth-child(4){animation-delay:-0.4s}
+#splash .splash-loader i:nth-child(5){animation-delay:-0.2s}
+@media (prefers-reduced-motion:reduce){#splash .splash-loader i{animation:none;transform:scaleY(.64);opacity:.8}}
+</style>
+</head>
+<body>
+
+<!-- SPLASH: see the #splash rule above for why this is separate from #landing below. Removed from the DOM
+     by app.js shortly after boot (splash-out class fades it, then a timeout deletes the element). -->
+<div id="splash" aria-hidden="true">
+  <div class="splash-brand">
+    <svg width="64" height="64" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6">
+      <circle cx="16" cy="16" r="12"/><ellipse cx="16" cy="16" rx="5" ry="12"/><path d="M4 16h24M6 9.5h20M6 22.5h20"/>
+      <circle cx="22.5" cy="10.5" r="3.2" fill="#F0604D" stroke="none"/>
+    </svg>
+    <span>QwickSignal</span>
+  </div>
+  <div class="splash-loader"><i></i><i></i><i></i><i></i><i></i></div>
+</div>
+
+<!-- LANDING: shown once, before the app's own header/tabs, until the person picks sign-in, sign-up, Google
+     or Continue as guest (see Landing in app.js). Kept as a fixed full-screen overlay so it can cover the
+     header and tab bar too, not just the main content area - body.pre-app hides the app underneath while
+     it's up. The choice is remembered on-device, so this isn't shown again on the next visit; signing out
+     brings it back. -->
+<div id="landing" class="landing landing-loading" hidden>
+  <div class="landing-inner">
+    <div class="landing-brand">
+      <svg width="40" height="40" viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6">
+        <circle cx="16" cy="16" r="12"/><ellipse cx="16" cy="16" rx="5" ry="12"/><path d="M4 16h24M6 9.5h20M6 22.5h20"/>
+        <circle cx="22.5" cy="10.5" r="3.2" fill="#F0604D" stroke="none"/>
+      </svg>
+      <span data-i18n="landingTitle">QwickSignal</span>
+    </div>
+
+    <!-- Brief loading indicator while the app checks for a remembered device choice / restores any signed-in
+         session - see Landing.show() in app.js, which removes the "landing-loading" class once that check is
+         done, swapping this out for the sign-in form below. -->
+    <div class="landing-loader" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+
+    <div class="landing-content">
+      <form id="landingAuthForm" class="acct-form landing-form">
+        <label class="vh" for="landingEmail" data-i18n="signInEmail">Email</label>
+        <input id="landingEmail" type="email" autocomplete="email" placeholder="Enter your Gmail" required>
+        <label class="vh" for="landingPass" data-i18n="signInPassword">Password</label>
+        <input id="landingPass" type="password" autocomplete="current-password" placeholder="Password" data-i18n-placeholder="signInPassword" minlength="6" required>
+        <div class="acct-buttons">
+          <button type="submit" data-mode="signin" class="btn primary block" data-i18n="signIn">Sign in</button>
+          <button type="submit" data-mode="signup" class="btn block" data-i18n="createAccount">Create account</button>
+        </div>
+      </form>
+      <div id="landingGoogleBtn" class="acct-google landing-google" hidden></div>
+
+      <div class="landing-divider"><span data-i18n="landingOr">or</span></div>
+
+      <button id="landingGuestBtn" class="btn block landing-guest" data-i18n="continueAsGuest">Continue as guest</button>
+      <p class="landing-guestnote" data-i18n="landingGuestNote">You can look around and follow the default channels without an account. Sign in any time later from Settings to keep your own saved articles and channels.</p>
+    </div>
+  </div>
+</div>
+
+<header class="top">
+  <div class="brand">
+    <span>QwickSignal</span>
+    <div class="livebar" id="liveBar"></div>
+  </div>
+  <div class="right">
+    <label class="vh" for="langSelect">Language</label>
+    <select id="langSelect" class="lang-select" aria-label="Language">
+      <option value="en">EN</option>
+      <option value="hi">हिंदी</option>
+      <option value="mr">मराठी</option>
+      <option value="gu">ગુજરાતી</option>
+    </select>
+    <span id="today"></span><button class="tiny" data-install hidden>Install</button>
+  </div>
+</header>
+
+<main>
+  <!-- SETTINGS (formerly "Link Pages" - Appearance, Account, Telegram channels and cross-device Sync all
+       live here now, reached via the Settings tab instead of being the app's first/default screen) -->
+  <section id="view-settings" class="view" hidden>
+    <h1 data-i18n="settings">Settings</h1>
+
+    <div class="lp-block">
+      <h2 class="lp-h" data-i18n="account">Account</h2>
+      <p class="lp-sub" data-i18n="accountSub">Optional. Sign in to keep your own saved articles, dismissed items and followed channels tied to your account instead of a code - and separate from anyone else's.</p>
+      <div id="accountBox"></div>
+    </div>
+
+    <div class="lp-block">
+      <h2 class="lp-h" data-i18n="notifHeading">Notifications</h2>
+      <p class="lp-sub" data-i18n="notifSub">Get a notification on this device when a new story arrives - even when the app isn't open.</p>
+      <div id="notifBox"></div>
+    </div>
+
+    <div class="lp-block">
+      <h2 class="lp-h" data-i18n="telegram">Telegram</h2>
+      <div class="lp-add">
+        <input id="tgInput" type="text" inputmode="text" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="t/channelname" data-i18n-placeholder="tgPlaceholder">
+        <button id="tgAdd" class="btn primary" data-i18n="addBtn">+ Add</button>
+      </div>
+      <p id="tgGateNote" class="lp-syncnote" data-i18n="loginToLinkChannels" hidden>Log in to link Telegram channels.</p>
+      <div id="tgSyncNote" class="lp-syncnote"></div>
+      <div id="tgList" class="lp-list" aria-live="polite"></div>
+    </div>
+
+    <div class="lp-block" id="syncBlock">
+      <h2 class="lp-h" data-i18n="syncHeading">Sync across your devices</h2>
+      <p class="lp-sub" data-i18n="syncSub">This code links your saved articles and followed channels on another phone or browser. Anyone with the code can use it, so keep it to yourself and your own devices.</p>
+      <div class="lp-sync">
+        <code id="syncCodeShow">&hellip;</code>
+        <button id="syncCopy" class="btn small" data-i18n="copyBtn">Copy</button>
+      </div>
+      <div class="lp-add" style="margin-top:10px">
+        <input id="syncInput" type="text" inputmode="text" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="Enter a code from another device" data-i18n-placeholder="syncInputPlaceholder">
+        <button id="syncUse" class="btn small" data-i18n="useCodeBtn">Use this code</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- BRIEFING -->
+  <section id="view-brief" class="view" hidden>
+    <div id="countryStatus" class="cstatus" role="group" aria-label="Country status" hidden></div>
+    <p class="lede" id="briefMeta" hidden></p>
+    <div id="aiBrief"></div>
+
+    <div class="seg" id="rangeSeg" role="group" aria-label="Time range" hidden>
+      <!--
+      <button data-v="today" aria-pressed="false">Today</button>
+      <button data-v="7d" aria-pressed="true">7 days</button>
+      <button data-v="all" aria-pressed="false">All</button>
+      -->
+    </div>
+
+    <div class="tools">
+      <input type="search" id="q" placeholder="Search headlines, companies, text" aria-label="Search" data-i18n-placeholder="searchPlaceholder">
+      <div class="strip" id="impchips" hidden></div>
+      <div id="filterBox" class="filters">
+        <select id="countryFilter" class="filter-dropdown" aria-label="Filter by country"></select>
+        <select id="sectorFilter" class="filter-dropdown" aria-label="Filter by sector"></select>
+        <select id="viewFilter" class="filter-dropdown" aria-label="Filter by priority">
+          <option value="" data-i18n="allPriorities">All priorities</option>
+          <option value="Critical" data-i18n="critical">Critical</option>
+          <option value="High" data-i18n="high">High</option>
+          <option value="Medium" data-i18n="medium">Medium</option>
+          <option value="Low" data-i18n="low">Low</option>
+        </select>
+      </div>
+      <div class="strip" id="countries" aria-label="Countries" hidden></div>
+      <div class="strip" id="sectors" aria-label="Sectors" hidden></div>
+    </div>
+    <div class="impbar" id="impbar" aria-hidden="true" hidden></div>
+
+    <div class="seg" id="viewSeg" role="group" aria-label="Group by" hidden>
+      <button data-v="priority" aria-pressed="true">By priority</button>
+      <button data-v="country" aria-pressed="false">By country</button>
+      <button data-v="sector" aria-pressed="false">By sector</button>
+    </div>
+    <p style="margin:10px 0 0" id="hasFilter" hidden><button class="link" style="border:0;width:auto;padding:4px 0" data-act="reset" data-i18n="clearFilters">Clear filters</button></p>
+
+    <div id="list"></div>
+  </section>
+
+  <!-- SAVED -->
+  <section id="view-saved" class="view" hidden>
+    <div class="viewhead"><h1 data-i18n="saved">Saved</h1></div>
+    <div id="savedList"></div>
+  </section>
+
+  <!-- EXPORT -->
+  <section id="view-export" class="view" hidden>
+    <h1 data-i18n="export">Export</h1>
+    <p class="lede" data-i18n="exportLede">Save a report or the raw table. Files go to your phone's Downloads.</p>
+
+    <div class="seg" id="exportSeg" role="group" aria-label="Period" hidden>
+     <!-- <button data-v="today" aria-pressed="true">Today</button> -->
+      <!--
+      <!<button data-v="7d" aria-pressed="false">7 days</button>
+      <button data-v="all" aria-pressed="false">All</button>
+      -->
+    </div>
+    <p class="muted" id="exportCount" style="margin:8px 0 12px"></p>
+    <div class="stack">
+      <button id="pdfBtn" class="btn primary block" data-i18n="downloadPdf">Download QwickSignal PDF</button>
+      <button id="csvBtn" class="btn block" data-i18n="downloadCsv">Download CSV</button>
+    </div>
+
+  </section>
+</main>
+
+<nav class="tabs" role="tablist" aria-label="Sections">
+  <button role="tab" data-tab="brief" aria-selected="true" aria-label="Signals" data-i18n-aria="signals" title="Signals" data-i18n-title="signals">
+    <svg class="tab-icon tab-icon-bars" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="10" width="3" height="8" rx="1"/><rect x="7.5" y="6" width="3" height="12" rx="1"/><rect x="13" y="2" width="3" height="16" rx="1"/><rect x="18.5" y="6" width="3" height="12" rx="1"/></svg>
+  </button>
+  <button role="tab" data-tab="saved" aria-selected="false" aria-label="Saved" data-i18n-aria="saved" title="Saved" data-i18n-title="saved">
+    <svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-6-4-6 4V3z"/></svg>
+  </button>
+  <button role="tab" data-tab="export" aria-selected="false" aria-label="Export" data-i18n-aria="export" title="Export" data-i18n-title="export">
+    <svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>
+  </button>
+  <button role="tab" data-tab="settings" aria-selected="false" aria-label="Settings" data-i18n-aria="settings" title="Settings" data-i18n-title="settings">
+    <svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+  </button>
+</nav>
+<div id="toast" role="status" aria-live="polite"></div>
+<div id="storyToast" role="status" aria-live="polite"></div>
+<div class="vmodal" id="videoModal" role="dialog" aria-modal="true" aria-labelledby="vmTitle" hidden>
+  <div class="vback" data-act="vclose"></div>
+  <div class="vpanel">
+    <div class="vhead">
+      <div class="vtitle" id="vmTitle"></div>
+      <button class="vclose" data-act="vclose" aria-label="Close video" title="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="vstage"><div class="vframe" id="vmFrame"></div></div>
+    <div class="vfoot"><span id="vmMeta"></span><a id="vmOpen" href="#" target="_blank" rel="noopener noreferrer">Watch on YouTube &#8599;</a></div>
+  </div>
+</div>
+
+<div class="cviewer" id="countryViewer" role="dialog" aria-modal="true" aria-label="Country stories" hidden>
+  <div class="cv-dashes" id="cvDashes"></div>
+  <button class="cv-close" data-act="cvclose" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  <button class="cv-nav cv-prev" data-act="cvprev" aria-label="Previous story"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
+  <button class="cv-nav cv-next" data-act="cvnext" aria-label="Next story"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
+  <div class="cv-body" id="cvBody"></div>
+</div>
+
+<script src="app.js" defer></script>
+</body>
+</html>

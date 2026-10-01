@@ -570,7 +570,12 @@ if (typeof document !== 'undefined') (function () {
       downloadPdf: 'Download QwickSignal PDF', downloadCsv: 'Download CSV',
       onThisPhone: 'On this phone', clearAllData: 'Clear all data',
       refresh: 'Refresh',
-      loginToLinkChannels: 'Log in to link Telegram channels.'
+      loginToLinkChannels: 'Log in to link Telegram channels.',
+      notifHeading: 'Notifications', notifSub: "Get a notification on this device when a new story arrives - even when the app isn't open.",
+      notifEnable: 'Turn on notifications', notifDisable: 'Turn off notifications', notifOn: 'Notifications are on for this device.',
+      notifUnsupported: "This browser doesn't support push notifications.",
+      notifBlocked: 'Notifications are blocked for this site. Allow them in your browser/site settings, then try again.',
+      notifFailed: "Couldn't turn on notifications. Check your connection and try again."
     },
     hi: {
       linkPages: 'लिंक पेज', settings: 'सेटिंग्स', signals: 'सिग्नल्स', saved: 'सेव किए गए', export: 'एक्सपोर्ट',
@@ -578,7 +583,7 @@ if (typeof document !== 'undefined') (function () {
       landingOr: 'या', continueAsGuest: 'गेस्ट के रूप में जारी रखें',
       landingGuestNote: 'आप बिना खाते के भी देख सकते हैं और डिफ़ॉल्ट चैनल फॉलो कर सकते हैं। बाद में कभी भी सेटिंग्स से साइन इन करके अपने सेव किए गए लेख और चैनल रख सकते हैं।',
       account: 'खाता', accountSub: 'वैकल्पिक। अपने सेव किए गए लेख, हटाए गए आइटम और फॉलो किए गए चैनल किसी कोड की बजाय अपने खाते से जोड़ने के लिए साइन इन करें - और बाकी सभी से अलग रखें।',
-      signInEmail: 'ईमेल', signInPassword: 'पासवर्ड (6+ अक्षर)', signIn: 'साइन इन करें', createAccount: 'खाता बनाएं',
+      signInEmail: 'ईमेल', signInPassword: 'पासवर्ड', signIn: 'साइन इन करें', createAccount: 'खाता बनाएं',
       signOut: 'साइन आउट', signedInAs: 'इस रूप में साइन इन है',
       telegram: 'टेलीग्राम', tgPlaceholder: 't/channelname या t.me लिंक', addBtn: '+ जोड़ें',
       following: 'फॉलो कर रहे हैं', follow: 'फॉलो करें', remove: 'हटाएं', removeShared: 'सभी के लिए हटाएं', setDefault: 'डिफ़ॉल्ट बनाएं', removeDefault: 'डिफ़ॉल्ट हटाएं', defaultBadge: 'डिफ़ॉल्ट',
@@ -594,7 +599,12 @@ if (typeof document !== 'undefined') (function () {
       downloadPdf: 'QwickSignal PDF डाउनलोड करें', downloadCsv: 'CSV डाउनलोड करें',
       onThisPhone: 'इस फोन पर', clearAllData: 'सारा डेटा हटाएं',
       refresh: 'रिफ्रेश करें',
-      loginToLinkChannels: 'टेलीग्राम चैनल लिंक करने के लिए साइन इन करें।'
+      loginToLinkChannels: 'टेलीग्राम चैनल लिंक करने के लिए साइन इन करें।',
+      notifHeading: 'सूचनाएं', notifSub: 'जब कोई नई खबर आए तो इस डिवाइस पर सूचना पाएं - ऐप खुला न होने पर भी।',
+      notifEnable: 'सूचनाएं चालू करें', notifDisable: 'सूचनाएं बंद करें', notifOn: 'इस डिवाइस के लिए सूचनाएं चालू हैं।',
+      notifUnsupported: 'यह ब्राउज़र पुश सूचनाओं का समर्थन नहीं करता।',
+      notifBlocked: 'इस साइट के लिए सूचनाएं ब्लॉक हैं। अपनी ब्राउज़र/साइट सेटिंग्स में उन्हें अनुमति दें, फिर दोबारा कोशिश करें।',
+      notifFailed: 'सूचनाएं चालू नहीं हो सकीं। अपना कनेक्शन जांचें और फिर कोशिश करें।'
     },
     mr: {
       linkPages: 'लिंक पेजेस', settings: 'सेटिंग्ज', signals: 'सिग्नल्स', saved: 'सेव्ह केलेले', export: 'एक्सपोर्ट',
@@ -602,7 +612,7 @@ if (typeof document !== 'undefined') (function () {
       landingOr: 'किंवा', continueAsGuest: 'गेस्ट म्हणून सुरू ठेवा',
       landingGuestNote: 'तुम्ही खात्याशिवायही पाहू शकता आणि डीफॉल्ट चॅनेल्स फॉलो करू शकता. नंतर कधीही सेटिंग्जमधून साइन इन करून तुमचे सेव्ह केलेले लेख आणि चॅनेल्स ठेवू शकता.',
       account: 'खाते', accountSub: 'ऐच्छिक. तुमचे सेव्ह केलेले लेख, हटवलेल्या गोष्टी आणि फॉलो केलेले चॅनेल्स कोडऐवजी तुमच्या खात्याशी जोडण्यासाठी साइन इन करा - आणि इतरांपासून वेगळे ठेवा.',
-      signInEmail: 'ईमेल', signInPassword: 'पासवर्ड (6+ अक्षरे)', signIn: 'साइन इन करा', createAccount: 'खाते तयार करा',
+      signInEmail: 'ईमेल', signInPassword: 'पासवर्ड', signIn: 'साइन इन करा', createAccount: 'खाते तयार करा',
       signOut: 'साइन आउट', signedInAs: 'साइन इन केले आहे',
       telegram: 'टेलिग्राम', tgPlaceholder: 't/channelname किंवा t.me लिंक', addBtn: '+ जोडा',
       following: 'फॉलो करत आहात', follow: 'फॉलो करा', remove: 'काढा', removeShared: 'सर्वांसाठी काढा', setDefault: 'डीफॉल्ट करा', removeDefault: 'डीफॉल्ट काढा', defaultBadge: 'डीफॉल्ट',
@@ -618,7 +628,12 @@ if (typeof document !== 'undefined') (function () {
       downloadPdf: 'QwickSignal PDF डाउनलोड करा', downloadCsv: 'CSV डाउनलोड करा',
       onThisPhone: 'या फोनवर', clearAllData: 'सर्व डेटा काढा',
       refresh: 'रिफ्रेश करा',
-      loginToLinkChannels: 'टेलिग्राम चॅनेल लिंक करण्यासाठी साइन इन करा.'
+      loginToLinkChannels: 'टेलिग्राम चॅनेल लिंक करण्यासाठी साइन इन करा.',
+      notifHeading: 'सूचना', notifSub: 'नवीन बातमी आल्यावर या डिव्हाइसवर सूचना मिळवा - अ‍ॅप उघडे नसतानाही.',
+      notifEnable: 'सूचना चालू करा', notifDisable: 'सूचना बंद करा', notifOn: 'या डिव्हाइससाठी सूचना चालू आहेत.',
+      notifUnsupported: 'हा ब्राउझर पुश सूचनांना सपोर्ट करत नाही.',
+      notifBlocked: 'या साइटसाठी सूचना ब्लॉक केलेल्या आहेत. तुमच्या ब्राउझर/साइट सेटिंग्जमध्ये त्यांना परवानगी द्या, नंतर पुन्हा प्रयत्न करा.',
+      notifFailed: 'सूचना चालू करता आल्या नाहीत. तुमचे कनेक्शन तपासा आणि पुन्हा प्रयत्न करा.'
     },
     gu: {
       linkPages: 'લિંક પેજીસ', settings: 'સેટિંગ્સ', signals: 'સિગ્નલ્સ', saved: 'સેવ કરેલ', export: 'એક્સપોર્ટ',
@@ -626,7 +641,7 @@ if (typeof document !== 'undefined') (function () {
       landingOr: 'અથવા', continueAsGuest: 'ગેસ્ટ તરીકે ચાલુ રાખો',
       landingGuestNote: 'તમે ખાતા વગર પણ જોઈ શકો છો અને ડિફોલ્ટ ચેનલ્સ ફોલો કરી શકો છો. પછી ગમે ત્યારે સેટિંગ્સમાંથી સાઇન ઇન કરીને તમારા સેવ કરેલા લેખો અને ચેનલ્સ રાખી શકો છો.',
       account: 'ખાતું', accountSub: 'વૈકલ્પિક. તમારા સેવ કરેલા લેખો, કાઢી નાખેલી વસ્તુઓ અને ફોલો કરેલા ચેનલ્સ કોડને બદલે તમારા ખાતા સાથે જોડવા માટે સાઇન ઇન કરો - અને બીજા બધાથી અલગ રાખો.',
-      signInEmail: 'ઇમેઇલ', signInPassword: 'પાસવર્ડ (6+ અક્ષરો)', signIn: 'સાઇન ઇન કરો', createAccount: 'ખાતું બનાવો',
+      signInEmail: 'ઇમેઇલ', signInPassword: 'પાસવર્ડ', signIn: 'સાઇન ઇન કરો', createAccount: 'ખાતું બનાવો',
       signOut: 'સાઇન આઉટ', signedInAs: 'આ રીતે સાઇન ઇન છે',
       telegram: 'ટેલિગ્રામ', tgPlaceholder: 't/channelname અથવા t.me લિંક', addBtn: '+ ઉમેરો',
       following: 'ફોલો કરો છો', follow: 'ફોલો કરો', remove: 'કાઢી નાખો', removeShared: 'બધા માટે કાઢી નાખો', setDefault: 'ડિફોલ્ટ બનાવો', removeDefault: 'ડિફોલ્ટ કાઢો', defaultBadge: 'ડિફોલ્ટ',
@@ -642,7 +657,12 @@ if (typeof document !== 'undefined') (function () {
       downloadPdf: 'QwickSignal PDF ડાઉનલોડ કરો', downloadCsv: 'CSV ડાઉનલોડ કરો',
       onThisPhone: 'આ ફોન પર', clearAllData: 'બધો ડેટા કાઢી નાખો',
       refresh: 'રિફ્રેશ કરો',
-      loginToLinkChannels: 'ટેલિગ્રામ ચેનલ લિંક કરવા સાઇન ઇન કરો.'
+      loginToLinkChannels: 'ટેલિગ્રામ ચેનલ લિંક કરવા સાઇન ઇન કરો.',
+      notifHeading: 'નોટિફિકેશન', notifSub: 'નવી સ્ટોરી આવે ત્યારે આ ડિવાઇસ પર નોટિફિકેશન મેળવો - ઍપ ખુલ્લી ન હોય ત્યારે પણ.',
+      notifEnable: 'નોટિફિકેશન ચાલુ કરો', notifDisable: 'નોટિફિકેશન બંધ કરો', notifOn: 'આ ડિવાઇસ માટે નોટિફિકેશન ચાલુ છે.',
+      notifUnsupported: 'આ બ્રાઉઝર પુશ નોટિફિકેશનને સપોર્ટ કરતું નથી.',
+      notifBlocked: 'આ સાઇટ માટે નોટિફિકેશન બ્લોક કરેલા છે. તમારા બ્રાઉઝર/સાઇટ સેટિંગ્સમાં તેમને મંજૂરી આપો, પછી ફરી પ્રયાસ કરો.',
+      notifFailed: 'નોટિફિકેશન ચાલુ કરી શકાયા નહીં. તમારું જોડાણ તપાસો અને ફરી પ્રયાસ કરો.'
     }
   };
   let currentLang = 'en';
@@ -861,6 +881,10 @@ if (typeof document !== 'undefined') (function () {
     // "Continue with Google" button - email/password accounts work regardless.
     googleClientId: '434668496404-ivlniatcoq0b26bvcuk9ue1q40thtkfu.apps.googleusercontent.com'
   };
+  // Web Push VAPID public key (safe to ship in client code - it only identifies this app to the push
+  // service, it can't be used to send anything). Its matching private key lives only in the pipeline's
+  // GitHub Actions secrets (see pipeline.py's send_push_notifications()) and is never in this repo.
+  const VAPID_PUBLIC_KEY = 'BLoqORqoNU8nV8DYIq70_t11_XaiwkhELAT_QBtFyoz9c8sWnYd0Ibg8Pp1sr_87C0s0iHq9FKQxZsk5wo4mh8w';
   const FS_BASE = `https://firestore.googleapis.com/v1/projects/${FIREBASE.projectId}/databases/(default)/documents`;
 
   // The one account that owns this deployment - the only sign-in that can remove a shared channel or curate the
@@ -1287,6 +1311,32 @@ if (typeof document !== 'undefined') (function () {
     }
   }
 
+  function renderNotifBox() {
+    const box = $('#notifBox');
+    if (!box) return;
+    if (!Push.supported()) {
+      box.innerHTML = `<p class="lp-syncnote">${t('notifUnsupported')}</p>`;
+      return;
+    }
+    const blocked = Notification.permission === 'denied';
+    const on = Push.isOn() && Notification.permission === 'granted';
+    if (blocked) {
+      box.innerHTML = `<p class="lp-syncnote">${t('notifBlocked')}</p>`;
+      return;
+    }
+    box.innerHTML = on
+      ? `<p class="lp-syncnote">${t('notifOn')}</p><button id="notifBtn" class="btn small">${t('notifDisable')}</button>`
+      : `<button id="notifBtn" class="btn primary small">${t('notifEnable')}</button>`;
+    $('#notifBtn').addEventListener('click', async () => {
+      $('#notifBtn').disabled = true;
+      if (on) { await Push.unsubscribe(); } else {
+        const r = await Push.subscribe();
+        if (!r.ok) { toast(r.error); }
+      }
+      renderNotifBox();
+    });
+  }
+
   /* ---------- Telegram channel linking (Link Pages) ----------
      Typing t/channelname adds it straight to the shared qs_channels collection as "approved" - the very next
      pipeline run (see fetch_approved_channels() in pipeline.py) picks it up and starts fetching it into the
@@ -1412,6 +1462,79 @@ if (typeof document !== 'undefined') (function () {
 
     follow(name) { S.myChannels.add(name.toLowerCase()); Sync.pushSoon(); track('follow_channel', { channel: name }); },
     unfollow(name) { S.myChannels.delete(name.toLowerCase()); Sync.pushSoon(); track('unfollow_channel', { channel: name }); }
+  };
+
+  /* ---------- Push notifications (real OS-level, work even when the app isn't open) ----------
+     Separate from the in-app "Waveform Arrival" toast (notifyNewStory() near loadLive(), which only shows
+     while this tab is open): this is a standard Web Push subscription, so the pipeline (pipeline.py's
+     send_push_notifications(), run after every publish) can wake the service worker and show a real system
+     notification for a brand-new story, same as any other app's push notifications. No login needed - the
+     subscription is keyed by a random id this device keeps in localStorage, same spirit as the guest sync
+     code, since most visitors use the app signed out (see qs_push_subs in firestore.rules). */
+  const PUSH_ID_KEY = 'qs-push-id-v1';
+  function urlBase64ToUint8Array(base64) {
+    const pad = '='.repeat((4 - base64.length % 4) % 4);
+    const b64 = (base64 + pad).replace(/-/g, '+').replace(/_/g, '/');
+    const raw = atob(b64);
+    const out = new Uint8Array(raw.length);
+    for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+    return out;
+  }
+  function pushId() {
+    try {
+      let id = localStorage.getItem(PUSH_ID_KEY);
+      if (!id) { id = 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 10); localStorage.setItem(PUSH_ID_KEY, id); }
+      return id;
+    } catch (e) { return 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10); }
+  }
+  const Push = {
+    supported() { return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window; },
+    // Reflects this device's own subscription bookkeeping, not the live OS permission (which can change
+    // behind our back in the browser's own settings) - renderNotifBox() checks Notification.permission too.
+    isOn() { try { return localStorage.getItem('qs-push-on-v1') === '1'; } catch (e) { return false; } },
+    setOn(v) { try { localStorage.setItem('qs-push-on-v1', v ? '1' : '0'); } catch (e) { /* ignore */ } },
+
+    async subscribe() {
+      if (!this.supported()) return { ok: false, error: t('notifUnsupported') };
+      try {
+        const perm = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission();
+        if (perm !== 'granted') return { ok: false, error: t('notifBlocked') };
+        const reg = await navigator.serviceWorker.ready;
+        let sub = await reg.pushManager.getSubscription();
+        if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) });
+        const j = sub.toJSON();
+        const id = pushId();
+        const fields = {
+          endpoint: toFsValue(j.endpoint),
+          p256dh: toFsValue((j.keys || {}).p256dh || ''),
+          auth: toFsValue((j.keys || {}).auth || ''),
+          created_at: toFsValue(new Date().toISOString())
+        };
+        const r = await fetch(`${FS_BASE}/qs_push_subs/${id}?key=${FIREBASE.apiKey}`, {
+          method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fields })
+        });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        this.setOn(true);
+        track('push_subscribe', {});
+        return { ok: true };
+      } catch (e) {
+        return { ok: false, error: t('notifFailed') };
+      }
+    },
+
+    async unsubscribe() {
+      try {
+        if (this.supported()) {
+          const reg = await navigator.serviceWorker.ready;
+          const sub = await reg.pushManager.getSubscription();
+          if (sub) await sub.unsubscribe();
+        }
+        const id = pushId();
+        await fetch(`${FS_BASE}/qs_push_subs/${id}?key=${FIREBASE.apiKey}`, { method: 'DELETE' }).catch(() => { });
+      } catch (e) { /* best-effort - still mark it off locally below */ }
+      this.setOn(false);
+      track('push_unsubscribe', {});
+    }
   };
 
   /* ---------- Default channels (owner-curated) ----------
@@ -2403,7 +2526,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     // blocks were always rendered on load regardless of which tab was showing. Now that it's reached only via
     // the Settings tab, re-render its dynamic bits on every visit so they're never stale (e.g. after signing
     // in from the landing page while this tab wasn't open yet).
-    if (name === 'settings') { renderAccount(); renderChannels(); renderSyncCode(); }
+    if (name === 'settings') { renderAccount(); renderChannels(); renderSyncCode(); renderNotifBox(); }
   }
 
   /* ---------- export ---------- */
@@ -2884,7 +3007,12 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     }
     setTab('brief'); renderAll(); renderLiveBar(); renderAccount();
     Landing.init();   // shows the landing screen over everything above if this device hasn't chosen yet
-    loadLive();
+    // Opening the app from a push notification when no tab was already open lands here as a plain URL
+    // hash (sw.js's self.clients.openWindow('./#' + id)) - jump to that story once the first live feed
+    // load below has populated S.live, so the id is actually there to find.
+    const hashGotoId = location.hash.length > 1 ? decodeURIComponent(location.hash.slice(1)) : '';
+    if (hashGotoId) history.replaceState(null, '', location.pathname);
+    loadLive().then(() => { if (hashGotoId) gotoItem(hashGotoId); });
     // The default-channels list is public read, so it loads independently of sign-in - a guest should never
     // see a blank feed while waiting for anything auth-related.
     DefaultChannels.load().then(() => renderAll());
@@ -2893,6 +3021,11 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     Auth.restore().then(() => Sync.init()).then(() => { renderAccount(); renderSyncCode(); renderChannels(); renderAll(); });
     if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
       window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => { }));
+      // A push notification's "Check Now" tap (see sw.js's notificationclick): an already-open tab gets
+      // focused and sent this message directly instead of relying on the hash above.
+      navigator.serviceWorker.addEventListener('message', ev => {
+        if (ev.data && ev.data.type === 'qs-goto' && ev.data.id) gotoItem(ev.data.id);
+      });
     }
   })();
 })();

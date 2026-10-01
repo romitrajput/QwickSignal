@@ -1,10 +1,11 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-18-v1';  // added the in-app "new story" notification (Waveform Arrival design):
-                                      // a toast pops when a new live story arrives (manual refresh or the
-                                      // silent background poll), and tapping "Check Now" jumps to that story -
-                                      // bumped so every visitor picks up the new index.html/app.js
+const VERSION = 'gni-phase3-19-v1';  // added real OS-level push notifications (Web Push): a 'push' handler
+                                      // shows a system notification for a new Critical/High story even when
+                                      // no tab is open, and 'notificationclick' deep-links into that story -
+                                      // on top of the in-app toast added in -18. Bumped so every visitor's
+                                      // cached service worker picks up these new event listeners.
 const SHELL = ['./', 'index.html', 'app.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {
@@ -13,6 +14,44 @@ self.addEventListener('install', e => {
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== VERSION).map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
+/* Real OS-level push notifications ("Waveform Arrival"), separate from the in-app toast in app.js (that one
+   only shows while a tab is open). The pipeline (pipeline.py's send_push_notifications()) posts a Web Push
+   message carrying one new story's id/flag/country/sector/headline after every publish; this is what actually
+   turns that message into a notification the OS shows, even if no tab is open at all. */
+self.addEventListener('push', e => {
+  let data = {};
+  try { data = e.data ? e.data.json() : {}; } catch (err) { /* malformed payload: fall through to defaults below */ }
+  const title = (data.flag ? data.flag + ' ' : '') + (data.country || 'QwickSignal');
+  const body = data.headline || 'A new story just came in.';
+  const id = data.id || '';
+  e.waitUntil(self.registration.showNotification(title, {
+    body,
+    icon: 'icon-192.png',
+    badge: 'icon-192.png',
+    tag: id || 'qs-story',       // a second push for the same story replaces the first instead of stacking
+    renotify: !!id,
+    data: { id, kicker: data.sector ? (data.country || '') + ' · ' + data.sector : (data.country || '') }
+  }));
+});
+
+// Tapping the notification: focus an already-open tab and hand it the story id to jump to, or open a fresh
+// tab at #<id> which app.js reads on load (see the hashchange/DOMContentLoaded handling added there).
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  const id = (e.notification.data && e.notification.data.id) || '';
+  e.waitUntil((async () => {
+    const clientsList = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const c of clientsList) {
+      if ('focus' in c) {
+        await c.focus();
+        if (id) c.postMessage({ type: 'qs-goto', id });
+        return;
+      }
+    }
+    if (self.clients.openWindow) await self.clients.openWindow(id ? './#' + encodeURIComponent(id) : './');
+  })());
+});
+
 self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;

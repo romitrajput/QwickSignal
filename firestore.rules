@@ -30,6 +30,21 @@
 //                       filtered()/countryGroups()). Public read (so the feed isn't blank
 //                       for a first-time visitor), owner-only write.
 //
+//   qs_push_subs/{id}   One doc per device that has turned on "new story" notifications
+//                       (see app.js's Push.subscribe()). id is a random token the device
+//                       generates itself and keeps in localStorage - there's no login
+//                       requirement, matching qs_sync above, since most visitors use the
+//                       app signed out. The doc holds only a Web Push subscription (an
+//                       endpoint URL plus two public keys) - never anything that lets
+//                       someone read a person's data, only push TO that one device. The
+//                       pipeline (pipeline.py: send_push_notifications()) lists every doc
+//                       in this collection the same unauthenticated way it already lists
+//                       qs_channels, and posts a Web Push payload to each endpoint for a
+//                       newly-published story. A subscription a device no longer wants is
+//                       deleted by that same device; the pipeline also deletes any
+//                       subscription a push attempt reports as gone (HTTP 404/410), so
+//                       uninstalled/revoked devices don't accumulate forever.
+//
 // OWNER_EMAIL below must exactly match the OWNER_EMAIL constant in app.js - both are simple
 // string constants, not a secret (the value is already public in the shipped client code);
 // the real protection is that only Firebase Auth itself can produce a signed token asserting
@@ -109,6 +124,25 @@ service cloud.firestore {
         request.resource.data.channels is list &&
         request.resource.data.channels.size() <= 200;
       allow delete: if false;
+    }
+
+    match /qs_push_subs/{id} {
+      // get/list so the unauthenticated pipeline (same pattern as qs_channels) can fetch every
+      // subscription and send pushes; a subscription only allows pushing TO that device, so making
+      // it listable carries none of the risk a personal-data collection would.
+      allow get, list: if true;
+
+      allow create, update: if
+        id.matches('[A-Za-z0-9_-]{16,64}') &&
+        request.resource.data.keys().hasOnly(['endpoint', 'p256dh', 'auth', 'created_at']) &&
+        request.resource.data.endpoint is string && request.resource.data.endpoint.size() <= 1024 &&
+        request.resource.data.p256dh is string && request.resource.data.p256dh.size() <= 256 &&
+        request.resource.data.auth is string && request.resource.data.auth.size() <= 64 &&
+        request.resource.data.created_at is string;
+
+      // A device can drop its own subscription (toggling notifications off); the pipeline also prunes
+      // dead ones (push attempt returned 404/410) using the same unauthenticated access.
+      allow delete: if true;
     }
   }
 }
