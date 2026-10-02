@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.netlify.qwicksignal.twa",
+      "sha256_cert_fingerprints": [
+        "BF:8C:3D:30:A7:54:91:D5:E0:1F:83:4B:2C:42:94:55:75:C2:7B:73:AB:A1:17:C3:CA:5F:60:DC:AC:5E:85:74"
+      ]
+    }
+  }
+]
