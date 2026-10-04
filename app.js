@@ -575,7 +575,14 @@ if (typeof document !== 'undefined') (function () {
       notifEnable: 'Turn on notifications', notifDisable: 'Turn off notifications', notifOn: 'Notifications are on for this device.',
       notifUnsupported: "This browser doesn't support push notifications.",
       notifBlocked: 'Notifications are blocked for this site. Allow them in your browser/site settings, then try again.',
-      notifFailed: "Couldn't turn on notifications. Check your connection and try again."
+      notifFailed: "Couldn't turn on notifications. Check your connection and try again.",
+      getAppHeading: 'Get the Android app', getAppSub: 'Download the installable app (one file, zipped). Unzip it, then tap the .apk to install - you may need to allow "install unknown apps" for your browser once.', getAppBtn: 'Download QwickSignal.zip',
+      feedbackHeading: 'Feedback & support', feedbackSub: 'Found a bug, or have a suggestion? Send it here - it goes straight to the app owner.',
+      ticketKindBug: 'Bug', ticketKindSupport: 'Support', ticketKindFeedback: 'Feedback',
+      ticketPlaceholder: 'Describe the issue or idea…', ticketSend: 'Send', ticketSent: 'Thanks - sent to the app owner.',
+      ticketFailed: "Couldn't send that. Check your connection and try again.", ticketEmpty: 'Write a few words first.',
+      ticketAdminHeading: 'Tickets (owner only)', ticketAdminEmpty: 'No tickets yet.', ticketAdminLoadFailed: "Couldn't load tickets.",
+      ticketStatusOpen: 'Open', ticketStatusDone: 'Done', ticketMarkDone: 'Mark done', ticketMarkOpen: 'Reopen'
     },
     hi: {
       linkPages: 'लिंक पेज', settings: 'सेटिंग्स', signals: 'सिग्नल्स', saved: 'सेव किए गए', export: 'एक्सपोर्ट',
@@ -604,7 +611,14 @@ if (typeof document !== 'undefined') (function () {
       notifEnable: 'सूचनाएं चालू करें', notifDisable: 'सूचनाएं बंद करें', notifOn: 'इस डिवाइस के लिए सूचनाएं चालू हैं।',
       notifUnsupported: 'यह ब्राउज़र पुश सूचनाओं का समर्थन नहीं करता।',
       notifBlocked: 'इस साइट के लिए सूचनाएं ब्लॉक हैं। अपनी ब्राउज़र/साइट सेटिंग्स में उन्हें अनुमति दें, फिर दोबारा कोशिश करें।',
-      notifFailed: 'सूचनाएं चालू नहीं हो सकीं। अपना कनेक्शन जांचें और फिर कोशिश करें।'
+      notifFailed: 'सूचनाएं चालू नहीं हो सकीं। अपना कनेक्शन जांचें और फिर कोशिश करें।',
+      getAppHeading: 'Android ऐप पाएं', getAppSub: 'इंस्टॉल करने योग्य ऐप डाउनलोड करें (एक फ़ाइल, ज़िप की हुई)। इसे अनज़िप करें, फिर इंस्टॉल करने के लिए .apk पर टैप करें - आपको अपने ब्राउज़र के लिए एक बार "अज्ञात ऐप्स इंस्टॉल करें" की अनुमति देनी पड़ सकती है।', getAppBtn: 'QwickSignal.zip डाउनलोड करें',
+      feedbackHeading: 'फ़ीडबैक और सहायता', feedbackSub: 'कोई बग मिला, या कोई सुझाव है? यहाँ भेजें - यह सीधे ऐप के मालिक तक जाता है।',
+      ticketKindBug: 'बग', ticketKindSupport: 'सहायता', ticketKindFeedback: 'फ़ीडबैक',
+      ticketPlaceholder: 'समस्या या विचार बताएं…', ticketSend: 'भेजें', ticketSent: 'धन्यवाद - ऐप के मालिक को भेज दिया गया।',
+      ticketFailed: 'भेजा नहीं जा सका। अपना कनेक्शन जांचें और फिर कोशिश करें।', ticketEmpty: 'पहले कुछ शब्द लिखें।',
+      ticketAdminHeading: 'टिकट (केवल मालिक)', ticketAdminEmpty: 'अभी तक कोई टिकट नहीं।', ticketAdminLoadFailed: 'टिकट लोड नहीं हो सके।',
+      ticketStatusOpen: 'खुला', ticketStatusDone: 'पूर्ण', ticketMarkDone: 'पूर्ण के रूप में चिह्नित करें', ticketMarkOpen: 'फिर से खोलें'
     },
     mr: {
       linkPages: 'लिंक पेजेस', settings: 'सेटिंग्ज', signals: 'सिग्नल्स', saved: 'सेव्ह केलेले', export: 'एक्सपोर्ट',
@@ -633,7 +647,14 @@ if (typeof document !== 'undefined') (function () {
       notifEnable: 'सूचना चालू करा', notifDisable: 'सूचना बंद करा', notifOn: 'या डिव्हाइससाठी सूचना चालू आहेत.',
       notifUnsupported: 'हा ब्राउझर पुश सूचनांना सपोर्ट करत नाही.',
       notifBlocked: 'या साइटसाठी सूचना ब्लॉक केलेल्या आहेत. तुमच्या ब्राउझर/साइट सेटिंग्जमध्ये त्यांना परवानगी द्या, नंतर पुन्हा प्रयत्न करा.',
-      notifFailed: 'सूचना चालू करता आल्या नाहीत. तुमचे कनेक्शन तपासा आणि पुन्हा प्रयत्न करा.'
+      notifFailed: 'सूचना चालू करता आल्या नाहीत. तुमचे कनेक्शन तपासा आणि पुन्हा प्रयत्न करा.',
+      getAppHeading: 'Android अ‍ॅप मिळवा', getAppSub: 'इंस्टॉल करण्यायोग्य अ‍ॅप डाउनलोड करा (एक फाईल, झिप केलेली). अनझिप करा, मग इंस्टॉल करण्यासाठी .apk वर टॅप करा - तुम्हाला तुमच्या ब्राउझरसाठी एकदा "अज्ञात अ‍ॅप्स इंस्टॉल करा" ला परवानगी द्यावी लागू शकते.', getAppBtn: 'QwickSignal.zip डाउनलोड करा',
+      feedbackHeading: 'फीडबॅक आणि सहाय्य', feedbackSub: 'बग सापडला, किंवा सुचवायचे आहे? इथे पाठवा - ते थेट अ‍ॅपच्या मालकाकडे जाते.',
+      ticketKindBug: 'बग', ticketKindSupport: 'सहाय्य', ticketKindFeedback: 'फीडबॅक',
+      ticketPlaceholder: 'समस्या किंवा कल्पना सांगा…', ticketSend: 'पाठवा', ticketSent: 'धन्यवाद - अ‍ॅपच्या मालकाला पाठवले.',
+      ticketFailed: 'पाठवता आले नाही. तुमचे कनेक्शन तपासा आणि पुन्हा प्रयत्न करा.', ticketEmpty: 'आधी काही शब्द लिहा.',
+      ticketAdminHeading: 'तिकिटे (फक्त मालक)', ticketAdminEmpty: 'अजून तिकिटे नाहीत.', ticketAdminLoadFailed: 'तिकिटे लोड करता आली नाहीत.',
+      ticketStatusOpen: 'उघडे', ticketStatusDone: 'पूर्ण', ticketMarkDone: 'पूर्ण म्हणून चिन्हांकित करा', ticketMarkOpen: 'पुन्हा उघडा'
     },
     gu: {
       linkPages: 'લિંક પેજીસ', settings: 'સેટિંગ્સ', signals: 'સિગ્નલ્સ', saved: 'સેવ કરેલ', export: 'એક્સપોર્ટ',
@@ -662,7 +683,14 @@ if (typeof document !== 'undefined') (function () {
       notifEnable: 'નોટિફિકેશન ચાલુ કરો', notifDisable: 'નોટિફિકેશન બંધ કરો', notifOn: 'આ ડિવાઇસ માટે નોટિફિકેશન ચાલુ છે.',
       notifUnsupported: 'આ બ્રાઉઝર પુશ નોટિફિકેશનને સપોર્ટ કરતું નથી.',
       notifBlocked: 'આ સાઇટ માટે નોટિફિકેશન બ્લોક કરેલા છે. તમારા બ્રાઉઝર/સાઇટ સેટિંગ્સમાં તેમને મંજૂરી આપો, પછી ફરી પ્રયાસ કરો.',
-      notifFailed: 'નોટિફિકેશન ચાલુ કરી શકાયા નહીં. તમારું જોડાણ તપાસો અને ફરી પ્રયાસ કરો.'
+      notifFailed: 'નોટિફિકેશન ચાલુ કરી શકાયા નહીં. તમારું જોડાણ તપાસો અને ફરી પ્રયાસ કરો.',
+      getAppHeading: 'Android ઍપ મેળવો', getAppSub: 'ઇન્સ્ટોલ કરી શકાય તેવી ઍપ ડાઉનલોડ કરો (એક ફાઇલ, ઝિપ કરેલી). તેને અનઝિપ કરો, પછી ઇન્સ્ટોલ કરવા માટે .apk પર ટૅપ કરો - તમારે તમારા બ્રાઉઝર માટે એકવાર "અજાણી ઍપ્સ ઇન્સ્ટોલ કરો"ની મંજૂરી આપવી પડી શકે.', getAppBtn: 'QwickSignal.zip ડાઉનલોડ કરો',
+      feedbackHeading: 'પ્રતિસાદ અને સહાય', feedbackSub: 'બગ મળ્યો, કે સૂચન છે? અહીં મોકલો - તે સીધું ઍપના માલિક સુધી જાય છે.',
+      ticketKindBug: 'બગ', ticketKindSupport: 'સહાય', ticketKindFeedback: 'પ્રતિસાદ',
+      ticketPlaceholder: 'સમસ્યા કે વિચાર જણાવો…', ticketSend: 'મોકલો', ticketSent: 'આભાર - ઍપના માલિકને મોકલાયું.',
+      ticketFailed: 'મોકલી શકાયું નહીં. તમારું જોડાણ તપાસો અને ફરી પ્રયાસ કરો.', ticketEmpty: 'પહેલા થોડા શબ્દો લખો.',
+      ticketAdminHeading: 'ટિકિટ (ફક્ત માલિક)', ticketAdminEmpty: 'હજુ કોઈ ટિકિટ નથી.', ticketAdminLoadFailed: 'ટિકિટ લોડ કરી શકાયા નહીં.',
+      ticketStatusOpen: 'ખુલ્લું', ticketStatusDone: 'પૂર્ણ', ticketMarkDone: 'પૂર્ણ તરીકે ચિહ્નિત કરો', ticketMarkOpen: 'ફરી ખોલો'
     }
   };
   let currentLang = 'en';
@@ -1337,6 +1365,69 @@ if (typeof document !== 'undefined') (function () {
     });
   }
 
+  // Everyone's feedback/bug/support submission box. Always visible in Settings, no login required.
+  function renderTicketBox() {
+    const box = $('#ticketBox');
+    if (!box) return;
+    box.innerHTML = `
+      <div class="seg" id="ticketKindSeg" role="group" aria-label="${t('feedbackHeading')}">
+        <button data-v="bug" aria-pressed="true">${t('ticketKindBug')}</button>
+        <button data-v="support" aria-pressed="false">${t('ticketKindSupport')}</button>
+        <button data-v="feedback" aria-pressed="false">${t('ticketKindFeedback')}</button>
+      </div>
+      <textarea id="ticketMsg" rows="3" placeholder="${t('ticketPlaceholder')}" style="width:100%;margin-top:8px;padding:10px;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;resize:vertical"></textarea>
+      <button id="ticketSendBtn" class="btn primary small" style="margin-top:8px">${t('ticketSend')}</button>
+    `;
+    let kind = 'bug';
+    $$('#ticketKindSeg button', box).forEach(b => b.addEventListener('click', () => {
+      kind = b.dataset.v;
+      $$('#ticketKindSeg button', box).forEach(x => x.setAttribute('aria-pressed', x === b));
+    }));
+    $('#ticketSendBtn', box).addEventListener('click', async () => {
+      const ta = $('#ticketMsg', box);
+      const btn = $('#ticketSendBtn', box);
+      btn.disabled = true;
+      const r = await Tickets.submit(kind, ta.value);
+      btn.disabled = false;
+      if (r.ok) { ta.value = ''; toast(t('ticketSent')); }
+      else { toast(r.error); }
+    });
+  }
+
+  // Owner-only ticket list. Block itself stays hidden (removed from layout, not just display:none in spirit
+  // - the "hidden" attribute) for anyone whose isOwner() is false, so a non-owner never even sees an empty
+  // "Tickets" heading or triggers the owner-gated Firestore query.
+  async function renderTicketAdmin() {
+    const block = $('#ticketAdminBlock');
+    const box = $('#ticketAdminBox');
+    if (!block || !box) return;
+    if (!isOwner()) { block.hidden = true; return; }
+    block.hidden = false;
+    box.innerHTML = '<p class="lp-syncnote">…</p>';
+    const rows = await Tickets.listAll();
+    if (rows === null) { box.innerHTML = `<p class="lp-syncnote">${t('ticketAdminLoadFailed')}</p>`; return; }
+    if (!rows.length) { box.innerHTML = `<p class="lp-syncnote">${t('ticketAdminEmpty')}</p>`; return; }
+    box.innerHTML = rows.map(tk => {
+      const done = tk.status === 'done';
+      const kindLabel = tk.kind === 'bug' ? t('ticketKindBug') : tk.kind === 'support' ? t('ticketKindSupport') : t('ticketKindFeedback');
+      const when = tk.created_at ? fmtDateTime(new Date(tk.created_at).getTime()) : '';
+      return `<div class="lp-row" style="align-items:flex-start;flex-direction:column;gap:4px;padding:10px 0;border-top:1px solid var(--line)">
+        <div style="display:flex;gap:8px;align-items:center;width:100%">
+          <span class="chip" style="flex:none">${kindLabel}</span>
+          <span style="flex:1;font-size:12.5px;color:var(--ink2)">${when}${tk.user_email ? ' · ' + tk.user_email : ''}</span>
+          <span style="flex:none;font-size:12px;font-weight:700;color:${done ? 'var(--ink2)' : 'var(--accent)'}">${done ? t('ticketStatusDone') : t('ticketStatusOpen')}</span>
+        </div>
+        <div style="font-size:14px;white-space:pre-wrap">${escapeHtml(tk.message || '')}</div>
+        <button class="btn small" data-ticket-toggle="${tk.id}" data-ticket-status="${done ? 'open' : 'done'}">${done ? t('ticketMarkOpen') : t('ticketMarkDone')}</button>
+      </div>`;
+    }).join('');
+    $$('[data-ticket-toggle]', box).forEach(b => b.addEventListener('click', async () => {
+      b.disabled = true;
+      await Tickets.setStatus(b.dataset.ticketToggle, b.dataset.ticketStatus);
+      renderTicketAdmin();
+    }));
+  }
+
   /* ---------- Telegram channel linking (Link Pages) ----------
      Typing t/channelname adds it straight to the shared qs_channels collection as "approved" - the very next
      pipeline run (see fetch_approved_channels() in pipeline.py) picks it up and starts fetching it into the
@@ -1561,6 +1652,81 @@ if (typeof document !== 'undefined') (function () {
     }
   };
 
+  /* ---------- Tickets (bug reports / support / feedback) ----------
+     User's own words: "It is becoming difficult for me to track each and every bugs / additional features
+     which needs to be added - Kindly add a ticket system where user can raise the ticket [...] Which I can
+     only see as the owner of the app and take actions on it." Same shape as qs_push_subs/qs_channels: no
+     login required to submit (most visitors are signed out), a random id the device doesn't need to
+     remember (nobody re-opens their own ticket), write-only for a normal visitor, and get/list restricted
+     to the owner account by firestore.rules - not just hidden in the UI, since a client-side check alone is
+     never real security (same note as isOwner() elsewhere in this file). */
+  const Tickets = {
+    async submit(kind, message) {
+      const text = (message || '').trim();
+      if (!text) return { ok: false, error: t('ticketEmpty') };
+      const id = 'tk' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 10);
+      const fields = {
+        kind: toFsValue(kind || 'feedback'),
+        message: toFsValue(text.slice(0, 4000)),
+        status: toFsValue('open'),
+        created_at: toFsValue(new Date().toISOString()),
+        // Best-effort context for the owner triaging later - never required, never shown to other visitors
+        // (get/list is owner-only in firestore.rules), so including it carries no privacy exposure beyond
+        // what the owner already sees for anyone who contacts them directly.
+        user_email: toFsValue((Auth && Auth.email) || ''),
+      };
+      try {
+        const r = await fetch(`${FS_BASE}/qs_tickets/${id}?key=${FIREBASE.apiKey}`, {
+          method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fields })
+        });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        track('ticket_submit', { kind: kind || 'feedback' });
+        return { ok: true };
+      } catch (e) {
+        return { ok: false, error: t('ticketFailed') };
+      }
+    },
+
+    // Owner-only. Mirrors Channels.listApproved()'s runQuery pattern; firestore.rules is the real
+    // enforcement (get/list on qs_tickets requires isOwner()), this check just avoids a wasted, doomed
+    // request and a confusing raw permission error for anyone who isn't the owner.
+    async listAll() {
+      if (!isOwner()) return null;
+      try {
+        const r = await fetch(`${FS_BASE}:runQuery?key=${FIREBASE.apiKey}`, {
+          method: 'POST',
+          headers: Object.assign({ 'Content-Type': 'application/json' }, await Sync.authHeaders()),
+          body: JSON.stringify({ structuredQuery: { from: [{ collectionId: 'qs_tickets' }] } })
+        });
+        if (!r.ok) return null;
+        const rows = await r.json();
+        return rows.filter(x => x.document).map(x => {
+          const o = fsFieldsToObject(x.document.fields);
+          o.id = x.document.name.split('/').pop();
+          return o;
+        }).sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
+      } catch (e) {
+        return null;
+      }
+    },
+
+    // Owner-only toggle between "open" and "done", so the owner has somewhere to put a ticket once it's
+    // handled without deleting the record outright.
+    async setStatus(id, status) {
+      if (!isOwner()) return false;
+      try {
+        const r = await fetch(`${FS_BASE}/qs_tickets/${id}?updateMask.fieldPaths=status&key=${FIREBASE.apiKey}`, {
+          method: 'PATCH',
+          headers: Object.assign({ 'Content-Type': 'application/json' }, await Sync.authHeaders()),
+          body: JSON.stringify({ fields: { status: toFsValue(status) } })
+        });
+        return r.ok;
+      } catch (e) {
+        return false;
+      }
+    }
+  };
+
   /* ---------- Default channels (owner-curated) ----------
      Section 1 of Link Pages, from the user's own words: "By default channel which are linked to this app to
      avoid showing blank when user visit this page. Kind of like guest mode. So owner will have the access to
@@ -1629,6 +1795,12 @@ if (typeof document !== 'undefined') (function () {
     const h = Math.round(m / 60);
     if (h < 24) return h + ' h ago';
     return Math.round(h / 24) + ' d ago';
+  }
+  // Escapes text that gets dropped into innerHTML as plain content (e.g. a ticket's free-typed message),
+  // so a visitor typing "<img onerror=...>" into the feedback box can't inject markup into the owner's
+  // admin view.
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
   // Absolute date+time next to the "X ago" relative label, e.g. "29 Sep 2026, 10:39 PM" - uses the
   // viewer's own locale/timezone (Intl.DateTimeFormat with no timeZone override) rather than hardcoding
@@ -2069,10 +2241,20 @@ if (typeof document !== 'undefined') (function () {
     const open = S.open.has(it.id);
     const n = (it.sources || []).length;
     const rel = (it.related || []).length;
+    // Closed-card thumbnail only (CSS also hides it via .entry.open .entry-thumb as a second safety net) -
+    // a real headline photo from image_intel.py when one was found, otherwise nothing is rendered at all
+    // rather than a placeholder box, so stories without a match just keep today's clean text-only look.
+    const thumb = (!open && it.image && it.image.url)
+      ? `<div class="entry-thumb"><img src="${esc(it.image.url)}" alt="" loading="lazy" onerror="this.closest('.entry-thumb').remove()"></div>` : '';
     return `<article class="entry imp-${it.importance.toLowerCase()}${open ? ' open' : ''}" data-id="${it.id}">
-      <div class="where"><span>${flagOf(it.country)} ${esc(it.country)}</span><span class="sect">${esc(it.sector)}${it.subsector ? ' / ' + esc(it.subsector) : ''}</span></div>
-      <h3 class="hl">${esc(trOf(it.headline))}</h3>
-      ${it.summary ? `<p class="sum">${esc(trOf(it.summary))}</p>` : ''}
+      <div class="entry-top">
+        <div class="entry-text">
+          <div class="where"><span>${flagOf(it.country)} ${esc(it.country)}</span><span class="sect">${esc(it.sector)}${it.subsector ? ' / ' + esc(it.subsector) : ''}</span></div>
+          <h3 class="hl">${esc(trOf(it.headline))}</h3>
+          ${it.summary ? `<p class="sum">${esc(trOf(it.summary))}</p>` : ''}
+        </div>
+        ${thumb}
+      </div>
       ${videoHTML(it)}
       <div class="foot">${n > 1 ? `<span>${n} sources</span>` : ''}${rel ? `<span>${rel} related</span>` : ''}<span title="${esc(fmtDateTime(it.addedAt))}">${ago(it.addedAt)}</span><span class="ts">${esc(fmtDateTime(it.addedAt))}</span></div>
       ${open ? detailsHTML(it) : ''}
@@ -2098,10 +2280,17 @@ if (typeof document !== 'undefined') (function () {
   function savedCardHTML(it) {
     const open = S.open.has(it.id);
     const n = (it.sources || []).length;
+    const thumb = (!open && it.image && it.image.url)
+      ? `<div class="entry-thumb"><img src="${esc(it.image.url)}" alt="" loading="lazy" onerror="this.closest('.entry-thumb').remove()"></div>` : '';
     return `<article class="entry imp-${it.importance.toLowerCase()}${open ? ' open' : ''}" data-id="${it.id}">
-      <div class="where"><span>${flagOf(it.country)} ${esc(it.country)}</span><span class="sect">${esc(it.sector)}${it.subsector ? ' / ' + esc(it.subsector) : ''}</span></div>
-      <h3 class="hl">${esc(trOf(it.headline))}</h3>
-      ${it.summary ? `<p class="sum">${esc(trOf(it.summary))}</p>` : ''}
+      <div class="entry-top">
+        <div class="entry-text">
+          <div class="where"><span>${flagOf(it.country)} ${esc(it.country)}</span><span class="sect">${esc(it.sector)}${it.subsector ? ' / ' + esc(it.subsector) : ''}</span></div>
+          <h3 class="hl">${esc(trOf(it.headline))}</h3>
+          ${it.summary ? `<p class="sum">${esc(trOf(it.summary))}</p>` : ''}
+        </div>
+        ${thumb}
+      </div>
       ${videoHTML(it)}
       <div class="foot">${n > 1 ? `<span>${n} sources</span>` : ''}<span title="${esc(fmtDateTime(it.addedAt))}">${ago(it.addedAt)}</span><span class="ts">${esc(fmtDateTime(it.addedAt))}</span></div>
       ${open ? detailsHTML(it, { inSaved: true }) : ''}
@@ -2550,7 +2739,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     // blocks were always rendered on load regardless of which tab was showing. Now that it's reached only via
     // the Settings tab, re-render its dynamic bits on every visit so they're never stale (e.g. after signing
     // in from the landing page while this tab wasn't open yet).
-    if (name === 'settings') { renderAccount(); renderChannels(); renderSyncCode(); renderNotifBox(); }
+    if (name === 'settings') { renderAccount(); renderChannels(); renderSyncCode(); renderNotifBox(); renderTicketBox(); renderTicketAdmin(); }
   }
 
   /* ---------- export ---------- */
@@ -2605,33 +2794,26 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     doc.text(new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) + '   |   ' + RANGE_LABEL[S.exportRange], M, 64);
     y = 116;
 
-    const top = items.filter(i => i.importance === 'Critical' || i.importance === 'High');
-    if (top.length) {
-      heading('Priority developments');
-      top.forEach(it => {
+    // Every priority level (Critical/High/Medium/Low) is included in the export - items is never filtered
+    // by importance (see visibleItems()/inRange() above). This used to be split into two sections titled
+    // "Priority developments" (Critical+High) and "Other developments" (Medium+Low), which read to at least
+    // one user as "only High and some generic Other stuff get exported," even though every level was always
+    // present. Now split into four explicitly-labelled sections, one per importance, in rank order, so the
+    // PDF itself makes it unambiguous that nothing is being left out.
+    const ORDER = ['Critical', 'High', 'Medium', 'Low'];
+    const SECTION_TITLE = { Critical: 'Critical developments', High: 'High developments', Medium: 'Medium developments', Low: 'Low developments' };
+    ORDER.forEach(level => {
+      const group = items.filter(i => i.importance === level);
+      if (!group.length) return;
+      heading(SECTION_TITLE[level] + ' (' + group.length + ')');
+      group.forEach(it => {
         need(70);
         doc.setFillColor(...COL[it.importance]); doc.rect(M, y + 2, 7, 9, 'F');
         put(it.headline, { size: 11.5, bold: true, indent: 14, after: 1 });
         put(it.country + '  |  ' + it.sector + (it.subsector ? ' / ' + it.subsector : '') + '  |  ' + it.importance + ((it.sources || []).length > 1 ? '  |  ' + it.sources.length + ' sources' : ''), { size: 8.5, color: GREY, indent: 14, after: 2 });
         if (it.summary) put(it.summary, { size: 9.5, indent: 14, after: 9 }); else y += 7;
       });
-    }
-
-    // Medium/Low items: a plain list, same layout as Priority developments above - no per-country grouping
-    // or counts. The earlier "All developments by country" section (grouped headings like "Global (40)" with
-    // a bullet list under each) was removed per instruction; this replaces it with the flat listing so a
-    // report full of only Medium/Low items (a quiet news day) doesn't come out blank.
-    const rest = items.filter(i => i.importance !== 'Critical' && i.importance !== 'High');
-    if (rest.length) {
-      heading('Other developments');
-      rest.forEach(it => {
-        need(70);
-        doc.setFillColor(...COL[it.importance]); doc.rect(M, y + 2, 7, 9, 'F');
-        put(it.headline, { size: 11.5, bold: true, indent: 14, after: 1 });
-        put(it.country + '  |  ' + it.sector + (it.subsector ? ' / ' + it.subsector : '') + '  |  ' + it.importance + ((it.sources || []).length > 1 ? '  |  ' + it.sources.length + ' sources' : ''), { size: 8.5, color: GREY, indent: 14, after: 2 });
-        if (it.summary) put(it.summary, { size: 9.5, indent: 14, after: 9 }); else y += 7;
-      });
-    }
+    });
 
     const pages = doc.getNumberOfPages();
     for (let p = 1; p <= pages; p++) {

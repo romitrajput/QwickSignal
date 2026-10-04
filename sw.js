@@ -1,11 +1,12 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-19-v1';  // added real OS-level push notifications (Web Push): a 'push' handler
-                                      // shows a system notification for a new Critical/High story even when
-                                      // no tab is open, and 'notificationclick' deep-links into that story -
-                                      // on top of the in-app toast added in -18. Bumped so every visitor's
-                                      // cached service worker picks up these new event listeners.
+const VERSION = 'gni-phase3-21-v1';  // Added: ticket/feedback system, APK download link in Settings, and a
+                                      // headline thumbnail on closed cards in the main list (image_intel.py's
+                                      // Google-searched photo, when found). Bumped for the same reason as
+                                      // every prior bump noted below - the service worker caches index.html/
+                                      // app.js itself, so without a new VERSION an already-installed visitor
+                                      // can keep seeing the old page indefinitely.
 const SHELL = ['./', 'index.html', 'app.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {

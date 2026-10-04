@@ -375,6 +375,15 @@ PUSH_MIN_IMPORTANCE = {"Critical", "High", "Medium", "Low"}
 # get, without silently reinstating a "one push per run" behaviour they explicitly didn't want. Raise it,
 # lower it, or remove the slice below entirely if the cap itself gets in the way.
 PUSH_MAX_PER_RUN = 25
+# Seconds to wait between each story's round of notifications. Without this, every story in a run's burst
+# fired in the same instant - fine for one story, but a run with several new stories meant 5-6+ OS
+# notifications landing on a device all at once, which reads as spam rather than "a story just broke."
+# This can't make notifications arrive the true instant a story is detected (that would need a
+# persistently-running backend instead of this scheduled batch pipeline - see max_age_hours/the 5-minute
+# schedule for how "live" detection already is), but spacing out a single run's own stories gets close to
+# that feel instead of dumping them all in one breath. 25 stories * 10s = ~4 minutes, which still comfortably
+# fits inside the 8-minute step timeout in .github/workflows/pipeline.yml.
+PUSH_SPACING_SECONDS = 10
 
 
 def _b64u(data: bytes) -> str:
@@ -526,7 +535,12 @@ def send_push_notifications(new_items: list[dict]) -> None:
         log(f"  push: {len(worthy)} new storie(s) this run, {len(subs)} device(s) subscribed")
     total_sent = total_dead = 0
     dead_names: set[str] = set()
-    for item in capped:
+    for i, item in enumerate(capped):
+        if i > 0:
+            # Spread this run's own stories out instead of firing every notification in the same instant -
+            # see PUSH_SPACING_SECONDS above. No wait before the first one, so a run with just one new story
+            # (the common case) is unaffected.
+            time.sleep(PUSH_SPACING_SECONDS)
         country = item.get("country") or "Global"
         payload = {
             "id": "L" + item["id"], "flag": push_flag(country), "country": country,
