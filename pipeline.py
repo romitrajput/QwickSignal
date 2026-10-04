@@ -839,6 +839,18 @@ def fetch_rss(entry: dict) -> list[dict]:
 
 
 # ----------------------------------------------------------------- filtering and cheap duplicate collapse
+# Catches obvious channel self-promotion / ads ("ADD CHANNELS... contact us via Direct Messages @x",
+# "Join our premium group", "subscribe now", etc.) BEFORE a post ever reaches the AI classifier below.
+# This used to only run in "Free mode" (no ANTHROPIC_API_KEY) - meaning with an API key configured
+# (the normal case) every post relied solely on the AI's own is_news judgment, which can and did miss
+# an ad that happens to use real news-sounding keywords (e.g. an "Iran war updates" channel-promo post
+# got tagged as real Iran/Geopolitics news). Applying this regex as a hard pre-filter for every post,
+# not just the no-API-key fallback, is a cheap, reliable backstop against exactly that kind of miss.
+PROMO = re.compile(r"\b(join (our|the|my)|subscribe|promo code|discount code|premium (group|signals?|channel)|"
+                    r"sign up now|click here|giveaway|vip (group|channel)|referral|add channels?|"
+                    r"contact us via|dm (us|me)|direct messages? @|becoming part of this catalog)\b", re.I)
+
+
 def filter_posts(posts: list[dict], seen: dict, s: dict, now: dt.datetime) -> tuple[list[dict], list[dict]]:
     """Return (candidates for AI, posts to mark as seen without AI)."""
     keep, skip, keys = [], [], set()
@@ -848,7 +860,8 @@ def filter_posts(posts: list[dict], seen: dict, s: dict, now: dt.datetime) -> tu
         keys.add(p["key"])
         core = re.sub(r"https?://\S+", "", p["text"]).strip()
         too_old = now - p["published"] > dt.timedelta(hours=float(s["max_age_hours"]))
-        (skip if (too_old or len(core) < int(s["min_chars"])) else keep).append(p)
+        is_promo = bool(PROMO.search(p["text"]))
+        (skip if (too_old or len(core) < int(s["min_chars"]) or is_promo) else keep).append(p)
     keep.sort(key=lambda p: p["published"])
     return keep, skip
 
@@ -1171,9 +1184,6 @@ def lexical_match(headline: str, items: list[dict], now: dt.datetime, text: str 
         if score > best_s:
             best, best_s = it, score
     return best if best_s >= 0.6 else None
-
-
-PROMO = re.compile(r"\b(join (our|the|my)|subscribe|promo code|discount code|premium (group|signals?|channel)|sign up now|click here|giveaway|vip (group|channel)|referral)\b", re.I)
 
 
 def merge_record(feed_items: list[dict], index: dict, post: dict, rec: dict, now: dt.datetime) -> tuple[str, dict | None]:
