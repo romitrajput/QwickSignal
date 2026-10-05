@@ -3198,10 +3198,19 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       const fresh = freshItems.length;
       if (!cached && fresh && prevIds.size) notifyNewStory(freshItems);
       if (manual) {
+        // The toast's story count must match what Signals actually shows this visitor, not the pipeline's
+        // raw total - S.live.length is every story across every source channel (e.g. 199), while most
+        // visitors only follow a few of those channels (or see the owner-curated default list if they
+        // follow none), so Signals itself only ever shows a filtered subset (e.g. 33). Showing the raw
+        // total here was confusing ("199 stories refreshed" when only 33 appear) even though neither
+        // number was wrong - they were just answering different questions. visibleCount applies the same
+        // channelVisible()/itemStatus() filtering Signals, Export and Country Status already use, counted
+        // against S.live only (not S.items) since this message is specifically about the live feed.
+        const visibleCount = S.live.filter(it => itemStatus(it) !== 'dismissed' && itemStatus(it) !== 'expired' && channelVisible(it)).length;
         toast(!S.liveMeta ? 'The live feed is not set up yet.'
-          : cached ? 'No connection. Showing the saved copy (' + S.live.length + ' stories).'
+          : cached ? 'No connection. Showing the saved copy (' + visibleCount + ' stories).'
           : fresh && prevIds.size ? fresh + (fresh === 1 ? ' new story.' : ' new stories.')
-          : 'Up to date. ' + S.live.length + ' live stories.');
+          : 'Up to date. ' + visibleCount + ' stories in your feed.');
       }
     } finally {
       liveBusy = false;
