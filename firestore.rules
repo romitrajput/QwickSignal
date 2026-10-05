@@ -66,7 +66,7 @@ service cloud.firestore {
 
       allow create, update: if
         code.matches('QS-[A-Z2-9]{4}-[A-Z2-9]{4}') &&
-        request.resource.data.keys().hasOnly(['saved', 'dismissed', 'channels', 'reviewed', 'hiddenChannels']) &&
+        request.resource.data.keys().hasOnly(['saved', 'dismissed', 'channels', 'reviewed', 'hiddenChannels', 'companies']) &&
         request.resource.data.saved is list && request.resource.data.saved.size() <= 5000 &&
         request.resource.data.dismissed is list && request.resource.data.dismissed.size() <= 5000 &&
         request.resource.data.channels is list && request.resource.data.channels.size() <= 200 &&
@@ -76,7 +76,11 @@ service cloud.firestore {
         // hiddenChannels is optional too, for the same reason (an older client written before this field
         // existed still writes without it) - the personal per-user "Remove"/hide list for channels.
         (!('hiddenChannels' in request.resource.data) ||
-          (request.resource.data.hiddenChannels is list && request.resource.data.hiddenChannels.size() <= 200));
+          (request.resource.data.hiddenChannels is list && request.resource.data.hiddenChannels.size() <= 200)) &&
+        // companies is optional too (added for the News/Investment toggle's watchlist) - an older client
+        // that hasn't picked it up yet still writes without it, same pattern as reviewed/hiddenChannels.
+        (!('companies' in request.resource.data) ||
+          (request.resource.data.companies is list && request.resource.data.companies.size() <= 300));
 
       allow delete: if false;
     }
@@ -86,14 +90,16 @@ service cloud.firestore {
 
       allow create, update: if
         request.auth != null && request.auth.uid == uid &&
-        request.resource.data.keys().hasOnly(['saved', 'dismissed', 'channels', 'reviewed', 'hiddenChannels']) &&
+        request.resource.data.keys().hasOnly(['saved', 'dismissed', 'channels', 'reviewed', 'hiddenChannels', 'companies']) &&
         request.resource.data.saved is list && request.resource.data.saved.size() <= 5000 &&
         request.resource.data.dismissed is list && request.resource.data.dismissed.size() <= 5000 &&
         request.resource.data.channels is list && request.resource.data.channels.size() <= 200 &&
         (!('reviewed' in request.resource.data) ||
           (request.resource.data.reviewed is list && request.resource.data.reviewed.size() <= 5000)) &&
         (!('hiddenChannels' in request.resource.data) ||
-          (request.resource.data.hiddenChannels is list && request.resource.data.hiddenChannels.size() <= 200));
+          (request.resource.data.hiddenChannels is list && request.resource.data.hiddenChannels.size() <= 200)) &&
+        (!('companies' in request.resource.data) ||
+          (request.resource.data.companies is list && request.resource.data.companies.size() <= 300));
 
       allow delete: if false;
     }

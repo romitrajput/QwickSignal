@@ -152,6 +152,7 @@ input[type=search]:focus-visible{border-color:var(--accent);box-shadow:0 0 0 4px
 
 /* segmented + chips */
 .seg{display:flex;border:1.5px solid var(--ink);border-radius:var(--radius-ctrl);overflow:hidden}
+.modeseg{margin-bottom:14px}
 .seg button{flex:1;min-height:40px;border:0;background:transparent;font-weight:600;font-size:14px;cursor:pointer}
 .seg button+button{border-left:1.5px solid var(--ink)}
 .seg button[aria-pressed=true]{background:var(--ink);color:var(--paper)}
@@ -199,6 +200,11 @@ input[type=search]:focus-visible{border-color:var(--accent);box-shadow:0 0 0 4px
 .grp{display:flex;align-items:center;gap:8px;margin:24px 0 10px;font-size:16px}
 .grp .sw{width:10px;height:10px;flex:none}
 .grp .n{margin-left:auto;font-weight:600;font-size:13px;color:var(--ink2);font-variant-numeric:tabular-nums}
+.grp-company{display:flex;align-items:center;gap:8px;margin:14px 0 8px;padding:0 0 0 14px;font-size:14px;font-weight:700;color:var(--ink2)}
+.grp-company .n{font-weight:600;font-size:12px;color:var(--ink2);font-variant-numeric:tabular-nums}
+.grp-company .link{font-size:12px;font-weight:600}
+.grp-company .link:first-of-type{margin-left:auto}
+.empty-note{margin:0 0 10px;padding:0 0 0 14px;font-size:13px;color:var(--ink2);font-style:italic}
 .entry{--c:var(--low);background:var(--surface);border-left:5px solid var(--c);border-radius:0 8px 8px 0;padding:12px 14px;margin:0 0 10px;cursor:pointer}
 .entry.imp-critical{--c:var(--crit)} .entry.imp-high{--c:var(--high)} .entry.imp-medium{--c:var(--med)} .entry.imp-low{--c:var(--low)}
 .where{display:flex;flex-wrap:wrap;gap:2px 0;font-size:13px;font-weight:600;color:var(--ink2)}
@@ -358,6 +364,9 @@ body.noscroll{overflow:hidden}
 .vframe iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 .vfoot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 14px;padding:10px 14px 12px;font-size:12.5px;font-weight:600;color:var(--ink2)}
 .vfoot a{color:var(--accent);font-weight:700}
+.cstage{background:var(--surface)}
+.cmchart{width:100%;height:min(70vh,560px)}
+.cmchart iframe{width:100% !important;height:100% !important}
 
 /* Auth-gate popup: a small, centered dialog for "you need to log in to do that" moments (Telegram +Add,
    Sync Code), reusing the same backdrop/panel language as the video modal above rather than the plain
@@ -669,6 +678,22 @@ body.pre-app .top, body.pre-app main, body.pre-app .tabs{display:none}
       <div id="tgList" class="lp-list" aria-live="polite"></div>
     </div>
 
+    <!-- Investment watchlist (Phase: News/Investment toggle). Companies the user is tracking - invested in,
+         or planning to - personal to the account, never a shared pool like Telegram channels, so there's no
+         owner-curation/approval step here, just add and remove. Login-gated the same way as Telegram +Add
+         and cross-device Sync (see Companies.add() and its openAuthGate() call in app.js). -->
+    <div class="lp-block">
+      <h2 class="lp-h" data-i18n="investHeading">Investment watchlist</h2>
+      <p class="lp-sub" data-i18n="investSub">Track companies you've invested in, or are watching, to see their news grouped separately in the Investment tab.</p>
+      <div class="lp-add">
+        <input id="invInput" type="text" inputmode="text" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Company name" data-i18n-placeholder="investPlaceholder" list="invSuggest">
+        <datalist id="invSuggest"></datalist>
+        <button id="invAdd" class="btn primary" data-i18n="addBtn">+ Add</button>
+      </div>
+      <p id="invGateNote" class="lp-syncnote" data-i18n="loginToTrackCompanies" hidden>Log in to track companies.</p>
+      <div id="invList" class="lp-list" aria-live="polite"></div>
+    </div>
+
     <!-- Signed-in accounts already sync automatically (Auth.uid keyed, no code needed) - this block is
          guest-only now, and only ever shows a login prompt (syncing by shareable code was removed; see
          renderSyncCode()). Stays in the DOM as a dedicated block so it keeps its own place in Settings,
@@ -697,7 +722,15 @@ body.pre-app .top, body.pre-app main, body.pre-app .tabs{display:none}
 
   <!-- BRIEFING -->
   <section id="view-brief" class="view" hidden>
+    <div class="seg modeseg" id="modeSeg" role="group" aria-label="News or investment">
+      <button data-v="news" aria-pressed="true" data-i18n="modeNews">News</button>
+      <button data-v="investment" aria-pressed="false" data-i18n="modeInvestment">Investment</button>
+    </div>
     <div id="countryStatus" class="cstatus" role="group" aria-label="Country status" hidden></div>
+    <div id="investEmpty" class="empty" hidden>
+      <p data-i18n="investEmptyTitle">Track companies to see investment-related news.</p>
+      <button class="btn" data-act="gotoWatchlist" data-i18n="investEmptyBtn">Add companies to track</button>
+    </div>
     <p class="lede" id="briefMeta" hidden></p>
     <div id="aiBrief"></div>
 
@@ -790,6 +823,21 @@ body.pre-app .top, body.pre-app main, body.pre-app .tabs{display:none}
     </div>
     <div class="vstage"><div class="vframe" id="vmFrame"></div></div>
     <div class="vfoot"><span id="vmMeta"></span><a id="vmOpen" href="#" target="_blank" rel="noopener noreferrer">Watch on YouTube &#8599;</a></div>
+  </div>
+</div>
+
+<!-- View Chart (Investment tab). Reuses the .vmodal/.vback/.vpanel shell the video modal already defines -
+     same overlay, same panel chrome - just with a TradingView Advanced Chart widget inside instead of a
+     YouTube iframe. See openChartModal()/closeChartModal() in app.js. -->
+<div class="vmodal" id="chartModal" role="dialog" aria-modal="true" aria-labelledby="cmTitle" hidden>
+  <div class="vback" data-act="cmclose"></div>
+  <div class="vpanel">
+    <div class="vhead">
+      <div class="vtitle" id="cmTitle"></div>
+      <button class="vclose" data-act="cmclose" aria-label="Close chart" title="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="vstage cstage"><div id="cmChart" class="cmchart"></div></div>
+    <div class="vfoot"><span id="cmNote" data-i18n="chartSearchHint">Wrong listing? Click the ticker name at the top-left of the chart to search for the right one.</span></div>
   </div>
 </div>
 

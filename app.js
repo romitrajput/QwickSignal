@@ -169,6 +169,28 @@ const Engine = (function () {
     return { name: p[0], code: p[1], sector: p[2], aliases: [p[0]].concat(p[3] ? p[3].split(';') : []) };
   });
 
+  /* ---------- ticker guessing (View Chart, Investment tab) ----------
+     No hand-maintained ticker list: instead, guessSymbol() below makes a best-effort guess straight from
+     the company's name (and, where it helps, its home country from COMPANIES) and hands that to
+     TradingView's Advanced Chart widget as the opening symbol. If the guess is wrong, the widget's own
+     built-in symbol search (click the ticker name at the top-left of the chart - a standard feature of
+     every TradingView embed) lets the user correct it in one click, right there, without leaving the chart.
+     This covers every tracked company, known or freehand, with nothing to keep updated on this end. */
+  const EXCHANGE_BY_COUNTRY = {
+    IN: 'NSE', US: 'NASDAQ', GB: 'LSE', DE: 'XETR', JP: 'TSE', KR: 'KRX', CN: 'HKEX', TW: 'TPEX',
+    FR: 'EURONEXT', NL: 'EURONEXT', AU: 'ASX', BR: 'BVMF', CH: 'SIX', SA: 'TADAWUL', RU: 'MOEX'
+  };
+  function guessSymbol(name) {
+    const known = E.COMPANIES.find(c => c.name.toLowerCase() === name.toLowerCase()
+      || c.aliases.some(a => a.toLowerCase() === name.toLowerCase()));
+    const exch = (known && EXCHANGE_BY_COUNTRY[known.code]) || 'NASDAQ';
+    // A plain, deterministic guess: strip anything that isn't a letter/number, uppercase it. Right far more
+    // often than not for short, single-word names (AAPL, INFY-style), and for everything else the widget's
+    // own search is the real correction path - this is a starting point, not a claim of accuracy.
+    const ticker = name.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
+    return exch + ':' + ticker;
+  }
+
   /* ---------- sectors (most specific first, ties go to the earlier one) ---------- */
   const SECTORS = [
     { name: 'Semiconductors', kw: ['semiconductor*', 'chip', 'chipmaker*', 'chipmaking', 'chip-making', 'wafer*', 'foundry', 'foundries', 'lithography', 'EUV', 'fab', 'fabs', 'TSMC', 'ASML', 'Nvidia', 'GPU', 'DRAM', 'NAND', 'integrated circuit*', 'nanometre*', 'nanometer*', 'HBM'],
@@ -514,7 +536,8 @@ const Engine = (function () {
   return {
     analyze, compare, setOf, splitMessages, parseCSV, csvToDocs, toCSV, tokens, flag,
     classifyCountry, classifySector, classifyImportance, findCompanies, findDate,
-    COUNTRY_NAMES, COUNTRY_BY_NAME, SECTOR_NAMES, IMP_ORDER, impRank, clip
+    COUNTRY_NAMES, COUNTRY_BY_NAME, SECTOR_NAMES, IMP_ORDER, impRank, clip,
+    COMPANIES, guessSymbol
   };
 })();
 
@@ -589,7 +612,15 @@ if (typeof document !== 'undefined') (function () {
       ticketPlaceholder: 'Describe the issue or idea…', ticketSend: 'Send', ticketSent: 'Thanks - sent to the app owner.',
       ticketFailed: "Couldn't send that. Check your connection and try again.", ticketEmpty: 'Write a few words first.',
       ticketAdminHeading: 'Tickets (owner only)', ticketAdminEmpty: 'No tickets yet.', ticketAdminLoadFailed: "Couldn't load tickets.",
-      ticketStatusOpen: 'Open', ticketStatusDone: 'Done', ticketMarkDone: 'Mark done', ticketMarkOpen: 'Reopen'
+      ticketStatusOpen: 'Open', ticketStatusDone: 'Done', ticketMarkDone: 'Mark done', ticketMarkOpen: 'Reopen',
+      modeNews: 'News', modeInvestment: 'Investment',
+      investHeading: 'Investment watchlist', investSub: "Track companies you've invested in, or are watching, to see their news grouped separately in the Investment tab.",
+      investPlaceholder: 'Company name', loginToTrackCompanies: 'Log in to track companies.',
+      agTrackCompanyTitle: 'Log in to track companies', agTrackCompanyBody: 'Creating a free account keeps your investment watchlist with you across devices.',
+      investEmptyTitle: 'Track companies to see investment-related news.', investEmptyBtn: 'Add companies to track',
+      investNoNews: 'No recent news for this company.', investRemove: 'Remove',
+      viewChart: 'View Chart', chartLoading: 'Loading chart…',
+      chartSearchHint: 'Wrong listing? Click the ticker name at the top-left of the chart to search for the right one.'
     },
     hi: {
       linkPages: 'लिंक पेज', settings: 'सेटिंग्स', signals: 'सिग्नल्स', saved: 'सेव किए गए', export: 'एक्सपोर्ट',
@@ -882,6 +913,8 @@ if (typeof document !== 'undefined') (function () {
     myChannels: new Set(),   // Telegram channels this user has chosen to follow (empty = follow everything)
     hiddenChannels: new Set(), // channels this user has explicitly removed/hidden from their own Telegram list
     reviewed: new Set(),     // article ids the user has opened in the Country Status viewer (Phase C)
+    myCompanies: new Set(),  // companies this user is tracking (invested in / watching) - News/Investment toggle
+    mode: 'news',            // 'news' (country-grouped, unchanged) or 'investment' (sector->company groups, tracked companies only)
     cv: null                 // { country, idx, stories } while the Country Status viewer is open; not persisted
   };
 
@@ -1142,7 +1175,7 @@ if (typeof document !== 'undefined') (function () {
       this.code = code;
       S.syncCode = code;
       this.cacheWrite(null);
-      S.saved = new Set(); S.dismissed = new Set(); S.myChannels = new Set(); S.hiddenChannels = new Set(); S.reviewed = new Set();
+      S.saved = new Set(); S.dismissed = new Set(); S.myChannels = new Set(); S.hiddenChannels = new Set(); S.reviewed = new Set(); S.myCompanies = new Set();
       const ok = await this.pull();
       toast(ok ? 'Synced. This device now shares saved articles and channels with that code.' : 'Saved the code, but couldn\u2019t reach the sync service just now. It will sync when back online.');
       renderAll(); renderChannels();
@@ -1167,6 +1200,7 @@ if (typeof document !== 'undefined') (function () {
       S.myChannels = new Set(rec.channels || []);
       S.hiddenChannels = new Set(rec.hiddenChannels || []);
       S.reviewed = new Set(rec.reviewed || []);
+      S.myCompanies = new Set(rec.companies || []);
     },
 
     // lastPullFoundDoc distinguishes "no cloud record yet" (404 - S.* is left exactly as it was, whatever
@@ -1193,10 +1227,10 @@ if (typeof document !== 'undefined') (function () {
 
     async push() {
       if (!this.code && !Auth.uid) return false;
-      const rec = { saved: [...S.saved], dismissed: [...S.dismissed], channels: [...S.myChannels], hiddenChannels: [...S.hiddenChannels], reviewed: [...S.reviewed] };
+      const rec = { saved: [...S.saved], dismissed: [...S.dismissed], channels: [...S.myChannels], hiddenChannels: [...S.hiddenChannels], reviewed: [...S.reviewed], companies: [...S.myCompanies] };
       if (!Auth.uid) this.cacheWrite(rec);
       try {
-        const fields = { saved: toFsValue(rec.saved), dismissed: toFsValue(rec.dismissed), channels: toFsValue(rec.channels), hiddenChannels: toFsValue(rec.hiddenChannels), reviewed: toFsValue(rec.reviewed) };
+        const fields = { saved: toFsValue(rec.saved), dismissed: toFsValue(rec.dismissed), channels: toFsValue(rec.channels), hiddenChannels: toFsValue(rec.hiddenChannels), reviewed: toFsValue(rec.reviewed), companies: toFsValue(rec.companies) };
         const headers = Object.assign({ 'Content-Type': 'application/json' }, await this.authHeaders());
         const r = await fetch(this.docUrl(), { method: 'PATCH', headers, body: JSON.stringify({ fields }) });
         if (!r.ok) throw new Error('HTTP ' + r.status);
@@ -1214,7 +1248,7 @@ if (typeof document !== 'undefined') (function () {
   // Runs right after a successful sign-up/sign-in/Google call. Auth.uid is already set at this point, so
   // Sync.pull() below reads this account's own qs_users/{uid} doc instead of the guest one.
   async function completeAuth() {
-    const hadGuestData = !!(S.saved.size || S.dismissed.size || S.myChannels.size || S.hiddenChannels.size || S.reviewed.size);
+    const hadGuestData = !!(S.saved.size || S.dismissed.size || S.myChannels.size || S.hiddenChannels.size || S.reviewed.size || S.myCompanies.size);
     await Sync.pull();
     // pull() found no existing doc for this account (a brand-new account, or a returning one that never
     // synced from this browser before) - S.* still holds whatever was there before the pull, i.e. the
@@ -1222,19 +1256,19 @@ if (typeof document !== 'undefined') (function () {
     // overwritten S.* with it - nothing to offer merging in, that data already IS what's now on screen.
     if (hadGuestData && !Sync.lastPullFoundDoc) {
       const bring = confirm('Bring your existing saved articles, dismissed items and followed channels into this account?');
-      if (!bring) { S.saved = new Set(); S.dismissed = new Set(); S.myChannels = new Set(); S.hiddenChannels = new Set(); S.reviewed = new Set(); }
+      if (!bring) { S.saved = new Set(); S.dismissed = new Set(); S.myChannels = new Set(); S.hiddenChannels = new Set(); S.reviewed = new Set(); S.myCompanies = new Set(); }
       else await Sync.push();
       toast('Signed in as ' + Auth.email + (bring ? '. Your existing data is now saved to this account.' : '.'));
     } else {
       toast('Signed in as ' + Auth.email + '.');
     }
-    renderAccount(); renderAll(); renderChannels(); renderSyncCode(); renderTicketBox(); renderTicketAdmin();
+    renderAccount(); renderAll(); renderChannels(); renderSyncCode(); renderTicketBox(); renderTicketAdmin(); renderInvestmentBox();
   }
 
   function signOut() {
     Auth.signOut();
-    S.saved = new Set(); S.dismissed = new Set(); S.myChannels = new Set(); S.hiddenChannels = new Set(); S.reviewed = new Set();
-    renderAccount(); renderAll(); renderChannels(); renderSyncCode(); renderTicketBox(); renderTicketAdmin();
+    S.saved = new Set(); S.dismissed = new Set(); S.myChannels = new Set(); S.hiddenChannels = new Set(); S.reviewed = new Set(); S.myCompanies = new Set();
+    renderAccount(); renderAll(); renderChannels(); renderSyncCode(); renderTicketBox(); renderTicketAdmin(); renderInvestmentBox();
     toast('Signed out. Back to guest mode on this device.');
     Sync.pull().then(() => { renderAll(); renderChannels(); });    // fall back to this browser's guest sync code
     Landing.clearGuestSeen();   // a stale guest flag from earlier this tab session shouldn't skip the screen below
@@ -1645,6 +1679,44 @@ if (typeof document !== 'undefined') (function () {
 
     follow(name) { S.myChannels.add(name.toLowerCase()); Sync.pushSoon(); track('follow_channel', { channel: name }); },
     unfollow(name) { S.myChannels.delete(name.toLowerCase()); Sync.pushSoon(); track('unfollow_channel', { channel: name }); }
+  };
+
+  /* ---------- Investment watchlist (News/Investment toggle) ----------
+     Unlike Telegram channels, a tracked company is purely personal data - there's no shared pool to add to
+     or owner-curation step, it only ever lives in this account's own qs_users/{uid} (or qs_sync/{code} for a
+     guest) doc, under the "companies" field Sync.push()/pull() already carry. So this module is much smaller
+     than Channels: no Firestore collection of its own, just add/remove on S.myCompanies plus the login gate,
+     matching the owner's instruction that this - like Telegram +Add and cross-device Sync - needs an account. */
+  const COMPANY_NAME_RX = /^[\p{L}\p{N}&'.,\- ]{2,60}$/u;   // \p{L}/\p{N} so non-English company names (accents, etc) aren't rejected
+  const Companies = {
+    add(raw) {
+      if (!Auth.uid) { openAuthGate('agTrackCompanyTitle', 'agTrackCompanyBody'); return false; }
+      const name = (raw || '').trim();
+      if (!COMPANY_NAME_RX.test(name)) { toast('Enter a company name (letters, numbers, spaces, & ’ . , -).'); return false; }
+      if (S.myCompanies.size >= 300) { toast('You can track up to 300 companies.'); return false; }
+      // Keep the exact, known display name when the typed text matches one of the app's recognized
+      // companies (case-insensitively) - this is what lets a tracked company actually match
+      // item.companies (the pipeline tags stories with these same canonical names), rather than only
+      // ever matching a freehand name the user happened to type with different capitalization.
+      const known = E.COMPANIES.find(c => c.name.toLowerCase() === name.toLowerCase()
+        || c.aliases.some(a => a.toLowerCase() === name.toLowerCase()));
+      const canonical = known ? known.name : name;
+      if (S.myCompanies.has(canonical)) { toast(canonical + ' is already on your watchlist.'); return false; }
+      S.myCompanies.add(canonical);
+      Sync.pushSoon();
+      track('track_company', { company: canonical, known: !!known });
+      toast(canonical + ' added to your investment watchlist.');
+      renderInvestmentBox();
+      renderAll();
+      return true;
+    },
+    remove(name) {
+      S.myCompanies.delete(name);
+      Sync.pushSoon();
+      track('untrack_company', { company: name });
+      renderInvestmentBox();
+      renderAll();
+    }
   };
 
   /* ---------- Push notifications (real OS-level, work even when the app isn't open) ----------
@@ -2084,6 +2156,54 @@ if (typeof document !== 'undefined') (function () {
     return groups;
   }
 
+  /* ---------- Investment tab: sector -> tracked-company groups ----------
+     Deliberately NOT filtered by channelVisible()/followed channels - the Investment tab is scoped by
+     which COMPANIES the user tracks, not which Telegram channels they follow, so a story about a tracked
+     company should show here even if it came from a channel the user hasn't followed in the News tab.
+     Still excludes dismissed/expired exactly like the News tab (a dismissed story should stay dismissed
+     everywhere), and still respects the current search/priority filters via filtered-style logic in
+     renderList(), same as the News tab's By-country/By-sector grouping. */
+  function investmentGroups() {
+    const want = S.myCompanies;
+    const bySector = new Map();   // sector -> Map(company -> stories[])
+    if (!want.size) return [];
+    for (const it of all()) {
+      const st = itemStatus(it);
+      if (st === 'dismissed' || st === 'expired') continue;
+      const matched = (it.companies || []).filter(c => want.has(c));
+      if (!matched.length) continue;
+      for (const co of matched) {
+        const known = E.COMPANIES.find(c => c.name === co);
+        const sector = (known && known.sector) || it.sector || 'Other';
+        if (!bySector.has(sector)) bySector.set(sector, new Map());
+        const comp = bySector.get(sector);
+        if (!comp.has(co)) comp.set(co, []);
+        comp.get(co).push(it);
+      }
+    }
+    // Every tracked company gets a row even with zero stories (confirmed: show a quiet "no recent news"
+    // note rather than hiding it), so a company with no matches yet still needs a home sector to sit
+    // under - fall back to the known list's sector, or 'Other' for a freehand name with no match.
+    for (const name of want) {
+      const known = E.COMPANIES.find(c => c.name === name);
+      const sector = (known && known.sector) || 'Other';
+      if (!bySector.has(sector)) bySector.set(sector, new Map());
+      if (!bySector.get(sector).has(name)) bySector.get(sector).set(name, []);
+    }
+    const sectors = [...bySector.entries()].map(([sector, companyMap]) => {
+      const companies = [...companyMap.entries()].map(([company, stories]) => {
+        stories.sort(byPriority);
+        return { company, stories, latest: stories.length ? Math.max(...stories.map(s => s.addedAt)) : 0 };
+      });
+      companies.sort((a, b) => (b.stories.length - a.stories.length) || (b.latest - a.latest) || a.company.localeCompare(b.company));
+      const total = companies.reduce((n, c) => n + c.stories.length, 0);
+      const latest = Math.max(0, ...companies.map(c => c.latest));
+      return { sector, companies, total, latest };
+    });
+    sectors.sort((a, b) => (b.total - a.total) || (b.latest - a.latest) || a.sector.localeCompare(b.sector));
+    return sectors;
+  }
+
   const RING_MAXSEG = 12, RING_GAP_DEG = 6;
   function ringGradient(stories) {
     const total = stories.length;
@@ -2356,6 +2476,51 @@ if (typeof document !== 'undefined') (function () {
     document.body.classList.remove('noscroll');
     if (vmOpener && document.contains(vmOpener)) vmOpener.focus();
     vmOpener = null;
+  }
+
+  /* ---------- View Chart (Investment tab) ----------
+     TradingView's free Advanced Chart widget, embedded directly - no API key, no backend. The opening
+     symbol is only a best-effort guess (see guessSymbol() above); the widget's own built-in symbol search
+     (click the ticker name top-left of the chart) is the real correction path for anything guessed wrong,
+     which is why #cmNote points the user at it. A fresh script tag is created on every open (rather than
+     a single reused one) because the widget's config is baked in at script-load time - there's no
+     documented "change symbol" call for this particular embed, so a different company means a fresh widget. */
+  let cmOpener = null;
+  function openChartModal(companyName, opener) {
+    const box = $('#chartModal'), chart = $('#cmChart');
+    if (!box || !chart) return;
+    track('view_chart', { company: companyName });
+    $('#cmTitle').textContent = companyName;
+    const symbol = E.guessSymbol(companyName);
+    chart.innerHTML = `<div class="tradingview-widget-container" style="height:100%;width:100%">
+      <div class="tradingview-widget-container__widget" style="height:100%;width:100%"></div>
+    </div>`;
+    const script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
+    script.async = true;
+    script.text = JSON.stringify({
+      // QwickSignal has one permanent cream/red palette, no dark mode (by explicit prior request) - so the
+      // chart always matches it with the light theme, no detection needed.
+      symbol, interval: 'D', timezone: 'exchange', theme: 'light',
+      style: '1', locale: 'en', autosize: true,
+      studies: ['MASimple@tv-basicstudies'],
+      studies_overrides: { 'moving average.length': 200 }
+    });
+    chart.querySelector('.tradingview-widget-container__widget').appendChild(script);
+    cmOpener = opener || document.activeElement;
+    box.hidden = false;
+    document.body.classList.add('noscroll');
+    const x = box.querySelector('.vclose'); if (x) x.focus();
+  }
+  function closeChartModal() {
+    const box = $('#chartModal');
+    if (!box || box.hidden) return;
+    $('#cmChart').innerHTML = '';     // drop the widget/iframe entirely rather than leave it running hidden
+    box.hidden = true;
+    document.body.classList.remove('noscroll');
+    if (cmOpener && document.contains(cmOpener)) cmOpener.focus();
+    cmOpener = null;
   }
 
   function entryHTML(it) {
@@ -2639,7 +2804,49 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     return `<h2 class="grp">${color ? `<span class="sw" style="background:${color}"></span>` : ''}${html}<span class="n">${n}</span></h2>`;
   }
 
+  // Investment mode's search/priority filter: same fields as filtered()'s own search, applied per-story
+  // within each company group, so the existing search box and priority chips keep working without
+  // duplicating their UI. Country/sector dropdown filters don't apply here - sector is already the
+  // Investment tab's own grouping - so only q and imp are relevant.
+  function investmentStoryMatches(it) {
+    const f = S.f, q = f.q.trim().toLowerCase();
+    if (f.imp && it.importance !== f.imp) return false;
+    if (q && !(it.headline + ' ' + it.summary + ' ' + it.country + ' ' + it.sector + ' ' + it.subsector + ' ' + (it.companies || []).join(' ') + ' ' + it.text).toLowerCase().includes(q)) return false;
+    return true;
+  }
+
+  function renderInvestmentList() {
+    // Same guard as renderList(): don't yank #list's DOM out from under an in-progress swipe gesture.
+    if (SWIPE.active) { SWIPE.renderPending = true; return; }
+    const box = $('#list');
+    const groups = investmentGroups();
+    const empty = $('#investEmpty');
+    if (!S.myCompanies.size) {
+      if (empty) empty.hidden = false;
+      box.innerHTML = '';
+      return;
+    }
+    if (empty) empty.hidden = true;
+    let html = '';
+    for (const g of groups) {
+      const companyBlocks = g.companies.map(c => {
+        const stories = c.stories.filter(investmentStoryMatches);
+        const body = stories.length
+          ? stories.map(entryWrapHTML).join('')
+          : `<p class="empty-note">${esc(t('investNoNews'))}</p>`;
+        return `<h3 class="grp-company">${esc(c.company)}<span class="n">${stories.length}</span>
+          <button class="link" data-act="viewChart" data-v="${esc(c.company)}">${esc(t('viewChart'))}</button>
+          <button class="link lp-remove" data-act="untrack" data-v="${esc(c.company)}" aria-label="${esc(t('investRemove'))} ${esc(c.company)}">${esc(t('investRemove'))}</button>
+        </h3>${body}`;
+      }).join('');
+      const sectorTotal = g.companies.reduce((n, c) => n + c.stories.filter(investmentStoryMatches).length, 0);
+      html += groupHead(esc(g.sector), sectorTotal) + companyBlocks;
+    }
+    box.innerHTML = html || `<div class="empty"><p>${esc(t('investNoNews'))}</p></div>`;
+  }
+
   function renderList() {
+    if (S.mode === 'investment') { renderInvestmentList(); return; }
     // A background refresh (the initial live-feed load, or the 60s auto-poll) can land while the user has a
     // finger down on a card. Rebuilding #list's innerHTML underneath an in-progress gesture would yank the DOM
     // node out from under the pointer capture, so a re-render is deferred until the gesture ends.
@@ -2838,15 +3045,66 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     </div>`;
     }).join('');
   }
+
+  // Investment watchlist (Settings). Much simpler than renderChannels(): purely personal data, no shared
+  // pool/owner-approval step, just this account's own S.myCompanies - see the Companies module above.
+  function renderInvestmentBox() {
+    const box = $('#invList'), gate = $('#invGateNote');
+    if (!box) return;
+    // Signed out: a quiet login prompt, same spirit as the Telegram gate note - the input/button stay in
+    // the DOM and clickable either way, since Companies.add() itself is what opens the login-gate modal.
+    if (gate) gate.hidden = !!Auth.uid;
+    if (!S.myCompanies.size) {
+      box.innerHTML = `<p class="lp-empty">${esc(t('investEmptyTitle'))}</p>`;
+    } else {
+      box.innerHTML = [...S.myCompanies].sort((a, b) => a.localeCompare(b)).map(name => `<div class="lp-row">
+        <span class="name">${esc(name)}</span>
+        <div class="lp-rowbtns">
+          <button class="follow lp-remove" data-act="untrack" data-v="${esc(name)}" aria-label="${esc(t('investRemove'))} ${esc(name)}">${esc(t('investRemove'))}</button>
+        </div>
+      </div>`).join('');
+    }
+    // Datalist suggestions from the app's own recognized-companies list, so typed names match what the
+    // pipeline actually tags stories with (see Companies.add()'s canonical-name lookup).
+    const dl = $('#invSuggest');
+    if (dl && !dl.childElementCount) dl.innerHTML = E.COMPANIES.map(c => `<option value="${esc(c.name)}">`).join('');
+  }
+
   async function renderExport() {
     $$('#exportSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === S.exportRange));
     const c = visibleItems().filter(i => inRange(i, S.exportRange)).length;
     $('#exportCount').textContent = c + (c === 1 ? ' item' : ' items') + ' in this period';
   }
   function renderAll() {
+    if (S.mode === 'investment') { renderList(); if (S.tab === 'saved') renderSaved(); return; }
     renderControls(); renderList(); renderExport(); renderCountryBar();
     if (S.tab === 'saved') renderSaved();
     // keep the just-added cards in sync when they are toggled
+  }
+
+  /* ---------- News / Investment mode toggle ---------- */
+  function setMode(mode) {
+    if (mode === S.mode) return;
+    S.mode = mode;
+    track('mode_view', { mode });
+    $$('#modeSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === mode));
+    // The News-only chrome (country status ring, country/sector dropdown filters) has no meaning in
+    // Investment mode, which is already grouped by sector/company - hide it rather than render it against
+    // the wrong data. #rangeSeg/#sectors/#countries/#viewSeg are left alone entirely: they're already
+    // permanently hidden in the markup (their buttons are commented out - unused/future UI), independent of
+    // mode. The search box and priority chips/dropdown stay visible in both modes: Investment mode's own
+    // rendering (investmentStoryMatches()) honors the same S.f.q/S.f.imp, so they keep actually doing something.
+    const investmentOnlyHide = ['#countryStatus', '#countryFilter', '#sectorFilter', '#hasFilter'];
+    if (mode === 'investment') {
+      investmentOnlyHide.forEach(sel => { const el = $(sel); if (el) el.hidden = true; });
+      renderInvestmentList();
+    } else {
+      // renderControls() fills countryFilter/sectorFilter but never un-hides them (it only reacts to filter
+      // state, not mode), so that's cleared here first; #countryStatus/#hasFilter are restored by
+      // renderCountryBar()/renderControls() themselves right after.
+      ['#countryFilter', '#sectorFilter'].forEach(sel => { const el = $(sel); if (el) el.hidden = false; });
+      renderControls(); renderList(); renderCountryBar();
+    }
   }
 
   /* ---------- tabs ---------- */
@@ -2856,14 +3114,14 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     $$('.view').forEach(v => v.hidden = v.id !== 'view-' + name);
     $$('.tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === name));
     window.scrollTo(0, 0);
-    if (name === 'brief') { renderControls(); renderList(); }
+    if (name === 'brief') { if (S.mode === 'investment') renderInvestmentList(); else { renderControls(); renderList(); } }
     if (name === 'export') renderExport();
     if (name === 'saved') renderSaved();
     // Settings used to be the app's default first screen ("Link Pages"), so its Account/Telegram/Appearance
     // blocks were always rendered on load regardless of which tab was showing. Now that it's reached only via
     // the Settings tab, re-render its dynamic bits on every visit so they're never stale (e.g. after signing
     // in from the landing page while this tab wasn't open yet).
-    if (name === 'settings') { renderAccount(); renderChannels(); renderSyncCode(); renderGetApp(); renderNotifBox(); renderTicketBox(); renderTicketAdmin(); }
+    if (name === 'settings') { renderAccount(); renderChannels(); renderSyncCode(); renderGetApp(); renderNotifBox(); renderTicketBox(); renderTicketAdmin(); renderInvestmentBox(); }
   }
 
   /* ---------- export ---------- */
@@ -2953,13 +3211,18 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     if (SWIPE.justSwiped) { ev.preventDefault(); ev.stopPropagation(); return; }
     const el = ev.target.closest('[data-act],[data-tab],[data-v]');
     if (el && el.dataset.tab) { setTab(el.dataset.tab); return; }
+    if (el && el.closest('#modeSeg')) { setMode(el.dataset.v); return; }
     if (el && el.closest('#rangeSeg')) { S.f.range = el.dataset.v; renderControls(); renderList(); return; }
     if (el && el.closest('#viewSeg')) { S.f.view = el.dataset.v; renderControls(); renderList(); return; }
     if (el && el.closest('#exportSeg')) { S.exportRange = el.dataset.v; renderExport(); return; }
     const act = el && el.dataset.act;
     if (act) {
       const v = el.dataset.v;
-      if (act === 'ai') {
+      if (act === 'untrack') { Companies.remove(v); }
+      else if (act === 'gotoWatchlist') { setTab('settings'); const inp = $('#invInput'); if (inp) inp.focus(); }
+      else if (act === 'viewChart') { openChartModal(v, el); }
+      else if (act === 'cmclose') { closeChartModal(); }
+      else if (act === 'ai') {
         const it = all().find(x => x.id === el.dataset.id);
         if (it) openAI(it, el.dataset.ai);
       }
@@ -2970,10 +3233,10 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       else if (act === 'vclose') { closeVideo(); }
       else if (act === 'agclose') { closeAuthGate(); }
       else if (act === 'agGoto') { closeAuthGate(); setTab('settings'); const eb = $('#authEmail'); if (eb) eb.focus(); }
-      else if (act === 'fi') { S.f.imp = v; renderControls(); renderList(); }
+      else if (act === 'fi') { S.f.imp = v; if (S.mode === 'investment') renderInvestmentList(); else { renderControls(); renderList(); } }
       else if (act === 'fc') { S.f.country = S.f.country === v ? '' : v; renderControls(); renderList(); }
       else if (act === 'fs') { S.f.sector = S.f.sector === v ? '' : v; renderControls(); renderList(); }
-      else if (act === 'reset') { S.f = Object.assign(S.f, { country: '', sector: '', imp: '', q: '', range: 'all' }); $('#q').value = ''; renderControls(); renderList(); }
+      else if (act === 'reset') { S.f = Object.assign(S.f, { country: '', sector: '', imp: '', q: '', range: 'all' }); $('#q').value = ''; if (S.mode === 'investment') renderInvestmentList(); else { renderControls(); renderList(); } }
       else if (act === 'refresh') { await loadLive(true); }
       else if (act === 'tgfollow') {
         // Follow/unfollow used to fire-and-forget via Sync.pushSoon() (a 600ms-debounced background save) -
@@ -3093,6 +3356,18 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       }
       return;
     }
+    const chartBox = $('#chartModal');
+    if (chartBox && !chartBox.hidden) {
+      if (ev.key === 'Escape') { ev.preventDefault(); closeChartModal(); return; }
+      if (ev.key === 'Tab') {
+        const f = [...chartBox.querySelectorAll('button, a[href], iframe')].filter(e => !e.disabled);
+        if (!f.length) return;
+        const first = f[0], last = f[f.length - 1];
+        if (ev.shiftKey && document.activeElement === first) { ev.preventDefault(); last.focus(); }
+        else if (!ev.shiftKey && document.activeElement === last) { ev.preventDefault(); first.focus(); }
+      }
+      return;
+    }
     const gate = $('#authGate');
     if (gate && !gate.hidden) {
       if (ev.key === 'Escape') { ev.preventDefault(); closeAuthGate(); return; }
@@ -3105,7 +3380,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       }
     }
   });
-  $('#q').addEventListener('input', e => { S.f.q = e.target.value; renderControls(); renderList(); });
+  $('#q').addEventListener('input', e => { S.f.q = e.target.value; if (S.mode === 'investment') renderInvestmentList(); else { renderControls(); renderList(); } });
   $('#tgAdd').addEventListener('click', async () => {
     const inp = $('#tgInput'); const v = inp.value;
     if (!v.trim()) return;
@@ -3113,6 +3388,13 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     if (ok) inp.value = '';
   });
   $('#tgInput').addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); $('#tgAdd').click(); } });
+  $('#invAdd').addEventListener('click', () => {
+    const inp = $('#invInput'); const v = inp.value;
+    if (!v.trim()) return;
+    const ok = Companies.add(v);
+    if (ok) inp.value = '';
+  });
+  $('#invInput').addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); $('#invAdd').click(); } });
   // Sync-by-code UI (#syncCopy/#syncUse/#syncInput) was removed from index.html - syncing now requires an
   // account (see renderSyncCode()); Sync.switchTo()/the code itself still exist internally since Sync.code
   // is also the guest local-cache key for saves/dismisses/channels on a single device, just with no more

@@ -1,14 +1,12 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-24-v1';  // Fixed the manual-refresh toast showing the pipeline's raw total
-                                      // story count (e.g. "199 stories refreshed") instead of how many are
-                                      // actually visible to this visitor after channel filtering (e.g. 33) -
-                                      // it now counts the same way Signals itself does: followed channels if
-                                      // any are followed, else the owner-curated default list. Bumped for the
-                                      // same reason as every prior bump noted below - the service worker
-                                      // caches index.html/app.js itself, so without a new VERSION an
-                                      // already-installed visitor can keep seeing the old page indefinitely.
+const VERSION = 'gni-phase3-26-v1';  // Added "View Chart" to the Investment tab: a TradingView Advanced
+                                      // Chart widget (free, no API key) with a 200-day moving average applied
+                                      // by default, opened per tracked company. Bumped for the same reason
+                                      // as every prior bump noted below - the service worker caches
+                                      // index.html/app.js itself, so without a new VERSION an already-
+                                      // installed visitor can keep seeing the old page indefinitely.
 const SHELL = ['./', 'index.html', 'app.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {
