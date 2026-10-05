@@ -1,12 +1,14 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-21-v1';  // Added: ticket/feedback system, APK download link in Settings, and a
-                                      // headline thumbnail on closed cards in the main list (image_intel.py's
-                                      // Google-searched photo, when found). Bumped for the same reason as
-                                      // every prior bump noted below - the service worker caches index.html/
-                                      // app.js itself, so without a new VERSION an already-installed visitor
-                                      // can keep seeing the old page indefinitely.
+const VERSION = 'gni-phase3-23-v1';  // "Get the app" card in Settings now platform-detects Android vs
+                                      // iPhone: Android still gets the direct APK download, iPhone gets
+                                      // "Add to Home Screen" steps (Apple blocks sideloading outright, so
+                                      // this is the real install path there - and it still gets full push
+                                      // notifications on iOS 16.4+). Bumped for the same reason as every
+                                      // prior bump noted below - the service worker caches index.html/app.js
+                                      // itself, so without a new VERSION an already-installed visitor can
+                                      // keep seeing the old page indefinitely.
 const SHELL = ['./', 'index.html', 'app.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {

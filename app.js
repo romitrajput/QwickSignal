@@ -562,7 +562,7 @@ if (typeof document !== 'undefined') (function () {
       couldntLoadChannels: 'Couldn’t load the channel list right now.', checkConnection: 'Check your connection.',
       syncHeading: 'Sync across your devices', syncSub: 'This code links your saved articles and followed channels on another phone or browser. Anyone with the code can use it, so keep it to yourself and your own devices.',
       copyBtn: 'Copy', syncInputPlaceholder: 'Enter a code from another device', useCodeBtn: 'Use this code',
-      searchPlaceholder: 'Search headlines, companies, text',
+      searchPlaceholder: 'Search',
       allPriorities: 'All priorities', critical: 'Critical', high: 'High', medium: 'Medium', low: 'Low',
       clearFilters: 'Clear filters',
       savedLede: "Stories you've saved stay here even after they'd normally drop off Signals after 24 hours.",
@@ -576,8 +576,15 @@ if (typeof document !== 'undefined') (function () {
       notifUnsupported: "This browser doesn't support push notifications.",
       notifBlocked: 'Notifications are blocked for this site. Allow them in your browser/site settings, then try again.',
       notifFailed: "Couldn't turn on notifications. Check your connection and try again.",
-      getAppHeading: 'Get the Android app', getAppSub: 'Download the installable app (one file, zipped). Unzip it, then tap the .apk to install - you may need to allow "install unknown apps" for your browser once.', getAppBtn: 'Download QwickSignal.zip',
+      getAppHeading: 'Get the app', getAppAndroidTab: 'Android', getAppIosTab: 'iPhone',
+      getAppSub: 'Download the installable app (one file, zipped). Unzip it, then tap the .apk to install - you may need to allow "install unknown apps" for your browser once.', getAppBtn: 'Download QwickSignal.zip',
+      getAppIosStep1: 'Open qwicksignal.netlify.app in Safari (it has to be Safari, not Chrome).', getAppIosStep2: 'Tap the Share icon, then "Add to Home Screen".', getAppIosStep3: 'Tap "Add" - QwickSignal now opens like a regular app, no browser bar.',
+      getAppIosNote: 'Notifications work the same way after this - iOS supports real push notifications for home-screen apps on iOS 16.4 and later.',
       feedbackHeading: 'Feedback & support', feedbackSub: 'Found a bug, or have a suggestion? Send it here - it goes straight to the app owner.',
+      agGoToAccount: 'Go to Account', agMaybeLater: 'Maybe later',
+      agAddChannelsTitle: 'Log in to add channels', agAddChannelsBody: 'Creating a free account keeps your followed channels and saved stories with you, and lets you add new ones.',
+      agSyncTitle: 'Log in to sync your devices', agSyncBody: 'Syncing across devices now needs a free account - it keeps everything a little safer and tied to you, not a shareable code.',
+      feedbackLoginTitle: 'Log in to send feedback', feedbackLoginBody: 'Creating a free account lets the app owner follow up with you if needed.',
       ticketKindBug: 'Bug', ticketKindSupport: 'Support', ticketKindFeedback: 'Feedback',
       ticketPlaceholder: 'Describe the issue or idea…', ticketSend: 'Send', ticketSent: 'Thanks - sent to the app owner.',
       ticketFailed: "Couldn't send that. Check your connection and try again.", ticketEmpty: 'Write a few words first.',
@@ -598,7 +605,7 @@ if (typeof document !== 'undefined') (function () {
       couldntLoadChannels: 'अभी चैनल सूची लोड नहीं हो सकी।', checkConnection: 'अपना कनेक्शन जांचें।',
       syncHeading: 'अपने डिवाइस में सिंक करें', syncSub: 'यह कोड आपके सेव किए गए लेख और फॉलो किए गए चैनल किसी दूसरे फोन या ब्राउज़र से जोड़ता है। कोड जिसके पास भी है वह इसे इस्तेमाल कर सकता है, इसलिए इसे अपने और अपने डिवाइस तक सीमित रखें।',
       copyBtn: 'कॉपी करें', syncInputPlaceholder: 'दूसरे डिवाइस का कोड डालें', useCodeBtn: 'यह कोड इस्तेमाल करें',
-      searchPlaceholder: 'हेडलाइन, कंपनियां, टेक्स्ट खोजें',
+      searchPlaceholder: 'खोजें',
       allPriorities: 'सभी प्राथमिकताएं', critical: 'गंभीर', high: 'उच्च', medium: 'मध्यम', low: 'निम्न',
       clearFilters: 'फ़िल्टर हटाएं',
       savedLede: 'आपके सेव किए गए लेख यहां बने रहते हैं, भले ही वे 24 घंटे बाद सिग्नल्स से हट जाते हों।',
@@ -612,8 +619,15 @@ if (typeof document !== 'undefined') (function () {
       notifUnsupported: 'यह ब्राउज़र पुश सूचनाओं का समर्थन नहीं करता।',
       notifBlocked: 'इस साइट के लिए सूचनाएं ब्लॉक हैं। अपनी ब्राउज़र/साइट सेटिंग्स में उन्हें अनुमति दें, फिर दोबारा कोशिश करें।',
       notifFailed: 'सूचनाएं चालू नहीं हो सकीं। अपना कनेक्शन जांचें और फिर कोशिश करें।',
-      getAppHeading: 'Android ऐप पाएं', getAppSub: 'इंस्टॉल करने योग्य ऐप डाउनलोड करें (एक फ़ाइल, ज़िप की हुई)। इसे अनज़िप करें, फिर इंस्टॉल करने के लिए .apk पर टैप करें - आपको अपने ब्राउज़र के लिए एक बार "अज्ञात ऐप्स इंस्टॉल करें" की अनुमति देनी पड़ सकती है।', getAppBtn: 'QwickSignal.zip डाउनलोड करें',
+      getAppHeading: 'ऐप पाएं', getAppAndroidTab: 'Android', getAppIosTab: 'iPhone',
+      getAppSub: 'इंस्टॉल करने योग्य ऐप डाउनलोड करें (एक फ़ाइल, ज़िप की हुई)। इसे अनज़िप करें, फिर इंस्टॉल करने के लिए .apk पर टैप करें - आपको अपने ब्राउज़र के लिए एक बार "अज्ञात ऐप्स इंस्टॉल करें" की अनुमति देनी पड़ सकती है।', getAppBtn: 'QwickSignal.zip डाउनलोड करें',
+      getAppIosStep1: 'Safari में qwicksignal.netlify.app खोलें (Chrome में नहीं, Safari में ही)।', getAppIosStep2: 'शेयर आइकन टैप करें, फिर "Add to Home Screen" चुनें।', getAppIosStep3: '"Add" टैप करें - अब QwickSignal एक सामान्य ऐप की तरह खुलेगा, बिना ब्राउज़र बार के।',
+      getAppIosNote: 'इसके बाद नोटिफिकेशन वैसे ही काम करते हैं - iOS 16.4 और उसके बाद होम-स्क्रीन ऐप्स के लिए असली पुश नोटिफिकेशन देता है।',
       feedbackHeading: 'फ़ीडबैक और सहायता', feedbackSub: 'कोई बग मिला, या कोई सुझाव है? यहाँ भेजें - यह सीधे ऐप के मालिक तक जाता है।',
+      agGoToAccount: 'खाते पर जाएं', agMaybeLater: 'बाद में',
+      agAddChannelsTitle: 'चैनल जोड़ने के लिए साइन इन करें', agAddChannelsBody: 'मुफ़्त खाता बनाने से आपके फॉलो किए चैनल और सेव की गई स्टोरी आपके साथ रहती हैं, और आप नए चैनल जोड़ पाते हैं।',
+      agSyncTitle: 'डिवाइस सिंक करने के लिए साइन इन करें', agSyncBody: 'डिवाइस के बीच सिंक करने के लिए अब मुफ़्त खाता चाहिए - यह सब कुछ थोड़ा ज़्यादा सुरक्षित और आपसे जुड़ा रखता है, शेयर किए जा सकने वाले कोड के बजाय।',
+      feedbackLoginTitle: 'फ़ीडबैक भेजने के लिए साइन इन करें', feedbackLoginBody: 'मुफ़्त खाता बनाने से ऐप के मालिक ज़रूरत पड़ने पर आपसे संपर्क कर सकते हैं।',
       ticketKindBug: 'बग', ticketKindSupport: 'सहायता', ticketKindFeedback: 'फ़ीडबैक',
       ticketPlaceholder: 'समस्या या विचार बताएं…', ticketSend: 'भेजें', ticketSent: 'धन्यवाद - ऐप के मालिक को भेज दिया गया।',
       ticketFailed: 'भेजा नहीं जा सका। अपना कनेक्शन जांचें और फिर कोशिश करें।', ticketEmpty: 'पहले कुछ शब्द लिखें।',
@@ -634,7 +648,7 @@ if (typeof document !== 'undefined') (function () {
       couldntLoadChannels: 'सध्या चॅनेल यादी लोड होऊ शकली नाही.', checkConnection: 'तुमचे कनेक्शन तपासा.',
       syncHeading: 'तुमच्या डिव्हाइसेसवर सिंक करा', syncSub: 'हा कोड तुमचे सेव्ह केलेले लेख आणि फॉलो केलेले चॅनेल दुसऱ्या फोन किंवा ब्राउझरशी जोडतो. हा कोड ज्याच्याकडेही असेल तो वापरू शकतो, त्यामुळे तो फक्त स्वतःपुरता आणि स्वतःच्या डिव्हाइसेसपुरता ठेवा.',
       copyBtn: 'कॉपी करा', syncInputPlaceholder: 'दुसऱ्या डिव्हाइसचा कोड टाका', useCodeBtn: 'हा कोड वापरा',
-      searchPlaceholder: 'हेडलाइन, कंपन्या, मजकूर शोधा',
+      searchPlaceholder: 'शोधा',
       allPriorities: 'सर्व प्राधान्ये', critical: 'गंभीर', high: 'उच्च', medium: 'मध्यम', low: 'कमी',
       clearFilters: 'फिल्टर्स साफ करा',
       savedLede: 'तुम्ही सेव्ह केलेल्या बातम्या 24 तासांनंतर सिग्नल्समधून निघून गेल्या तरी इथे राहतात.',
@@ -648,8 +662,15 @@ if (typeof document !== 'undefined') (function () {
       notifUnsupported: 'हा ब्राउझर पुश सूचनांना सपोर्ट करत नाही.',
       notifBlocked: 'या साइटसाठी सूचना ब्लॉक केलेल्या आहेत. तुमच्या ब्राउझर/साइट सेटिंग्जमध्ये त्यांना परवानगी द्या, नंतर पुन्हा प्रयत्न करा.',
       notifFailed: 'सूचना चालू करता आल्या नाहीत. तुमचे कनेक्शन तपासा आणि पुन्हा प्रयत्न करा.',
-      getAppHeading: 'Android अ‍ॅप मिळवा', getAppSub: 'इंस्टॉल करण्यायोग्य अ‍ॅप डाउनलोड करा (एक फाईल, झिप केलेली). अनझिप करा, मग इंस्टॉल करण्यासाठी .apk वर टॅप करा - तुम्हाला तुमच्या ब्राउझरसाठी एकदा "अज्ञात अ‍ॅप्स इंस्टॉल करा" ला परवानगी द्यावी लागू शकते.', getAppBtn: 'QwickSignal.zip डाउनलोड करा',
+      getAppHeading: 'अ‍ॅप मिळवा', getAppAndroidTab: 'Android', getAppIosTab: 'iPhone',
+      getAppSub: 'इंस्टॉल करण्यायोग्य अ‍ॅप डाउनलोड करा (एक फाईल, झिप केलेली). अनझिप करा, मग इंस्टॉल करण्यासाठी .apk वर टॅप करा - तुम्हाला तुमच्या ब्राउझरसाठी एकदा "अज्ञात अ‍ॅप्स इंस्टॉल करा" ला परवानगी द्यावी लागू शकते.', getAppBtn: 'QwickSignal.zip डाउनलोड करा',
+      getAppIosStep1: 'Safari मध्ये qwicksignal.netlify.app उघडा (Chrome नाही, Safari हवे).', getAppIosStep2: 'शेअर आयकॉन टॅप करा, मग "Add to Home Screen" निवडा.', getAppIosStep3: '"Add" टॅप करा - आता QwickSignal सामान्य अ‍ॅपसारखे उघडेल, ब्राउझर बारशिवाय.',
+      getAppIosNote: 'यानंतर नोटिफिकेशन्स तशीच काम करतात - iOS 16.4 आणि त्यानंतरच्या आवृत्त्यांमध्ये होम-स्क्रीन अ‍ॅप्ससाठी खऱ्या पुश नोटिफिकेशन्स मिळतात.',
       feedbackHeading: 'फीडबॅक आणि सहाय्य', feedbackSub: 'बग सापडला, किंवा सुचवायचे आहे? इथे पाठवा - ते थेट अ‍ॅपच्या मालकाकडे जाते.',
+      agGoToAccount: 'खात्याकडे जा', agMaybeLater: 'नंतर',
+      agAddChannelsTitle: 'चॅनेल जोडण्यासाठी साइन इन करा', agAddChannelsBody: 'मोफत खाते तयार केल्याने तुमचे फॉलो केलेले चॅनेल आणि सेव्ह केलेल्या स्टोरीज तुमच्याजवळ राहतात, आणि तुम्हाला नवीन जोडता येतात.',
+      agSyncTitle: 'डिव्हाइस सिंक करण्यासाठी साइन इन करा', agSyncBody: 'डिव्हाइसमध्ये सिंक करण्यासाठी आता मोफत खाते आवश्यक आहे - यामुळे सर्व काही थोडे अधिक सुरक्षित आणि तुमच्याशी जोडलेले राहते, शेअर करता येणाऱ्या कोडऐवजी.',
+      feedbackLoginTitle: 'फीडबॅक पाठवण्यासाठी साइन इन करा', feedbackLoginBody: 'मोफत खाते तयार केल्याने अ‍ॅपचे मालक गरज पडल्यास तुमच्याशी संपर्क साधू शकतात.',
       ticketKindBug: 'बग', ticketKindSupport: 'सहाय्य', ticketKindFeedback: 'फीडबॅक',
       ticketPlaceholder: 'समस्या किंवा कल्पना सांगा…', ticketSend: 'पाठवा', ticketSent: 'धन्यवाद - अ‍ॅपच्या मालकाला पाठवले.',
       ticketFailed: 'पाठवता आले नाही. तुमचे कनेक्शन तपासा आणि पुन्हा प्रयत्न करा.', ticketEmpty: 'आधी काही शब्द लिहा.',
@@ -670,7 +691,7 @@ if (typeof document !== 'undefined') (function () {
       couldntLoadChannels: 'હાલમાં ચેનલ યાદી લોડ થઈ શકી નથી.', checkConnection: 'તમારું જોડાણ તપાસો.',
       syncHeading: 'તમારા ડિવાઇસ પર સિંક કરો', syncSub: 'આ કોડ તમારા સેવ કરેલા લેખો અને ફોલો કરેલા ચેનલ્સને બીજા ફોન કે બ્રાઉઝર સાથે જોડે છે. આ કોડ જેની પાસે પણ હોય તે તેનો ઉપયોગ કરી શકે છે, તેથી તેને ફક્ત તમારા પોતાના ડિવાઇસ પૂરતો રાખો.',
       copyBtn: 'કૉપિ કરો', syncInputPlaceholder: 'બીજા ડિવાઇસનો કોડ દાખલ કરો', useCodeBtn: 'આ કોડ વાપરો',
-      searchPlaceholder: 'હેડલાઇન, કંપનીઓ, ટેક્સ્ટ શોધો',
+      searchPlaceholder: 'શોધો',
       allPriorities: 'બધી પ્રાથમિકતાઓ', critical: 'ગંભીર', high: 'ઊંચી', medium: 'મધ્યમ', low: 'નીચી',
       clearFilters: 'ફિલ્ટર્સ સાફ કરો',
       savedLede: 'તમે સેવ કરેલી સ્ટોરીઝ 24 કલાક પછી સિગ્નલ્સમાંથી નીકળી જાય તો પણ અહીં રહે છે.',
@@ -684,8 +705,15 @@ if (typeof document !== 'undefined') (function () {
       notifUnsupported: 'આ બ્રાઉઝર પુશ નોટિફિકેશનને સપોર્ટ કરતું નથી.',
       notifBlocked: 'આ સાઇટ માટે નોટિફિકેશન બ્લોક કરેલા છે. તમારા બ્રાઉઝર/સાઇટ સેટિંગ્સમાં તેમને મંજૂરી આપો, પછી ફરી પ્રયાસ કરો.',
       notifFailed: 'નોટિફિકેશન ચાલુ કરી શકાયા નહીં. તમારું જોડાણ તપાસો અને ફરી પ્રયાસ કરો.',
-      getAppHeading: 'Android ઍપ મેળવો', getAppSub: 'ઇન્સ્ટોલ કરી શકાય તેવી ઍપ ડાઉનલોડ કરો (એક ફાઇલ, ઝિપ કરેલી). તેને અનઝિપ કરો, પછી ઇન્સ્ટોલ કરવા માટે .apk પર ટૅપ કરો - તમારે તમારા બ્રાઉઝર માટે એકવાર "અજાણી ઍપ્સ ઇન્સ્ટોલ કરો"ની મંજૂરી આપવી પડી શકે.', getAppBtn: 'QwickSignal.zip ડાઉનલોડ કરો',
+      getAppHeading: 'ઍપ મેળવો', getAppAndroidTab: 'Android', getAppIosTab: 'iPhone',
+      getAppSub: 'ઇન્સ્ટોલ કરી શકાય તેવી ઍપ ડાઉનલોડ કરો (એક ફાઇલ, ઝિપ કરેલી). તેને અનઝિપ કરો, પછી ઇન્સ્ટોલ કરવા માટે .apk પર ટૅપ કરો - તમારે તમારા બ્રાઉઝર માટે એકવાર "અજાણી ઍપ્સ ઇન્સ્ટોલ કરો"ની મંજૂરી આપવી પડી શકે.', getAppBtn: 'QwickSignal.zip ડાઉનલોડ કરો',
+      getAppIosStep1: 'Safari માં qwicksignal.netlify.app ખોલો (Chrome નહીં, Safari જ જોઈએ).', getAppIosStep2: 'શેર આઇકન ટૅપ કરો, પછી "Add to Home Screen" પસંદ કરો.', getAppIosStep3: '"Add" ટૅપ કરો - હવે QwickSignal સામાન્ય ઍપની જેમ ખુલશે, બ્રાઉઝર બાર વગર.',
+      getAppIosNote: 'આ પછી નોટિફિકેશન એ જ રીતે કામ કરે છે - iOS 16.4 અને પછીની આવૃત્તિઓમાં હોમ-સ્ક્રીન ઍપ્સ માટે ખરા પુશ નોટિફિકેશન મળે છે.',
       feedbackHeading: 'પ્રતિસાદ અને સહાય', feedbackSub: 'બગ મળ્યો, કે સૂચન છે? અહીં મોકલો - તે સીધું ઍપના માલિક સુધી જાય છે.',
+      agGoToAccount: 'ખાતા પર જાઓ', agMaybeLater: 'પછી',
+      agAddChannelsTitle: 'ચેનલ ઉમેરવા સાઇન ઇન કરો', agAddChannelsBody: 'મફત ખાતું બનાવવાથી તમારી ફોલો કરેલી ચેનલો અને સેવ કરેલી સ્ટોરીઝ તમારી સાથે રહે છે, અને તમે નવી ઉમેરી શકો છો.',
+      agSyncTitle: 'ડિવાઇસ સિંક કરવા સાઇન ઇન કરો', agSyncBody: 'ડિવાઇસ વચ્ચે સિંક કરવા હવે મફત ખાતું જરૂરી છે - આ બધું થોડું વધુ સુરક્ષિત અને તમારી સાથે જોડાયેલું રાખે છે, શેર કરી શકાય તેવા કોડને બદલે.',
+      feedbackLoginTitle: 'ફીડબેક મોકલવા સાઇન ઇન કરો', feedbackLoginBody: 'મફત ખાતું બનાવવાથી ઍપના માલિક જરૂર પડ્યે તમારો સંપર્ક કરી શકે છે.',
       ticketKindBug: 'બગ', ticketKindSupport: 'સહાય', ticketKindFeedback: 'પ્રતિસાદ',
       ticketPlaceholder: 'સમસ્યા કે વિચાર જણાવો…', ticketSend: 'મોકલો', ticketSent: 'આભાર - ઍપના માલિકને મોકલાયું.',
       ticketFailed: 'મોકલી શકાયું નહીં. તમારું જોડાણ તપાસો અને ફરી પ્રયાસ કરો.', ticketEmpty: 'પહેલા થોડા શબ્દો લખો.',
@@ -1200,13 +1228,13 @@ if (typeof document !== 'undefined') (function () {
     } else {
       toast('Signed in as ' + Auth.email + '.');
     }
-    renderAccount(); renderAll(); renderChannels();
+    renderAccount(); renderAll(); renderChannels(); renderSyncCode(); renderTicketBox(); renderTicketAdmin();
   }
 
   function signOut() {
     Auth.signOut();
     S.saved = new Set(); S.dismissed = new Set(); S.myChannels = new Set(); S.hiddenChannels = new Set(); S.reviewed = new Set();
-    renderAccount(); renderAll(); renderChannels();
+    renderAccount(); renderAll(); renderChannels(); renderSyncCode(); renderTicketBox(); renderTicketAdmin();
     toast('Signed out. Back to guest mode on this device.');
     Sync.pull().then(() => { renderAll(); renderChannels(); });    // fall back to this browser's guest sync code
     Landing.clearGuestSeen();   // a stale guest flag from earlier this tab session shouldn't skip the screen below
@@ -1339,6 +1367,53 @@ if (typeof document !== 'undefined') (function () {
     }
   }
 
+  // Rough, good-enough device guess from the UA string - only used to decide which tab opens by default
+  // (Android vs iPhone); both tabs are always present so anyone can check the other platform's steps too
+  // (e.g. to tell a friend on a different phone how to install it).
+  function guessPlatform() {
+    const ua = navigator.userAgent || '';
+    if (/android/i.test(ua)) return 'android';
+    if (/iphone|ipad|ipod/i.test(ua)) return 'ios';
+    // iPadOS 13+ reports as "Macintosh" with touch support - the one real ambiguous case worth catching.
+    if (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1) return 'ios';
+    return 'android';   // most visitors are on Android (see the TWA work earlier this project) - reasonable default
+  }
+
+  // "Get the app" card: Android gets the direct APK download (item #9 - a single zipped asset on the
+  // GitHub release, not the whole PWABuilder export folder). iOS can't sideload a .apk at all (Apple
+  // blocks it outright, no workaround), so it gets "Add to Home Screen" steps instead - the PWA already
+  // supports real push notifications on iOS 16.4+, so this is a genuinely equivalent install path, not a
+  // downgrade. Both tabs always exist (see guessPlatform() above); only which one opens by default changes.
+  const APK_URL = 'https://github.com/romitrajput/qwicksignal/releases/download/QwickSignal/QwickSignal.zip';
+  let gaTab = null;   // persists the chosen tab across re-renders within a session (e.g. after a language change)
+  function renderGetApp() {
+    const box = $('#getAppBox');
+    if (!box) return;
+    if (!gaTab) gaTab = guessPlatform();
+    const androidSvg = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.6 9.48l1.84-3.18a.5.5 0 0 0-.86-.5l-1.87 3.23a8.9 8.9 0 0 0-7.42 0L7.42 5.8a.5.5 0 1 0-.86.5L8.4 9.48A8.4 8.4 0 0 0 4 16.5h16a8.4 8.4 0 0 0-4.4-7.02zM9 14.25a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm6 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/></svg>';
+    const appleSvg = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.3 12.2c0-2.1 1.7-3.1 1.8-3.2-1-1.4-2.5-1.6-3-1.6-1.3-.1-2.5.8-3.1.8-.6 0-1.6-.7-2.7-.7-1.4 0-2.7.8-3.4 2.1-1.5 2.5-.4 6.3 1 8.3.7 1 1.5 2.1 2.6 2a10 10 0 0 0 1.2-.1c.5-.2 1-.2 1.6 0 .6.2 1 .1 1.6-.1 1.1-.4 1.9-1.6 2.6-2.6a7.3 7.3 0 0 1-1.7-2.9c.1 0-1.5-.8-1.5-2zM14.1 5.9c.6-.7 1-1.7.9-2.6-.9.1-1.9.6-2.5 1.3-.5.6-1 1.6-.9 2.5.9.1 1.9-.4 2.5-1.2z"/></svg>';
+    box.innerHTML = `
+      <div class="tcard gacard">
+        <div class="gatabs" role="tablist" aria-label="${esc(t('getAppHeading'))}">
+          <button role="tab" data-v="android" aria-pressed="${gaTab === 'android'}">${androidSvg}${esc(t('getAppAndroidTab'))}</button>
+          <button role="tab" data-v="ios" aria-pressed="${gaTab === 'ios'}">${appleSvg}${esc(t('getAppIosTab'))}</button>
+        </div>
+        ${gaTab === 'android' ? `
+          <p class="lp-sub" style="margin:0">${esc(t('getAppSub'))}</p>
+          <a id="apkDownloadLink" class="btn primary small" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none;align-self:flex-start" href="${esc(APK_URL)}">${esc(t('getAppBtn'))}</a>
+        ` : `
+          <ol class="gasteps">
+            <li><span class="ganum">1</span><span>${esc(t('getAppIosStep1'))}</span></li>
+            <li><span class="ganum">2</span><span>${esc(t('getAppIosStep2'))}</span></li>
+            <li><span class="ganum">3</span><span>${esc(t('getAppIosStep3'))}</span></li>
+          </ol>
+          <p class="ganote">${esc(t('getAppIosNote'))}</p>
+        `}
+      </div>
+    `;
+    $$('.gatabs button', box).forEach(b => b.addEventListener('click', () => { gaTab = b.dataset.v; renderGetApp(); }));
+  }
+
   function renderNotifBox() {
     const box = $('#notifBox');
     if (!box) return;
@@ -1365,31 +1440,48 @@ if (typeof document !== 'undefined') (function () {
     });
   }
 
-  // Everyone's feedback/bug/support submission box. Always visible in Settings, no login required.
+  // Feedback/bug/support submission card. Requires an account (per the owner's request: tickets are now
+  // tied to a real identity, same reasoning as gating Telegram +Add and cross-device sync) - a signed-out
+  // visitor sees a login prompt instead of the form, via openAuthGate(), not a disabled textarea they can
+  // type into and then get rejected on submit.
+  const TICKET_MAX = 2000;
   function renderTicketBox() {
     const box = $('#ticketBox');
     if (!box) return;
+    if (!Auth.uid) {
+      box.innerHTML = `<div class="tcard" style="text-align:center;padding:22px 16px">
+        <p class="lp-sub" style="margin:0 0 12px">${esc(t('feedbackLoginBody'))}</p>
+        <button class="btn primary small" data-act="agGoto">${esc(t('agGoToAccount'))}</button>
+      </div>`;
+      return;
+    }
     box.innerHTML = `
-      <div class="seg" id="ticketKindSeg" role="group" aria-label="${t('feedbackHeading')}">
-        <button data-v="bug" aria-pressed="true">${t('ticketKindBug')}</button>
-        <button data-v="support" aria-pressed="false">${t('ticketKindSupport')}</button>
-        <button data-v="feedback" aria-pressed="false">${t('ticketKindFeedback')}</button>
+      <div class="tcard">
+        <div class="tseg" id="ticketKindSeg" role="group" aria-label="${esc(t('feedbackHeading'))}">
+          <button data-v="bug" aria-pressed="true">${esc(t('ticketKindBug'))}</button>
+          <button data-v="support" aria-pressed="false">${esc(t('ticketKindSupport'))}</button>
+          <button data-v="feedback" aria-pressed="false">${esc(t('ticketKindFeedback'))}</button>
+        </div>
+        <textarea id="ticketMsg" class="tmsg" rows="4" maxlength="${TICKET_MAX}" placeholder="${esc(t('ticketPlaceholder'))}"></textarea>
+        <div class="tfoot">
+          <span class="tcount" id="ticketCount">0 / ${TICKET_MAX}</span>
+          <button id="ticketSendBtn" class="btn primary small">${esc(t('ticketSend'))}</button>
+        </div>
       </div>
-      <textarea id="ticketMsg" rows="3" placeholder="${t('ticketPlaceholder')}" style="width:100%;margin-top:8px;padding:10px;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;resize:vertical"></textarea>
-      <button id="ticketSendBtn" class="btn primary small" style="margin-top:8px">${t('ticketSend')}</button>
     `;
     let kind = 'bug';
     $$('#ticketKindSeg button', box).forEach(b => b.addEventListener('click', () => {
       kind = b.dataset.v;
       $$('#ticketKindSeg button', box).forEach(x => x.setAttribute('aria-pressed', x === b));
     }));
+    const ta = $('#ticketMsg', box), count = $('#ticketCount', box);
+    ta.addEventListener('input', () => { count.textContent = ta.value.length + ' / ' + TICKET_MAX; });
     $('#ticketSendBtn', box).addEventListener('click', async () => {
-      const ta = $('#ticketMsg', box);
       const btn = $('#ticketSendBtn', box);
       btn.disabled = true;
       const r = await Tickets.submit(kind, ta.value);
       btn.disabled = false;
-      if (r.ok) { ta.value = ''; toast(t('ticketSent')); }
+      if (r.ok) { ta.value = ''; count.textContent = '0 / ' + TICKET_MAX; toast(t('ticketSent')); }
       else { toast(r.error); }
     });
   }
@@ -1472,7 +1564,7 @@ if (typeof document !== 'undefined') (function () {
       // one is gated on sign-in, per the owner's request. Enforced here (not just in the UI) so this can't be
       // bypassed by calling propose() some other way; there is no further Firestore-side check for this,
       // since qs_channels stays an open-create collection for any signed-in identity (see firestore.rules).
-      if (!Auth.uid) { toast(t('loginToLinkChannels')); return false; }
+      if (!Auth.uid) { openAuthGate('agAddChannelsTitle', 'agAddChannelsBody'); return false; }
       const name = normalizeChannel(raw);
       if (!CHANNEL_RX.test(name)) { toast('Use the form t/channelname \u2013 letters, numbers and underscores only.'); return false; }
       try {
@@ -1661,7 +1753,12 @@ if (typeof document !== 'undefined') (function () {
      to the owner account by firestore.rules - not just hidden in the UI, since a client-side check alone is
      never real security (same note as isOwner() elsewhere in this file). */
   const Tickets = {
+    // Requires sign-in (per the owner's request - tickets are now tied to a real account, same reasoning
+    // as gating Telegram +Add and cross-device sync). Checked here too, not just in the UI (renderTicketBox()
+    // hides the form for guests) and in firestore.rules (the real enforcement) - a client-side check alone
+    // is never real security by itself, same note as isOwner() elsewhere in this file.
     async submit(kind, message) {
+      if (!Auth.uid) return { ok: false, error: t('feedbackLoginTitle') };
       const text = (message || '').trim();
       if (!text) return { ok: false, error: t('ticketEmpty') };
       const id = 'tk' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 10);
@@ -1670,14 +1767,14 @@ if (typeof document !== 'undefined') (function () {
         message: toFsValue(text.slice(0, 4000)),
         status: toFsValue('open'),
         created_at: toFsValue(new Date().toISOString()),
-        // Best-effort context for the owner triaging later - never required, never shown to other visitors
-        // (get/list is owner-only in firestore.rules), so including it carries no privacy exposure beyond
-        // what the owner already sees for anyone who contacts them directly.
-        user_email: toFsValue((Auth && Auth.email) || ''),
+        // Now always the signed-in account's own address (firestore.rules checks it matches the caller's
+        // auth token) - never empty, since submit() requires Auth.uid above.
+        user_email: toFsValue(Auth.email || ''),
       };
       try {
+        const headers = Object.assign({ 'Content-Type': 'application/json' }, await Sync.authHeaders());
         const r = await fetch(`${FS_BASE}/qs_tickets/${id}?key=${FIREBASE.apiKey}`, {
-          method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fields })
+          method: 'PATCH', headers, body: JSON.stringify({ fields })
         });
         if (!r.ok) throw new Error('HTTP ' + r.status);
         track('ticket_submit', { kind: kind || 'feedback' });
@@ -2227,6 +2324,30 @@ if (typeof document !== 'undefined') (function () {
     document.body.classList.add('noscroll');
     const x = box.querySelector('.vclose'); if (x) x.focus();
   }
+  // Shared "log in to do that" popup (replaces the old plain-text toast for the same moments: Telegram
+  // +Add, Sync Code, and ticket submission while signed out). "Go to Account" closes the popup and jumps
+  // to Settings > Account so the person can actually act on it, rather than just being told no.
+  let agOpener = null;
+  function openAuthGate(titleKey, bodyKey) {
+    const box = $('#authGate');
+    if (!box) { toast(t(bodyKey)); return; }   // safety net if an older index.html is still cached
+    $('#agTitle').textContent = t(titleKey);
+    $('#agBody').textContent = t(bodyKey);
+    agOpener = document.activeElement;
+    box.hidden = false;
+    document.body.classList.add('noscroll');
+    track('auth_gate_shown', { reason: titleKey });
+    const g = $('#agGoto'); if (g) g.focus();
+  }
+  function closeAuthGate() {
+    const box = $('#authGate');
+    if (!box || box.hidden) return;
+    box.hidden = true;
+    document.body.classList.remove('noscroll');
+    if (agOpener && document.contains(agOpener)) agOpener.focus();
+    agOpener = null;
+  }
+
   function closeVideo() {
     const box = $('#videoModal');
     if (!box || box.hidden) return;
@@ -2633,9 +2754,12 @@ Give a concise, event-specific analysis - decide for yourself which structure be
   }
 
 
+  // Sync-by-code is now guest-only UI that just points at login (see the #syncBlock markup in index.html) -
+  // there is no code to show any more, so this just keeps the block's visibility in sync with sign-in state.
+  // renderAccount() also sets this on every sign-in/sign-out, this call covers the initial page load.
   function renderSyncCode() {
-    const el = $('#syncCodeShow');
-    if (el) el.textContent = S.syncCode || '\u2026';
+    const box = $('#syncBlock');
+    if (box) box.hidden = !!Auth.uid;
   }
 
   // Linking a NEW channel needs an account (see the note on Channels.propose(), which is the actual block -
@@ -2739,7 +2863,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     // blocks were always rendered on load regardless of which tab was showing. Now that it's reached only via
     // the Settings tab, re-render its dynamic bits on every visit so they're never stale (e.g. after signing
     // in from the landing page while this tab wasn't open yet).
-    if (name === 'settings') { renderAccount(); renderChannels(); renderSyncCode(); renderNotifBox(); renderTicketBox(); renderTicketAdmin(); }
+    if (name === 'settings') { renderAccount(); renderChannels(); renderSyncCode(); renderGetApp(); renderNotifBox(); renderTicketBox(); renderTicketAdmin(); }
   }
 
   /* ---------- export ---------- */
@@ -2844,6 +2968,8 @@ Give a concise, event-specific analysis - decide for yourself which structure be
         if (it) openVideo(it, el);
       }
       else if (act === 'vclose') { closeVideo(); }
+      else if (act === 'agclose') { closeAuthGate(); }
+      else if (act === 'agGoto') { closeAuthGate(); setTab('settings'); const eb = $('#authEmail'); if (eb) eb.focus(); }
       else if (act === 'fi') { S.f.imp = v; renderControls(); renderList(); }
       else if (act === 'fc') { S.f.country = S.f.country === v ? '' : v; renderControls(); renderList(); }
       else if (act === 'fs') { S.f.sector = S.f.sector === v ? '' : v; renderControls(); renderList(); }
@@ -2956,14 +3082,27 @@ Give a concise, event-specific analysis - decide for yourself which structure be
   });
   document.addEventListener('keydown', ev => {
     const box = $('#videoModal');
-    if (!box || box.hidden) return;
-    if (ev.key === 'Escape') { ev.preventDefault(); closeVideo(); return; }
-    if (ev.key === 'Tab') {                      // keep keyboard focus inside the open player
-      const f = [...box.querySelectorAll('button, a[href], iframe')].filter(e => !e.disabled);
-      if (!f.length) return;
-      const first = f[0], last = f[f.length - 1];
-      if (ev.shiftKey && document.activeElement === first) { ev.preventDefault(); last.focus(); }
-      else if (!ev.shiftKey && document.activeElement === last) { ev.preventDefault(); first.focus(); }
+    if (box && !box.hidden) {
+      if (ev.key === 'Escape') { ev.preventDefault(); closeVideo(); return; }
+      if (ev.key === 'Tab') {                      // keep keyboard focus inside the open player
+        const f = [...box.querySelectorAll('button, a[href], iframe')].filter(e => !e.disabled);
+        if (!f.length) return;
+        const first = f[0], last = f[f.length - 1];
+        if (ev.shiftKey && document.activeElement === first) { ev.preventDefault(); last.focus(); }
+        else if (!ev.shiftKey && document.activeElement === last) { ev.preventDefault(); first.focus(); }
+      }
+      return;
+    }
+    const gate = $('#authGate');
+    if (gate && !gate.hidden) {
+      if (ev.key === 'Escape') { ev.preventDefault(); closeAuthGate(); return; }
+      if (ev.key === 'Tab') {
+        const f = [...gate.querySelectorAll('button')].filter(e => !e.disabled);
+        if (!f.length) return;
+        const first = f[0], last = f[f.length - 1];
+        if (ev.shiftKey && document.activeElement === first) { ev.preventDefault(); last.focus(); }
+        else if (!ev.shiftKey && document.activeElement === last) { ev.preventDefault(); first.focus(); }
+      }
     }
   });
   $('#q').addEventListener('input', e => { S.f.q = e.target.value; renderControls(); renderList(); });
@@ -2974,17 +3113,10 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     if (ok) inp.value = '';
   });
   $('#tgInput').addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); $('#tgAdd').click(); } });
-  $('#syncCopy').addEventListener('click', async () => {
-    try { await navigator.clipboard.writeText(S.syncCode || ''); toast('Sync code copied.'); }
-    catch (e) { toast('Couldn\u2019t copy automatically \u2013 the code is shown above to copy by hand.'); }
-  });
-  $('#syncUse').addEventListener('click', async () => {
-    const inp = $('#syncInput'); const v = inp.value;
-    if (!v.trim()) return;
-    const ok = await Sync.switchTo(v);
-    if (ok) { inp.value = ''; renderSyncCode(); }
-  });
-  $('#syncInput').addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); $('#syncUse').click(); } });
+  // Sync-by-code UI (#syncCopy/#syncUse/#syncInput) was removed from index.html - syncing now requires an
+  // account (see renderSyncCode()); Sync.switchTo()/the code itself still exist internally since Sync.code
+  // is also the guest local-cache key for saves/dismisses/channels on a single device, just with no more
+  // UI to manually copy/paste it between devices.
   $('#pdfBtn').addEventListener('click', exportPDF);
   $('#csvBtn').addEventListener('click', exportCSV);
 
