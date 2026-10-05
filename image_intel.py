@@ -155,7 +155,23 @@ def search_image(query: str, key: str, cx: str, http, budget: Budget, safe: str,
         budget.block(8 if reason in ("dailyLimitExceeded", "quotaExceeded") else 1)
         raise QuotaError(f"Custom Search quota or rate limit ({reason or r.status_code})")
     if r.status_code in (400, 401, 403):
-        raise AuthError(f"Custom Search rejected the request (HTTP {r.status_code} {reason})")
+        msg = ""
+        try:
+            msg = (r.json().get("error") or {}).get("message", "")
+        except Exception:  # noqa: BLE001
+            pass
+        # Google's exact wording when the Cloud project has no billing account linked - the API can show
+        # as "enabled" in the console and the key can be perfectly valid, but every request is still
+        # refused with this message until billing is linked (the daily quota itself stays free either
+        # way). This is a standing configuration issue, not a one-off blip, so back off for a few hours
+        # like a quota hit instead of spending a query on every single pipeline run forever.
+        if "does not have the access" in msg.lower():
+            budget.block(6)
+            raise AuthError("no billing account is linked to the Google Cloud project for this API key - "
+                             "Custom Search JSON API requires one even for free-tier use "
+                             "(console.cloud.google.com/billing). Pausing image search for a few hours.")
+        budget.block(1)
+        raise AuthError(f"Custom Search rejected the request (HTTP {r.status_code} {reason or msg})")
     raise TemporaryError(f"Custom Search HTTP {r.status_code} {reason}".strip())
 
 
@@ -226,7 +242,7 @@ def enrich_feed(feed: dict, state: dict, settings: dict, *, now: dt.datetime, ht
             except (QuotaError, AuthError) as exc:
                 log(f"  image search stopped: {redact(exc, secrets)}")
                 stats["queries"] = budget.used - units_at_start
-                return finish("quota" if isinstance(exc, QuotaError) else "no_key")
+                return finish("quota" if isinstance(exc, QuotaError) else "auth_error")
             except TemporaryError as exc:
                 log(f"  {item.get('id', '?')}: temporary problem, will retry ({redact(exc, secrets)})")
         stats["queries"] = budget.used - units_at_start
