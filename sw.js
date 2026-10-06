@@ -1,21 +1,42 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-33-v1';  // Fixed a real bug: tracking "Maruti" (not the full "Maruti Suzuki")
-                                      // produced NASDAQ:MARUTI - a symbol that doesn't exist - because
-                                      // guessSymbol() only ever did an EXACT name/alias match; anything typed
-                                      // slightly differently fell straight through to the generic NASDAQ
-                                      // default, which is a wrong-country guess whenever the company is
-                                      // actually a known non-US one. Two fixes: (1) added the missing
-                                      // "Maruti" alias to Maruti Suzuki's COMPANY_ROWS entry, same pattern
-                                      // already used for Mahindra/TCS/SBI/Reliance/Airtel; (2) guessSymbol()
-                                      // now also tries a partial/substring match (either direction, 3+ chars
-                                      // to avoid short-string false positives) before giving up and
-                                      // defaulting to NASDAQ, so a near-miss on a known company still lands
-                                      // on the right exchange even without a hand-added alias for every
-                                      // possible shortening. Bumped for the same reason as every prior bump -
-                                      // the service worker caches index.html/app.js itself, so without a new
-                                      // VERSION an already-installed visitor can keep seeing the old page.
+const VERSION = 'gni-phase3-36-v1';  // The big one: guessSymbol() now checks a full BSE equity scrip
+                                      // lookup (BSE_SCRIP_LOOKUP in app.js) - ~4,800 companies built from
+                                      // BSE's own official master equity list (bseindia.com, user-supplied
+                                      // this round), not guessed or scraped. Previously only ~115 companies
+                                      // had a verified real ticker (the hand-curated COMPANIES list); every
+                                      // other BSE-listed company fell through to a name-stripping guess that
+                                      // kept producing wrong/nonexistent symbols. This is the difference
+                                      // between "verified a sample by hand" and "actually covers the
+                                      // exchange" - typing basically any real BSE-listed company name now
+                                      // gets its real ticker. Tickers are derived with a confirmed,
+                                      // mechanical rule (not a guess): TradingView replaces any run of
+                                      // non-alphanumeric characters in BSE's raw Security Id with a single
+                                      // underscore (BSE's own data says Mahindra & Mahindra's Security Id is
+                                      // literally "M&M" and Bajaj Auto's is "BAJAJ-AUTO"; TradingView shows
+                                      // both as M_M / BAJAJ_AUTO - confirmed directly against live
+                                      // TradingView pages for this exact pattern).
+                                      //
+                                      // Two real bugs caught and fixed while building this: (1) "Jio
+                                      // Financial Services" - a real company demerged from Reliance in 2023,
+                                      // ticker JIOFIN - was being swallowed by the existing "Jio" alias's
+                                      // own partial match and incorrectly routed to Reliance's ticker; it now
+                                      // has its own explicit entry. (2) The partial/freehand-match fallback
+                                      // (both the original COMPANIES one and this new broad one) used to do a
+                                      // raw substring check, which meant short real tickers that are also
+                                      // common English letter sequences - SIS, ANS, REC, and "persistent"
+                                      // containing "sis" was an actual case this surfaced - could misfire on
+                                      // totally unrelated input ("Crisis Management Corp" matching SIS Ltd
+                                      // purely because the letters appear inside "cri-SIS"). Both fallbacks
+                                      // now match whole words only, not raw substrings.
+                                      //
+                                      // Bumped for the same reason as every prior bump - the service worker
+                                      // caches index.html/app.js itself, so without a new VERSION an
+                                      // already-installed visitor can keep seeing the old page. This is also
+                                      // by far the largest app.js has been (BSE_SCRIP_LOOKUP alone is ~150KB
+                                      // of data) - still well within normal PWA page-weight budgets and
+                                      // cached once by this same service worker, not re-downloaded per visit.
 const SHELL = ['./', 'index.html', 'app.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {
