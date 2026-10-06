@@ -1,15 +1,15 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-29-v1';  // Found and fixed the real "View Chart" bug: guessSymbol() referenced
-                                      // "E.COMPANIES" but it's defined inside the Engine IIFE itself, where
-                                      // there is no "E" (that name only exists in the UI layer, outside
-                                      // Engine) - every call threw "ReferenceError: E is not defined",
-                                      // caught by the diagnostic toast added in the previous version.
-                                      // Verified by actually running the code (not just reading it) before
-                                      // and after the fix. Bumped for the same reason as every prior bump -
-                                      // the service worker caches index.html/app.js itself, so without a new
-                                      // VERSION an already-installed visitor can keep seeing the old page.
+const VERSION = 'gni-phase3-30-v1';  // Redesigned the Investment tab's company row: it's now a proper
+                                      // card (name + a small count badge on top, actions below) instead of
+                                      // a bare text line - View Chart is a round pill button with an icon,
+                                      // Remove is a quiet round icon button so it doesn't compete with View
+                                      // Chart for attention. Fixes long names (e.g. "Mahindra & Mahindra")
+                                      // wrapping awkwardly into the old single-line layout. Bumped for the
+                                      // same reason as every prior bump - the service worker caches
+                                      // index.html/app.js itself, so without a new VERSION an already-
+                                      // installed visitor can keep seeing the old page.
 const SHELL = ['./', 'index.html', 'app.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {

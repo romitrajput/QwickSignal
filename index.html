@@ -200,10 +200,23 @@ input[type=search]:focus-visible{border-color:var(--accent);box-shadow:0 0 0 4px
 .grp{display:flex;align-items:center;gap:8px;margin:24px 0 10px;font-size:16px}
 .grp .sw{width:10px;height:10px;flex:none}
 .grp .n{margin-left:auto;font-weight:600;font-size:13px;color:var(--ink2);font-variant-numeric:tabular-nums}
-.grp-company{display:flex;align-items:center;gap:8px;margin:14px 0 8px;padding:0 0 0 14px;font-size:14px;font-weight:700;color:var(--ink2)}
-.grp-company .n{font-weight:600;font-size:12px;color:var(--ink2);font-variant-numeric:tabular-nums}
-.grp-company .link{font-size:12px;font-weight:600}
-.grp-company .link:first-of-type{margin-left:auto}
+/* Company row (Investment tab): a self-contained card rather than a bare text line, so a tracked
+   company reads as one scannable unit - name+count up top, actions below. View Chart is the one
+   action someone reaches for on every visit, so it gets a real pill button; Remove is rare, so it's
+   a quiet round icon button rather than a second pill competing for the same attention. --accent and
+   --crit are the same red in this palette, so the two are told apart by weight/shape, not color. */
+.grp-company{display:flex;flex-direction:column;gap:9px;margin:14px 0 8px;padding:12px 12px 11px;border-radius:var(--radius-ctrl);border:1px solid var(--line);background:var(--surface)}
+.gc-top{display:flex;align-items:baseline;gap:8px}
+.gc-name{font-size:15px;font-weight:700;color:var(--ink);line-height:1.3}
+.gc-top .n{margin-left:auto;flex:none;min-width:20px;padding:2px 7px;border-radius:999px;background:var(--paper);color:var(--ink2);font-weight:700;font-size:11.5px;text-align:center;font-variant-numeric:tabular-nums}
+.gc-actions{display:flex;align-items:center;gap:8px}
+.btn-chart{display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:0 14px;border-radius:999px;border:1.5px solid var(--accent);background:transparent;color:var(--accent);font-weight:700;font-size:12.5px;cursor:pointer;transition:background-color .15s var(--ease),color .15s var(--ease)}
+.btn-chart svg{width:14px;height:14px;flex:none}
+@media (hover:hover){.btn-chart:hover{background:var(--accent);color:var(--accent-ink)}}
+.gc-remove{flex:none;width:34px;height:34px;margin-left:auto;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;border:1.5px solid var(--line);background:transparent;color:var(--ink2);cursor:pointer;transition:border-color .15s var(--ease),color .15s var(--ease)}
+.gc-remove svg{width:14px;height:14px}
+@media (hover:hover){.gc-remove:hover{border-color:var(--crit);color:var(--crit)}}
+.btn-chart:focus-visible,.gc-remove:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .empty-note{margin:0 0 10px;padding:0 0 0 14px;font-size:13px;color:var(--ink2);font-style:italic}
 .entry{--c:var(--low);background:var(--surface);border-left:5px solid var(--c);border-radius:0 8px 8px 0;padding:12px 14px;margin:0 0 10px;cursor:pointer}
 .entry.imp-critical{--c:var(--crit)} .entry.imp-high{--c:var(--high)} .entry.imp-medium{--c:var(--med)} .entry.imp-low{--c:var(--low)}

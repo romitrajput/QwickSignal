@@ -2847,9 +2847,12 @@ Give a concise, event-specific analysis - decide for yourself which structure be
         const body = stories.length
           ? stories.map(entryWrapHTML).join('')
           : `<p class="empty-note">${esc(t('investNoNews'))}</p>`;
-        return `<h3 class="grp-company">${esc(c.company)}<span class="n">${stories.length}</span>
-          <button class="link" data-act="viewChart" data-v="${esc(c.company)}">${esc(t('viewChart'))}</button>
-          <button class="link lp-remove" data-act="untrack" data-v="${esc(c.company)}" aria-label="${esc(t('investRemove'))} ${esc(c.company)}">${esc(t('investRemove'))}</button>
+        return `<h3 class="grp-company">
+          <div class="gc-top"><span class="gc-name">${esc(c.company)}</span><span class="n">${stories.length}</span></div>
+          <div class="gc-actions">
+            <button class="btn-chart" data-act="viewChart" data-v="${esc(c.company)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l5-5 4 4 8-9"/><path d="M15 7h5v5"/></svg>${esc(t('viewChart'))}</button>
+            <button class="gc-remove" data-act="untrack" data-v="${esc(c.company)}" aria-label="${esc(t('investRemove'))} ${esc(c.company)}" title="${esc(t('investRemove'))}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+          </div>
         </h3>${body}`;
       }).join('');
       const sectorTotal = g.companies.reduce((n, c) => n + c.stories.filter(investmentStoryMatches).length, 0);
