@@ -1,13 +1,15 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-28-v1';  // Added a temporary-but-safe-to-keep diagnostic net: any uncaught JS
-                                      // error (including inside a data-act click handler like View Chart)
-                                      // now shows up as an on-screen toast, since a phone with no devtools
-                                      // previously had no way to see why a tap "did nothing". Bumped for the
-                                      // same reason as every prior bump - the service worker caches
-                                      // index.html/app.js itself, so without a new VERSION an already-
-                                      // installed visitor can keep seeing the old page indefinitely.
+const VERSION = 'gni-phase3-29-v1';  // Found and fixed the real "View Chart" bug: guessSymbol() referenced
+                                      // "E.COMPANIES" but it's defined inside the Engine IIFE itself, where
+                                      // there is no "E" (that name only exists in the UI layer, outside
+                                      // Engine) - every call threw "ReferenceError: E is not defined",
+                                      // caught by the diagnostic toast added in the previous version.
+                                      // Verified by actually running the code (not just reading it) before
+                                      // and after the fix. Bumped for the same reason as every prior bump -
+                                      // the service worker caches index.html/app.js itself, so without a new
+                                      // VERSION an already-installed visitor can keep seeing the old page.
 const SHELL = ['./', 'index.html', 'app.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {

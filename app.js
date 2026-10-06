@@ -181,7 +181,11 @@ const Engine = (function () {
     FR: 'EURONEXT', NL: 'EURONEXT', AU: 'ASX', BR: 'BVMF', CH: 'SIX', SA: 'TADAWUL', RU: 'MOEX'
   };
   function guessSymbol(name) {
-    const known = E.COMPANIES.find(c => c.name.toLowerCase() === name.toLowerCase()
+    // COMPANIES (not E.COMPANIES) - this function lives inside the Engine IIFE itself, where COMPANIES is
+    // already a local const (declared above). "E" is the name the UI layer uses *outside* Engine to refer
+    // to it (const E = Engine); referencing E here was a real bug - from inside Engine's own scope there is
+    // no E at all, so every call to guessSymbol() threw "ReferenceError: E is not defined" before this fix.
+    const known = COMPANIES.find(c => c.name.toLowerCase() === name.toLowerCase()
       || c.aliases.some(a => a.toLowerCase() === name.toLowerCase()));
     const exch = (known && EXCHANGE_BY_COUNTRY[known.code]) || 'NASDAQ';
     // A plain, deterministic guess: strip anything that isn't a letter/number, uppercase it. Right far more
