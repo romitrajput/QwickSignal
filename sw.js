@@ -1,12 +1,13 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-27-v1';  // Fixed "View Chart": the TradingView loader script was nested one
-                                      // DOM level too deep (inside .tradingview-widget-container__widget
-                                      // instead of beside it), so the chart area rendered blank. Bumped for
-                                      // the same reason as every prior bump noted below - the service worker
-                                      // caches index.html/app.js itself, so without a new VERSION an already-
-                                      // installed visitor can keep seeing the old (broken) page indefinitely.
+const VERSION = 'gni-phase3-28-v1';  // Added a temporary-but-safe-to-keep diagnostic net: any uncaught JS
+                                      // error (including inside a data-act click handler like View Chart)
+                                      // now shows up as an on-screen toast, since a phone with no devtools
+                                      // previously had no way to see why a tap "did nothing". Bumped for the
+                                      // same reason as every prior bump - the service worker caches
+                                      // index.html/app.js itself, so without a new VERSION an already-
+                                      // installed visitor can keep seeing the old page indefinitely.
 const SHELL = ['./', 'index.html', 'app.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {

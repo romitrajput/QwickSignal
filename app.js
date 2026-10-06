@@ -2488,7 +2488,12 @@ if (typeof document !== 'undefined') (function () {
   let cmOpener = null;
   function openChartModal(companyName, opener) {
     const box = $('#chartModal'), chart = $('#cmChart');
-    if (!box || !chart) return;
+    if (!box || !chart) {
+      // Silent otherwise - no exception, so the generic error net above wouldn't catch this case. Shows up
+      // if the #chartModal/#cmChart markup is somehow missing from the loaded page (stale/partial HTML).
+      toast('View Chart: missing modal markup (' + (!box ? '#chartModal' : '#cmChart') + ' not found).');
+      return;
+    }
     track('view_chart', { company: companyName });
     $('#cmTitle').textContent = companyName;
     const symbol = E.guessSymbol(companyName);
@@ -3210,6 +3215,22 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     toast('PDF saved to Downloads.');
   }
 
+  /* ---------- temporary diagnostic net ----------
+     An uncaught error anywhere in the app (not just inside the click handler below, which has its own
+     try/catch) used to fail completely silently on a phone with no devtools - a tap just did nothing, with
+     no way to tell what broke. These two surface the real browser error as a toast instead, which is how
+     we found and fixed real bugs (like the TradingView chart one) without guessing blind. Safe to leave in
+     permanently - they only fire on a genuine uncaught error/rejection, never during normal use. */
+  window.addEventListener('error', ev => {
+    console.error('[window.onerror]', ev.error || ev.message);
+    toast('App error: ' + (ev.error && ev.error.message ? ev.error.message : ev.message));
+  });
+  window.addEventListener('unhandledrejection', ev => {
+    console.error('[unhandledrejection]', ev.reason);
+    const r = ev.reason;
+    toast('App error: ' + (r && r.message ? r.message : String(r)));
+  });
+
   /* ---------- events ---------- */
   document.addEventListener('click', async ev => {
     if (SWIPE.justSwiped) { ev.preventDefault(); ev.stopPropagation(); return; }
@@ -3221,6 +3242,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     if (el && el.closest('#exportSeg')) { S.exportRange = el.dataset.v; renderExport(); return; }
     const act = el && el.dataset.act;
     if (act) {
+     try {
       const v = el.dataset.v;
       if (act === 'untrack') { Companies.remove(v); }
       else if (act === 'gotoWatchlist') { setTab('settings'); const inp = $('#invInput'); if (inp) inp.focus(); }
@@ -3311,6 +3333,14 @@ Give a concise, event-specific analysis - decide for yourself which structure be
         await DB.del(id); S.open.delete(id);
         renderAll();
       }
+     } catch (e) {
+       // Temporary diagnostic net (see the matching window.onerror/unhandledrejection hooks below): a
+       // data-act handler that throws used to fail completely silently - the click just did nothing, with
+       // no way for someone on a phone with no devtools to tell us why. Surfacing the real error as a toast
+       // is what let us find and fix real bugs instead of guessing blind.
+       console.error('[data-act:' + act + ']', e);
+       toast('Action error (' + act + '): ' + (e && e.message ? e.message : String(e)));
+     }
       return;
     }
     // tap on an entry toggles its details
