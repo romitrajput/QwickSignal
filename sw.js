@@ -1,15 +1,18 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-30-v1';  // Redesigned the Investment tab's company row: it's now a proper
-                                      // card (name + a small count badge on top, actions below) instead of
-                                      // a bare text line - View Chart is a round pill button with an icon,
-                                      // Remove is a quiet round icon button so it doesn't compete with View
-                                      // Chart for attention. Fixes long names (e.g. "Mahindra & Mahindra")
-                                      // wrapping awkwardly into the old single-line layout. Bumped for the
-                                      // same reason as every prior bump - the service worker caches
-                                      // index.html/app.js itself, so without a new VERSION an already-
-                                      // installed visitor can keep seeing the old page.
+const VERSION = 'gni-phase3-31-v1';  // Added a Stock/Sector toggle to the View Chart modal: alongside the
+                                      // single company's chart, Automotive/Banking/Metals & Mining/Pharma/
+                                      // Technology/Energy/Consumer/Infrastructure/Semiconductors/Aerospace/
+                                      // Defence stories can now also show the real NSE Nifty sectoral index
+                                      // (for Indian companies) or a global sector-ETF proxy (for everyone
+                                      // else) right next to the stock, one tap away. The toggle only appears
+                                      // when a sector actually has a sensible benchmark - sectors like
+                                      // Geopolitics/Economy/Climate have none, so no toggle shows rather than
+                                      // guessing a bad symbol. Bumped for the same reason as every prior
+                                      // bump - the service worker caches index.html/app.js itself, so
+                                      // without a new VERSION an already-installed visitor can keep seeing
+                                      // the old page.
 const SHELL = ['./', 'index.html', 'app.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {

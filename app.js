@@ -195,6 +195,39 @@ const Engine = (function () {
     return exch + ':' + ticker;
   }
 
+  /* ---------- sector index symbols (for the "View sector" chart, alongside the single-stock chart) ----------
+     Tata Motors is correctly tagged Automotive (COMPANY_ROWS above) - not a misclassification. This map gives
+     that same sector a benchmark index to chart next to the single stock, so e.g. an Automotive story shows
+     both Tata Motors AND the sector it moves with. Indian sectors map to the matching NSE Nifty sectoral index
+     (real, exchange-published indices - NIFTYAUTO, NIFTYBANK, etc.); sectors with no direct NSE sectoral index,
+     and non-Indian sectors in general, fall back to a widely-tracked global sector ETF as the closest available
+     benchmark. Deliberately short list: only sectors that actually have a sensible single benchmark are here -
+     everything else (Geopolitics, Economy, Climate, ...) has no stock-market index and isn't included, so
+     "View sector" simply doesn't appear for those stories rather than guessing a bad symbol. */
+  const SECTOR_INDEX = {
+    Automotive: { in: ['NSE:NIFTYAUTO', 'Nifty Auto'], global: ['AMEX:CARZ', 'Global Auto'] },
+    Banking: { in: ['NSE:NIFTYBANK', 'Nifty Bank'], global: ['AMEX:KBE', 'Global Banks'] },
+    'Metals & Mining': { in: ['NSE:NIFTYMETAL', 'Nifty Metal'], global: ['AMEX:XME', 'Global Metals & Mining'] },
+    Pharmaceuticals: { in: ['NSE:NIFTYPHARMA', 'Nifty Pharma'], global: ['NASDAQ:IBB', 'Global Biotech'] },
+    Technology: { in: ['NSE:NIFTYIT', 'Nifty IT'], global: ['NASDAQ:QQQ', 'Nasdaq 100'] },
+    Energy: { in: ['NSE:NIFTYENERGY', 'Nifty Energy'], global: ['AMEX:XLE', 'Global Energy'] },
+    Consumer: { in: ['NSE:NIFTYFMCG', 'Nifty FMCG'], global: ['AMEX:XLP', 'Global Consumer Staples'] },
+    Infrastructure: { in: ['NSE:NIFTYINFRA', 'Nifty Infra'], global: ['AMEX:PAVE', 'Global Infrastructure'] },
+    Semiconductors: { global: ['NASDAQ:SOXX', 'Semiconductors'] },
+    Aerospace: { global: ['AMEX:ITA', 'Aerospace & Defense'] },
+    Defence: { global: ['AMEX:ITA', 'Aerospace & Defense'] }
+  };
+  function guessSectorIndex(companyName, sector) {
+    const row = SECTOR_INDEX[sector];
+    if (!row) return null;
+    const known = COMPANIES.find(c => c.name.toLowerCase() === companyName.toLowerCase()
+      || c.aliases.some(a => a.toLowerCase() === companyName.toLowerCase()));
+    // Each side carries its own [symbol, label] pair - a US company under "Automotive" shows "Global Auto"
+    // next to the Nasdaq-listed global ETF, never the Indian "Nifty Auto" label next to a non-Indian symbol.
+    const [symbol, label] = (known && known.code === 'IN' && row.in) ? row.in : row.global;
+    return { symbol, label };
+  }
+
   /* ---------- sectors (most specific first, ties go to the earlier one) ---------- */
   const SECTORS = [
     { name: 'Semiconductors', kw: ['semiconductor*', 'chip', 'chipmaker*', 'chipmaking', 'chip-making', 'wafer*', 'foundry', 'foundries', 'lithography', 'EUV', 'fab', 'fabs', 'TSMC', 'ASML', 'Nvidia', 'GPU', 'DRAM', 'NAND', 'integrated circuit*', 'nanometre*', 'nanometer*', 'HBM'],
@@ -541,7 +574,7 @@ const Engine = (function () {
     analyze, compare, setOf, splitMessages, parseCSV, csvToDocs, toCSV, tokens, flag,
     classifyCountry, classifySector, classifyImportance, findCompanies, findDate,
     COUNTRY_NAMES, COUNTRY_BY_NAME, SECTOR_NAMES, IMP_ORDER, impRank, clip,
-    COMPANIES, guessSymbol
+    COMPANIES, guessSymbol, guessSectorIndex
   };
 })();
 
@@ -624,7 +657,8 @@ if (typeof document !== 'undefined') (function () {
       investEmptyTitle: 'Track companies to see investment-related news.', investEmptyBtn: 'Add companies to track',
       investNoNews: 'No recent news for this company.', investRemove: 'Remove',
       viewChart: 'View Chart', chartLoading: 'Loading chart…',
-      chartSearchHint: 'Wrong listing? Click the ticker name at the top-left of the chart to search for the right one.'
+      chartSearchHint: 'Wrong listing? Click the ticker name at the top-left of the chart to search for the right one.',
+      chartStock: 'Stock', chartSectorFallback: 'Sector'
     },
     hi: {
       linkPages: 'लिंक पेज', settings: 'सेटिंग्स', signals: 'सिग्नल्स', saved: 'सेव किए गए', export: 'एक्सपोर्ट',
@@ -2490,17 +2524,13 @@ if (typeof document !== 'undefined') (function () {
      a single reused one) because the widget's config is baked in at script-load time - there's no
      documented "change symbol" call for this particular embed, so a different company means a fresh widget. */
   let cmOpener = null;
-  function openChartModal(companyName, opener) {
-    const box = $('#chartModal'), chart = $('#cmChart');
-    if (!box || !chart) {
-      // Silent otherwise - no exception, so the generic error net above wouldn't catch this case. Shows up
-      // if the #chartModal/#cmChart markup is somehow missing from the loaded page (stale/partial HTML).
-      toast('View Chart: missing modal markup (' + (!box ? '#chartModal' : '#cmChart') + ' not found).');
-      return;
-    }
-    track('view_chart', { company: companyName });
-    $('#cmTitle').textContent = companyName;
-    const symbol = E.guessSymbol(companyName);
+  let cmState = null; // { stockSymbol, sectorSymbol, sectorLabel } for the currently-open modal, so the
+                       // Stock/Sector toggle can re-render without needing the company name/sector again.
+  function loadChartSymbol(symbol) {
+    // Builds one fresh widget for whichever symbol is currently selected (stock or sector index). A fresh
+    // script tag on every switch - same reason as before: the widget's config is baked in at script-load
+    // time, there's no documented "change symbol" call, so switching means tearing down and rebuilding.
+    const chart = $('#cmChart');
     chart.innerHTML = `<div class="tradingview-widget-container" style="height:100%;width:100%">
       <div class="tradingview-widget-container__widget" style="height:100%;width:100%"></div>
     </div>`;
@@ -2521,6 +2551,42 @@ if (typeof document !== 'undefined') (function () {
     // loader finds where to inject the chart. Appending it one level too deep (a bug in an earlier version
     // of this function) left the chart area blank with no visible error.
     chart.querySelector('.tradingview-widget-container').appendChild(script);
+  }
+  function setChartSeg(which) {
+    // which: 'stock' or 'sector'. No-op (and the toggle is hidden) when there's no sector symbol to show -
+    // see guessSectorIndex(): sectors with no sensible benchmark (Geopolitics, Economy, ...) return null
+    // rather than a guessed-wrong index symbol.
+    if (!cmState) return;
+    const seg = $('#cmSeg');
+    if (which === 'sector' && !cmState.sectorSymbol) which = 'stock';
+    const btns = seg ? seg.querySelectorAll('button[data-act="cmSeg"]') : [];
+    btns.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === which)));
+    loadChartSymbol(which === 'sector' ? cmState.sectorSymbol : cmState.stockSymbol);
+  }
+  function openChartModal(companyName, opener, sector) {
+    const box = $('#chartModal'), chart = $('#cmChart');
+    if (!box || !chart) {
+      // Silent otherwise - no exception, so the generic error net above wouldn't catch this case. Shows up
+      // if the #chartModal/#cmChart markup is somehow missing from the loaded page (stale/partial HTML).
+      toast('View Chart: missing modal markup (' + (!box ? '#chartModal' : '#cmChart') + ' not found).');
+      return;
+    }
+    track('view_chart', { company: companyName });
+    $('#cmTitle').textContent = companyName;
+    const stockSymbol = E.guessSymbol(companyName);
+    const idx = E.guessSectorIndex(companyName, sector); // null when this sector has no sensible benchmark
+    cmState = { stockSymbol, sectorSymbol: idx ? idx.symbol : null, sectorLabel: idx ? idx.label : null };
+    const seg = $('#cmSeg');
+    if (seg) {
+      seg.hidden = !idx; // one symbol only -> no point showing a toggle with nothing to switch to
+      const sectorBtn = seg.querySelector('[data-v="sector"]');
+      const sectorLabelEl = $('#cmSectorLabel');
+      if (idx && sectorLabelEl) sectorLabelEl.textContent = idx.label;
+      if (sectorBtn) sectorBtn.setAttribute('aria-pressed', 'false');
+      const stockBtn = seg.querySelector('[data-v="stock"]');
+      if (stockBtn) stockBtn.setAttribute('aria-pressed', 'true');
+    }
+    loadChartSymbol(stockSymbol);
     cmOpener = opener || document.activeElement;
     box.hidden = false;
     document.body.classList.add('noscroll');
@@ -2534,6 +2600,7 @@ if (typeof document !== 'undefined') (function () {
     document.body.classList.remove('noscroll');
     if (cmOpener && document.contains(cmOpener)) cmOpener.focus();
     cmOpener = null;
+    cmState = null;
   }
 
   function entryHTML(it) {
@@ -2850,7 +2917,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
         return `<h3 class="grp-company">
           <div class="gc-top"><span class="gc-name">${esc(c.company)}</span><span class="n">${stories.length}</span></div>
           <div class="gc-actions">
-            <button class="btn-chart" data-act="viewChart" data-v="${esc(c.company)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l5-5 4 4 8-9"/><path d="M15 7h5v5"/></svg>${esc(t('viewChart'))}</button>
+            <button class="btn-chart" data-act="viewChart" data-v="${esc(c.company)}" data-sector="${esc(g.sector)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l5-5 4 4 8-9"/><path d="M15 7h5v5"/></svg>${esc(t('viewChart'))}</button>
             <button class="gc-remove" data-act="untrack" data-v="${esc(c.company)}" aria-label="${esc(t('investRemove'))} ${esc(c.company)}" title="${esc(t('investRemove'))}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
           </div>
         </h3>${body}`;
@@ -3253,8 +3320,9 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       const v = el.dataset.v;
       if (act === 'untrack') { Companies.remove(v); }
       else if (act === 'gotoWatchlist') { setTab('settings'); const inp = $('#invInput'); if (inp) inp.focus(); }
-      else if (act === 'viewChart') { openChartModal(v, el); }
+      else if (act === 'viewChart') { openChartModal(v, el, el.dataset.sector); }
       else if (act === 'cmclose') { closeChartModal(); }
+      else if (act === 'cmSeg') { setChartSeg(v); }
       else if (act === 'ai') {
         const it = all().find(x => x.id === el.dataset.id);
         if (it) openAI(it, el.dataset.ai);

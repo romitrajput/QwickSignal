@@ -153,6 +153,8 @@ input[type=search]:focus-visible{border-color:var(--accent);box-shadow:0 0 0 4px
 /* segmented + chips */
 .seg{display:flex;border:1.5px solid var(--ink);border-radius:var(--radius-ctrl);overflow:hidden}
 .modeseg{margin-bottom:14px}
+.cmseg{margin:0 14px 10px;flex:none}
+.cmseg button{min-height:36px;font-size:13px}
 .seg button{flex:1;min-height:40px;border:0;background:transparent;font-weight:600;font-size:14px;cursor:pointer}
 .seg button+button{border-left:1.5px solid var(--ink)}
 .seg button[aria-pressed=true]{background:var(--ink);color:var(--paper)}
@@ -848,6 +850,10 @@ body.pre-app .top, body.pre-app main, body.pre-app .tabs{display:none}
     <div class="vhead">
       <div class="vtitle" id="cmTitle"></div>
       <button class="vclose" data-act="cmclose" aria-label="Close chart" title="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="seg cmseg" id="cmSeg" role="group" aria-label="Stock or sector" hidden>
+      <button type="button" data-act="cmSeg" data-v="stock" aria-pressed="true" data-i18n="chartStock">Stock</button>
+      <button type="button" data-act="cmSeg" data-v="sector" aria-pressed="false"><span id="cmSectorLabel">Sector</span></button>
     </div>
     <div class="vstage cstage"><div id="cmChart" class="cmchart"></div></div>
     <div class="vfoot"><span id="cmNote" data-i18n="chartSearchHint">Wrong listing? Click the ticker name at the top-left of the chart to search for the right one.</span></div>
