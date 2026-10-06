@@ -1,12 +1,12 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-26-v1';  // Added "View Chart" to the Investment tab: a TradingView Advanced
-                                      // Chart widget (free, no API key) with a 200-day moving average applied
-                                      // by default, opened per tracked company. Bumped for the same reason
-                                      // as every prior bump noted below - the service worker caches
-                                      // index.html/app.js itself, so without a new VERSION an already-
-                                      // installed visitor can keep seeing the old page indefinitely.
+const VERSION = 'gni-phase3-27-v1';  // Fixed "View Chart": the TradingView loader script was nested one
+                                      // DOM level too deep (inside .tradingview-widget-container__widget
+                                      // instead of beside it), so the chart area rendered blank. Bumped for
+                                      // the same reason as every prior bump noted below - the service worker
+                                      // caches index.html/app.js itself, so without a new VERSION an already-
+                                      // installed visitor can keep seeing the old (broken) page indefinitely.
 const SHELL = ['./', 'index.html', 'app.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {

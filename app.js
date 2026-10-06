@@ -2507,7 +2507,11 @@ if (typeof document !== 'undefined') (function () {
       studies: ['MASimple@tv-basicstudies'],
       studies_overrides: { 'moving average.length': 200 }
     });
-    chart.querySelector('.tradingview-widget-container__widget').appendChild(script);
+    // The loader script must be a SIBLING of .tradingview-widget-container__widget (both children of
+    // .tradingview-widget-container), not nested inside __widget itself - that's how TradingView's own
+    // loader finds where to inject the chart. Appending it one level too deep (a bug in an earlier version
+    // of this function) left the chart area blank with no visible error.
+    chart.querySelector('.tradingview-widget-container').appendChild(script);
     cmOpener = opener || document.activeElement;
     box.hidden = false;
     document.body.classList.add('noscroll');
