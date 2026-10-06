@@ -144,7 +144,7 @@ const Engine = (function () {
 
   /* ---------- companies (name | home country code | sector | extra aliases) ---------- */
   const COMPANY_ROWS = [
-    'Tata Motors|IN|Automotive', 'Maruti Suzuki|IN|Automotive', 'Mahindra & Mahindra|IN|Automotive|Mahindra', 'Ashok Leyland|IN|Automotive',
+    'Tata Motors|IN|Automotive', 'Maruti Suzuki|IN|Automotive|Maruti', 'Mahindra & Mahindra|IN|Automotive|Mahindra', 'Ashok Leyland|IN|Automotive',
     'Bajaj Auto|IN|Automotive', 'Tata Steel|IN|Metals & Mining', 'JSW Steel|IN|Metals & Mining', 'Hindalco|IN|Metals & Mining',
     'Reliance Industries|IN|Energy|Reliance', 'Infosys|IN|Technology', 'Tata Consultancy Services|IN|Technology|TCS', 'Wipro|IN|Technology',
     'HCLTech|IN|Technology', 'HDFC Bank|IN|Banking', 'ICICI Bank|IN|Banking', 'State Bank of India|IN|Banking|SBI', 'Adani|IN|Infrastructure',
@@ -193,8 +193,23 @@ const Engine = (function () {
     // already a local const (declared above). "E" is the name the UI layer uses *outside* Engine to refer
     // to it (const E = Engine); referencing E here was a real bug - from inside Engine's own scope there is
     // no E at all, so every call to guessSymbol() threw "ReferenceError: E is not defined" before this fix.
-    const known = COMPANIES.find(c => c.name.toLowerCase() === name.toLowerCase()
-      || c.aliases.some(a => a.toLowerCase() === name.toLowerCase()));
+    const n = name.toLowerCase();
+    let known = COMPANIES.find(c => c.name.toLowerCase() === n || c.aliases.some(a => a.toLowerCase() === n));
+    // Fallback: a partial/substring match (either direction) before giving up on finding this company at
+    // all. Bug this caught in practice: a user tracking "Maruti Suzuki" typed just "Maruti" - no exact name
+    // match, no alias for the short form (fixed separately above) - and with ONLY the exact-match check
+    // above, that silently fell through to the 'NASDAQ' default below and produced NASDAQ:MARUTI, a symbol
+    // that doesn't exist, for an Indian company. Defaulting an unmatched name to NASDAQ is a reasonable
+    // guess for a genuinely unknown/freehand company (most of this app's freehand tickers will be US names),
+    // but it's a wrong-country guess whenever the name is actually a known company typed slightly differently
+    // - this partial match catches that case first, so "Maruti" still resolves to the real IN/BSE listing.
+    if (!known && n.length >= 3) { // guard: below 3 chars, a substring match is more likely noise than signal
+                                    // (and "".includes(x) / x.includes("") quirks make very short strings
+                                    // match almost anything) - better to fall through to the NASDAQ default
+                                    // for those than risk matching the wrong company entirely.
+      known = COMPANIES.find(c => c.name.toLowerCase().includes(n) || n.includes(c.name.toLowerCase())
+        || c.aliases.some(a => a.toLowerCase().includes(n) || n.includes(a.toLowerCase())));
+    }
     const exch = (known && EXCHANGE_BY_COUNTRY[known.code]) || 'NASDAQ';
     // A plain, deterministic guess: strip anything that isn't a letter/number, uppercase it. Right far more
     // often than not for short, single-word names (AAPL, INFY-style), and for everything else the widget's
