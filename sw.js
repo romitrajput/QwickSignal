@@ -1,18 +1,23 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-31-v1';  // Added a Stock/Sector toggle to the View Chart modal: alongside the
-                                      // single company's chart, Automotive/Banking/Metals & Mining/Pharma/
-                                      // Technology/Energy/Consumer/Infrastructure/Semiconductors/Aerospace/
-                                      // Defence stories can now also show the real NSE Nifty sectoral index
-                                      // (for Indian companies) or a global sector-ETF proxy (for everyone
-                                      // else) right next to the stock, one tap away. The toggle only appears
-                                      // when a sector actually has a sensible benchmark - sectors like
-                                      // Geopolitics/Economy/Climate have none, so no toggle shows rather than
-                                      // guessing a bad symbol. Bumped for the same reason as every prior
-                                      // bump - the service worker caches index.html/app.js itself, so
-                                      // without a new VERSION an already-installed visitor can keep seeing
-                                      // the old page.
+const VERSION = 'gni-phase3-32-v1';  // Indian stocks/sectors now chart via BSE instead of NSE. Confirmed
+                                      // (TradingView's own widget-docs Data FAQ + Available Markets list)
+                                      // that NSE isn't licensed for TradingView's free embeddable widget AT
+                                      // ALL - not delayed, not plan-gated, just never shown ("This symbol is
+                                      // only available on TradingView" for every single NSE equity, no
+                                      // exception). BSE IS on that list and uses the same plain-ticker
+                                      // format, so EXCHANGE_BY_COUNTRY's IN entry and the sector-index map
+                                      // both switched from NSE/Nifty symbols to real BSE/S&P-BSE ones
+                                      // (BSE:TATAMOTORS, BSE:AUTO, BSE:BANK, BSE:METAL, BSE:TECK, BSE:OILGAS,
+                                      // BSE:FMCG, BSE:HC - each individually verified to exist as a
+                                      // TradingView widget symbol before being added). The real trade-off,
+                                      // now surfaced in the chart modal's own footer text instead of left
+                                      // silent: BSE data in the free widget is end-of-day only, not live
+                                      // intraday - a licensing limit on TradingView's side, not a bug here.
+                                      // Bumped for the same reason as every prior bump - the service worker
+                                      // caches index.html/app.js itself, so without a new VERSION an
+                                      // already-installed visitor can keep seeing the old page.
 const SHELL = ['./', 'index.html', 'app.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {

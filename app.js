@@ -175,9 +175,17 @@ const Engine = (function () {
      TradingView's Advanced Chart widget as the opening symbol. If the guess is wrong, the widget's own
      built-in symbol search (click the ticker name at the top-left of the chart - a standard feature of
      every TradingView embed) lets the user correct it in one click, right there, without leaving the chart.
-     This covers every tracked company, known or freehand, with nothing to keep updated on this end. */
+     This covers every tracked company, known or freehand, with nothing to keep updated on this end.
+
+     IN -> BSE, not NSE: confirmed via TradingView's own widget-docs Data FAQ and their Available Markets
+     list that NSE isn't among the exchanges TradingView is licensed to show in the free embeddable widget
+     AT ALL (any plan, any timeframe - "This symbol is only available on TradingView"), which is exactly the
+     dialog this was hitting for every Indian stock. BSE IS on that list and uses the same plain-ticker
+     format as NSE (BSE:TATAMOTORS, BSE:HDFCBANK, ...) so guessSymbol()'s existing ticker-guessing logic
+     below needs no change - only this exchange prefix. The one real trade-off: BSE data in the free widget
+     is end-of-day only (no live intraday candles), not a bug, a licensing limit on TradingView's side. */
   const EXCHANGE_BY_COUNTRY = {
-    IN: 'NSE', US: 'NASDAQ', GB: 'LSE', DE: 'XETR', JP: 'TSE', KR: 'KRX', CN: 'HKEX', TW: 'TPEX',
+    IN: 'BSE', US: 'NASDAQ', GB: 'LSE', DE: 'XETR', JP: 'TSE', KR: 'KRX', CN: 'HKEX', TW: 'TPEX',
     FR: 'EURONEXT', NL: 'EURONEXT', AU: 'ASX', BR: 'BVMF', CH: 'SIX', SA: 'TADAWUL', RU: 'MOEX'
   };
   function guessSymbol(name) {
@@ -198,21 +206,27 @@ const Engine = (function () {
   /* ---------- sector index symbols (for the "View sector" chart, alongside the single-stock chart) ----------
      Tata Motors is correctly tagged Automotive (COMPANY_ROWS above) - not a misclassification. This map gives
      that same sector a benchmark index to chart next to the single stock, so e.g. an Automotive story shows
-     both Tata Motors AND the sector it moves with. Indian sectors map to the matching NSE Nifty sectoral index
-     (real, exchange-published indices - NIFTYAUTO, NIFTYBANK, etc.); sectors with no direct NSE sectoral index,
-     and non-Indian sectors in general, fall back to a widely-tracked global sector ETF as the closest available
-     benchmark. Deliberately short list: only sectors that actually have a sensible single benchmark are here -
+     both Tata Motors AND the sector it moves with. Indian sectors map to the matching S&P BSE sectoral index
+     (real, exchange-published indices - BSE:AUTO, BSE:BANK, etc. - each verified to exist as a TradingView
+     widget symbol). NSE sectoral indices (NIFTYAUTO etc.) deliberately are NOT used here: confirmed via
+     TradingView's own Data FAQ that NSE is excluded from the free widget entirely - not delayed, not
+     restricted-by-plan, just never shown, same "This symbol is only available on TradingView" wall as NSE
+     equities. BSE sectoral indices are the free-widget-safe equivalent (same EOD-only limit as BSE stocks -
+     see EXCHANGE_BY_COUNTRY above). Sectors with no confirmed BSE sectoral index, and non-Indian sectors in
+     general, fall back to a widely-tracked global sector ETF as the closest available benchmark.
+     Deliberately short list: only sectors that actually have a sensible single benchmark are here -
      everything else (Geopolitics, Economy, Climate, ...) has no stock-market index and isn't included, so
      "View sector" simply doesn't appear for those stories rather than guessing a bad symbol. */
   const SECTOR_INDEX = {
-    Automotive: { in: ['NSE:NIFTYAUTO', 'Nifty Auto'], global: ['AMEX:CARZ', 'Global Auto'] },
-    Banking: { in: ['NSE:NIFTYBANK', 'Nifty Bank'], global: ['AMEX:KBE', 'Global Banks'] },
-    'Metals & Mining': { in: ['NSE:NIFTYMETAL', 'Nifty Metal'], global: ['AMEX:XME', 'Global Metals & Mining'] },
-    Pharmaceuticals: { in: ['NSE:NIFTYPHARMA', 'Nifty Pharma'], global: ['NASDAQ:IBB', 'Global Biotech'] },
-    Technology: { in: ['NSE:NIFTYIT', 'Nifty IT'], global: ['NASDAQ:QQQ', 'Nasdaq 100'] },
-    Energy: { in: ['NSE:NIFTYENERGY', 'Nifty Energy'], global: ['AMEX:XLE', 'Global Energy'] },
-    Consumer: { in: ['NSE:NIFTYFMCG', 'Nifty FMCG'], global: ['AMEX:XLP', 'Global Consumer Staples'] },
-    Infrastructure: { in: ['NSE:NIFTYINFRA', 'Nifty Infra'], global: ['AMEX:PAVE', 'Global Infrastructure'] },
+    Automotive: { in: ['BSE:AUTO', 'BSE Auto'], global: ['AMEX:CARZ', 'Global Auto'] },
+    Banking: { in: ['BSE:BANK', 'BSE Bankex'], global: ['AMEX:KBE', 'Global Banks'] },
+    'Metals & Mining': { in: ['BSE:METAL', 'BSE Metal'], global: ['AMEX:XME', 'Global Metals & Mining'] },
+    Healthcare: { in: ['BSE:HC', 'BSE Healthcare'], global: ['NASDAQ:IBB', 'Global Biotech'] },
+    Pharmaceuticals: { global: ['NASDAQ:IBB', 'Global Biotech'] }, // no confirmed BSE pharma-specific index - BSE:HC is broader healthcare, not swapped in to avoid overclaiming
+    Technology: { in: ['BSE:TECK', 'BSE Teck'], global: ['NASDAQ:QQQ', 'Nasdaq 100'] },
+    Energy: { in: ['BSE:OILGAS', 'BSE Oil & Gas'], global: ['AMEX:XLE', 'Global Energy'] },
+    Consumer: { in: ['BSE:FMCG', 'BSE FMCG'], global: ['AMEX:XLP', 'Global Consumer Staples'] },
+    Infrastructure: { global: ['AMEX:PAVE', 'Global Infrastructure'] }, // no confirmed BSE infra index
     Semiconductors: { global: ['NASDAQ:SOXX', 'Semiconductors'] },
     Aerospace: { global: ['AMEX:ITA', 'Aerospace & Defense'] },
     Defence: { global: ['AMEX:ITA', 'Aerospace & Defense'] }
@@ -658,7 +672,8 @@ if (typeof document !== 'undefined') (function () {
       investNoNews: 'No recent news for this company.', investRemove: 'Remove',
       viewChart: 'View Chart', chartLoading: 'Loading chart…',
       chartSearchHint: 'Wrong listing? Click the ticker name at the top-left of the chart to search for the right one.',
-      chartStock: 'Stock', chartSectorFallback: 'Sector'
+      chartStock: 'Stock', chartSectorFallback: 'Sector',
+      chartEodHint: 'Indian exchange data shown here is end-of-day, not live intraday - a data-licensing limit on TradingView’s side, not a bug in this app.'
     },
     hi: {
       linkPages: 'लिंक पेज', settings: 'सेटिंग्स', signals: 'सिग्नल्स', saved: 'सेव किए गए', export: 'एक्सपोर्ट',
@@ -2551,6 +2566,11 @@ if (typeof document !== 'undefined') (function () {
     // loader finds where to inject the chart. Appending it one level too deep (a bug in an earlier version
     // of this function) left the chart area blank with no visible error.
     chart.querySelector('.tradingview-widget-container').appendChild(script);
+    // BSE data in TradingView's free widget is end-of-day only (a licensing limit on TradingView's side, not
+    // a bug here - see EXCHANGE_BY_COUNTRY's comment) - surfaced plainly rather than left for the user to
+    // wonder why an Indian stock's chart doesn't move intraday like a US one does.
+    const note = $('#cmNote');
+    if (note) note.textContent = symbol.startsWith('BSE:') ? t('chartEodHint') : t('chartSearchHint');
   }
   function setChartSeg(which) {
     // which: 'stock' or 'sector'. No-op (and the toggle is hidden) when there's no sector symbol to show -
