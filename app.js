@@ -3715,6 +3715,32 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     setTimeout(() => btn.classList.remove('pulse-once'), 1000);
   }
 
+  // BUG FIX: a single tap on #modeSym used to switch mode immediately. With nothing tracked yet in
+  // Investment mode, that single accidental tap (easy to land on, since it sits between Saved and Export
+  // in the tab bar) dropped the visitor straight onto the "Track companies to see investment-related
+  // news / Add companies to track" empty state - reported as an unwanted tab/screen appearing out of
+  // nowhere. Fix: #modeSym now requires two taps within MODE_TAP_WINDOW_MS to actually switch mode - a
+  // single tap only "arms" the button (a brief .armed highlight, see CSS, plus pulseModeSym()'s usual
+  // one-shot icon animation so the tap still feels acknowledged) and does nothing else; a second tap
+  // within the window completes the switch. A tap after the window has elapsed is treated as a fresh
+  // first tap, not a second one.
+  const MODE_TAP_WINDOW_MS = 600;
+  let modeArmedAt = 0;
+  function tryModeSwitch() {
+    const btn = $('#modeSym');
+    const now = Date.now();
+    if (now - modeArmedAt <= MODE_TAP_WINDOW_MS) {
+      modeArmedAt = 0;
+      if (btn) btn.classList.remove('armed');
+      setMode(S.mode === 'investment' ? 'news' : 'investment');
+      pulseModeSym();
+    } else {
+      modeArmedAt = now;
+      if (btn) { btn.classList.add('armed'); setTimeout(() => btn.classList.remove('armed'), MODE_TAP_WINDOW_MS); }
+      pulseModeSym();   // still plays the one-shot icon animation so a single tap isn't silent/dead-feeling
+    }
+  }
+
   /* ---------- tabs ---------- */
   function setTab(name) {
     if (name !== S.tab) track('tab_view', { tab: name });
@@ -3849,8 +3875,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     const el = ev.target.closest('[data-act],[data-tab],[data-v]');
     if (el && el.dataset.tab) { setTab(el.dataset.tab); return; }
     if (el && el.closest('#modeSym')) {
-      setMode(S.mode === 'investment' ? 'news' : 'investment');
-      pulseModeSym();
+      tryModeSwitch();
       return;
     }
     if (el && el.closest('#rangeSeg')) { S.f.range = el.dataset.v; renderControls(); renderList(); return; }

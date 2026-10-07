@@ -1,7 +1,25 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-41-v1';  // Three fixes this round:
+const VERSION = 'gni-phase3-42-v1';  // Three fixes this round, all on the #modeSym mode-switch button:
+                                      // (1) BUG: a single tap on #modeSym switched mode immediately, so one
+                                      // accidental tap (easy to land on, between Saved and Export in the tab
+                                      // bar) could drop a visitor straight onto Investment mode's "Track
+                                      // companies to see investment-related news / Add companies to track"
+                                      // empty state with no warning - reported as an unwanted screen
+                                      // appearing out of nowhere. Fixed by requiring two taps within 600ms
+                                      // to actually switch (tryModeSwitch() in app.js): a lone first tap now
+                                      // only "arms" the button (a brief ring-pulse so the tap still visibly
+                                      // registers) and leaves mode untouched; a second tap within the window
+                                      // completes the switch, same as before. (2) The button is now filled
+                                      // with a light-red circle across the whole tab (not just a thin border
+                                      // ring), with both the wifi and candlestick icons set to white so they
+                                      // read clearly against it - previously a CSS specificity bug (the
+                                      // shared .tabs button rule was more specific than a plain .modesym
+                                      // rule and silently won) left the icon grey regardless of what was set;
+                                      // fixed by keying the color/fill rules off #modeSym's id instead.
+                                      //
+                                      // Previous round's two fixes, still in effect:
                                       // (1) BUG: tracked companies (Investment watchlist) could vanish on a
                                       // fast tab/app switch. Sync.pushSoon() used to do nothing synchronous
                                       // at all - it only scheduled a 600ms-debounced network push, and the
