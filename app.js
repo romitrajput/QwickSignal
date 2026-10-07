@@ -952,8 +952,7 @@ if (typeof document !== 'undefined') (function () {
       obStep4Title: 'A news card', obStep4Body: 'Tap a story to read more, swipe right to save it, or swipe left to dismiss it.',
       obStep5Title: 'Saved', obStep5Body: 'Swipe a story right, or tap Save, to keep it here past the usual 24-hour window.',
       obStep6Title: 'Switch to Investment', obStep6Body: 'Double-tap to flip between Signal (general news) and Investment (news grouped by company). A single tap won’t switch it by accident.',
-      obStep7Title: 'Export', obStep7Body: 'Download your current feed as a CSV file any time.',
-      obStep8Title: 'Settings', obStep8Body: 'Channels, your investment watchlist, notifications, account, and feedback - all in one place.'
+      obStep7Title: 'Settings', obStep7Body: 'Channels, your investment watchlist, notifications, account, export, and feedback - all in one place.'
     },
     hi: {
       linkPages: 'लिंक पेज', settings: 'सेटिंग्स', signals: 'सिग्नल्स', saved: 'सेव किए गए', export: 'एक्सपोर्ट',
@@ -1010,8 +1009,7 @@ if (typeof document !== 'undefined') (function () {
       obStep4Title: 'एक न्यूज़ कार्ड', obStep4Body: 'अधिक पढ़ने के लिए किसी खबर पर टैप करें, सेव करने के लिए दाईं ओर स्वाइप करें, या हटाने के लिए बाईं ओर स्वाइप करें।',
       obStep5Title: 'सेव किए गए', obStep5Body: 'किसी खबर को दाईं ओर स्वाइप करें, या सेव पर टैप करें, ताकि वह सामान्य 24 घंटे के बाद भी यहां रहे।',
       obStep6Title: 'इन्वेस्टमेंट पर जाएं', obStep6Body: 'सिग्नल (सामान्य खबरें) और इन्वेस्टमेंट (कंपनी के अनुसार समूहित खबरें) के बीच बदलने के लिए डबल-टैप करें। एक टैप से गलती से नहीं बदलेगा।',
-      obStep7Title: 'एक्सपोर्ट', obStep7Body: 'अपना मौजूदा फ़ीड कभी भी CSV फ़ाइल के रूप में डाउनलोड करें।',
-      obStep8Title: 'सेटिंग्स', obStep8Body: 'चैनल, आपकी इन्वेस्टमेंट वॉचलिस्ट, नोटिफिकेशन, खाता, और फ़ीडबैक - सब एक ही जगह।'
+      obStep7Title: 'सेटिंग्स', obStep7Body: 'चैनल, आपकी इन्वेस्टमेंट वॉचलिस्ट, नोटिफिकेशन, खाता, एक्सपोर्ट, और फ़ीडबैक - सब एक ही जगह।'
     },
     mr: {
       linkPages: 'लिंक पेजेस', settings: 'सेटिंग्ज', signals: 'सिग्नल्स', saved: 'सेव्ह केलेले', export: 'एक्सपोर्ट',
@@ -1068,8 +1066,7 @@ if (typeof document !== 'undefined') (function () {
       obStep4Title: 'एक न्यूज कार्ड', obStep4Body: 'अधिक वाचण्यासाठी बातमीवर टॅप करा, सेव्ह करण्यासाठी उजवीकडे स्वाइप करा, किंवा काढण्यासाठी डावीकडे स्वाइप करा.',
       obStep5Title: 'सेव्ह केलेले', obStep5Body: 'एखादी बातमी उजवीकडे स्वाइप करा, किंवा सेव्हवर टॅप करा, जेणेकरून ती नेहमीच्या 24 तासांनंतरही इथे राहील.',
       obStep6Title: 'इन्व्हेस्टमेंटवर जा', obStep6Body: 'सिग्नल (सामान्य बातम्या) आणि इन्व्हेस्टमेंट (कंपनीनुसार गटबद्ध बातम्या) यामध्ये बदलण्यासाठी डबल-टॅप करा. एका टॅपने चुकून बदलणार नाही.',
-      obStep7Title: 'एक्सपोर्ट', obStep7Body: 'तुमचा सध्याचा फीड कधीही CSV फाइल म्हणून डाउनलोड करा.',
-      obStep8Title: 'सेटिंग्ज', obStep8Body: 'चॅनेल्स, तुमची इन्व्हेस्टमेंट वॉचलिस्ट, नोटिफिकेशन्स, खाते, आणि फीडबॅक - सर्व एकाच ठिकाणी.'
+      obStep7Title: 'सेटिंग्ज', obStep7Body: 'चॅनेल्स, तुमची इन्व्हेस्टमेंट वॉचलिस्ट, नोटिफिकेशन्स, खाते, एक्सपोर्ट, आणि फीडबॅक - सर्व एकाच ठिकाणी.'
     },
     gu: {
       linkPages: 'લિંક પેજીસ', settings: 'સેટિંગ્સ', signals: 'સિગ્નલ્સ', saved: 'સેવ કરેલ', export: 'એક્સપોર્ટ',
@@ -1126,8 +1123,7 @@ if (typeof document !== 'undefined') (function () {
       obStep4Title: 'એક ન્યૂઝ કાર્ડ', obStep4Body: 'વધુ વાંચવા સમાચાર પર ટેપ કરો, સેવ કરવા જમણી બાજુ સ્વાઇપ કરો, અથવા હટાવવા ડાબી બાજુ સ્વાઇપ કરો.',
       obStep5Title: 'સેવ કરેલ', obStep5Body: 'કોઈ સમાચારને જમણી બાજુ સ્વાઇપ કરો, અથવા સેવ પર ટેપ કરો, જેથી તે સામાન્ય 24 કલાક પછી પણ અહીં રહે.',
       obStep6Title: 'ઇન્વેસ્ટમેન્ટ પર જાઓ', obStep6Body: 'સિગ્નલ (સામાન્ય સમાચાર) અને ઇન્વેસ્ટમેન્ટ (કંપની પ્રમાણે જૂથબદ્ધ સમાચાર) વચ્ચે બદલવા ડબલ-ટેપ કરો. એક ટેપથી ભૂલથી નહીં બદલાય.',
-      obStep7Title: 'એક્સપોર્ટ', obStep7Body: 'તમારો હાલનો ફીડ ગમે ત્યારે CSV ફાઇલ તરીકે ડાઉનલોડ કરો.',
-      obStep8Title: 'સેટિંગ્સ', obStep8Body: 'ચેનલો, તમારી ઇન્વેસ્ટમેન્ટ વોચલિસ્ટ, નોટિફિકેશન, ખાતું, અને પ્રતિસાદ - બધું એક જ જગ્યાએ.'
+      obStep7Title: 'સેટિંગ્સ', obStep7Body: 'ચેનલો, તમારી ઇન્વેસ્ટમેન્ટ વોચલિસ્ટ, નોટિફિકેશન, ખાતું, એક્સપોર્ટ, અને પ્રતિસાદ - બધું એક જ જગ્યાએ.'
     }
   };
   let currentLang = 'en';
@@ -1351,13 +1347,11 @@ if (typeof document !== 'undefined') (function () {
     // both providers are OFF by default on a new Firebase project, and Auth.signUp/signIn will fail with
     // "OPERATION_NOT_ALLOWED" until Email/Password is turned on. Leaving googleClientId blank simply hides the
     // "Continue with Google" button - email/password accounts work regardless.
-    googleClientId: '434668496404-ivlniatcoq0b26bvcuk9ue1q40thtkfu.apps.googleusercontent.com',
-    // Firebase Storage bucket for ticket attachments (Tickets.submit() below). Firebase's default bucket name
-    // for a project is "{projectId}.appspot.com" - this is NOT provisioned automatically the way Firestore is;
-    // Storage has to be turned on once in the Firebase console (Build -> Storage -> Get started) before any
-    // upload here will succeed, and storage.rules (shipped alongside firestore.rules in this repo) needs
-    // publishing there too. If you used a different bucket name when enabling Storage, update this to match.
-    storageBucket: 'qwicksignal.appspot.com'
+    googleClientId: '434668496404-ivlniatcoq0b26bvcuk9ue1q40thtkfu.apps.googleusercontent.com'
+    // No Storage bucket here: ticket attachments (Tickets.submit() below) are stored as base64 text directly
+    // on the Firestore ticket document, not in Firebase Storage - Storage requires the project to be on
+    // Firebase's paid "Blaze" plan, which the owner decided against. See the TICKET_ATTACH_MAX_BYTES comment
+    // in renderTicketBox() for the size-limit rationale.
   };
   // Web Push VAPID public key (safe to ship in client code - it only identifies this app to the push
   // service, it can't be used to send anything). Its matching private key lives only in the pipeline's
@@ -1792,8 +1786,7 @@ if (typeof document !== 'undefined') (function () {
       { anchor: '#list .entry', titleKey: 'obStep4Title', bodyKey: 'obStep4Body' },
       { anchor: '[data-tab="saved"]', titleKey: 'obStep5Title', bodyKey: 'obStep5Body' },
       { anchor: '#modeSym', titleKey: 'obStep6Title', bodyKey: 'obStep6Body' },
-      { anchor: '[data-tab="export"]', titleKey: 'obStep7Title', bodyKey: 'obStep7Body' },
-      { anchor: '[data-tab="settings"]', titleKey: 'obStep8Title', bodyKey: 'obStep8Body' }
+      { anchor: '[data-tab="settings"]', titleKey: 'obStep7Title', bodyKey: 'obStep7Body' }
     ],
     _idx: 0,
     _visibleAnchor(sel) {
@@ -2042,8 +2035,16 @@ if (typeof document !== 'undefined') (function () {
   // types after, not an invisible tag applied at submit time. Switching bubbles mid-draft swaps only that
   // leading prefix text and leaves whatever the user already typed after it untouched.
   const TICKET_MAX = 2000;
-  const TICKET_ATTACH_MAX_BYTES = 8 * 1024 * 1024; // 8 MB - comfortably covers a phone screenshot or a short screen recording, well under Firestore's own 1 MB doc limit (the file itself goes to Storage, only its download URL is stored in the ticket doc).
-  let ticketAttachFile = null; // the File object staged for upload, or null - cleared on every renderTicketBox() and on successful/failed submit
+  // Attachments are stored as base64 directly on the ticket document (Tickets.submit() below), not in
+  // Firebase Storage - Storage requires the project to be on Firebase's paid "Blaze" plan (billing account),
+  // which the owner decided not to set up for what is, in practice, a handful of small screenshots. The
+  // tradeoff: base64 text is ~33% larger than the original file, and Firestore caps a whole document at 1 MiB
+  // (1,048,576 bytes) INCLUDING the message text and every other field, not just the attachment - so this cap
+  // is deliberately much lower than a real Storage upload would need. 600 KB of raw file comfortably covers a
+  // phone screenshot (a typical screenshot is 200-500 KB) while leaving headroom under the 1 MiB document
+  // limit after base64 inflation (~800 KB) plus the message text and other fields.
+  const TICKET_ATTACH_MAX_BYTES = 600 * 1024;
+  let ticketAttachFile = null; // the File object staged for reading, or null - cleared on every renderTicketBox() and on successful/failed submit
   function renderTicketBox() {
     const box = $('#ticketBox');
     if (!box) return;
@@ -2121,9 +2122,9 @@ if (typeof document !== 'undefined') (function () {
     $('#ticketSendBtn', box).addEventListener('click', async () => {
       const btn = $('#ticketSendBtn', box);
       btn.disabled = true;
-      const fileToUpload = ticketAttachFile;
-      if (fileToUpload) btn.textContent = t('ticketAttachUploading');
-      const r = await Tickets.submit(kind, ta.value, fileToUpload);
+      const attachFile = ticketAttachFile;
+      if (attachFile) btn.textContent = t('ticketAttachUploading');
+      const r = await Tickets.submit(kind, ta.value, attachFile);
       btn.disabled = false;
       btn.textContent = t('ticketSend');
       if (r.ok) {
@@ -2168,7 +2169,7 @@ if (typeof document !== 'undefined') (function () {
           <span style="flex:none;font-size:12px;font-weight:700;color:${done ? 'var(--ink2)' : 'var(--accent)'}">${done ? t('ticketStatusDone') : t('ticketStatusOpen')}</span>
         </div>
         <div style="font-size:14px;white-space:pre-wrap">${escapeHtml(tk.message || '')}</div>
-        ${tk.attachment_url ? `<a href="${esc(tk.attachment_url)}" target="_blank" rel="noopener" class="btn small" style="text-decoration:none">${esc(t('ticketAdminAttachment'))}</a>` : ''}
+        ${tk.attachment_data ? `<a href="data:${esc(tk.attachment_type || 'application/octet-stream')};base64,${tk.attachment_data}" download="${esc(tk.attachment_name || 'attachment')}" class="btn small" style="text-decoration:none">${esc(t('ticketAdminAttachment'))}</a>` : ''}
         <button class="btn small" data-ticket-toggle="${tk.id}" data-ticket-status="${done ? 'open' : 'done'}">${done ? t('ticketMarkOpen') : t('ticketMarkDone')}</button>
       </div>`;
     }).join('');
@@ -2489,27 +2490,34 @@ if (typeof document !== 'undefined') (function () {
       return `QS-${part()}-${part()}`;
     },
 
-    // Uploads one file to Firebase Storage via its REST (JSON) API - no SDK is loaded anywhere in this app,
-    // same "plain fetch + API key / bearer token" approach already used for Firestore throughout this file.
-    // Returns the public download URL on success, or null on any failure (network, Storage not yet enabled
-    // for this project, etc) - submit() below treats a null here as "send the ticket text anyway, just
-    // without the attachment" rather than blocking the whole submission on an upload problem.
-    async uploadAttachment(file, ticketId) {
-      try {
-        const safeName = (file.name || 'attachment').replace(/[^\w.\-]+/g, '_').slice(-80);
-        const objectPath = `ticket_attachments/${Auth.uid}/${ticketId}/${Date.now()}_${safeName}`;
-        const headers = Object.assign({ 'Content-Type': file.type || 'application/octet-stream' }, await Sync.authHeaders());
-        const uploadUrl = `https://firebasestorage.googleapis.com/v0/b/${FIREBASE.storageBucket}/o?uploadType=media&name=${encodeURIComponent(objectPath)}`;
-        const r = await fetch(uploadUrl, { method: 'POST', headers, body: file });
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        const meta = await r.json();
-        // Storage's own "download token" query param is what makes the URL fetchable by anyone holding it
-        // (the owner, reading the ticket in renderTicketAdmin()) without needing their own auth header.
-        const token = meta.downloadTokens;
-        return `https://firebasestorage.googleapis.com/v0/b/${FIREBASE.storageBucket}/o/${encodeURIComponent(objectPath)}?alt=media${token ? '&token=' + token : ''}`;
-      } catch (e) {
-        return null;
-      }
+    // Reads one file as base64 for storing directly on the ticket document - no Firebase Storage involved
+    // (that would need the project on a paid "Blaze" plan, which the owner decided against for what amounts
+    // to a handful of small screenshots). Returns { data, type, name } on success, or null on any failure
+    // (the FileReader API rejecting, an unreadable file, etc) - submit() below treats a null here as "send
+    // the ticket text anyway, just without the attachment" rather than blocking the whole submission.
+    // TICKET_ATTACH_MAX_BYTES already caps the file size before this is even called (renderTicketBox()'s
+    // file-input handler), so this is a pure local read with no network step and nothing that can fail due
+    // to connectivity - only a corrupt/unreadable file triggers the catch below in practice.
+    readAttachment(file) {
+      return new Promise(resolve => {
+        try {
+          const reader = new FileReader();
+          reader.onload = () => {
+            // reader.result is a data: URL ("data:image/png;base64,iVBORw0...") - only the base64 payload
+            // after the comma is stored, since the MIME type is kept separately (attachment_type) and
+            // reconstructed into a fresh data: URL when rendering it back (renderTicketAdmin()), rather than
+            // storing the redundant "data:...;base64," prefix itself in Firestore.
+            const result = String(reader.result || '');
+            const comma = result.indexOf(',');
+            if (comma < 0) { resolve(null); return; }
+            resolve({ data: result.slice(comma + 1), type: file.type || 'application/octet-stream', name: (file.name || 'attachment').slice(-120) });
+          };
+          reader.onerror = () => resolve(null);
+          reader.readAsDataURL(file);
+        } catch (e) {
+          resolve(null);
+        }
+      });
     },
 
     // Requires sign-in (per the owner's request - tickets are now tied to a real account, same reasoning
@@ -2524,10 +2532,10 @@ if (typeof document !== 'undefined') (function () {
       if (!text) return { ok: false, error: t('ticketEmpty') };
       const id = 'tk' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 10);
       const ticketNumber = this.genTicketNumber();
-      let attachmentUrl = '', attachFailed = false;
+      let attachment = null, attachFailed = false;
       if (file) {
-        attachmentUrl = await this.uploadAttachment(file, id);
-        if (!attachmentUrl) { attachmentUrl = ''; attachFailed = true; }
+        attachment = await this.readAttachment(file);
+        if (!attachment) attachFailed = true;
       }
       const fields = {
         kind: toFsValue(kind || 'feedback'),
@@ -2543,14 +2551,18 @@ if (typeof document !== 'undefined') (function () {
         // since submit() requires Auth.uid above.
         user_email: toFsValue(Auth.email || ''),
       };
-      if (attachmentUrl) fields.attachment_url = toFsValue(attachmentUrl);
+      if (attachment) {
+        fields.attachment_data = toFsValue(attachment.data);
+        fields.attachment_type = toFsValue(attachment.type);
+        fields.attachment_name = toFsValue(attachment.name);
+      }
       try {
         const headers = Object.assign({ 'Content-Type': 'application/json' }, await Sync.authHeaders());
         const r = await fetch(`${FS_BASE}/qs_tickets/${id}?key=${FIREBASE.apiKey}`, {
           method: 'PATCH', headers, body: JSON.stringify({ fields })
         });
         if (!r.ok) throw new Error('HTTP ' + r.status);
-        track('ticket_submit', { kind: kind || 'feedback', has_attachment: !!attachmentUrl });
+        track('ticket_submit', { kind: kind || 'feedback', has_attachment: !!attachment });
         return { ok: true, ticketNumber, attachFailed };
       } catch (e) {
         return { ok: false, error: t('ticketFailed') };
@@ -4049,8 +4061,9 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     if (savedInv) savedInv.hidden = mode !== 'investment';
     if (S.tab === 'saved') renderSaved();
     // Export: the item count shown there (and what Download PDF/CSV will actually pull - see
-    // exportItems()) depends on mode, so refresh it if that tab happens to be open already.
-    if (S.tab === 'export') renderExport();
+    // exportItems()) depends on mode, so refresh it if that settings sub-page happens to be open already
+    // (Export now lives under Settings, not its own tab - see SETTINGS_SECTIONS/openSettingsPage()).
+    if (S.tab === 'settings' && S.settingsPage === 'export') renderExport();
   }
 
   // Plays the wifi-sweep/candle-tick animation on #modeSym exactly once per tap (the .pulse-once CSS rules
@@ -4105,6 +4118,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     { id: 'newschannels', mode: 'news', icon: 'wifi', title: 'Telegram channels for News', subKey: () => S.myChannels.size + ' linked', count: () => S.myChannels.size },
     { id: 'investwatchlist', mode: 'investment', icon: 'candle', title: 'Investment watchlist & channels', subKey: () => S.myCompanies.size + ' tracked · ' + S.myInvestChannels.size + ' channels', count: () => S.myCompanies.size + S.myInvestChannels.size },
     { id: 'notifications', mode: null, icon: 'bell', title: 'Notifications', subKey: () => 'New story alerts', count: null },
+    { id: 'export', mode: null, icon: 'export', title: 'Export', subKey: () => 'Save a report or the raw table', count: null },
     { id: 'getapp', mode: null, icon: 'plus', title: 'Get the app', subKey: () => 'Install on this device', count: null },
     { id: 'feedback', mode: null, icon: 'help', title: 'Feedback & support', subKey: () => isOwner() ? 'Send feedback · view tickets' : 'Send feedback', count: null }
   ];
@@ -4113,7 +4127,8 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     candle: '<rect x="4" y="9" width="3.4" height="9" rx="1"/><rect x="10.3" y="4" width="3.4" height="12" rx="1"/><rect x="16.6" y="11" width="3.4" height="7" rx="1"/>',
     bell: '<path d="M12 2a7 7 0 0 1 7 7c0 5 2 7 2 7H3s2-2 2-7a7 7 0 0 1 7-7z"/><path d="M9.5 19a2.5 2.5 0 0 0 5 0"/>',
     plus: '<path d="M12 4v16M4 12h16"/>',
-    help: '<circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/>'
+    help: '<circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/>',
+    export: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>'
   };
   function renderSettingsNav() {
     const avatar = $('#snAcctAvatar'), title = $('#snAcctTitle'), sub = $('#snAcctSub');
@@ -4151,6 +4166,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     S.settingsPage = id;
     window.scrollTo(0, 0);
     track('settings_section_open', { section: id });
+    if (id === 'export') renderExport();
   }
   function closeSettingsPage() {
     $$('.settingspage').forEach(p => p.classList.add('sp-hidden'));
@@ -4168,7 +4184,6 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     $$('.tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === name));
     window.scrollTo(0, 0);
     if (name === 'brief') { if (S.mode === 'investment') { renderInvestmentList(); renderCompanyBar(); } else { renderControls(); renderList(); } }
-    if (name === 'export') renderExport();
     if (name === 'saved') renderSaved();
     // Settings used to be the app's default first screen ("Link Pages"), so its Account/Telegram/Appearance
     // blocks were always rendered on load regardless of which tab was showing. Now that it's reached only via

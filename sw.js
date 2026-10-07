@@ -1,22 +1,33 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-47-v1';  // Two fixes reported after the previous round shipped: (1) Onboarding
-                                      // walkthrough made noticeably smaller (owner's explicit request) and
-                                      // expanded from 5 to 8 steps - it now also covers the country-wise news
-                                      // cards, the search box, the country/sector/priority filters, and a
-                                      // sample news card (tap/swipe), not just the 4 tab-bar controls, and
-                                      // waits briefly for the live feed to load before starting so those two
-                                      // new early steps have real content to point at. (2) Investment-tab
-                                      // search "wasn't working": the matching/filtering logic itself was
-                                      // already correct, but a company with stories that just didn't match
-                                      // the search term showed the exact same "No recent news for this
-                                      // company" text as a company with no stories at all - indistinguishable
+const VERSION = 'gni-phase3-48-v1';  // This round: moved Export out of the bottom tab bar entirely - it's an
+                                      // occasional action (a few times a month, at most), not something checked
+                                      // daily like Signals/Saved, so it no longer takes a permanent slot next to
+                                      // controls people use constantly. It now lives as a destination inside
+                                      // Settings (SETTINGS_SECTIONS in app.js), opened the same way as
+                                      // Notifications/Get the app/Feedback - same settingspage markup, same
+                                      // back button, same renderExport() populating #exportCount/#pdfBtn/#csvBtn
+                                      // as before. The tab bar is now Signals/Saved/mode-switch/Settings (4
+                                      // buttons instead of 5). The onboarding tour's old separate Export step
+                                      // was folded into its Settings step, since both now point at the same
+                                      // tab-bar button.
+                                      //
+                                      // Previous round, two fixes: (1) Onboarding walkthrough made noticeably
+                                      // smaller (owner's explicit request) and expanded from 5 to 8 steps - it
+                                      // now also covers the country-wise news cards, the search box, the
+                                      // country/sector/priority filters, and a sample news card (tap/swipe), not
+                                      // just the 4 tab-bar controls, and waits briefly for the live feed to load
+                                      // before starting so those two new early steps have real content to point
+                                      // at. (2) Investment-tab search "wasn't working": the matching/filtering
+                                      // logic itself was already correct, but a company with stories that just
+                                      // didn't match the search term showed the exact same "No recent news for
+                                      // this company" text as a company with no stories at all - indistinguishable
                                       // from search having no effect. Now shows a distinct message
                                       // ("No stories match your search...") when a search is active and the
                                       // company does have stories, just none matching.
                                       //
-                                      // Previous round: a 5-step onboarding walkthrough (Onboarding module in app.js) shown
+                                      // Earlier round: a 5-step onboarding walkthrough (Onboarding module in app.js) shown
                                       // once per device right after the landing screen is dismissed (sign-in,
                                       // sign-up, Google, or guest) - a dark spotlight overlay pointing at the
                                       // real Signals/Saved/mode-switch/Export/Settings tab-bar controls in turn,

@@ -475,9 +475,10 @@ body.noscroll{overflow:hidden}
    rotate-and-crossfade - the "one icon spins away, the other spins in" move adapted from the reference
    CodePen (codepen.io/Onur-E/pen/mddzmKK), which fades/rotates its plus icon out on interaction. Replaces
    the earlier two-separate-circles version, which rendered far larger than the other tab icons and had no
-   single obvious affordance for "tap to switch." This sits as the 3rd of 5 buttons directly inside .tabs,
+   single obvious affordance for "tap to switch." This sits as the 3rd of 4 buttons directly inside .tabs,
    not a separate .modebar wrapper - so it inherits the exact same sizing/hit-area/active-state rules as
-   Signals/Saved/Export/Settings around it. */
+   Signals/Saved/Settings around it. (Export used to be the 4th - it moved under Settings, see
+   SETTINGS_SECTIONS in app.js - so the tab bar is Signals/Saved/mode-switch/Settings now.) */
 .modesym{flex:1;min-height:58px;border:0;background:transparent;cursor:pointer;color:#fff;position:relative;
   display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent}
 .modesym:active{transform:scale(.92)}
@@ -490,7 +491,7 @@ body.noscroll{overflow:hidden}
    behind the icon, with the icon itself set to white (both SVGs use currentColor/stroke=currentColor so
    one color change turns both white) so it reads clearly against the fill instead of disappearing into
    it. Both the fill and the ring are always visible (not an animation) so this one button is unmistakably
-   "the red one" among the four plain grey Signals/Saved/Export/Settings icons around it, at rest and not
+   "the red one" among the three plain grey Signals/Saved/Settings icons around it, at rest and not
    just mid-tap. Keyed off --accent (#D3131E) so this stays correct in light and dark without a separate
    dark-mode override.
    Specificity note: the shared .tabs button rule (color:var(--ink2)) and .tabs button::after
@@ -932,6 +933,26 @@ body.pre-app .top, body.pre-app main, body.pre-app .tabs{display:none}
       </div>
     </div>
 
+    <!-- Export: moved here from its own top-level tab - it's an occasional action (a handful of times a
+         month, at most), not something checked daily like Signals/Saved, so it no longer takes a permanent
+         slot in the tab bar next to controls people use constantly. Content/ids (#exportSeg/#exportCount/
+         #pdfBtn/#csvBtn) are unchanged from the old view-export section - renderExport() still populates
+         them exactly as before; only the wrapper and how you reach it have changed. -->
+    <div class="settingspage sp-hidden" id="sp-export">
+      <button type="button" class="settingspage-back" data-act="spback"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>Settings</button>
+      <div class="lp-block">
+        <h2 class="lp-h" data-i18n="export">Export</h2>
+        <p class="lp-sub" data-i18n="exportLede">Save a report or the raw table. Files go to your phone's Downloads.</p>
+
+        <div class="seg" id="exportSeg" role="group" aria-label="Period" hidden></div>
+        <p class="muted" id="exportCount" style="margin:8px 0 12px"></p>
+        <div class="stack">
+          <button id="pdfBtn" class="btn primary block" data-i18n="downloadPdf">Download QwickSignal PDF</button>
+          <button id="csvBtn" class="btn block" data-i18n="downloadCsv">Download CSV</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Feedback & support: everyone sees this, a simple bug/feedback/support form, writing to qs_tickets in
          Firestore (same unauthenticated-write, owner-only-read pattern as qs_push_subs - see
          firestore.rules). -->
@@ -1016,25 +1037,6 @@ body.pre-app .top, body.pre-app main, body.pre-app .tabs{display:none}
     <div id="savedInvestList" hidden></div>
   </section>
 
-  <!-- EXPORT -->
-  <section id="view-export" class="view" hidden>
-    <h1 data-i18n="export">Export</h1>
-    <p class="lede" data-i18n="exportLede">Save a report or the raw table. Files go to your phone's Downloads.</p>
-
-    <div class="seg" id="exportSeg" role="group" aria-label="Period" hidden>
-     <!-- <button data-v="today" aria-pressed="true">Today</button> -->
-      <!--
-      <!<button data-v="7d" aria-pressed="false">7 days</button>
-      <button data-v="all" aria-pressed="false">All</button>
-      -->
-    </div>
-    <p class="muted" id="exportCount" style="margin:8px 0 12px"></p>
-    <div class="stack">
-      <button id="pdfBtn" class="btn primary block" data-i18n="downloadPdf">Download QwickSignal PDF</button>
-      <button id="csvBtn" class="btn block" data-i18n="downloadCsv">Download CSV</button>
-    </div>
-
-  </section>
 </main>
 
 <nav class="tabs" role="tablist" aria-label="Sections">
@@ -1066,9 +1068,6 @@ body.pre-app .top, body.pre-app main, body.pre-app .tabs{display:none}
     </svg>
   </button>
 
-  <button role="tab" data-tab="export" aria-selected="false" aria-label="Export" data-i18n-aria="export" title="Export" data-i18n-title="export">
-    <svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>
-  </button>
   <button role="tab" data-tab="settings" aria-selected="false" aria-label="Settings" data-i18n-aria="settings" title="Settings" data-i18n-title="settings">
     <svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
   </button>
