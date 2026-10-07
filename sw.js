@@ -1,7 +1,38 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-40-v1';  // Three fixes this round, all against the mode-switch/Investment work:
+const VERSION = 'gni-phase3-41-v1';  // Three fixes this round:
+                                      // (1) BUG: tracked companies (Investment watchlist) could vanish on a
+                                      // fast tab/app switch. Sync.pushSoon() used to do nothing synchronous
+                                      // at all - it only scheduled a 600ms-debounced network push, and the
+                                      // local cache was only ever written inside that same debounced push,
+                                      // and only for guests. Backgrounding the app inside that 600ms window
+                                      // (common on mobile - timers on a backgrounded page are often paused
+                                      // or the page discarded) meant the addition was never saved anywhere,
+                                      // so the next load's Sync.init() restored the server's older,
+                                      // company-less copy with no error shown. Fixed by writing the local
+                                      // cache synchronously and unconditionally (both guest and signed-in)
+                                      // on every pushSoon() call, before the debounced network push - the
+                                      // cache Sync.init() reads first, before pull(), now always reflects
+                                      // the latest in-memory state regardless of whether the network push
+                                      // ever completes. (Also clears that cache on sign-out, so a second
+                                      // account signing in on the same browser can't briefly see the first
+                                      // account's cached watchlist before its own pull() lands.)
+                                      // (2) BUG: articles saved under the Saved tab were disappearing after
+                                      // roughly a day. Not a lifecycle-expiry bug (saved items were already
+                                      // correctly exempted from that check) - loadLive() was unconditionally
+                                      // replacing S.live with whatever feed.json's rolling window currently
+                                      // contains, on every load and every ~2 minute auto-refresh, silently
+                                      // dropping any saved story old enough to have scrolled out of that
+                                      // upstream window. Fixed by carrying forward any saved story that's
+                                      // present in the old S.live but missing from the new feed, instead of
+                                      // letting the replacement discard it.
+                                      // (3) The mode-switch button (#modeSym) is now filled with a reddish
+                                      // tint across the whole tab, not just a thin border ring, so the
+                                      // button itself reads as "the red one" at a glance rather than a grey
+                                      // icon with a faint outline.
+                                      //
+                                      // Previous round's three fixes, still in effect:
                                       // (1) Company Status is back - Investment mode was missing its
                                       // equivalent of the News-mode country ring row entirely. Added
                                       // #companyStatus: one ring per tracked company (companyGroups()),

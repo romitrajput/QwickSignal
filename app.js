@@ -1545,10 +1545,20 @@ if (typeof document !== 'undefined') (function () {
       }
     },
 
+    // Snapshot of S's syncable fields, as a plain object - shared by the immediate cache write below and
+    // the (possibly much later) network push, so both always agree on exactly what "current state" means.
+    snapshot() {
+      return { saved: [...S.saved], dismissed: [...S.dismissed], channels: [...S.myChannels], hiddenChannels: [...S.hiddenChannels], reviewed: [...S.reviewed], companies: [...S.myCompanies], investChannels: [...S.myInvestChannels] };
+    },
+
     async push() {
       if (!this.code && !Auth.uid) return false;
-      const rec = { saved: [...S.saved], dismissed: [...S.dismissed], channels: [...S.myChannels], hiddenChannels: [...S.hiddenChannels], reviewed: [...S.reviewed], companies: [...S.myCompanies], investChannels: [...S.myInvestChannels] };
-      if (!Auth.uid) this.cacheWrite(rec);
+      const rec = this.snapshot();
+      // Written for a signed-in account too, not just guests, as a crash-recovery fallback only (see
+      // pushSoon() below) - Sync.init()'s pull() still always overwrites this with the server's copy
+      // whenever the network succeeds, so this is never read as the source of truth while signed in, only
+      // when a reload happens to land before that pull resolves or while offline.
+      this.cacheWrite(rec);
       try {
         const fields = { saved: toFsValue(rec.saved), dismissed: toFsValue(rec.dismissed), channels: toFsValue(rec.channels), hiddenChannels: toFsValue(rec.hiddenChannels), reviewed: toFsValue(rec.reviewed), companies: toFsValue(rec.companies), investChannels: toFsValue(rec.investChannels) };
         const headers = Object.assign({ 'Content-Type': 'application/json' }, await this.authHeaders());
@@ -1561,7 +1571,25 @@ if (typeof document !== 'undefined') (function () {
       }
     },
 
-    pushSoon: (() => { let t = null; return () => { clearTimeout(t); t = setTimeout(() => Sync.push(), 600); }; })()
+    // BUG FIX: pushSoon() used to ONLY schedule Sync.push() 600ms later, with nothing saved anywhere in the
+    // meantime - not even the local cache, since that write used to live inside push() itself, behind the
+    // same debounce, and only ever for a signed-OUT guest at that. A real cost of that: add a company (or
+    // save a story, follow a channel, etc), then switch away from the tab/app quickly - many mobile
+    // browsers suspend or discard a backgrounded page's timers, so the 600ms setTimeout never fires,
+    // nothing is ever written to localStorage, and the next load's Sync.init() (cacheRead() finding nothing
+    // new, then pull() loading the server's older copy) shows the watchlist exactly as it was before the
+    // add - the new company is just gone, with no error. Fix: write the local cache SYNCHRONOUSLY, right
+    // here, on every call, for both guest and signed-in - cheap (one JSON.stringify to localStorage) and
+    // cannot be lost to a suspended timer - and keep only the actual network round-trip debounced, since
+    // that's the part worth batching.
+    pushSoon: (() => {
+      let t = null;
+      return () => {
+        Sync.cacheWrite(Sync.snapshot());
+        clearTimeout(t);
+        t = setTimeout(() => Sync.push(), 600);
+      };
+    })()
   };
 
   /* ---------- Phase E: account UI ---------- */
@@ -1588,6 +1616,11 @@ if (typeof document !== 'undefined') (function () {
   function signOut() {
     Auth.signOut();
     S.saved = new Set(); S.dismissed = new Set(); S.myChannels = new Set(); S.hiddenChannels = new Set(); S.reviewed = new Set(); S.myCompanies = new Set(); S.myInvestChannels = new Set();
+    // Sync.cacheWrite() now runs for a signed-in account too (see pushSoon()'s bug fix above), so the cache
+    // left behind by the account that's signing out has to be cleared here - otherwise a DIFFERENT account
+    // signing in next on this same browser could briefly see the previous account's cached watchlist/saves
+    // for the moment before Sync.init()'s pull() overwrites it with their own.
+    Sync.cacheWrite(null);
     renderAccount(); renderAll(); renderChannels(); renderInvestChannels(); renderSyncCode(); renderTicketBox(); renderTicketAdmin(); renderInvestmentBox();
     toast('Signed out. Back to guest mode on this device.');
     Sync.pull().then(() => { renderAll(); renderChannels(); renderInvestChannels(); });    // fall back to this browser's guest sync code
@@ -4095,7 +4128,22 @@ Give a concise, event-specific analysis - decide for yourself which structure be
         '|' + (feed && feed.video_meta ? feed.video_meta.status : '');
       S.lastLive = Date.now();
       if (!manual && S.liveMeta && sig === prevSig) return;   // silent check, nothing new: leave the screen alone
-      S.live = items.map(mapLive);
+      // BUG FIX: this used to just be `S.live = items.map(mapLive)`, a straight replace. feed.json is a
+      // rolling window from the pipeline (recent items only, not a permanent archive), so any story old
+      // enough to have scrolled out of that window would vanish from S.live the moment this ran - which
+      // happens on every load and again every ~2 minutes while the app is open (AUTO_REFRESH_MS below).
+      // Since all() is just S.items.concat(S.live), a SAVED story is just as exposed to this as any other:
+      // itemStatus()'s saved-items-never-expire check never even runs, because the item itself is gone,
+      // not merely marked expired. That's what "Saved articles disappear after 24h" actually was - not a
+      // bug in the 24h lifecycle check (which already exempts saved items correctly), but this feed refresh
+      // silently discarding the underlying item data for anything saved that aged out of the upstream feed.
+      // Fix: a saved story that's present in the OLD S.live but missing from the new feed is kept, not
+      // dropped - carried over as-is, fully preserving its headline/summary/etc. Only applies to S.saved;
+      // a dismissed or already-expired-when-live-and-unsaved item still ages out normally, matching the
+      // saved-items-are-the-one-exception intent the rest of the app already has (itemStatus(), savedItems()).
+      const freshIds = new Set(items.map(i => i.id));
+      const keptSaved = S.live.filter(it => S.saved.has(it.id) && !freshIds.has(it.id));
+      S.live = items.map(mapLive).concat(keptSaved);
       S.liveSig = sig;
       S.videoMeta = feed && feed.video_meta ? feed.video_meta : null;
       S.liveMeta = feed ? { at: Date.parse(feed.generated_at) || 0, cached } : null;

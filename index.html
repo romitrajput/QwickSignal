@@ -438,16 +438,22 @@ body.noscroll{overflow:hidden}
 .modesym{flex:1;min-height:58px;border:0;background:transparent;cursor:pointer;color:var(--accent);position:relative;
   display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent}
 .modesym:active{transform:scale(.92)}
-.modesym .sym-icon{width:24px;height:24px;flex:none;position:absolute;transition:opacity .22s var(--ease),transform .32s var(--ease)}
+.modesym .sym-icon{width:24px;height:24px;flex:none;position:absolute;z-index:1;transition:opacity .22s var(--ease),transform .32s var(--ease)}
 .modesym .sym-wifi{opacity:0;transform:rotate(-90deg) scale(.5)}
 .modesym .sym-candle{opacity:0;transform:rotate(90deg) scale(.5)}
 .modesym[data-mode=news] .sym-wifi{opacity:1;transform:rotate(0) scale(1)}
 .modesym[data-mode=investment] .sym-candle{opacity:1;transform:rotate(0) scale(1)}
-/* A permanent red-ish ring, always visible (not an animation) - this is what sets this one button apart
-   from the plain grey Signals/Saved/Export/Settings icons around it at a glance, not just on tap. */
+/* The whole tab reads red now, not just a thin ring around the icon - a filled reddish pill behind the
+   icon, plus a slightly stronger ring on top of it, both always visible (not an animation). This is what
+   sets this one button apart from the plain grey Signals/Saved/Export/Settings icons around it at a
+   glance, not just on tap. Fill and ring both key off --accent (already a red, #D3131E) so this stays
+   correct in light and dark without a separate dark-mode override. */
+.modesym::after{content:"";position:absolute;width:44px;height:44px;border-radius:50%;background:var(--accent);
+  opacity:.16;pointer-events:none}
 .modesym::before{content:"";position:absolute;width:38px;height:38px;border-radius:50%;border:1.5px solid var(--accent);
-  opacity:.55;pointer-events:none}
-@media (hover:hover){.modesym:hover::before{opacity:.9}}
+  opacity:.75;pointer-events:none}
+@media (hover:hover){.modesym:hover::before{opacity:1}.modesym:hover::after{opacity:.24}}
+.modesym:active::after{opacity:.3}
 
 /* Wifi-signal icon: three concentric arcs + a dot, lit up one ring at a time in a single outward sweep -
    but ONLY right after a tap, never continuously. The animations below have no "infinite" and sit idle
