@@ -151,10 +151,11 @@ service cloud.firestore {
       allow delete: if true;
     }
 
-    // qs_tickets/{id}   The in-app bug/support/feedback box (app.js's Tickets module). Anyone, signed in
-    //                   or not, can file a ticket - most visitors use the app signed out, same as
-    //                   qs_sync/qs_push_subs above. Tickets are write-only for a normal visitor: they
-    //                   can create one but can never read any ticket back (not even their own), so this
+    // qs_tickets/{id}   The in-app bug/feedback box (app.js's Tickets module). Originally anyone, signed in
+    //                   or not, could file a ticket; now requires sign-in (owner's request - tickets carry a
+    //                   ticket_number and user_id tying them to a real account, so the owner can follow up
+    //                   with whoever filed one). Tickets are write-only for a normal visitor: they can
+    //                   create one but can never read any ticket back (not even their own), so this
     //                   collection can't be used to browse what other people have reported. Only the
     //                   owner account can list/read/update tickets, which is also how the hidden admin
     //                   view in Settings is actually secured - renderTicketAdmin()'s isOwner() check in
@@ -164,14 +165,24 @@ service cloud.firestore {
       allow get, list: if isOwner();
 
       allow create: if
+        request.auth != null &&
         id.matches('tk[a-z0-9]{10,40}') &&
-        request.resource.data.keys().hasOnly(['kind', 'message', 'status', 'created_at', 'user_email']) &&
+        request.resource.data.keys().hasOnly(['kind', 'message', 'status', 'created_at', 'user_email', 'user_id', 'ticket_number', 'attachment_url']) &&
         request.resource.data.kind in ['bug', 'support', 'feedback'] &&
         request.resource.data.message is string && request.resource.data.message.size() > 0 &&
           request.resource.data.message.size() <= 4000 &&
         request.resource.data.status == 'open' &&
         request.resource.data.created_at is string &&
-        request.resource.data.user_email is string && request.resource.data.user_email.size() <= 256;
+        request.resource.data.user_email is string && request.resource.data.user_email.size() <= 256 &&
+        // Must be tagged to the caller's own account - never on someone else's behalf.
+        request.resource.data.user_id is string && request.resource.data.user_id == request.auth.uid &&
+        request.resource.data.ticket_number is string && request.resource.data.ticket_number.size() <= 32 &&
+        // attachment_url is optional (a ticket with no file simply omits it, same optional-field pattern as
+        // hiddenChannels/companies on qs_sync/qs_users above) - just bounded in length if present, since the
+        // real safety (whether the URL points somewhere sane) is enforced by storage.rules on the Storage
+        // side, not here.
+        (!('attachment_url' in request.resource.data) ||
+          (request.resource.data.attachment_url is string && request.resource.data.attachment_url.size() <= 1000));
 
       // Only the owner can change a ticket afterwards, and only to flip status between open/done -
       // never to rewrite the reporter's original message or who filed it.

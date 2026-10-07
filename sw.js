@@ -1,7 +1,33 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-43-v1';  // Settings redesign (Option 2: drill-down list) and a News-feed card
+const VERSION = 'gni-phase3-46-v1';  // New: a 5-step onboarding walkthrough (Onboarding module in app.js) shown
+                                      // once per device right after the landing screen is dismissed (sign-in,
+                                      // sign-up, Google, or guest) - a dark spotlight overlay pointing at the
+                                      // real Signals/Saved/mode-switch/Export/Settings tab-bar controls in turn,
+                                      // skippable at any point, never shown again once seen (qs-onboard-seen-v1
+                                      // in localStorage). Addresses real feedback from an Instagram ad campaign
+                                      // that new visitors didn't understand what the app does.
+                                      //
+                                      // Previous round: Feedback & support redesigned: Bug/Feedback only (Support dropped),
+                                      // picking a bubble pre-fills the textarea with a literal "Bug: "/
+                                      // "Feedback: " prefix the user types after (switching bubbles mid-draft
+                                      // swaps just that prefix, keeping whatever was typed), an optional
+                                      // attachment (uploads to Firebase Storage - see Tickets.uploadAttachment()
+                                      // in app.js and the new storage.rules in the repo), "Send" renamed to
+                                      // "Submit", and every ticket now gets a short reference number
+                                      // (ticket_number, e.g. QS-7F3K-9XJ2) shown to the user on success and
+                                      // tagged to their account (user_id) so the owner can tell who reported
+                                      // what in the admin ticket list.
+                                      //
+                                      // Previous round: Investment-tab "No recent news" empty state now carries a short
+                                      // reassuring second line (investNoNewsHint) explaining this updates
+                                      // automatically rather than reading as a stuck/broken screen - a
+                                      // stopgap while a separate pipeline.py fix (not cached by this service
+                                      // worker - see that file's own changelog) backfills the `companies`
+                                      // field the extraction step had been leaving empty almost always.
+                                      //
+                                      // Before that: Settings redesign (Option 2: drill-down list) and a News-feed card
                                       // refinement (Style A: priority chip), both picked from a set of
                                       // mockups generated for review. (1) Settings used to be one long
                                       // scroll of every block in a fixed order (Account, Get the app,

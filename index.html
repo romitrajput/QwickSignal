@@ -201,6 +201,11 @@ input[type=search]:focus-visible{border-color:var(--accent);box-shadow:0 0 0 4px
 .tmsg:focus{outline:none;border-color:var(--accent)}
 .tfoot{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:12px}
 .tcount{font-size:12px;color:var(--ink2);margin-right:auto;font-variant-numeric:tabular-nums}
+.tattach{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+.tattach-label{font-size:12.5px;font-weight:700;color:var(--ink2);margin-bottom:8px}
+.tattach-file{display:inline-flex;align-items:center;gap:10px;max-width:100%}
+.tattach-name{font-size:13px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px}
+#ticketSendBtn{width:100%;margin-top:14px}
 
 /* Get the app card (renderGetApp()) - platform-specific content inside the same .tcard shell as the
    ticket form, so Settings reads as one consistent design rather than a grab-bag of ad-hoc blocks. */
@@ -255,6 +260,7 @@ input[type=search]:focus-visible{border-color:var(--accent);box-shadow:0 0 0 4px
 @media (hover:hover){.gc-remove:hover{border-color:var(--crit);color:var(--crit)}}
 .btn-chart:focus-visible,.gc-remove:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .empty-note{margin:0 0 10px;padding:0 0 0 14px;font-size:13px;color:var(--ink2);font-style:italic}
+.empty-note-hint{display:block;margin-top:2px;font-size:11.5px;font-style:normal;opacity:.75}
 .entry{--c:var(--low);background:var(--surface);border-left:5px solid var(--c);border-radius:0 8px 8px 0;padding:12px 14px;margin:0 0 10px;cursor:pointer}
 .entry.imp-critical{--c:var(--crit)} .entry.imp-high{--c:var(--high)} .entry.imp-medium{--c:var(--med)} .entry.imp-low{--c:var(--low)}
 .where{display:flex;flex-wrap:wrap;gap:2px 0;font-size:13px;font-weight:600;color:var(--ink2)}
@@ -650,6 +656,33 @@ body.pre-app .top, body.pre-app main, body.pre-app .tabs{display:none}
 .landing-guest{border-style:dashed}
 .landing-guestnote{margin:12px 0 0;font-size:12.5px;line-height:1.5;color:var(--ink2)}
 
+/* Onboarding walkthrough (Onboarding module in app.js) - a dark scrim with one rectangular cutout ("hole")
+   that tracks whichever tab-bar control the current step is explaining, plus a small floating callout card.
+   z-index:150 sits above the tab bar (.tabs, z-index:30) and everything else in the app, but below .landing
+   (200) - the two are never shown at the same time in practice (the tour only starts once landing has just
+   been dismissed), this just keeps the stacking order sane if that ever changed. */
+.ob-overlay{position:fixed;inset:0;z-index:150}
+.ob-hole{position:fixed;border-radius:12px;
+  /* The actual "dark everywhere except this rectangle" effect: a transparent box whose box-shadow is one
+     huge spread covering the full viewport - the box itself casts no visible edge, only its shadow does,
+     so the cutout reads as a hole in the scrim rather than a highlighted box drawn on top of it. */
+  box-shadow:0 0 0 9999px rgba(36,26,18,.72);
+  transition:left .25s var(--ease),top .25s var(--ease),width .25s var(--ease),height .25s var(--ease);
+  pointer-events:none}
+.ob-card{position:fixed;width:min(320px,calc(100vw - 24px));background:var(--surface);color:var(--ink);
+  border-radius:16px;padding:18px 18px 16px;box-shadow:0 16px 40px -12px rgba(0,0,0,.45);
+  transition:top .25s var(--ease),bottom .25s var(--ease),left .25s var(--ease)}
+.ob-dots{display:flex;gap:6px;margin:0 0 10px}
+.ob-dot{width:6px;height:6px;border-radius:50%;background:var(--line)}
+.ob-dot.on{background:var(--accent);width:16px;border-radius:3px}
+.ob-title{margin:0 0 6px;font-size:17px;font-weight:800;letter-spacing:-.01em}
+.ob-body{margin:0;font-size:14px;line-height:1.5;color:var(--ink2)}
+.ob-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px}
+.ob-skip{background:none;border:0;padding:8px 2px;font-size:13.5px;font-weight:600;color:var(--ink2);cursor:pointer}
+.ob-skip:hover{color:var(--ink)}
+.ob-actions .btn{margin-top:0}
+@media (prefers-reduced-motion:reduce){.ob-hole,.ob-card{transition:none}}
+
 /* Landing loading indicator: an equalizer-style row of bars pulsing at staggered heights, shown briefly
    while the app initializes (checking for an already-remembered device choice, restoring any signed-in
    session) before the sign-in form/Continue-as-guest content is revealed - see Landing.show() in app.js.
@@ -748,6 +781,16 @@ body.pre-app .top, body.pre-app main, body.pre-app .tabs{display:none}
       <p class="landing-guestnote" data-i18n="landingGuestNote">You can look around and follow the default channels without an account. Sign in any time later from Settings to keep your own saved articles and channels.</p>
     </div>
   </div>
+</div>
+
+<!-- Onboarding walkthrough (Onboarding module in app.js): a 5-step spotlight tour shown once per device
+     right after the landing screen above is dismissed, pointing at the real tab-bar controls underneath
+     rather than a set of static slides. #obHole is a transparent rectangle cut into a dark scrim via a huge
+     box-shadow (so only that one control stays lit); #obCard is the floating title/body/Skip/Next callout,
+     repositioned in JS for every step to sit near whichever control is currently highlighted. -->
+<div id="obOverlay" class="ob-overlay" hidden aria-live="polite">
+  <div id="obHole" class="ob-hole"></div>
+  <div id="obCard" class="ob-card"></div>
 </div>
 
 <header class="top">

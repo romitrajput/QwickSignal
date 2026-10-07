@@ -605,33 +605,6 @@ def tg_photo_url(msg) -> str | None:
     return m.group(1) if m and m.group(1) else None
 
 
-def telegram_image_shape_ok(url: str, timeout: int = 8) -> bool:
-    """A Telegram post's own photo is free (no Google Custom Search query spent) but unverified - it can be
-    a real news photo, or a channel's logo/banner/meme graphic. Telegram's preview HTML gives us only the
-    URL, no width/height, so this fetches the actual bytes and reads real dimensions with Pillow. Rejects:
-    too small to be a usable photo, or close to square/portrait (news photos run landscape; logos, stickers,
-    quote-card graphics and WhatsApp-style forwarded banners are usually square or tall). Any failure here
-    (network, decode, missing Pillow) means "can't confirm it's a good photo" -> treated as not OK, so a
-    bad fetch never blocks the story, it just falls through to Google Image Search like a photo-less post."""
-    try:
-        from PIL import Image
-    except Exception:
-        return False
-    try:
-        r = requests.get(url, headers={"User-Agent": UA}, timeout=timeout, stream=True)
-        if r.status_code != 200:
-            return False
-        chunk = r.raw.read(262144, decode_content=True)
-        img = Image.open(io.BytesIO(chunk))
-        w, h = img.size
-    except Exception:
-        return False
-    if w < 400 or h < 250:
-        return False
-    ratio = w / h
-    return 1.15 <= ratio <= 2.4   # landscape news-photo range; excludes square/tall graphics
-
-
 def parse_telegram_html(page: str, channel: str) -> list[dict]:
     """Parse https://t.me/s/<channel>, the public web preview of a channel."""
     soup = BeautifulSoup(page, "html.parser")
@@ -926,7 +899,7 @@ EXTRACT_TOOL = {
                 "sector": {"type": "string", "enum": SECTORS},
                 "subsector": {"type": "string", "description": "Short free text such as EV, Equipment, Oil & gas. Empty if unsure"},
                 "importance": {"type": "string", "enum": IMPORTANCE},
-                "companies": {"type": "array", "items": {"type": "string"}},
+                "companies": {"type": "array", "items": {"type": "string"}, "description": "Any publicly-traded or well-known companies named in the post as a direct subject or party (not just briefly referenced) - full name as commonly written, e.g. 'Tata Motors', 'Reliance Industries', 'Maruti Suzuki'. Empty list if the post names no company, which is most posts (geopolitics, defense, government action) - do not force one in."},
                 "facts": {"type": "array", "items": {"type": "string"}, "description": "Up to 3 key figures or facts"},
                 "same_story_as": {"type": "string", "description": "id from recent_stories, or the post_id of another post in this same request, if this post reports the same event. Otherwise empty string"},
                 "related_to": {"type": "array", "items": {"type": "string"}, "description": "ids from recent_stories or post_ids from this request that are connected, at most 3"},
@@ -1243,13 +1216,6 @@ def merge_record(feed_items: list[dict], index: dict, post: dict, rec: dict, now
         "importance": rec["importance"], "companies": rec["companies"], "facts": rec["facts"],
         "published": iso(min(p["published"] for p in group)), "updated": iso(now), "sources": [], "related": [],
     }
-    # Free first choice: if the source Telegram post already carried its own photo and it looks like a
-    # real news photo (not a logo/banner/meme - see telegram_image_shape_ok), use that immediately. No
-    # Google Custom Search query spent, and image_intel.py's queue-building skips any item whose
-    # image.status is already "found", so this story won't be re-searched either.
-    img_post = next((p for p in group if p.get("image_url")), None)
-    if img_post and telegram_image_shape_ok(img_post["image_url"]):
-        item["image"] = {"url": img_post["image_url"], "source": "telegram", "status": "found", "checked_at": iso(now)}
     add_sources(item, group)
     feed_items.append(item)
     index[item["id"]] = item

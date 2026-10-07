@@ -920,11 +920,17 @@ if (typeof document !== 'undefined') (function () {
       agAddChannelsTitle: 'Log in to add channels', agAddChannelsBody: 'Creating a free account keeps your followed channels and saved stories with you, and lets you add new ones.',
       agSyncTitle: 'Log in to sync your devices', agSyncBody: 'Syncing across devices now needs a free account - it keeps everything a little safer and tied to you, not a shareable code.',
       feedbackLoginTitle: 'Log in to send feedback', feedbackLoginBody: 'Creating a free account lets the app owner follow up with you if needed.',
-      ticketKindBug: 'Bug', ticketKindSupport: 'Support', ticketKindFeedback: 'Feedback',
-      ticketPlaceholder: 'Describe the issue or idea…', ticketSend: 'Send', ticketSent: 'Thanks - sent to the app owner.',
+      ticketKindBug: 'Bug', ticketKindFeedback: 'Feedback',
+      ticketPrefixBug: 'Bug: ', ticketPrefixFeedback: 'Feedback: ',
+      ticketPlaceholder: 'Describe the issue or idea…', ticketSend: 'Submit', ticketSent: 'Thanks - sent to the app owner.',
       ticketFailed: "Couldn't send that. Check your connection and try again.", ticketEmpty: 'Write a few words first.',
+      ticketSentWithNumber: 'Sent - your ticket number is {num}. Keep it for reference.',
+      ticketAttachHeading: 'Attachment (optional)', ticketAttachAdd: 'Add a screenshot or file',
+      ticketAttachRemove: 'Remove', ticketAttachTooBig: 'That file is too large (max 8 MB).',
+      ticketAttachUploading: 'Uploading attachment…', ticketAttachFailed: "Couldn't upload the attachment - sent the ticket without it.",
       ticketAdminHeading: 'Tickets (owner only)', ticketAdminEmpty: 'No tickets yet.', ticketAdminLoadFailed: "Couldn't load tickets.",
       ticketStatusOpen: 'Open', ticketStatusDone: 'Done', ticketMarkDone: 'Mark done', ticketMarkOpen: 'Reopen',
+      ticketAdminAttachment: 'Attachment',
       modeNews: 'Signal', modeInvestment: 'Investment',
       telegramNewsSub: 'Link Telegram channels to follow for your Signal/News feed.',
       telegramInvestHeading: 'Telegram channels for Investment', telegramInvestSub: "Link Telegram channels you follow specifically for investment/market news - kept separate from your News channels above.",
@@ -933,10 +939,17 @@ if (typeof document !== 'undefined') (function () {
       agTrackCompanyTitle: 'Log in to track companies', agTrackCompanyBody: 'Creating a free account keeps your investment watchlist with you across devices.',
       investEmptyTitle: 'Track companies to see investment-related news.', investEmptyBtn: 'Add companies to track',
       investNoNews: 'No recent news for this company.', investRemove: 'Remove',
+      investNoNewsHint: "This updates automatically as new stories come in - it's not a sign anything is wrong.",
       viewChart: 'View Chart', chartLoading: 'Loading chart…',
       chartSearchHint: 'Wrong listing? Click the ticker name at the top-left of the chart to search for the right one.',
       chartStock: 'Stock', chartSectorFallback: 'Sector',
-      chartEodHint: 'Indian exchange data shown here is end-of-day, not live intraday - a data-licensing limit on TradingView’s side, not a bug in this app.'
+      chartEodHint: 'Indian exchange data shown here is end-of-day, not live intraday - a data-licensing limit on TradingView’s side, not a bug in this app.',
+      obSkip: 'Skip', obNext: 'Next', obDone: 'Got it',
+      obStep1Title: 'Your Signals feed', obStep1Body: 'Stories from your followed channels, sorted by priority. This is your main feed.',
+      obStep2Title: 'Saved', obStep2Body: 'Swipe a story right, or tap Save, to keep it here past the usual 24-hour window.',
+      obStep3Title: 'Switch to Investment', obStep3Body: 'Double-tap to flip between Signal (general news) and Investment (news grouped by company). A single tap won’t switch it by accident.',
+      obStep4Title: 'Export', obStep4Body: 'Download your current feed as a CSV file any time.',
+      obStep5Title: 'Settings', obStep5Body: 'Channels, your investment watchlist, notifications, account, and feedback - all in one place.'
     },
     hi: {
       linkPages: 'लिंक पेज', settings: 'सेटिंग्स', signals: 'सिग्नल्स', saved: 'सेव किए गए', export: 'एक्सपोर्ट',
@@ -976,10 +989,22 @@ if (typeof document !== 'undefined') (function () {
       agSyncTitle: 'डिवाइस सिंक करने के लिए साइन इन करें', agSyncBody: 'डिवाइस के बीच सिंक करने के लिए अब मुफ़्त खाता चाहिए - यह सब कुछ थोड़ा ज़्यादा सुरक्षित और आपसे जुड़ा रखता है, शेयर किए जा सकने वाले कोड के बजाय।',
       feedbackLoginTitle: 'फ़ीडबैक भेजने के लिए साइन इन करें', feedbackLoginBody: 'मुफ़्त खाता बनाने से ऐप के मालिक ज़रूरत पड़ने पर आपसे संपर्क कर सकते हैं।',
       ticketKindBug: 'बग', ticketKindSupport: 'सहायता', ticketKindFeedback: 'फ़ीडबैक',
-      ticketPlaceholder: 'समस्या या विचार बताएं…', ticketSend: 'भेजें', ticketSent: 'धन्यवाद - ऐप के मालिक को भेज दिया गया।',
+      ticketPrefixBug: 'बग: ', ticketPrefixFeedback: 'फ़ीडबैक: ',
+      ticketPlaceholder: 'समस्या या विचार बताएं…', ticketSend: 'सबमिट करें', ticketSent: 'धन्यवाद - ऐप के मालिक को भेज दिया गया।',
       ticketFailed: 'भेजा नहीं जा सका। अपना कनेक्शन जांचें और फिर कोशिश करें।', ticketEmpty: 'पहले कुछ शब्द लिखें।',
+      ticketSentWithNumber: 'भेज दिया गया - आपका टिकट नंबर {num} है। संदर्भ के लिए इसे रखें।',
+      ticketAttachHeading: 'अटैचमेंट (वैकल्पिक)', ticketAttachAdd: 'स्क्रीनशॉट या फ़ाइल जोड़ें',
+      ticketAttachRemove: 'हटाएं', ticketAttachTooBig: 'यह फ़ाइल बहुत बड़ी है (अधिकतम 8 MB)।',
+      ticketAttachUploading: 'अटैचमेंट अपलोड हो रहा है…', ticketAttachFailed: 'अटैचमेंट अपलोड नहीं हो सका - टिकट बिना उसके भेज दिया गया।',
       ticketAdminHeading: 'टिकट (केवल मालिक)', ticketAdminEmpty: 'अभी तक कोई टिकट नहीं।', ticketAdminLoadFailed: 'टिकट लोड नहीं हो सके।',
-      ticketStatusOpen: 'खुला', ticketStatusDone: 'पूर्ण', ticketMarkDone: 'पूर्ण के रूप में चिह्नित करें', ticketMarkOpen: 'फिर से खोलें'
+      ticketAdminAttachment: 'अटैचमेंट',
+      ticketStatusOpen: 'खुला', ticketStatusDone: 'पूर्ण', ticketMarkDone: 'पूर्ण के रूप में चिह्नित करें', ticketMarkOpen: 'फिर से खोलें',
+      obSkip: 'छोड़ें', obNext: 'आगे', obDone: 'समझ गया',
+      obStep1Title: 'आपका सिग्नल्स फ़ीड', obStep1Body: 'आपके फॉलो किए चैनलों की खबरें, महत्व के अनुसार क्रमबद्ध। यह आपका मुख्य फ़ीड है।',
+      obStep2Title: 'सेव किए गए', obStep2Body: 'किसी खबर को दाईं ओर स्वाइप करें, या सेव पर टैप करें, ताकि वह सामान्य 24 घंटे के बाद भी यहां रहे।',
+      obStep3Title: 'इन्वेस्टमेंट पर जाएं', obStep3Body: 'सिग्नल (सामान्य खबरें) और इन्वेस्टमेंट (कंपनी के अनुसार समूहित खबरें) के बीच बदलने के लिए डबल-टैप करें। एक टैप से गलती से नहीं बदलेगा।',
+      obStep4Title: 'एक्सपोर्ट', obStep4Body: 'अपना मौजूदा फ़ीड कभी भी CSV फ़ाइल के रूप में डाउनलोड करें।',
+      obStep5Title: 'सेटिंग्स', obStep5Body: 'चैनल, आपकी इन्वेस्टमेंट वॉचलिस्ट, नोटिफिकेशन, खाता, और फ़ीडबैक - सब एक ही जगह।'
     },
     mr: {
       linkPages: 'लिंक पेजेस', settings: 'सेटिंग्ज', signals: 'सिग्नल्स', saved: 'सेव्ह केलेले', export: 'एक्सपोर्ट',
@@ -1019,10 +1044,22 @@ if (typeof document !== 'undefined') (function () {
       agSyncTitle: 'डिव्हाइस सिंक करण्यासाठी साइन इन करा', agSyncBody: 'डिव्हाइसमध्ये सिंक करण्यासाठी आता मोफत खाते आवश्यक आहे - यामुळे सर्व काही थोडे अधिक सुरक्षित आणि तुमच्याशी जोडलेले राहते, शेअर करता येणाऱ्या कोडऐवजी.',
       feedbackLoginTitle: 'फीडबॅक पाठवण्यासाठी साइन इन करा', feedbackLoginBody: 'मोफत खाते तयार केल्याने अ‍ॅपचे मालक गरज पडल्यास तुमच्याशी संपर्क साधू शकतात.',
       ticketKindBug: 'बग', ticketKindSupport: 'सहाय्य', ticketKindFeedback: 'फीडबॅक',
-      ticketPlaceholder: 'समस्या किंवा कल्पना सांगा…', ticketSend: 'पाठवा', ticketSent: 'धन्यवाद - अ‍ॅपच्या मालकाला पाठवले.',
+      ticketPrefixBug: 'बग: ', ticketPrefixFeedback: 'फीडबॅक: ',
+      ticketPlaceholder: 'समस्या किंवा कल्पना सांगा…', ticketSend: 'सबमिट करा', ticketSent: 'धन्यवाद - अ‍ॅपच्या मालकाला पाठवले.',
       ticketFailed: 'पाठवता आले नाही. तुमचे कनेक्शन तपासा आणि पुन्हा प्रयत्न करा.', ticketEmpty: 'आधी काही शब्द लिहा.',
+      ticketSentWithNumber: 'पाठवले - तुमचा तिकीट क्रमांक {num} आहे. संदर्भासाठी तो जपून ठेवा.',
+      ticketAttachHeading: 'जोडणी (ऐच्छिक)', ticketAttachAdd: 'स्क्रीनशॉट किंवा फाइल जोडा',
+      ticketAttachRemove: 'काढा', ticketAttachTooBig: 'ही फाइल खूप मोठी आहे (कमाल 8 MB).',
+      ticketAttachUploading: 'जोडणी अपलोड होत आहे…', ticketAttachFailed: 'जोडणी अपलोड होऊ शकली नाही - तिकीट त्याशिवाय पाठवले.',
       ticketAdminHeading: 'तिकिटे (फक्त मालक)', ticketAdminEmpty: 'अजून तिकिटे नाहीत.', ticketAdminLoadFailed: 'तिकिटे लोड करता आली नाहीत.',
-      ticketStatusOpen: 'उघडे', ticketStatusDone: 'पूर्ण', ticketMarkDone: 'पूर्ण म्हणून चिन्हांकित करा', ticketMarkOpen: 'पुन्हा उघडा'
+      ticketAdminAttachment: 'जोडणी',
+      ticketStatusOpen: 'उघडे', ticketStatusDone: 'पूर्ण', ticketMarkDone: 'पूर्ण म्हणून चिन्हांकित करा', ticketMarkOpen: 'पुन्हा उघडा',
+      obSkip: 'वगळा', obNext: 'पुढे', obDone: 'समजले',
+      obStep1Title: 'तुमचा सिग्नल्स फीड', obStep1Body: 'तुम्ही फॉलो केलेल्या चॅनेल्सच्या बातम्या, महत्त्वानुसार क्रमवारी लावलेल्या. हा तुमचा मुख्य फीड आहे.',
+      obStep2Title: 'सेव्ह केलेले', obStep2Body: 'एखादी बातमी उजवीकडे स्वाइप करा, किंवा सेव्हवर टॅप करा, जेणेकरून ती नेहमीच्या 24 तासांनंतरही इथे राहील.',
+      obStep3Title: 'इन्व्हेस्टमेंटवर जा', obStep3Body: 'सिग्नल (सामान्य बातम्या) आणि इन्व्हेस्टमेंट (कंपनीनुसार गटबद्ध बातम्या) यामध्ये बदलण्यासाठी डबल-टॅप करा. एका टॅपने चुकून बदलणार नाही.',
+      obStep4Title: 'एक्सपोर्ट', obStep4Body: 'तुमचा सध्याचा फीड कधीही CSV फाइल म्हणून डाउनलोड करा.',
+      obStep5Title: 'सेटिंग्ज', obStep5Body: 'चॅनेल्स, तुमची इन्व्हेस्टमेंट वॉचलिस्ट, नोटिफिकेशन्स, खाते, आणि फीडबॅक - सर्व एकाच ठिकाणी.'
     },
     gu: {
       linkPages: 'લિંક પેજીસ', settings: 'સેટિંગ્સ', signals: 'સિગ્નલ્સ', saved: 'સેવ કરેલ', export: 'એક્સપોર્ટ',
@@ -1062,10 +1099,22 @@ if (typeof document !== 'undefined') (function () {
       agSyncTitle: 'ડિવાઇસ સિંક કરવા સાઇન ઇન કરો', agSyncBody: 'ડિવાઇસ વચ્ચે સિંક કરવા હવે મફત ખાતું જરૂરી છે - આ બધું થોડું વધુ સુરક્ષિત અને તમારી સાથે જોડાયેલું રાખે છે, શેર કરી શકાય તેવા કોડને બદલે.',
       feedbackLoginTitle: 'ફીડબેક મોકલવા સાઇન ઇન કરો', feedbackLoginBody: 'મફત ખાતું બનાવવાથી ઍપના માલિક જરૂર પડ્યે તમારો સંપર્ક કરી શકે છે.',
       ticketKindBug: 'બગ', ticketKindSupport: 'સહાય', ticketKindFeedback: 'પ્રતિસાદ',
-      ticketPlaceholder: 'સમસ્યા કે વિચાર જણાવો…', ticketSend: 'મોકલો', ticketSent: 'આભાર - ઍપના માલિકને મોકલાયું.',
+      ticketPrefixBug: 'બગ: ', ticketPrefixFeedback: 'પ્રતિસાદ: ',
+      ticketPlaceholder: 'સમસ્યા કે વિચાર જણાવો…', ticketSend: 'સબમિટ કરો', ticketSent: 'આભાર - ઍપના માલિકને મોકલાયું.',
       ticketFailed: 'મોકલી શકાયું નહીં. તમારું જોડાણ તપાસો અને ફરી પ્રયાસ કરો.', ticketEmpty: 'પહેલા થોડા શબ્દો લખો.',
+      ticketSentWithNumber: 'મોકલાયું - તમારો ટિકિટ નંબર {num} છે. સંદર્ભ માટે તેને સાચવી રાખો.',
+      ticketAttachHeading: 'જોડાણ (વૈકલ્પિક)', ticketAttachAdd: 'સ્ક્રીનશોટ કે ફાઇલ ઉમેરો',
+      ticketAttachRemove: 'દૂર કરો', ticketAttachTooBig: 'આ ફાઇલ ઘણી મોટી છે (મહત્તમ 8 MB).',
+      ticketAttachUploading: 'જોડાણ અપલોડ થઈ રહ્યું છે…', ticketAttachFailed: 'જોડાણ અપલોડ ન થઈ શક્યું - ટિકિટ તેના વિના મોકલાયું.',
       ticketAdminHeading: 'ટિકિટ (ફક્ત માલિક)', ticketAdminEmpty: 'હજુ કોઈ ટિકિટ નથી.', ticketAdminLoadFailed: 'ટિકિટ લોડ કરી શકાયા નહીં.',
-      ticketStatusOpen: 'ખુલ્લું', ticketStatusDone: 'પૂર્ણ', ticketMarkDone: 'પૂર્ણ તરીકે ચિહ્નિત કરો', ticketMarkOpen: 'ફરી ખોલો'
+      ticketAdminAttachment: 'જોડાણ',
+      ticketStatusOpen: 'ખુલ્લું', ticketStatusDone: 'પૂર્ણ', ticketMarkDone: 'પૂર્ણ તરીકે ચિહ્નિત કરો', ticketMarkOpen: 'ફરી ખોલો',
+      obSkip: 'છોડો', obNext: 'આગળ', obDone: 'સમજાઈ ગયું',
+      obStep1Title: 'તમારો સિગ્નલ્સ ફીડ', obStep1Body: 'તમે ફોલો કરેલા ચેનલોના સમાચાર, મહત્વ પ્રમાણે ક્રમબદ્ધ. આ તમારો મુખ્ય ફીડ છે.',
+      obStep2Title: 'સેવ કરેલ', obStep2Body: 'કોઈ સમાચારને જમણી બાજુ સ્વાઇપ કરો, અથવા સેવ પર ટેપ કરો, જેથી તે સામાન્ય 24 કલાક પછી પણ અહીં રહે.',
+      obStep3Title: 'ઇન્વેસ્ટમેન્ટ પર જાઓ', obStep3Body: 'સિગ્નલ (સામાન્ય સમાચાર) અને ઇન્વેસ્ટમેન્ટ (કંપની પ્રમાણે જૂથબદ્ધ સમાચાર) વચ્ચે બદલવા ડબલ-ટેપ કરો. એક ટેપથી ભૂલથી નહીં બદલાય.',
+      obStep4Title: 'એક્સપોર્ટ', obStep4Body: 'તમારો હાલનો ફીડ ગમે ત્યારે CSV ફાઇલ તરીકે ડાઉનલોડ કરો.',
+      obStep5Title: 'સેટિંગ્સ', obStep5Body: 'ચેનલો, તમારી ઇન્વેસ્ટમેન્ટ વોચલિસ્ટ, નોટિફિકેશન, ખાતું, અને પ્રતિસાદ - બધું એક જ જગ્યાએ.'
     }
   };
   let currentLang = 'en';
@@ -1289,7 +1338,13 @@ if (typeof document !== 'undefined') (function () {
     // both providers are OFF by default on a new Firebase project, and Auth.signUp/signIn will fail with
     // "OPERATION_NOT_ALLOWED" until Email/Password is turned on. Leaving googleClientId blank simply hides the
     // "Continue with Google" button - email/password accounts work regardless.
-    googleClientId: '434668496404-ivlniatcoq0b26bvcuk9ue1q40thtkfu.apps.googleusercontent.com'
+    googleClientId: '434668496404-ivlniatcoq0b26bvcuk9ue1q40thtkfu.apps.googleusercontent.com',
+    // Firebase Storage bucket for ticket attachments (Tickets.submit() below). Firebase's default bucket name
+    // for a project is "{projectId}.appspot.com" - this is NOT provisioned automatically the way Firestore is;
+    // Storage has to be turned on once in the Firebase console (Build -> Storage -> Get started) before any
+    // upload here will succeed, and storage.rules (shipped alongside firestore.rules in this repo) needs
+    // publishing there too. If you used a different bucket name when enabling Storage, update this to match.
+    storageBucket: 'qwicksignal.appspot.com'
   };
   // Web Push VAPID public key (safe to ship in client code - it only identifies this app to the push
   // service, it can't be used to send anything). Its matching private key lives only in the pipeline's
@@ -1666,6 +1721,10 @@ if (typeof document !== 'undefined') (function () {
       const el = $('#landing');
       if (el) el.hidden = true;
       document.body.classList.remove('pre-app');
+      // Single shared exit point for every way someone can leave the landing screen (sign-in, sign-up,
+      // Google, guest) - the natural place to kick off the onboarding tour for a first-time visitor.
+      // Onboarding.maybeStart() checks its own "already seen" flag, so this is safe to call every time.
+      setTimeout(() => Onboarding.maybeStart(), 300);
     },
     // Called once at boot: if this device/tab already has a reason to skip (a real signed-in session, or a
     // guest choice made earlier in this same tab/session), skip straight past the landing screen (same
@@ -1690,6 +1749,93 @@ if (typeof document !== 'undefined') (function () {
       });
       const guestBtn = $('#landingGuestBtn');
       if (guestBtn) guestBtn.addEventListener('click', () => { track('continue_as_guest'); this.dismiss(true); });
+    }
+  };
+
+  /* ---------- Onboarding walkthrough ----------
+     User's own words, reporting real feedback from an Instagram ad campaign: "few people didn't get what
+     the app does and have to figure out on their own which kind of turns them off from the app." A short,
+     skippable 5-step spotlight tour, shown once per device right after the landing screen is dismissed
+     (sign-in, sign-up, Google, or guest - whichever door they came in through), pointing at the real tab-bar
+     controls rather than a set of generic slides: Signals feed, Saved, the mode switch (and its double-tap
+     requirement, since that's the one interaction people can't discover by poking at it), Export, Settings.
+     Shown once ever per device (ONBOARD_KEY in localStorage) - unlike Landing's guest flag, this does NOT
+     reset on sign-out, since the goal is purely "has this browser seen the tour," not tied to any account. */
+  const ONBOARD_KEY = 'qs-onboard-seen-v1';
+  const Onboarding = {
+    seen() { try { return localStorage.getItem(ONBOARD_KEY) === '1'; } catch (e) { return false; } },
+    markSeen() { try { localStorage.setItem(ONBOARD_KEY, '1'); } catch (e) { /* private browsing etc. */ } },
+    steps: [
+      { anchor: '[data-tab="brief"]', titleKey: 'obStep1Title', bodyKey: 'obStep1Body' },
+      { anchor: '[data-tab="saved"]', titleKey: 'obStep2Title', bodyKey: 'obStep2Body' },
+      { anchor: '#modeSym', titleKey: 'obStep3Title', bodyKey: 'obStep3Body' },
+      { anchor: '[data-tab="export"]', titleKey: 'obStep4Title', bodyKey: 'obStep4Body' },
+      { anchor: '[data-tab="settings"]', titleKey: 'obStep5Title', bodyKey: 'obStep5Body' }
+    ],
+    _idx: 0,
+    // Called once at boot, after Landing has already been dismissed (or skipped because this device already
+    // had a reason to skip it) - see start()'s call site. Does nothing if already seen, or if the tab bar
+    // itself isn't present for some reason (defensive - should always be there).
+    maybeStart() {
+      if (this.seen()) return;
+      if (!$('.tabs')) return;
+      this._idx = 0;
+      track('onboarding_start');
+      this._renderStep();
+    },
+    _renderStep() {
+      const step = this.steps[this._idx];
+      const anchorEl = $(step.anchor);
+      const overlay = $('#obOverlay');
+      if (!step || !anchorEl || !overlay) { this._finish(); return; }
+      overlay.hidden = false;
+      document.body.classList.add('ob-active');
+      const rect = anchorEl.getBoundingClientRect();
+      const hole = $('#obHole', overlay);
+      // A padded rectangular cutout around the real control (CSS box-shadow spotlight technique - see
+      // .ob-hole in index.html) rather than a copy of the control, so the actual button the person will
+      // tap next is what's lit up, not a picture of it.
+      const pad = 6;
+      hole.style.left = (rect.left - pad) + 'px';
+      hole.style.top = (rect.top - pad) + 'px';
+      hole.style.width = (rect.width + pad * 2) + 'px';
+      hole.style.height = (rect.height + pad * 2) + 'px';
+      const card = $('#obCard', overlay);
+      const isLast = this._idx === this.steps.length - 1;
+      card.innerHTML = `
+        <div class="ob-dots">${this.steps.map((s, i) => `<span class="ob-dot${i === this._idx ? ' on' : ''}"></span>`).join('')}</div>
+        <h3 class="ob-title">${esc(t(step.titleKey))}</h3>
+        <p class="ob-body">${esc(t(step.bodyKey))}</p>
+        <div class="ob-actions">
+          <button type="button" id="obSkipBtn" class="ob-skip">${esc(t('obSkip'))}</button>
+          <button type="button" id="obNextBtn" class="btn primary small">${esc(isLast ? t('obDone') : t('obNext'))}</button>
+        </div>
+      `;
+      // Position the card above or below the spotlighted control, whichever has more room, and clamp it
+      // within the viewport horizontally - the tab bar sits at the very bottom of the screen, so every step
+      // here actually needs the "show above" branch, but this keeps the logic correct if a future step ever
+      // points at something nearer the top.
+      const cardH = card.offsetHeight || 150;
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const showBelow = spaceBelow > cardH + 24 && rect.top < cardH + 24;
+      card.style.top = showBelow ? (rect.bottom + pad + 14) + 'px' : '';
+      card.style.bottom = showBelow ? '' : (window.innerHeight - rect.top + pad + 14) + 'px';
+      const cardW = card.offsetWidth || 280;
+      let left = rect.left + rect.width / 2 - cardW / 2;
+      left = Math.max(12, Math.min(left, window.innerWidth - cardW - 12));
+      card.style.left = left + 'px';
+      $('#obSkipBtn', card).addEventListener('click', () => { track('onboarding_skip', { step: this._idx }); this._finish(); });
+      $('#obNextBtn', card).addEventListener('click', () => {
+        if (isLast) { track('onboarding_complete'); this._finish(); return; }
+        this._idx++;
+        this._renderStep();
+      });
+    },
+    _finish() {
+      const overlay = $('#obOverlay');
+      if (overlay) overlay.hidden = true;
+      document.body.classList.remove('ob-active');
+      this.markSeen();
     }
   };
 
@@ -1829,11 +1975,20 @@ if (typeof document !== 'undefined') (function () {
     });
   }
 
-  // Feedback/bug/support submission card. Requires an account (per the owner's request: tickets are now
-  // tied to a real identity, same reasoning as gating Telegram +Add and cross-device sync) - a signed-out
-  // visitor sees a login prompt instead of the form, via openAuthGate(), not a disabled textarea they can
-  // type into and then get rejected on submit.
+  // Feedback/bug submission card. Requires an account (per the owner's request: tickets are now tied to a
+  // real identity, same reasoning as gating Telegram +Add and cross-device sync) - a signed-out visitor sees
+  // a login prompt instead of the form, via openAuthGate(), not a disabled textarea they can type into and
+  // then get rejected on submit.
+  //
+  // Bug/Feedback only (Support dropped - per the owner's request to keep this to the two kinds that need a
+  // ticket number and a reply, old "support" tickets already in Firestore still display fine via
+  // ticketKindSupport's surviving translation string in renderTicketAdmin()). Picking a bubble pre-fills the
+  // textarea with a literal "Bug: "/"Feedback: " prefix (ticketPrefixBug/ticketPrefixFeedback) that the user
+  // types after, not an invisible tag applied at submit time. Switching bubbles mid-draft swaps only that
+  // leading prefix text and leaves whatever the user already typed after it untouched.
   const TICKET_MAX = 2000;
+  const TICKET_ATTACH_MAX_BYTES = 8 * 1024 * 1024; // 8 MB - comfortably covers a phone screenshot or a short screen recording, well under Firestore's own 1 MB doc limit (the file itself goes to Storage, only its download URL is stored in the ticket doc).
+  let ticketAttachFile = null; // the File object staged for upload, or null - cleared on every renderTicketBox() and on successful/failed submit
   function renderTicketBox() {
     const box = $('#ticketBox');
     if (!box) return;
@@ -1844,34 +1999,88 @@ if (typeof document !== 'undefined') (function () {
       </div>`;
       return;
     }
+    ticketAttachFile = null;
     box.innerHTML = `
       <div class="tcard">
         <div class="tseg" id="ticketKindSeg" role="group" aria-label="${esc(t('feedbackHeading'))}">
           <button data-v="bug" aria-pressed="true">${esc(t('ticketKindBug'))}</button>
-          <button data-v="support" aria-pressed="false">${esc(t('ticketKindSupport'))}</button>
           <button data-v="feedback" aria-pressed="false">${esc(t('ticketKindFeedback'))}</button>
         </div>
-        <textarea id="ticketMsg" class="tmsg" rows="4" maxlength="${TICKET_MAX}" placeholder="${esc(t('ticketPlaceholder'))}"></textarea>
+        <textarea id="ticketMsg" class="tmsg" rows="4" maxlength="${TICKET_MAX}" placeholder="${esc(t('ticketPlaceholder'))}">${esc(t('ticketPrefixBug'))}</textarea>
         <div class="tfoot">
           <span class="tcount" id="ticketCount">0 / ${TICKET_MAX}</span>
-          <button id="ticketSendBtn" class="btn primary small">${esc(t('ticketSend'))}</button>
         </div>
+        <div class="tattach">
+          <div class="tattach-label">${esc(t('ticketAttachHeading'))}</div>
+          <div id="ticketAttachRow"></div>
+        </div>
+        <button id="ticketSendBtn" class="btn primary small">${esc(t('ticketSend'))}</button>
       </div>
     `;
     let kind = 'bug';
+    const PREFIXES = { bug: t('ticketPrefixBug'), feedback: t('ticketPrefixFeedback') };
+    const ta = $('#ticketMsg', box), count = $('#ticketCount', box);
+    const updateCount = () => { count.textContent = ta.value.length + ' / ' + TICKET_MAX; };
+    updateCount();
     $$('#ticketKindSeg button', box).forEach(b => b.addEventListener('click', () => {
+      const prevPrefix = PREFIXES[kind];
       kind = b.dataset.v;
       $$('#ticketKindSeg button', box).forEach(x => x.setAttribute('aria-pressed', x === b));
+      // Swap just the old prefix for the new one, wherever the cursor is, so anything the user already typed
+      // after it survives the switch. Falls back to simply prepending the new prefix if the textarea's
+      // current text doesn't start with the prefix we expect (e.g. the user deleted it by hand).
+      const rest = ta.value.startsWith(prevPrefix) ? ta.value.slice(prevPrefix.length) : ta.value;
+      ta.value = PREFIXES[kind] + rest;
+      updateCount();
+      ta.focus();
+      ta.setSelectionRange(ta.value.length, ta.value.length);
     }));
-    const ta = $('#ticketMsg', box), count = $('#ticketCount', box);
-    ta.addEventListener('input', () => { count.textContent = ta.value.length + ' / ' + TICKET_MAX; });
+    ta.addEventListener('input', updateCount);
+    // Attachment: a real file input styled as a button, swapped for a filename + remove button once a file
+    // is staged. Nothing uploads until Submit is pressed - this just stages the File object in memory.
+    const attachRow = $('#ticketAttachRow', box);
+    function renderAttachRow() {
+      if (!ticketAttachFile) {
+        attachRow.innerHTML = `
+          <label class="btn small" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer">
+            ${esc(t('ticketAttachAdd'))}
+            <input id="ticketAttachInput" type="file" accept="image/*,.pdf,.txt,.log" style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden">
+          </label>`;
+        $('#ticketAttachInput', attachRow).addEventListener('change', (ev) => {
+          const f = ev.target.files && ev.target.files[0];
+          if (!f) return;
+          if (f.size > TICKET_ATTACH_MAX_BYTES) { toast(t('ticketAttachTooBig')); ev.target.value = ''; return; }
+          ticketAttachFile = f;
+          renderAttachRow();
+        });
+      } else {
+        attachRow.innerHTML = `
+          <span class="tattach-file">
+            <span class="tattach-name">${esc(ticketAttachFile.name)}</span>
+            <button type="button" id="ticketAttachRemoveBtn" class="btn small">${esc(t('ticketAttachRemove'))}</button>
+          </span>`;
+        $('#ticketAttachRemoveBtn', attachRow).addEventListener('click', () => { ticketAttachFile = null; renderAttachRow(); });
+      }
+    }
+    renderAttachRow();
     $('#ticketSendBtn', box).addEventListener('click', async () => {
       const btn = $('#ticketSendBtn', box);
       btn.disabled = true;
-      const r = await Tickets.submit(kind, ta.value);
+      const fileToUpload = ticketAttachFile;
+      if (fileToUpload) btn.textContent = t('ticketAttachUploading');
+      const r = await Tickets.submit(kind, ta.value, fileToUpload);
       btn.disabled = false;
-      if (r.ok) { ta.value = ''; count.textContent = '0 / ' + TICKET_MAX; toast(t('ticketSent')); }
-      else { toast(r.error); }
+      btn.textContent = t('ticketSend');
+      if (r.ok) {
+        ta.value = PREFIXES[kind];
+        updateCount();
+        ticketAttachFile = null;
+        renderAttachRow();
+        toast(r.ticketNumber ? t('ticketSentWithNumber').replace('{num}', r.ticketNumber) : t('ticketSent'));
+        if (r.attachFailed) toast(t('ticketAttachFailed'));
+      } else {
+        toast(r.error);
+      }
     });
   }
 
@@ -1892,13 +2101,19 @@ if (typeof document !== 'undefined') (function () {
       const done = tk.status === 'done';
       const kindLabel = tk.kind === 'bug' ? t('ticketKindBug') : tk.kind === 'support' ? t('ticketKindSupport') : t('ticketKindFeedback');
       const when = tk.created_at ? fmtDateTime(new Date(tk.created_at).getTime()) : '';
+      // ticket_number/user_id are only present on tickets submitted after this round's changes - older rows
+      // in qs_tickets (from before sign-in was required, or before ticket numbers existed) simply omit the
+      // reference-number line and fall back to user_email alone, same spirit as hiddenChannels/companies
+      // being optional fields elsewhere in this file for the same reason.
+      const refLine = tk.ticket_number ? `<span style="font-weight:700">${esc(tk.ticket_number)}</span> · ` : '';
       return `<div class="lp-row" style="align-items:flex-start;flex-direction:column;gap:4px;padding:10px 0;border-top:1px solid var(--line)">
         <div style="display:flex;gap:8px;align-items:center;width:100%">
           <span class="chip" style="flex:none">${kindLabel}</span>
-          <span style="flex:1;font-size:12.5px;color:var(--ink2)">${when}${tk.user_email ? ' · ' + tk.user_email : ''}</span>
+          <span style="flex:1;font-size:12.5px;color:var(--ink2)">${refLine}${when}${tk.user_email ? ' · ' + tk.user_email : ''}</span>
           <span style="flex:none;font-size:12px;font-weight:700;color:${done ? 'var(--ink2)' : 'var(--accent)'}">${done ? t('ticketStatusDone') : t('ticketStatusOpen')}</span>
         </div>
         <div style="font-size:14px;white-space:pre-wrap">${escapeHtml(tk.message || '')}</div>
+        ${tk.attachment_url ? `<a href="${esc(tk.attachment_url)}" target="_blank" rel="noopener" class="btn small" style="text-decoration:none">${esc(t('ticketAdminAttachment'))}</a>` : ''}
         <button class="btn small" data-ticket-toggle="${tk.id}" data-ticket-status="${done ? 'open' : 'done'}">${done ? t('ticketMarkOpen') : t('ticketMarkDone')}</button>
       </div>`;
     }).join('');
@@ -2197,41 +2412,91 @@ if (typeof document !== 'undefined') (function () {
     }
   };
 
-  /* ---------- Tickets (bug reports / support / feedback) ----------
+  /* ---------- Tickets (bug reports / feedback) ----------
      User's own words: "It is becoming difficult for me to track each and every bugs / additional features
      which needs to be added - Kindly add a ticket system where user can raise the ticket [...] Which I can
-     only see as the owner of the app and take actions on it." Same shape as qs_push_subs/qs_channels: no
-     login required to submit (most visitors are signed out), a random id the device doesn't need to
-     remember (nobody re-opens their own ticket), write-only for a normal visitor, and get/list restricted
-     to the owner account by firestore.rules - not just hidden in the UI, since a client-side check alone is
-     never real security (same note as isOwner() elsewhere in this file). */
+     only see as the owner of the app and take actions on it." Originally no login required to submit, same
+     shape as qs_push_subs/qs_channels; now requires sign-in (see submit() below) so a ticket can carry a real
+     human-readable reference number tied to an account rather than an anonymous write. Still write-only for
+     a normal visitor, get/list restricted to the owner account by firestore.rules - not just hidden in the
+     UI, since a client-side check alone is never real security (same note as isOwner() elsewhere in this
+     file). */
   const Tickets = {
+    // A short human-friendly ticket number shown to the user as their reference (e.g. in a support reply
+    // outside the app), separate from the Firestore document id (an opaque "tk..." string used only as a
+    // storage key, never shown to anyone). Format: QS-XXXX-XXXX using an unambiguous alphabet (no 0/O/1/I)
+    // so it's easy to read back over a phone call or type into an email. Collision risk is negligible for a
+    // single-owner ticket volume and isn't worth a round-trip to check uniqueness before every submit.
+    _TICKET_NUM_ALPHABET: '23456789ABCDEFGHJKLMNPQRSTUVWXYZ',
+    genTicketNumber() {
+      const A = this._TICKET_NUM_ALPHABET;
+      const part = () => Array.from({ length: 4 }, () => A[Math.floor(Math.random() * A.length)]).join('');
+      return `QS-${part()}-${part()}`;
+    },
+
+    // Uploads one file to Firebase Storage via its REST (JSON) API - no SDK is loaded anywhere in this app,
+    // same "plain fetch + API key / bearer token" approach already used for Firestore throughout this file.
+    // Returns the public download URL on success, or null on any failure (network, Storage not yet enabled
+    // for this project, etc) - submit() below treats a null here as "send the ticket text anyway, just
+    // without the attachment" rather than blocking the whole submission on an upload problem.
+    async uploadAttachment(file, ticketId) {
+      try {
+        const safeName = (file.name || 'attachment').replace(/[^\w.\-]+/g, '_').slice(-80);
+        const objectPath = `ticket_attachments/${Auth.uid}/${ticketId}/${Date.now()}_${safeName}`;
+        const headers = Object.assign({ 'Content-Type': file.type || 'application/octet-stream' }, await Sync.authHeaders());
+        const uploadUrl = `https://firebasestorage.googleapis.com/v0/b/${FIREBASE.storageBucket}/o?uploadType=media&name=${encodeURIComponent(objectPath)}`;
+        const r = await fetch(uploadUrl, { method: 'POST', headers, body: file });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const meta = await r.json();
+        // Storage's own "download token" query param is what makes the URL fetchable by anyone holding it
+        // (the owner, reading the ticket in renderTicketAdmin()) without needing their own auth header.
+        const token = meta.downloadTokens;
+        return `https://firebasestorage.googleapis.com/v0/b/${FIREBASE.storageBucket}/o/${encodeURIComponent(objectPath)}?alt=media${token ? '&token=' + token : ''}`;
+      } catch (e) {
+        return null;
+      }
+    },
+
     // Requires sign-in (per the owner's request - tickets are now tied to a real account, same reasoning
     // as gating Telegram +Add and cross-device sync). Checked here too, not just in the UI (renderTicketBox()
     // hides the form for guests) and in firestore.rules (the real enforcement) - a client-side check alone
     // is never real security by itself, same note as isOwner() elsewhere in this file.
-    async submit(kind, message) {
+    // `file` is an optional File object (from the attachment picker in renderTicketBox()) - omitted or null
+    // for a ticket with no attachment.
+    async submit(kind, message, file) {
       if (!Auth.uid) return { ok: false, error: t('feedbackLoginTitle') };
       const text = (message || '').trim();
       if (!text) return { ok: false, error: t('ticketEmpty') };
       const id = 'tk' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 10);
+      const ticketNumber = this.genTicketNumber();
+      let attachmentUrl = '', attachFailed = false;
+      if (file) {
+        attachmentUrl = await this.uploadAttachment(file, id);
+        if (!attachmentUrl) { attachmentUrl = ''; attachFailed = true; }
+      }
       const fields = {
         kind: toFsValue(kind || 'feedback'),
         message: toFsValue(text.slice(0, 4000)),
         status: toFsValue('open'),
         created_at: toFsValue(new Date().toISOString()),
-        // Now always the signed-in account's own address (firestore.rules checks it matches the caller's
-        // auth token) - never empty, since submit() requires Auth.uid above.
+        ticket_number: toFsValue(ticketNumber),
+        // Tags this ticket to the submitting account, so the owner can tell who reported what (user's own
+        // request) - firestore.rules checks this matches the caller's own auth token on write.
+        user_id: toFsValue(Auth.uid),
+        // Still kept alongside user_id for a quick human-readable look in renderTicketAdmin() without having
+        // to cross-reference an account by uid - always the signed-in account's own address, never empty,
+        // since submit() requires Auth.uid above.
         user_email: toFsValue(Auth.email || ''),
       };
+      if (attachmentUrl) fields.attachment_url = toFsValue(attachmentUrl);
       try {
         const headers = Object.assign({ 'Content-Type': 'application/json' }, await Sync.authHeaders());
         const r = await fetch(`${FS_BASE}/qs_tickets/${id}?key=${FIREBASE.apiKey}`, {
           method: 'PATCH', headers, body: JSON.stringify({ fields })
         });
         if (!r.ok) throw new Error('HTTP ' + r.status);
-        track('ticket_submit', { kind: kind || 'feedback' });
-        return { ok: true };
+        track('ticket_submit', { kind: kind || 'feedback', has_attachment: !!attachmentUrl });
+        return { ok: true, ticketNumber, attachFailed };
       } catch (e) {
         return { ok: false, error: t('ticketFailed') };
       }
@@ -3344,7 +3609,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
         const stories = c.stories.filter(investmentStoryMatches);
         const body = stories.length
           ? stories.map(entryWrapHTML).join('')
-          : `<p class="empty-note">${esc(t('investNoNews'))}</p>`;
+          : `<p class="empty-note">${esc(t('investNoNews'))}<br><span class="empty-note-hint">${esc(t('investNoNewsHint'))}</span></p>`;
         const initial = esc((c.company || '?').trim().charAt(0).toUpperCase() || '?');
         return `<h3 class="grp-company">
           <div class="gc-top">
