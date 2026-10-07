@@ -925,7 +925,9 @@ if (typeof document !== 'undefined') (function () {
       ticketFailed: "Couldn't send that. Check your connection and try again.", ticketEmpty: 'Write a few words first.',
       ticketAdminHeading: 'Tickets (owner only)', ticketAdminEmpty: 'No tickets yet.', ticketAdminLoadFailed: "Couldn't load tickets.",
       ticketStatusOpen: 'Open', ticketStatusDone: 'Done', ticketMarkDone: 'Mark done', ticketMarkOpen: 'Reopen',
-      modeNews: 'News', modeInvestment: 'Investment',
+      modeNews: 'Signal', modeInvestment: 'Investment',
+      telegramNewsSub: 'Link Telegram channels to follow for your Signal/News feed.',
+      telegramInvestHeading: 'Telegram channels for Investment', telegramInvestSub: "Link Telegram channels you follow specifically for investment/market news - kept separate from your News channels above.",
       investHeading: 'Investment watchlist', investSub: "Track companies you've invested in, or are watching, to see their news grouped separately in the Investment tab.",
       investPlaceholder: 'Company name', loginToTrackCompanies: 'Log in to track companies.',
       agTrackCompanyTitle: 'Log in to track companies', agTrackCompanyBody: 'Creating a free account keeps your investment watchlist with you across devices.',
@@ -1133,7 +1135,7 @@ if (typeof document !== 'undefined') (function () {
   // left completely alone.
   function patchTranslations() {
     if (currentLang === 'en') return;
-    $$('#list .entry[data-id], #savedList .entry[data-id]').forEach(card => {
+    $$('#list .entry[data-id], #savedList .entry[data-id], #savedInvestList .entry[data-id]').forEach(card => {
       const it = all().find(x => x.id === card.dataset.id);
       if (!it) return;
       const hl = card.querySelector(':scope > .hl');
@@ -1228,6 +1230,9 @@ if (typeof document !== 'undefined') (function () {
     hiddenChannels: new Set(), // channels this user has explicitly removed/hidden from their own Telegram list
     reviewed: new Set(),     // article ids the user has opened in the Country Status viewer (Phase C)
     myCompanies: new Set(),  // companies this user is tracking (invested in / watching) - News/Investment toggle
+    myInvestChannels: new Set(), // Telegram channels linked specifically for Investment mode - local/personal
+                                  // only (unlike myChannels/Channels.*, there's no shared owner-curated pool
+                                  // here; this is simpler on purpose, same personal-list pattern as myCompanies)
     mode: 'news',            // 'news' (country-grouped, unchanged) or 'investment' (sector->company groups, tracked companies only)
     cv: null                 // { country, idx, stories } while the Country Status viewer is open; not persisted
   };
@@ -1489,7 +1494,7 @@ if (typeof document !== 'undefined') (function () {
       this.code = code;
       S.syncCode = code;
       this.cacheWrite(null);
-      S.saved = new Set(); S.dismissed = new Set(); S.myChannels = new Set(); S.hiddenChannels = new Set(); S.reviewed = new Set(); S.myCompanies = new Set();
+      S.saved = new Set(); S.dismissed = new Set(); S.myChannels = new Set(); S.hiddenChannels = new Set(); S.reviewed = new Set(); S.myCompanies = new Set(); S.myInvestChannels = new Set();
       const ok = await this.pull();
       toast(ok ? 'Synced. This device now shares saved articles and channels with that code.' : 'Saved the code, but couldn\u2019t reach the sync service just now. It will sync when back online.');
       renderAll(); renderChannels();
@@ -1515,6 +1520,7 @@ if (typeof document !== 'undefined') (function () {
       S.hiddenChannels = new Set(rec.hiddenChannels || []);
       S.reviewed = new Set(rec.reviewed || []);
       S.myCompanies = new Set(rec.companies || []);
+      S.myInvestChannels = new Set(rec.investChannels || []);
     },
 
     // lastPullFoundDoc distinguishes "no cloud record yet" (404 - S.* is left exactly as it was, whatever
@@ -1541,10 +1547,10 @@ if (typeof document !== 'undefined') (function () {
 
     async push() {
       if (!this.code && !Auth.uid) return false;
-      const rec = { saved: [...S.saved], dismissed: [...S.dismissed], channels: [...S.myChannels], hiddenChannels: [...S.hiddenChannels], reviewed: [...S.reviewed], companies: [...S.myCompanies] };
+      const rec = { saved: [...S.saved], dismissed: [...S.dismissed], channels: [...S.myChannels], hiddenChannels: [...S.hiddenChannels], reviewed: [...S.reviewed], companies: [...S.myCompanies], investChannels: [...S.myInvestChannels] };
       if (!Auth.uid) this.cacheWrite(rec);
       try {
-        const fields = { saved: toFsValue(rec.saved), dismissed: toFsValue(rec.dismissed), channels: toFsValue(rec.channels), hiddenChannels: toFsValue(rec.hiddenChannels), reviewed: toFsValue(rec.reviewed), companies: toFsValue(rec.companies) };
+        const fields = { saved: toFsValue(rec.saved), dismissed: toFsValue(rec.dismissed), channels: toFsValue(rec.channels), hiddenChannels: toFsValue(rec.hiddenChannels), reviewed: toFsValue(rec.reviewed), companies: toFsValue(rec.companies), investChannels: toFsValue(rec.investChannels) };
         const headers = Object.assign({ 'Content-Type': 'application/json' }, await this.authHeaders());
         const r = await fetch(this.docUrl(), { method: 'PATCH', headers, body: JSON.stringify({ fields }) });
         if (!r.ok) throw new Error('HTTP ' + r.status);
@@ -1562,7 +1568,7 @@ if (typeof document !== 'undefined') (function () {
   // Runs right after a successful sign-up/sign-in/Google call. Auth.uid is already set at this point, so
   // Sync.pull() below reads this account's own qs_users/{uid} doc instead of the guest one.
   async function completeAuth() {
-    const hadGuestData = !!(S.saved.size || S.dismissed.size || S.myChannels.size || S.hiddenChannels.size || S.reviewed.size || S.myCompanies.size);
+    const hadGuestData = !!(S.saved.size || S.dismissed.size || S.myChannels.size || S.hiddenChannels.size || S.reviewed.size || S.myCompanies.size || S.myInvestChannels.size);
     await Sync.pull();
     // pull() found no existing doc for this account (a brand-new account, or a returning one that never
     // synced from this browser before) - S.* still holds whatever was there before the pull, i.e. the
@@ -1570,21 +1576,21 @@ if (typeof document !== 'undefined') (function () {
     // overwritten S.* with it - nothing to offer merging in, that data already IS what's now on screen.
     if (hadGuestData && !Sync.lastPullFoundDoc) {
       const bring = confirm('Bring your existing saved articles, dismissed items and followed channels into this account?');
-      if (!bring) { S.saved = new Set(); S.dismissed = new Set(); S.myChannels = new Set(); S.hiddenChannels = new Set(); S.reviewed = new Set(); S.myCompanies = new Set(); }
+      if (!bring) { S.saved = new Set(); S.dismissed = new Set(); S.myChannels = new Set(); S.hiddenChannels = new Set(); S.reviewed = new Set(); S.myCompanies = new Set(); S.myInvestChannels = new Set(); }
       else await Sync.push();
       toast('Signed in as ' + Auth.email + (bring ? '. Your existing data is now saved to this account.' : '.'));
     } else {
       toast('Signed in as ' + Auth.email + '.');
     }
-    renderAccount(); renderAll(); renderChannels(); renderSyncCode(); renderTicketBox(); renderTicketAdmin(); renderInvestmentBox();
+    renderAccount(); renderAll(); renderChannels(); renderInvestChannels(); renderSyncCode(); renderTicketBox(); renderTicketAdmin(); renderInvestmentBox();
   }
 
   function signOut() {
     Auth.signOut();
-    S.saved = new Set(); S.dismissed = new Set(); S.myChannels = new Set(); S.hiddenChannels = new Set(); S.reviewed = new Set(); S.myCompanies = new Set();
-    renderAccount(); renderAll(); renderChannels(); renderSyncCode(); renderTicketBox(); renderTicketAdmin(); renderInvestmentBox();
+    S.saved = new Set(); S.dismissed = new Set(); S.myChannels = new Set(); S.hiddenChannels = new Set(); S.reviewed = new Set(); S.myCompanies = new Set(); S.myInvestChannels = new Set();
+    renderAccount(); renderAll(); renderChannels(); renderInvestChannels(); renderSyncCode(); renderTicketBox(); renderTicketAdmin(); renderInvestmentBox();
     toast('Signed out. Back to guest mode on this device.');
-    Sync.pull().then(() => { renderAll(); renderChannels(); });    // fall back to this browser's guest sync code
+    Sync.pull().then(() => { renderAll(); renderChannels(); renderInvestChannels(); });    // fall back to this browser's guest sync code
     Landing.clearGuestSeen();   // a stale guest flag from earlier this tab session shouldn't skip the screen below
     Landing.show();   // "once the user picks something" also unwinds on sign-out: ask again next time
   }
@@ -2030,6 +2036,32 @@ if (typeof document !== 'undefined') (function () {
       track('untrack_company', { company: name });
       renderInvestmentBox();
       renderAll();
+    }
+  };
+
+  /* ---------- Telegram channels for Investment mode ----------
+     Mirrors Companies above, not Channels: purely personal data (S.myInvestChannels, synced the same way as
+     myCompanies), no shared pool or owner-curation step, since linking a channel just for one's own
+     market-news tracking has no "approved for everyone" concept the way the News-mode channel pool does. */
+  const InvestChannels = {
+    add(raw) {
+      if (!Auth.uid) { openAuthGate('agAddChannelsTitle', 'agAddChannelsBody'); return false; }
+      const name = normalizeChannel(raw);
+      if (!CHANNEL_RX.test(name)) { toast('Use the form t/channelname – letters, numbers and underscores only.'); return false; }
+      const lower = name.toLowerCase();
+      if (S.myInvestChannels.has(lower)) { toast('t/' + lower + ' is already linked.'); return false; }
+      S.myInvestChannels.add(lower);
+      Sync.pushSoon();
+      track('invest_channel_add', { channel: lower });
+      toast('t/' + lower + ' linked for Investment.');
+      renderInvestChannels();
+      return true;
+    },
+    remove(name) {
+      S.myInvestChannels.delete(name.toLowerCase());
+      Sync.pushSoon();
+      track('invest_channel_remove', { channel: name });
+      renderInvestChannels();
     }
   };
 
@@ -3170,8 +3202,10 @@ Give a concise, event-specific analysis - decide for yourself which structure be
   // duplicating their UI. Country/sector dropdown filters don't apply here - sector is already the
   // Investment tab's own grouping - so only q and imp are relevant.
   function investmentStoryMatches(it) {
+    // No longer checks f.imp (priority) - the priority dropdown (#viewFilter) is hidden in Investment mode
+    // (see setMode()) at the user's explicit request, and applying a filter with no visible control to show
+    // or clear it would silently hide stories for no reason the user could see or undo from this screen.
     const f = S.f, q = f.q.trim().toLowerCase();
-    if (f.imp && it.importance !== f.imp) return false;
     if (q && !(it.headline + ' ' + it.summary + ' ' + it.country + ' ' + it.sector + ' ' + it.subsector + ' ' + (it.companies || []).join(' ') + ' ' + it.text).toLowerCase().includes(q)) return false;
     return true;
   }
@@ -3195,8 +3229,12 @@ Give a concise, event-specific analysis - decide for yourself which structure be
         const body = stories.length
           ? stories.map(entryWrapHTML).join('')
           : `<p class="empty-note">${esc(t('investNoNews'))}</p>`;
+        const initial = esc((c.company || '?').trim().charAt(0).toUpperCase() || '?');
         return `<h3 class="grp-company">
-          <div class="gc-top"><span class="gc-name">${esc(c.company)}</span><span class="n">${stories.length}</span></div>
+          <div class="gc-top">
+            <span class="gc-ring"><span class="gc-ring-inner">${initial}</span></span>
+            <span class="gc-name">${esc(c.company)}</span><span class="n">${stories.length}</span>
+          </div>
           <div class="gc-actions">
             <button class="btn-chart" data-act="viewChart" data-v="${esc(c.company)}" data-sector="${esc(g.sector)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l5-5 4 4 8-9"/><path d="M15 7h5v5"/></svg>${esc(t('viewChart'))}</button>
             <button class="gc-remove" data-act="untrack" data-v="${esc(c.company)}" aria-label="${esc(t('investRemove'))} ${esc(c.company)}" title="${esc(t('investRemove'))}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
@@ -3248,16 +3286,27 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     box.innerHTML = html;
   }
 
+  // Saved is split by mode, same as the main feed: a saved story that's tagged with one of the user's
+  // tracked companies is "investment-related" and shows in Investment mode's own list
+  // (#savedInvestList); everything else (including a story tagged with a company the user doesn't
+  // track) is Signal/News content and stays in the original #savedList. Both lists are kept rendered
+  // together and shown/hidden by setMode(), so switching modes never re-fetches, just toggles.
   function renderSaved() {
-    const box = $('#savedList');
-    if (!box) return;
+    const newsBox = $('#savedList'), investBox = $('#savedInvestList');
+    if (!newsBox && !investBox) return;
     const items = savedItems();
     ensureTranslated(collectTranslatable(items));
-    if (!items.length) {
-      box.innerHTML = `<div class="empty"><p>Nothing saved yet.</p><p>Swipe a story right, or tap Save, to keep it here past the normal 24-hour window.</p></div>`;
-      return;
+    const isInvestItem = it => (it.companies || []).some(c => S.myCompanies.has(c));
+    const newsItems = items.filter(it => !isInvestItem(it));
+    const investItems = items.filter(isInvestItem);
+    if (newsBox) {
+      newsBox.innerHTML = newsItems.length ? newsItems.map(savedCardHTML).join('')
+        : `<div class="empty"><p>Nothing saved yet.</p><p>Swipe a story right, or tap Save, to keep it here past the normal 24-hour window.</p></div>`;
     }
-    box.innerHTML = items.map(savedCardHTML).join('');
+    if (investBox) {
+      investBox.innerHTML = investItems.length ? investItems.map(savedCardHTML).join('')
+        : `<div class="empty"><p>${esc(t('investNoNews'))}</p><p>Save a story about one of your tracked companies to keep it here.</p></div>`;
+    }
   }
 
   /* ---------- country, sector and priority drop-downs ---------- */
@@ -3434,6 +3483,27 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     if (dl && !dl.childElementCount) dl.innerHTML = E.COMPANIES.map(c => `<option value="${esc(c.name)}">`).join('');
   }
 
+  // Telegram channels linked specifically for Investment mode. Deliberately a simpler, local-only personal
+  // list (same pattern as the investment watchlist above) rather than the shared, owner-curated pool the
+  // News-mode Telegram block uses (Channels.*/DefaultChannels) - there is no cross-user approval concept for
+  // a channel someone links just for their own market-news tracking. Kept in its own S.myInvestChannels set
+  // so the two channel lists never mix: a channel linked here does not appear in or affect the News list.
+  function renderInvestChannels() {
+    const box = $('#tgInvList'), gate = $('#tgInvGateNote');
+    if (!box) return;
+    if (gate) gate.hidden = !!Auth.uid;
+    if (!S.myInvestChannels.size) {
+      box.innerHTML = `<p class="lp-empty">${esc(t('noChannelsYet'))}</p>`;
+    } else {
+      box.innerHTML = [...S.myInvestChannels].sort((a, b) => a.localeCompare(b)).map(name => `<div class="lp-row">
+        <span class="name">t/${esc(name)}</span>
+        <div class="lp-rowbtns">
+          <button class="follow lp-remove" data-act="tginvremove" data-v="${esc(name)}" aria-label="${esc(t('remove'))} t/${esc(name)}">${esc(t('remove'))}</button>
+        </div>
+      </div>`).join('');
+    }
+  }
+
   async function renderExport() {
     $$('#exportSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === S.exportRange));
     const c = visibleItems().filter(i => inRange(i, S.exportRange)).length;
@@ -3446,29 +3516,52 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     // keep the just-added cards in sync when they are toggled
   }
 
-  /* ---------- News / Investment mode toggle ---------- */
+  /* ---------- News/Signal / Investment mode toggle ----------
+     Driven by the two animated symbols in the bottom tab bar (#modeSymNews/#modeSymInvestment) instead of
+     the old #modeSeg segmented control, which has been removed from the Signals view. Same mode state
+     (S.mode) as before, just a different control surface - plus two new mode-scoped areas (Settings'
+     #settingsSignalGroup/#settingsInvestmentGroup, Saved's #savedList/#savedInvestList) that now also
+     follow S.mode, per the user's request to split Saved/Settings content by Signal vs Investment. */
   function setMode(mode) {
     if (mode === S.mode) return;
     S.mode = mode;
     track('mode_view', { mode });
-    $$('#modeSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === mode));
-    // The News-only chrome (country status ring, country/sector dropdown filters) has no meaning in
+    $$('.modesym').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === mode));
+    // The News-only chrome (country status ring, country/sector/priority dropdown filters) has no meaning in
     // Investment mode, which is already grouped by sector/company - hide it rather than render it against
     // the wrong data. #rangeSeg/#sectors/#countries/#viewSeg are left alone entirely: they're already
     // permanently hidden in the markup (their buttons are commented out - unused/future UI), independent of
-    // mode. The search box and priority chips/dropdown stay visible in both modes: Investment mode's own
-    // rendering (investmentStoryMatches()) honors the same S.f.q/S.f.imp, so they keep actually doing something.
-    const investmentOnlyHide = ['#countryStatus', '#countryFilter', '#sectorFilter', '#hasFilter'];
+    // mode. The search box stays visible in both modes (investmentStoryMatches() still honors S.f.q), but the
+    // priority dropdown (#viewFilter) is hidden here too, at the user's explicit request - Investment mode no
+    // longer applies S.f.imp as a filter either (see investmentStoryMatches()), so hiding the control without
+    // also dropping its effect would otherwise leave stories silently filtered by a priority value selected
+    // back in News mode, with no visible control in Investment mode to explain or clear it.
+    const investmentOnlyHide = ['#countryStatus', '#countryFilter', '#sectorFilter', '#hasFilter', '#viewFilter'];
     if (mode === 'investment') {
       investmentOnlyHide.forEach(sel => { const el = $(sel); if (el) el.hidden = true; });
       renderInvestmentList();
     } else {
       // renderControls() fills countryFilter/sectorFilter but never un-hides them (it only reacts to filter
       // state, not mode), so that's cleared here first; #countryStatus/#hasFilter are restored by
-      // renderCountryBar()/renderControls() themselves right after.
-      ['#countryFilter', '#sectorFilter'].forEach(sel => { const el = $(sel); if (el) el.hidden = false; });
+      // renderCountryBar()/renderControls() themselves right after. #viewFilter (priority) is a plain static
+      // dropdown with no render function of its own, so it's un-hidden explicitly here too, the same way -
+      // otherwise coming back to News mode from Investment would leave it hidden forever.
+      ['#countryFilter', '#sectorFilter', '#viewFilter'].forEach(sel => { const el = $(sel); if (el) el.hidden = false; });
       renderControls(); renderList(); renderCountryBar();
     }
+    // Settings: swap which Telegram/watchlist block shows, per mode.
+    const sigGroup = $('#settingsSignalGroup'), invGroup = $('#settingsInvestmentGroup');
+    if (sigGroup) sigGroup.hidden = mode === 'investment';
+    if (invGroup) invGroup.hidden = mode !== 'investment';
+    if (S.tab === 'settings') {
+      if (mode === 'investment') renderInvestmentBox(); else renderChannels();
+      renderInvestChannels();
+    }
+    // Saved: swap which saved-items list shows, re-render if that tab happens to be open already.
+    const savedNews = $('#savedList'), savedInv = $('#savedInvestList');
+    if (savedNews) savedNews.hidden = mode === 'investment';
+    if (savedInv) savedInv.hidden = mode !== 'investment';
+    if (S.tab === 'saved') renderSaved();
   }
 
   /* ---------- tabs ---------- */
@@ -3485,7 +3578,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     // blocks were always rendered on load regardless of which tab was showing. Now that it's reached only via
     // the Settings tab, re-render its dynamic bits on every visit so they're never stale (e.g. after signing
     // in from the landing page while this tab wasn't open yet).
-    if (name === 'settings') { renderAccount(); renderChannels(); renderSyncCode(); renderGetApp(); renderNotifBox(); renderTicketBox(); renderTicketAdmin(); renderInvestmentBox(); }
+    if (name === 'settings') { renderAccount(); renderChannels(); renderInvestChannels(); renderSyncCode(); renderGetApp(); renderNotifBox(); renderTicketBox(); renderTicketAdmin(); renderInvestmentBox(); }
   }
 
   /* ---------- export ---------- */
@@ -3591,7 +3684,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     if (SWIPE.justSwiped) { ev.preventDefault(); ev.stopPropagation(); return; }
     const el = ev.target.closest('[data-act],[data-tab],[data-v]');
     if (el && el.dataset.tab) { setTab(el.dataset.tab); return; }
-    if (el && el.closest('#modeSeg')) { setMode(el.dataset.v); return; }
+    if (el && el.closest('.modebar')) { setMode(el.dataset.v); return; }
     if (el && el.closest('#rangeSeg')) { S.f.range = el.dataset.v; renderControls(); renderList(); return; }
     if (el && el.closest('#viewSeg')) { S.f.view = el.dataset.v; renderControls(); renderList(); return; }
     if (el && el.closest('#exportSeg')) { S.exportRange = el.dataset.v; renderExport(); return; }
@@ -3600,6 +3693,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
      try {
       const v = el.dataset.v;
       if (act === 'untrack') { Companies.remove(v); }
+      else if (act === 'tginvremove') { InvestChannels.remove(v); }
       else if (act === 'gotoWatchlist') { setTab('settings'); const inp = $('#invInput'); if (inp) inp.focus(); }
       else if (act === 'viewChart') { openChartModal(v, el, el.dataset.sector); }
       else if (act === 'cmclose') { closeChartModal(); }
@@ -3707,7 +3801,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       if (opening) S.open.add(id); else S.open.delete(id);
       track(opening ? 'open_story' : 'close_story', { id });
       const it = all().find(i => i.id === id);
-      if (it) card.outerHTML = card.closest('#savedList') ? savedCardHTML(it) : entryHTML(it);
+      if (it) card.outerHTML = card.closest('#savedList,#savedInvestList') ? savedCardHTML(it) : entryHTML(it);
     }
   });
 
@@ -3785,6 +3879,13 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     if (ok) inp.value = '';
   });
   $('#invInput').addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); $('#invAdd').click(); } });
+  $('#tgInvAdd').addEventListener('click', () => {
+    const inp = $('#tgInvInput'); const v = inp.value;
+    if (!v.trim()) return;
+    const ok = InvestChannels.add(v);
+    if (ok) inp.value = '';
+  });
+  $('#tgInvInput').addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); $('#tgInvAdd').click(); } });
   // Sync-by-code UI (#syncCopy/#syncUse/#syncInput) was removed from index.html - syncing now requires an
   // account (see renderSyncCode()); Sync.switchTo()/the code itself still exist internally since Sync.code
   // is also the guest local-cache key for saves/dismisses/channels on a single device, just with no more
