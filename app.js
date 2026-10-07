@@ -3517,16 +3517,26 @@ Give a concise, event-specific analysis - decide for yourself which structure be
   }
 
   /* ---------- News/Signal / Investment mode toggle ----------
-     Driven by the two animated symbols in the bottom tab bar (#modeSymNews/#modeSymInvestment) instead of
-     the old #modeSeg segmented control, which has been removed from the Signals view. Same mode state
-     (S.mode) as before, just a different control surface - plus two new mode-scoped areas (Settings'
-     #settingsSignalGroup/#settingsInvestmentGroup, Saved's #savedList/#savedInvestList) that now also
-     follow S.mode, per the user's request to split Saved/Settings content by Signal vs Investment. */
+     Driven by the single #modeSym button in the bottom tab bar (one button, same size as the other tab
+     icons, showing whichever symbol matches the current mode - see the click handler above, which toggles
+     to the other mode on tap) instead of the old #modeSeg segmented control, which has been removed from
+     the Signals view. Same mode state (S.mode) as before, just a different control surface - plus two new
+     mode-scoped areas (Settings' #settingsSignalGroup/#settingsInvestmentGroup, Saved's
+     #savedList/#savedInvestList) that now also follow S.mode, per the user's request to split Saved/
+     Settings content by Signal vs Investment. */
   function setMode(mode) {
     if (mode === S.mode) return;
     S.mode = mode;
     track('mode_view', { mode });
-    $$('.modesym').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === mode));
+    const symBtn = $('#modeSym');
+    if (symBtn) {
+      symBtn.dataset.v = mode;
+      symBtn.dataset.mode = mode;
+      const label = mode === 'investment' ? 'Investment' : 'Signal';
+      const hint = mode === 'investment' ? 'tap to switch to Signal' : 'tap to switch to Investment';
+      symBtn.setAttribute('aria-label', label);
+      symBtn.setAttribute('title', label + ' · ' + hint);
+    }
     // The News-only chrome (country status ring, country/sector/priority dropdown filters) has no meaning in
     // Investment mode, which is already grouped by sector/company - hide it rather than render it against
     // the wrong data. #rangeSeg/#sectors/#countries/#viewSeg are left alone entirely: they're already
@@ -3684,7 +3694,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     if (SWIPE.justSwiped) { ev.preventDefault(); ev.stopPropagation(); return; }
     const el = ev.target.closest('[data-act],[data-tab],[data-v]');
     if (el && el.dataset.tab) { setTab(el.dataset.tab); return; }
-    if (el && el.closest('.modebar')) { setMode(el.dataset.v); return; }
+    if (el && el.closest('#modeSym')) { setMode(S.mode === 'investment' ? 'news' : 'investment'); return; }
     if (el && el.closest('#rangeSeg')) { S.f.range = el.dataset.v; renderControls(); renderList(); return; }
     if (el && el.closest('#viewSeg')) { S.f.view = el.dataset.v; renderControls(); renderList(); return; }
     if (el && el.closest('#exportSeg')) { S.exportRange = el.dataset.v; renderExport(); return; }

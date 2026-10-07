@@ -1,22 +1,29 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-38-v1';  // New this round: the News/Investment mode switch moved out of the
-                                      // Signals screen (the old #modeSeg segmented control is gone) and
-                                      // into two animated symbols centered in the bottom tab bar - a
-                                      // wifi-signal icon (Signal/News mode, renamed from "News" in the UI)
-                                      // and a candlestick-chart icon (Investment mode), styled after
-                                      // codepen.io/Onur-E/pen/mddzmKK's expand-and-glow interaction. Saved
-                                      // and Settings now split their content by the same mode: Saved shows
-                                      // either saved news stories or saved items tied to tracked companies;
-                                      // Settings shows either the News Telegram-channel block or a new,
-                                      // separate Investment block (watchlist + its own Telegram channels,
-                                      // kept apart from the News channel list - this is a simple personal
-                                      // list, not the shared owner-curated pool News channels use). The
-                                      // Investment tab's per-company cards were also restyled to match the
-                                      // round icon-chip look of the News-mode country cards.
+const VERSION = 'gni-phase3-39-v1';  // Fix this round: the Signal/Investment mode switch is now ONE button
+                                      // in the bottom tab bar, sized exactly like the other four tab icons
+                                      // (Signals/Saved/Export/Settings) - the previous round shipped it as
+                                      // two separate large circles that rendered far bigger than the rest of
+                                      // the bar. Tapping the single button now toggles mode and crossfades
+                                      // between the wifi-signal icon (Signal/News) and the candlestick-chart
+                                      // icon (Investment), styled after codepen.io/Onur-E/pen/mddzmKK's
+                                      // icon-fades-and-rotates-away interaction, scaled down to fit the
+                                      // normal tab-icon size instead of the CodePen's much larger circle.
                                       //
-                                      // Previous round's changes, still in effect:
+                                      // Previous round's changes, still in effect: the News/Investment mode
+                                      // switch moved out of the Signals screen (the old #modeSeg segmented
+                                      // control is gone) into the bottom tab bar; Saved and Settings split
+                                      // their content by the same mode - Saved shows either saved news
+                                      // stories or saved items tied to tracked companies; Settings shows
+                                      // either the News Telegram-channel block or a separate Investment
+                                      // block (watchlist + its own Telegram channels, kept apart from the
+                                      // News channel list - a simple personal list, not the shared
+                                      // owner-curated pool News channels use). The Investment tab's
+                                      // per-company cards were restyled to match the round icon-chip look
+                                      // of the News-mode country cards.
+                                      //
+                                      // Earlier round's changes, still in effect:
                                       // (1) The ticker-accuracy work continues:
                                       // guessSymbol() now checks a full BSE equity scrip lookup
                                       // (BSE_SCRIP_LOOKUP in app.js) - ~4,800 companies built from BSE's own
