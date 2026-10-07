@@ -59,12 +59,6 @@
 //                       delete. Small by design (no sources/facts/images) since it accumulates
 //                       forever.
 //
-//   qs_longform/{id}    "Deeper reading": real Substack articles the pipeline finds via a live web
-//                       search for each new story (Substack has no reliable article-topic search of
-//                       its own - see search_substack_articles() in pipeline.py), up to 2 per story.
-//                       Same public-read/pipeline-write shape as qs_archive. Inert (writes nothing)
-//                       until a SERPER_API_KEY secret is configured.
-//
 // OWNER_EMAIL below must exactly match the OWNER_EMAIL constant in app.js - both are simple
 // string constants, not a secret (the value is already public in the shipped client code);
 // the real protection is that only Firebase Auth itself can produce a signed token asserting
@@ -252,41 +246,6 @@ service cloud.firestore {
           (request.resource.data.companies is list && request.resource.data.companies.size() <= 8));
 
       allow update: if false;
-      allow delete: if isOwner();
-    }
-
-    // qs_longform/{id}   "Deeper reading": real Substack articles the pipeline found via a live web search
-    //                     for each genuinely new story (there is no reliable way to search Substack BY
-    //                     TOPIC and get matching articles any other way - see the long comment above
-    //                     search_substack_articles() in pipeline.py). Up to 2 per story (story_id), chosen
-    //                     by the pipeline's own ranking, never more - app.js's Longform module reads these
-    //                     back by story_id and shows them in that story's detail view, not as a separate
-    //                     always-on feed. Same public-read/pipeline-write/no-client-update shape as
-    //                     qs_archive above, for the same reasons.
-    match /qs_longform/{id} {
-      allow get, list: if true;
-
-      allow create: if
-        id.matches('lf[a-z0-9]{10,40}') &&
-        request.resource.data.keys().hasOnly(['story_id', 'title', 'url', 'snippet', 'source', 'found_at']) &&
-        request.resource.data.story_id is string && request.resource.data.story_id.size() <= 64 &&
-        request.resource.data.title is string && request.resource.data.title.size() <= 300 &&
-        request.resource.data.url is string && request.resource.data.url.size() <= 1000 &&
-        request.resource.data.snippet is string && request.resource.data.snippet.size() <= 500 &&
-        request.resource.data.source is string && request.resource.data.source.size() <= 64 &&
-        request.resource.data.found_at is string;
-
-      // The pipeline overwrites the same doc id on a re-search (see write_longform_match()'s deterministic
-      // id), so this allows that one case: the story_id/url/etc fields can change, but only via the exact
-      // same create-shaped write a brand new doc would need to pass - update here is really "create again."
-      allow update: if
-        request.resource.data.keys().hasOnly(['story_id', 'title', 'url', 'snippet', 'source', 'found_at']) &&
-        request.resource.data.story_id is string && request.resource.data.story_id.size() <= 64 &&
-        request.resource.data.title is string && request.resource.data.title.size() <= 300 &&
-        request.resource.data.url is string && request.resource.data.url.size() <= 1000 &&
-        request.resource.data.snippet is string && request.resource.data.snippet.size() <= 500 &&
-        request.resource.data.source is string && request.resource.data.source.size() <= 64 &&
-        request.resource.data.found_at is string;
       allow delete: if isOwner();
     }
   }

@@ -1,7 +1,21 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-49-v1';  // This round: two new features addressing a real gap - feed.json keeps
+const VERSION = 'gni-phase3-50-v1';  // This round: removed "Deeper reading" entirely (owner's call - didn't
+                                      // want to add a new search-provider key right now). Pulled
+                                      // search_substack_articles()/write_longform_match()/find_deeper_reading()
+                                      // from pipeline.py, the Longform module/deeperReadingHTML()/its card-open
+                                      // fetch hookup from app.js, the qs_longform match block from
+                                      // firestore.rules, the .deeper/.dr-* CSS from index.html, and
+                                      // longform_importance/longform_monthly_query_budget from sources.yml and
+                                      // DEFAULTS - no dead code or settings left behind referencing it. Story
+                                      // threads (qs_archive, the Archive module) are untouched - that feature
+                                      // doesn't use any search API and was explicitly kept. If this returns
+                                      // later, see the git history around the Serper-then-Tavily switch for
+                                      // the full design reasoning (no reliable Substack article-search API
+                                      // exists, so it has to be a scoped live web search, not a curated feed).
+                                      //
+                                      // Previous round (gni-phase3-49-v1): two new features addressing a real gap - feed.json keeps
                                       // only 24h of stories (pipeline.py's prune() rewrites it every run), so
                                       // once a story aged out, there was no way to reconstruct "what happened
                                       // a few days ago" - the data was simply gone, for everyone, permanently.

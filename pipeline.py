@@ -557,107 +557,6 @@ def write_archive(item: dict, now: dt.datetime) -> None:
         log(f"  ! archive write failed for {item.get('id', '?')}: {exc}")
 
 
-# ----------------------------------------------------------------- qs_longform (deeper reading)
-# "Deeper reading" surfaces long-form Substack articles related to a story, instead of a standalone
-# Articles tab - attached to the specific story they add context to (owner's explicit framing: this stays
-# part of a story's detail view, not a second always-on feed competing with the fast-signal Signals tab).
-#
-# There is no real way to search Substack BY TOPIC and get matching ARTICLES back: Substack's own search
-# endpoint (substack.com/api/v1/publication/search) finds newsletters/publications, not posts, and is
-# undocumented/unsupported either way; third-party Substack API wrappers (e.g. substackapi.dev) only list
-# a publication's latest posts, which is really just RSS with extra steps and still needs you to already
-# know which publication to ask. So this uses a real web search instead, scoped to Substack with
-# `site:substack.com`, which is the only way that actually answers "what real articles exist about this
-# story" rather than "what have I pre-subscribed to."
-#
-# SEARCH_PROVIDER below is deliberately the ONLY place that knows Serper's specific request/response shape
-# (X-API-KEY header, query params, "organic" results array) - chosen because, as of when this was written,
-# it's the only mainstream search API with any free tier at all (2,500 free queries, no card required;
-# Google's Custom Search API is closed to new customers, Brave Search API dropped its free tier in Feb
-# 2026). If a cheaper/better provider shows up later, or this one changes terms, only this one function
-# needs rewriting - nothing else in the pipeline touches a provider's response format directly.
-#
-# Runs once per genuinely NEW story this run (see cmd_fetch's new_items), for every story regardless of
-# importance tier (the owner's explicit choice, even though it means burning through free-tier queries
-# faster than a Critical/High-only filter would - noted here since it's a real cost tradeoff, not hidden).
-SEARCH_PROVIDER_URL = "https://google.serper.dev/search"
-
-
-def search_substack_articles(query: str, num: int = 5) -> list[dict]:
-    """Returns up to `num` raw results ({title, link, snippet, date}), or [] on any failure (no key set,
-    network error, quota exhausted, unexpected response shape) - deeper reading is a nice-to-have, so a
-    failure here must never raise or block the rest of the pipeline run."""
-    api_key = os.environ.get("SERPER_API_KEY")
-    if not api_key:
-        return []
-    try:
-        r = requests.get(
-            SEARCH_PROVIDER_URL,
-            headers={"X-API-KEY": api_key, "Content-Type": "application/json"},
-            params={"q": f"site:substack.com {query}", "num": num},
-            timeout=15,
-        )
-        if not r.ok:
-            log(f"  ! substack search: HTTP {r.status_code} for query {query!r}")
-            return []
-        data = r.json()
-        out = []
-        for item in (data.get("organic") or [])[:num]:
-            title, link = item.get("title"), item.get("link")
-            if not title or not link:
-                continue
-            out.append({"title": title, "link": link, "snippet": item.get("snippet", ""), "date": item.get("date", "")})
-        return out
-    except Exception as exc:  # noqa: BLE001
-        log(f"  ! substack search failed for query {query!r}: {exc}")
-        return []
-
-
-def write_longform_match(story_id: str, idx: int, article: dict, now: dt.datetime) -> None:
-    """One qs_longform doc per (story, article) pair - doc id is deterministic (story_id + idx) so re-running
-    search for the same story overwrites the same slots instead of accumulating duplicates. Never raises."""
-    try:
-        fields = {
-            "story_id": {"stringValue": story_id},
-            "title": {"stringValue": smart_truncate(article.get("title", ""), 300)},
-            "url": {"stringValue": smart_truncate(article.get("link", ""), 1000)},
-            "snippet": {"stringValue": smart_truncate(article.get("snippet", ""), 500)},
-            "source": {"stringValue": "Substack"},
-            "found_at": {"stringValue": iso(now)},
-        }
-        doc_id = "lf" + hashlib.sha1(f"{story_id}:{idx}".encode()).hexdigest()[:16]
-        url = f"https://firestore.googleapis.com/v1/projects/{FIREBASE_PROJECT}/databases/(default)/documents/qs_longform/{doc_id}?key={FIREBASE_API_KEY}"
-        requests.patch(url, json={"fields": fields}, timeout=15)
-    except Exception as exc:  # noqa: BLE001
-        log(f"  ! longform write failed for {story_id}/{idx}: {exc}")
-
-
-def find_deeper_reading(new_items: list[dict]) -> None:
-    """For every genuinely new story this run, search Substack and keep the top 2 matches (owner's explicit
-    choice: "keep it open... link the top 2 article based on the matching"). Silently does nothing (one log
-    line) when SERPER_API_KEY isn't set, so this feature stays inert - not broken - until that secret is
-    added; nothing else in cmd_fetch depends on it running."""
-    if not os.environ.get("SERPER_API_KEY"):
-        log("  deeper reading: SERPER_API_KEY not set, skipping (feature is inert until a key is added)")
-        return
-    now = utcnow()
-    found = 0
-    for item in new_items:
-        # A short, specific query reads better to a search engine than the raw headline: companies (when
-        # known - see the qs_archive note above for why this is often empty) plus country plus headline
-        # keywords, not the full excerpt.
-        companies = " ".join((item.get("companies") or [])[:2])
-        query = " ".join(x for x in (companies, item.get("headline", "")) if x).strip()[:200]
-        if not query:
-            continue
-        results = search_substack_articles(query, num=5)
-        for idx, article in enumerate(results[:2]):
-            write_longform_match(item["id"], idx, article, now)
-            found += 1
-    if new_items:
-        log(f"  deeper reading: {found} Substack article(s) matched across {len(new_items)} new stories")
-
-
 def send_push_notifications(new_items: list[dict]) -> None:
     """Sends one real push PER newly-published story (see PUSH_MIN_IMPORTANCE - currently every priority),
     to every device subscribed in qs_push_subs - the user's explicit choice, after being told a single run
@@ -1722,10 +1621,6 @@ def cmd_fetch(client=None) -> int:
             send_push_notifications(new_items)
         except Exception as exc:  # noqa: BLE001
             log(f"  ! push notifications failed, not fatal to the run: {exc}")
-        try:
-            find_deeper_reading(new_items)
-        except Exception as exc:  # noqa: BLE001
-            log(f"  ! deeper reading search failed, not fatal to the run: {exc}")
     if candidates and stats["failed_batches"] and not (stats["new"] + stats["merged"] + stats["not_news"]):
         return 1  # every AI call failed: make the run go red
     return 0
