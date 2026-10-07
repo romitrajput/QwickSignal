@@ -669,18 +669,20 @@ body.pre-app .top, body.pre-app main, body.pre-app .tabs{display:none}
   box-shadow:0 0 0 9999px rgba(36,26,18,.72);
   transition:left .25s var(--ease),top .25s var(--ease),width .25s var(--ease),height .25s var(--ease);
   pointer-events:none}
-.ob-card{position:fixed;width:min(320px,calc(100vw - 24px));background:var(--surface);color:var(--ink);
-  border-radius:16px;padding:18px 18px 16px;box-shadow:0 16px 40px -12px rgba(0,0,0,.45);
+/* Deliberately compact (owner's explicit request: "make a bit small") - this is a transient pointer at a
+   control the person can already see on the real screen behind it, not a slide that needs to stand alone. */
+.ob-card{position:fixed;width:min(240px,calc(100vw - 24px));background:var(--surface);color:var(--ink);
+  border-radius:14px;padding:12px 14px 12px;box-shadow:0 12px 30px -10px rgba(0,0,0,.45);
   transition:top .25s var(--ease),bottom .25s var(--ease),left .25s var(--ease)}
-.ob-dots{display:flex;gap:6px;margin:0 0 10px}
-.ob-dot{width:6px;height:6px;border-radius:50%;background:var(--line)}
-.ob-dot.on{background:var(--accent);width:16px;border-radius:3px}
-.ob-title{margin:0 0 6px;font-size:17px;font-weight:800;letter-spacing:-.01em}
-.ob-body{margin:0;font-size:14px;line-height:1.5;color:var(--ink2)}
-.ob-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px}
-.ob-skip{background:none;border:0;padding:8px 2px;font-size:13.5px;font-weight:600;color:var(--ink2);cursor:pointer}
+.ob-dots{display:flex;gap:5px;margin:0 0 7px}
+.ob-dot{width:5px;height:5px;border-radius:50%;background:var(--line)}
+.ob-dot.on{background:var(--accent);width:13px;border-radius:3px}
+.ob-title{margin:0 0 4px;font-size:14.5px;font-weight:800;letter-spacing:-.01em}
+.ob-body{margin:0;font-size:12.5px;line-height:1.42;color:var(--ink2)}
+.ob-actions{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px}
+.ob-skip{background:none;border:0;padding:6px 2px;font-size:12.5px;font-weight:600;color:var(--ink2);cursor:pointer}
 .ob-skip:hover{color:var(--ink)}
-.ob-actions .btn{margin-top:0}
+.ob-actions .btn{margin-top:0;min-height:34px;padding:0 14px;font-size:13px}
 @media (prefers-reduced-motion:reduce){.ob-hole,.ob-card{transition:none}}
 
 /* Landing loading indicator: an equalizer-style row of bars pulsing at staggered heights, shown briefly

@@ -940,16 +940,20 @@ if (typeof document !== 'undefined') (function () {
       investEmptyTitle: 'Track companies to see investment-related news.', investEmptyBtn: 'Add companies to track',
       investNoNews: 'No recent news for this company.', investRemove: 'Remove',
       investNoNewsHint: "This updates automatically as new stories come in - it's not a sign anything is wrong.",
+      investNoSearchMatch: 'No stories match your search for this company.', investSearchActiveHint: 'Clear the search to see all of its recent news.',
       viewChart: 'View Chart', chartLoading: 'Loading chart…',
       chartSearchHint: 'Wrong listing? Click the ticker name at the top-left of the chart to search for the right one.',
       chartStock: 'Stock', chartSectorFallback: 'Sector',
       chartEodHint: 'Indian exchange data shown here is end-of-day, not live intraday - a data-licensing limit on TradingView’s side, not a bug in this app.',
       obSkip: 'Skip', obNext: 'Next', obDone: 'Got it',
-      obStep1Title: 'Your Signals feed', obStep1Body: 'Stories from your followed channels, sorted by priority. This is your main feed.',
-      obStep2Title: 'Saved', obStep2Body: 'Swipe a story right, or tap Save, to keep it here past the usual 24-hour window.',
-      obStep3Title: 'Switch to Investment', obStep3Body: 'Double-tap to flip between Signal (general news) and Investment (news grouped by company). A single tap won’t switch it by accident.',
-      obStep4Title: 'Export', obStep4Body: 'Download your current feed as a CSV file any time.',
-      obStep5Title: 'Settings', obStep5Body: 'Channels, your investment watchlist, notifications, account, and feedback - all in one place.'
+      obStep1Title: 'Country-wise news', obStep1Body: 'Each flag is a country with stories waiting - tap one to jump straight to its news.',
+      obStep2Title: 'Search', obStep2Body: 'Search across every story in your feed - headlines, summaries, and company names.',
+      obStep3Title: 'Country, sector & priority', obStep3Body: 'Narrow the feed to one country or sector, or show only Critical/High priority stories.',
+      obStep4Title: 'A news card', obStep4Body: 'Tap a story to read more, swipe right to save it, or swipe left to dismiss it.',
+      obStep5Title: 'Saved', obStep5Body: 'Swipe a story right, or tap Save, to keep it here past the usual 24-hour window.',
+      obStep6Title: 'Switch to Investment', obStep6Body: 'Double-tap to flip between Signal (general news) and Investment (news grouped by company). A single tap won’t switch it by accident.',
+      obStep7Title: 'Export', obStep7Body: 'Download your current feed as a CSV file any time.',
+      obStep8Title: 'Settings', obStep8Body: 'Channels, your investment watchlist, notifications, account, and feedback - all in one place.'
     },
     hi: {
       linkPages: 'लिंक पेज', settings: 'सेटिंग्स', signals: 'सिग्नल्स', saved: 'सेव किए गए', export: 'एक्सपोर्ट',
@@ -1000,11 +1004,14 @@ if (typeof document !== 'undefined') (function () {
       ticketAdminAttachment: 'अटैचमेंट',
       ticketStatusOpen: 'खुला', ticketStatusDone: 'पूर्ण', ticketMarkDone: 'पूर्ण के रूप में चिह्नित करें', ticketMarkOpen: 'फिर से खोलें',
       obSkip: 'छोड़ें', obNext: 'आगे', obDone: 'समझ गया',
-      obStep1Title: 'आपका सिग्नल्स फ़ीड', obStep1Body: 'आपके फॉलो किए चैनलों की खबरें, महत्व के अनुसार क्रमबद्ध। यह आपका मुख्य फ़ीड है।',
-      obStep2Title: 'सेव किए गए', obStep2Body: 'किसी खबर को दाईं ओर स्वाइप करें, या सेव पर टैप करें, ताकि वह सामान्य 24 घंटे के बाद भी यहां रहे।',
-      obStep3Title: 'इन्वेस्टमेंट पर जाएं', obStep3Body: 'सिग्नल (सामान्य खबरें) और इन्वेस्टमेंट (कंपनी के अनुसार समूहित खबरें) के बीच बदलने के लिए डबल-टैप करें। एक टैप से गलती से नहीं बदलेगा।',
-      obStep4Title: 'एक्सपोर्ट', obStep4Body: 'अपना मौजूदा फ़ीड कभी भी CSV फ़ाइल के रूप में डाउनलोड करें।',
-      obStep5Title: 'सेटिंग्स', obStep5Body: 'चैनल, आपकी इन्वेस्टमेंट वॉचलिस्ट, नोटिफिकेशन, खाता, और फ़ीडबैक - सब एक ही जगह।'
+      obStep1Title: 'देश के अनुसार समाचार', obStep1Body: 'हर झंडा एक देश है जिसकी खबरें तैयार हैं - सीधे उसकी खबरों पर जाने के लिए टैप करें।',
+      obStep2Title: 'खोजें', obStep2Body: 'अपने फ़ीड की हर खबर में खोजें - हेडलाइन, सारांश, और कंपनी के नाम।',
+      obStep3Title: 'देश, क्षेत्र और महत्व', obStep3Body: 'फ़ीड को किसी एक देश या क्षेत्र तक सीमित करें, या केवल क्रिटिकल/हाई प्राथमिकता वाली खबरें दिखाएं।',
+      obStep4Title: 'एक न्यूज़ कार्ड', obStep4Body: 'अधिक पढ़ने के लिए किसी खबर पर टैप करें, सेव करने के लिए दाईं ओर स्वाइप करें, या हटाने के लिए बाईं ओर स्वाइप करें।',
+      obStep5Title: 'सेव किए गए', obStep5Body: 'किसी खबर को दाईं ओर स्वाइप करें, या सेव पर टैप करें, ताकि वह सामान्य 24 घंटे के बाद भी यहां रहे।',
+      obStep6Title: 'इन्वेस्टमेंट पर जाएं', obStep6Body: 'सिग्नल (सामान्य खबरें) और इन्वेस्टमेंट (कंपनी के अनुसार समूहित खबरें) के बीच बदलने के लिए डबल-टैप करें। एक टैप से गलती से नहीं बदलेगा।',
+      obStep7Title: 'एक्सपोर्ट', obStep7Body: 'अपना मौजूदा फ़ीड कभी भी CSV फ़ाइल के रूप में डाउनलोड करें।',
+      obStep8Title: 'सेटिंग्स', obStep8Body: 'चैनल, आपकी इन्वेस्टमेंट वॉचलिस्ट, नोटिफिकेशन, खाता, और फ़ीडबैक - सब एक ही जगह।'
     },
     mr: {
       linkPages: 'लिंक पेजेस', settings: 'सेटिंग्ज', signals: 'सिग्नल्स', saved: 'सेव्ह केलेले', export: 'एक्सपोर्ट',
@@ -1055,11 +1062,14 @@ if (typeof document !== 'undefined') (function () {
       ticketAdminAttachment: 'जोडणी',
       ticketStatusOpen: 'उघडे', ticketStatusDone: 'पूर्ण', ticketMarkDone: 'पूर्ण म्हणून चिन्हांकित करा', ticketMarkOpen: 'पुन्हा उघडा',
       obSkip: 'वगळा', obNext: 'पुढे', obDone: 'समजले',
-      obStep1Title: 'तुमचा सिग्नल्स फीड', obStep1Body: 'तुम्ही फॉलो केलेल्या चॅनेल्सच्या बातम्या, महत्त्वानुसार क्रमवारी लावलेल्या. हा तुमचा मुख्य फीड आहे.',
-      obStep2Title: 'सेव्ह केलेले', obStep2Body: 'एखादी बातमी उजवीकडे स्वाइप करा, किंवा सेव्हवर टॅप करा, जेणेकरून ती नेहमीच्या 24 तासांनंतरही इथे राहील.',
-      obStep3Title: 'इन्व्हेस्टमेंटवर जा', obStep3Body: 'सिग्नल (सामान्य बातम्या) आणि इन्व्हेस्टमेंट (कंपनीनुसार गटबद्ध बातम्या) यामध्ये बदलण्यासाठी डबल-टॅप करा. एका टॅपने चुकून बदलणार नाही.',
-      obStep4Title: 'एक्सपोर्ट', obStep4Body: 'तुमचा सध्याचा फीड कधीही CSV फाइल म्हणून डाउनलोड करा.',
-      obStep5Title: 'सेटिंग्ज', obStep5Body: 'चॅनेल्स, तुमची इन्व्हेस्टमेंट वॉचलिस्ट, नोटिफिकेशन्स, खाते, आणि फीडबॅक - सर्व एकाच ठिकाणी.'
+      obStep1Title: 'देशानुसार बातम्या', obStep1Body: 'प्रत्येक ध्वज म्हणजे एक देश ज्याच्या बातम्या तयार आहेत - थेट त्या बातम्यांवर जाण्यासाठी टॅप करा.',
+      obStep2Title: 'शोधा', obStep2Body: 'तुमच्या फीडमधील प्रत्येक बातमीत शोधा - मथळे, सारांश, आणि कंपनीची नावे.',
+      obStep3Title: 'देश, क्षेत्र आणि महत्त्व', obStep3Body: 'फीड एका देशापुरते किंवा क्षेत्रापुरते मर्यादित करा, किंवा फक्त क्रिटिकल/हाय प्राधान्याच्या बातम्या दाखवा.',
+      obStep4Title: 'एक न्यूज कार्ड', obStep4Body: 'अधिक वाचण्यासाठी बातमीवर टॅप करा, सेव्ह करण्यासाठी उजवीकडे स्वाइप करा, किंवा काढण्यासाठी डावीकडे स्वाइप करा.',
+      obStep5Title: 'सेव्ह केलेले', obStep5Body: 'एखादी बातमी उजवीकडे स्वाइप करा, किंवा सेव्हवर टॅप करा, जेणेकरून ती नेहमीच्या 24 तासांनंतरही इथे राहील.',
+      obStep6Title: 'इन्व्हेस्टमेंटवर जा', obStep6Body: 'सिग्नल (सामान्य बातम्या) आणि इन्व्हेस्टमेंट (कंपनीनुसार गटबद्ध बातम्या) यामध्ये बदलण्यासाठी डबल-टॅप करा. एका टॅपने चुकून बदलणार नाही.',
+      obStep7Title: 'एक्सपोर्ट', obStep7Body: 'तुमचा सध्याचा फीड कधीही CSV फाइल म्हणून डाउनलोड करा.',
+      obStep8Title: 'सेटिंग्ज', obStep8Body: 'चॅनेल्स, तुमची इन्व्हेस्टमेंट वॉचलिस्ट, नोटिफिकेशन्स, खाते, आणि फीडबॅक - सर्व एकाच ठिकाणी.'
     },
     gu: {
       linkPages: 'લિંક પેજીસ', settings: 'સેટિંગ્સ', signals: 'સિગ્નલ્સ', saved: 'સેવ કરેલ', export: 'એક્સપોર્ટ',
@@ -1110,11 +1120,14 @@ if (typeof document !== 'undefined') (function () {
       ticketAdminAttachment: 'જોડાણ',
       ticketStatusOpen: 'ખુલ્લું', ticketStatusDone: 'પૂર્ણ', ticketMarkDone: 'પૂર્ણ તરીકે ચિહ્નિત કરો', ticketMarkOpen: 'ફરી ખોલો',
       obSkip: 'છોડો', obNext: 'આગળ', obDone: 'સમજાઈ ગયું',
-      obStep1Title: 'તમારો સિગ્નલ્સ ફીડ', obStep1Body: 'તમે ફોલો કરેલા ચેનલોના સમાચાર, મહત્વ પ્રમાણે ક્રમબદ્ધ. આ તમારો મુખ્ય ફીડ છે.',
-      obStep2Title: 'સેવ કરેલ', obStep2Body: 'કોઈ સમાચારને જમણી બાજુ સ્વાઇપ કરો, અથવા સેવ પર ટેપ કરો, જેથી તે સામાન્ય 24 કલાક પછી પણ અહીં રહે.',
-      obStep3Title: 'ઇન્વેસ્ટમેન્ટ પર જાઓ', obStep3Body: 'સિગ્નલ (સામાન્ય સમાચાર) અને ઇન્વેસ્ટમેન્ટ (કંપની પ્રમાણે જૂથબદ્ધ સમાચાર) વચ્ચે બદલવા ડબલ-ટેપ કરો. એક ટેપથી ભૂલથી નહીં બદલાય.',
-      obStep4Title: 'એક્સપોર્ટ', obStep4Body: 'તમારો હાલનો ફીડ ગમે ત્યારે CSV ફાઇલ તરીકે ડાઉનલોડ કરો.',
-      obStep5Title: 'સેટિંગ્સ', obStep5Body: 'ચેનલો, તમારી ઇન્વેસ્ટમેન્ટ વોચલિસ્ટ, નોટિફિકેશન, ખાતું, અને પ્રતિસાદ - બધું એક જ જગ્યાએ.'
+      obStep1Title: 'દેશ પ્રમાણે સમાચાર', obStep1Body: 'દરેક ધ્વજ એક દેશ છે જેના સમાચાર તૈયાર છે - સીધા તેના સમાચાર પર જવા ટેપ કરો.',
+      obStep2Title: 'શોધો', obStep2Body: 'તમારા ફીડની દરેક વાર્તામાં શોધો - હેડલાઇન, સારાંશ, અને કંપનીના નામ.',
+      obStep3Title: 'દેશ, ક્ષેત્ર અને મહત્વ', obStep3Body: 'ફીડને એક દેશ કે ક્ષેત્ર પૂરતું મર્યાદિત કરો, અથવા ફક્ત ક્રિટિકલ/હાઈ પ્રાથમિકતાના સમાચાર બતાવો.',
+      obStep4Title: 'એક ન્યૂઝ કાર્ડ', obStep4Body: 'વધુ વાંચવા સમાચાર પર ટેપ કરો, સેવ કરવા જમણી બાજુ સ્વાઇપ કરો, અથવા હટાવવા ડાબી બાજુ સ્વાઇપ કરો.',
+      obStep5Title: 'સેવ કરેલ', obStep5Body: 'કોઈ સમાચારને જમણી બાજુ સ્વાઇપ કરો, અથવા સેવ પર ટેપ કરો, જેથી તે સામાન્ય 24 કલાક પછી પણ અહીં રહે.',
+      obStep6Title: 'ઇન્વેસ્ટમેન્ટ પર જાઓ', obStep6Body: 'સિગ્નલ (સામાન્ય સમાચાર) અને ઇન્વેસ્ટમેન્ટ (કંપની પ્રમાણે જૂથબદ્ધ સમાચાર) વચ્ચે બદલવા ડબલ-ટેપ કરો. એક ટેપથી ભૂલથી નહીં બદલાય.',
+      obStep7Title: 'એક્સપોર્ટ', obStep7Body: 'તમારો હાલનો ફીડ ગમે ત્યારે CSV ફાઇલ તરીકે ડાઉનલોડ કરો.',
+      obStep8Title: 'સેટિંગ્સ', obStep8Body: 'ચેનલો, તમારી ઇન્વેસ્ટમેન્ટ વોચલિસ્ટ, નોટિફિકેશન, ખાતું, અને પ્રતિસાદ - બધું એક જ જગ્યાએ.'
     }
   };
   let currentLang = 'en';
@@ -1755,37 +1768,71 @@ if (typeof document !== 'undefined') (function () {
   /* ---------- Onboarding walkthrough ----------
      User's own words, reporting real feedback from an Instagram ad campaign: "few people didn't get what
      the app does and have to figure out on their own which kind of turns them off from the app." A short,
-     skippable 5-step spotlight tour, shown once per device right after the landing screen is dismissed
-     (sign-in, sign-up, Google, or guest - whichever door they came in through), pointing at the real tab-bar
-     controls rather than a set of generic slides: Signals feed, Saved, the mode switch (and its double-tap
-     requirement, since that's the one interaction people can't discover by poking at it), Export, Settings.
-     Shown once ever per device (ONBOARD_KEY in localStorage) - unlike Landing's guest flag, this does NOT
-     reset on sign-out, since the goal is purely "has this browser seen the tour," not tied to any account. */
+     skippable spotlight tour, shown once per device right after the landing screen is dismissed (sign-in,
+     sign-up, Google, or guest - whichever door they came in through), pointing at the real controls rather
+     than a set of generic slides. Covers the full Signals page top to bottom first (country-wise news cards,
+     search, the country/sector/priority filters, a sample news card), then the tab bar (Saved, the mode
+     switch and its double-tap requirement, Export, Settings) - the order a person's eye would actually travel
+     down the screen, rather than tab-bar-first. Shown once ever per device (ONBOARD_KEY in localStorage) -
+     unlike Landing's guest flag, this does NOT reset on sign-out, since the goal is purely "has this browser
+     seen the tour," not tied to any account.
+     A step whose anchor element doesn't exist, or is hidden/zero-size at the moment the tour reaches it (the
+     country-card row in particular - #countryStatus only exists at all once there's at least one story to
+     show - and the first #list entry - is empty until the live feed has actually loaded, which can take
+     longer than maybeStart()'s initial delay on a slow connection) is skipped rather than shown pointing at
+     nothing, via _firstVisibleStep()/_nextVisibleIdx() below. */
   const ONBOARD_KEY = 'qs-onboard-seen-v1';
   const Onboarding = {
     seen() { try { return localStorage.getItem(ONBOARD_KEY) === '1'; } catch (e) { return false; } },
     markSeen() { try { localStorage.setItem(ONBOARD_KEY, '1'); } catch (e) { /* private browsing etc. */ } },
     steps: [
-      { anchor: '[data-tab="brief"]', titleKey: 'obStep1Title', bodyKey: 'obStep1Body' },
-      { anchor: '[data-tab="saved"]', titleKey: 'obStep2Title', bodyKey: 'obStep2Body' },
-      { anchor: '#modeSym', titleKey: 'obStep3Title', bodyKey: 'obStep3Body' },
-      { anchor: '[data-tab="export"]', titleKey: 'obStep4Title', bodyKey: 'obStep4Body' },
-      { anchor: '[data-tab="settings"]', titleKey: 'obStep5Title', bodyKey: 'obStep5Body' }
+      { anchor: '#countryStatus', titleKey: 'obStep1Title', bodyKey: 'obStep1Body' },
+      { anchor: '#q', titleKey: 'obStep2Title', bodyKey: 'obStep2Body' },
+      { anchor: '#countryFilter', titleKey: 'obStep3Title', bodyKey: 'obStep3Body' },
+      { anchor: '#list .entry', titleKey: 'obStep4Title', bodyKey: 'obStep4Body' },
+      { anchor: '[data-tab="saved"]', titleKey: 'obStep5Title', bodyKey: 'obStep5Body' },
+      { anchor: '#modeSym', titleKey: 'obStep6Title', bodyKey: 'obStep6Body' },
+      { anchor: '[data-tab="export"]', titleKey: 'obStep7Title', bodyKey: 'obStep7Body' },
+      { anchor: '[data-tab="settings"]', titleKey: 'obStep8Title', bodyKey: 'obStep8Body' }
     ],
     _idx: 0,
+    _visibleAnchor(sel) {
+      const el = $(sel);
+      if (!el || el.hidden) return null;
+      const r = el.getBoundingClientRect();
+      return (r.width > 0 && r.height > 0) ? el : null;
+    },
+    // First step whose anchor actually exists/is visible right now, starting from `from` - used both to
+    // find where to start and, from _renderStep()'s Next handler, to skip past any step that isn't ready.
+    _nextVisibleIdx(from) {
+      for (let i = from; i < this.steps.length; i++) {
+        if (this._visibleAnchor(this.steps[i].anchor)) return i;
+      }
+      return -1;
+    },
     // Called once at boot, after Landing has already been dismissed (or skipped because this device already
-    // had a reason to skip it) - see start()'s call site. Does nothing if already seen, or if the tab bar
-    // itself isn't present for some reason (defensive - should always be there).
-    maybeStart() {
+    // had a reason to skip it) - see Landing.dismiss()'s call site. Does nothing if already seen, or if the
+    // tab bar itself isn't present for some reason (defensive - should always be there). Waits briefly for
+    // the first live-feed load to settle (up to ~2.5s, polling every 150ms) before picking the first step, so
+    // the country-card row and a sample news card - both empty until then - have real content to point at on
+    // a typical connection; on a slow/offline device this gives up and starts anyway, skipping whichever of
+    // those two steps still has nothing to show (see _nextVisibleIdx()) rather than hanging indefinitely.
+    async maybeStart() {
       if (this.seen()) return;
       if (!$('.tabs')) return;
-      this._idx = 0;
+      for (let waited = 0; waited < 2500; waited += 150) {
+        if (this._visibleAnchor('#list .entry')) break;
+        await new Promise(r => setTimeout(r, 150));
+      }
+      const start = this._nextVisibleIdx(0);
+      if (start < 0) { this.markSeen(); return; }   // nothing at all to point at - don't show an empty tour
+      this._idx = start;
       track('onboarding_start');
       this._renderStep();
     },
     _renderStep() {
       const step = this.steps[this._idx];
-      const anchorEl = $(step.anchor);
+      const anchorEl = step ? this._visibleAnchor(step.anchor) : null;
       const overlay = $('#obOverlay');
       if (!step || !anchorEl || !overlay) { this._finish(); return; }
       overlay.hidden = false;
@@ -1793,15 +1840,16 @@ if (typeof document !== 'undefined') (function () {
       const rect = anchorEl.getBoundingClientRect();
       const hole = $('#obHole', overlay);
       // A padded rectangular cutout around the real control (CSS box-shadow spotlight technique - see
-      // .ob-hole in index.html) rather than a copy of the control, so the actual button the person will
-      // tap next is what's lit up, not a picture of it.
-      const pad = 6;
+      // .ob-hole in index.html) rather than a copy of the control, so the actual thing the person will look
+      // at next is what's lit up, not a picture of it. Kept tight (small pad, no min-size floor) per the
+      // owner's explicit request that this box read as "highlighting," not covering half the screen.
+      const pad = 4;
       hole.style.left = (rect.left - pad) + 'px';
       hole.style.top = (rect.top - pad) + 'px';
       hole.style.width = (rect.width + pad * 2) + 'px';
       hole.style.height = (rect.height + pad * 2) + 'px';
       const card = $('#obCard', overlay);
-      const isLast = this._idx === this.steps.length - 1;
+      const isLast = this._nextVisibleIdx(this._idx + 1) < 0;
       card.innerHTML = `
         <div class="ob-dots">${this.steps.map((s, i) => `<span class="ob-dot${i === this._idx ? ' on' : ''}"></span>`).join('')}</div>
         <h3 class="ob-title">${esc(t(step.titleKey))}</h3>
@@ -1812,22 +1860,29 @@ if (typeof document !== 'undefined') (function () {
         </div>
       `;
       // Position the card above or below the spotlighted control, whichever has more room, and clamp it
-      // within the viewport horizontally - the tab bar sits at the very bottom of the screen, so every step
-      // here actually needs the "show above" branch, but this keeps the logic correct if a future step ever
-      // points at something nearer the top.
-      const cardH = card.offsetHeight || 150;
+      // within the viewport both ways - earlier steps now point at controls near the TOP of the page (the
+      // country-card row, search, filters), not just the tab bar at the bottom, so both branches are
+      // exercised in practice (not just kept correct for a hypothetical future step, as before).
+      const cardH = card.offsetHeight || 140;
       const spaceBelow = window.innerHeight - rect.bottom;
-      const showBelow = spaceBelow > cardH + 24 && rect.top < cardH + 24;
-      card.style.top = showBelow ? (rect.bottom + pad + 14) + 'px' : '';
-      card.style.bottom = showBelow ? '' : (window.innerHeight - rect.top + pad + 14) + 'px';
-      const cardW = card.offsetWidth || 280;
+      const spaceAbove = rect.top;
+      const showBelow = spaceBelow >= cardH + 20 || spaceBelow >= spaceAbove;
+      if (showBelow) {
+        card.style.top = Math.min(rect.bottom + pad + 12, window.innerHeight - cardH - 12) + 'px';
+        card.style.bottom = '';
+      } else {
+        card.style.bottom = (window.innerHeight - rect.top + pad + 12) + 'px';
+        card.style.top = '';
+      }
+      const cardW = card.offsetWidth || 260;
       let left = rect.left + rect.width / 2 - cardW / 2;
       left = Math.max(12, Math.min(left, window.innerWidth - cardW - 12));
       card.style.left = left + 'px';
       $('#obSkipBtn', card).addEventListener('click', () => { track('onboarding_skip', { step: this._idx }); this._finish(); });
       $('#obNextBtn', card).addEventListener('click', () => {
-        if (isLast) { track('onboarding_complete'); this._finish(); return; }
-        this._idx++;
+        const next = this._nextVisibleIdx(this._idx + 1);
+        if (next < 0) { track('onboarding_complete'); this._finish(); return; }
+        this._idx = next;
         this._renderStep();
       });
     },
@@ -3603,13 +3658,25 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       return;
     }
     if (empty) empty.hidden = true;
+    // Whether a search term is actually active right now - distinguishes two very different reasons a
+    // company's story list can be empty: no story about it exists yet at all (investNoNews/investNoNewsHint,
+    // same reassurance as before), versus stories DO exist but none of them match what was just typed
+    // (investNoSearchMatch/investSearchActiveHint) - without this distinction both cases rendered the exact
+    // same "No recent news for this company" text, so typing a search term that matched nothing looked
+    // identical to the search box having no effect at all, which is what was reported as "search isn't
+    // working." Reported against the company's full (pre-search) story count, not stories.length itself,
+    // since stories here is already the post-filter list.
+    const searching = !!S.f.q.trim();
     let html = '';
     for (const g of groups) {
       const companyBlocks = g.companies.map(c => {
         const stories = c.stories.filter(investmentStoryMatches);
+        const hasAnyStories = c.stories.length > 0;
         const body = stories.length
           ? stories.map(entryWrapHTML).join('')
-          : `<p class="empty-note">${esc(t('investNoNews'))}<br><span class="empty-note-hint">${esc(t('investNoNewsHint'))}</span></p>`;
+          : (searching && hasAnyStories)
+            ? `<p class="empty-note">${esc(t('investNoSearchMatch'))}<br><span class="empty-note-hint">${esc(t('investSearchActiveHint'))}</span></p>`
+            : `<p class="empty-note">${esc(t('investNoNews'))}<br><span class="empty-note-hint">${esc(t('investNoNewsHint'))}</span></p>`;
         const initial = esc((c.company || '?').trim().charAt(0).toUpperCase() || '?');
         return `<h3 class="grp-company">
           <div class="gc-top">

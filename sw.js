@@ -1,7 +1,22 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-46-v1';  // New: a 5-step onboarding walkthrough (Onboarding module in app.js) shown
+const VERSION = 'gni-phase3-47-v1';  // Two fixes reported after the previous round shipped: (1) Onboarding
+                                      // walkthrough made noticeably smaller (owner's explicit request) and
+                                      // expanded from 5 to 8 steps - it now also covers the country-wise news
+                                      // cards, the search box, the country/sector/priority filters, and a
+                                      // sample news card (tap/swipe), not just the 4 tab-bar controls, and
+                                      // waits briefly for the live feed to load before starting so those two
+                                      // new early steps have real content to point at. (2) Investment-tab
+                                      // search "wasn't working": the matching/filtering logic itself was
+                                      // already correct, but a company with stories that just didn't match
+                                      // the search term showed the exact same "No recent news for this
+                                      // company" text as a company with no stories at all - indistinguishable
+                                      // from search having no effect. Now shows a distinct message
+                                      // ("No stories match your search...") when a search is active and the
+                                      // company does have stories, just none matching.
+                                      //
+                                      // Previous round: a 5-step onboarding walkthrough (Onboarding module in app.js) shown
                                       // once per device right after the landing screen is dismissed (sign-in,
                                       // sign-up, Google, or guest) - a dark spotlight overlay pointing at the
                                       // real Signals/Saved/mode-switch/Export/Settings tab-bar controls in turn,
