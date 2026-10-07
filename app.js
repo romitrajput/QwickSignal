@@ -2609,6 +2609,100 @@ if (typeof document !== 'undefined') (function () {
     }
   };
 
+  /* ---------- Archive (permanent story history) ----------
+     feed.json keeps only 24h of stories (pipeline.py's prune() rewrites it every run) - so once a story
+     ages out, its text/headline/score are gone from the only place they ever lived, for everyone,
+     permanently. qs_archive (see firestore.rules) is where the pipeline writes a small permanent record of
+     a story at the exact moment it would otherwise vanish without a trace (see write_archive() in
+     pipeline.py). This module reads that collection back so a story's detail view can show "this is part of
+     an ongoing situation" even once the earlier parts are no longer live.
+
+     Thread grouping is done HERE, client-side, not server-side: company tagging (it.companies, from
+     findCompanies()/E.analyze() - see mapRules()/mapLive() above) is already computed fresh on every client
+     for every item, live or archived, so re-deriving the grouping here keeps exactly one source of truth
+     for "what company is this story about" instead of a second copy maintained in Python. The grouping rule
+     itself (per the owner's explicit choice) is simple: two stories are "the same thread" if they share at
+     least one company. This will over-group once in a while (two unrelated stories about the same company
+     in the same week) and under-group often (two related stories that don't share an explicit company
+     mention) - a known, accepted starting point, not a finished algorithm; refining it needs real
+     accumulated archive data to tune against, which doesn't exist yet on a brand new deploy of this feature. */
+  const Archive = {
+    _cache: new Map(),   // story's raw (un-prefixed) id -> array of archive records, or null while pending
+    // Every archived record this visitor has ever fetched, kept around so a second story that shares a
+    // company with an already-fetched one doesn't need its own round trip - see forStory() below.
+    _all: [],
+    _loadedAll: false,
+
+    // One-time, best-effort fetch of the whole qs_archive collection (capped - see LIMIT) so thread
+    // matching has something to search against. Deliberately NOT scoped to one company server-side: a
+    // structured Firestore query needs an index per field it filters/orders on, and this collection is
+    // small enough (a handful of KB per record, see write_archive()'s docstring) that listing it once and
+    // filtering client-side is simpler and avoids an index-management step in the Firebase console this
+    // app has otherwise never needed.
+    async _loadAll() {
+      if (this._loadedAll) return;
+      this._loadedAll = true;   // set up front so a failed attempt doesn't retry forever on every card open
+      try {
+        const r = await fetch(`${FS_BASE}:runQuery?key=${FIREBASE.apiKey}`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ structuredQuery: { from: [{ collectionId: 'qs_archive' }], limit: 2000 } })
+        });
+        if (!r.ok) return;
+        const rows = await r.json();
+        this._all = rows.filter(x => x.document).map(x => {
+          const o = fsFieldsToObject(x.document.fields);
+          o.id = x.document.name.split('/').pop();
+          return o;
+        });
+      } catch (e) { /* leave _all empty; forStory() below just finds nothing, same as "no thread" */ }
+    },
+
+    // Returns the archived records that share a company with `it` (a live, client-mapped item - see
+    // mapRules()/mapLive()), sorted oldest-first so a timeline reads as a developing story, or [] if none
+    // match or it.companies is empty (nothing to group on). Cached per story id so re-opening the same card
+    // doesn't redo the scan.
+    async forStory(it) {
+      const rawId = it.id.replace(/^L/, '');
+      if (this._cache.has(rawId)) return this._cache.get(rawId);
+      await this._loadAll();
+      const companies = new Set(it.companies || []);
+      const matches = companies.size
+        ? this._all.filter(a => a.id !== rawId && (a.companies || []).some(c => companies.has(c)))
+            .sort((a, b) => (a.published || '').localeCompare(b.published || ''))
+        : [];
+      this._cache.set(rawId, matches);
+      return matches;
+    }
+  };
+
+  /* ---------- Longform (deeper reading) ----------
+     Real Substack articles the pipeline found via a live web search for a story when it was new (see
+     find_deeper_reading()/search_substack_articles() in pipeline.py - there is no reliable way to search
+     Substack BY TOPIC otherwise, so this is a genuine web search result, not a curated feed). Up to 2 per
+     story, written to qs_longform keyed by story_id. This module just reads them back for one story at a
+     time - no client-side ranking needed, the pipeline already picked the top 2 before writing anything. */
+  const Longform = {
+    _cache: new Map(),   // story's raw id -> array of {title,url,snippet,source}, or [] if none/failed
+
+    async forStory(it) {
+      const rawId = it.id.replace(/^L/, '');
+      if (this._cache.has(rawId)) return this._cache.get(rawId);
+      let out = [];
+      try {
+        const r = await fetch(`${FS_BASE}:runQuery?key=${FIREBASE.apiKey}`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ structuredQuery: { from: [{ collectionId: 'qs_longform' }], where: { fieldFilter: { field: { fieldPath: 'story_id' }, op: 'EQUAL', value: toFsValue(rawId) } } } })
+        });
+        if (r.ok) {
+          const rows = await r.json();
+          out = rows.filter(x => x.document).map(x => fsFieldsToObject(x.document.fields));
+        }
+      } catch (e) { /* leave out empty - no deeper reading shown, same as a story with no matches found */ }
+      this._cache.set(rawId, out);
+      return out;
+    }
+  };
+
   /* ---------- Default channels (owner-curated) ----------
      Section 1 of Link Pages, from the user's own words: "By default channel which are linked to this app to
      avoid showing blank when user visit this page. Kind of like guest mode. So owner will have the access to
@@ -3604,6 +3698,39 @@ Give a concise, event-specific analysis - decide for yourself which structure be
   }
 
 
+  // Thread timeline block: stories from Archive.forStory() that share a company with `it`. Synchronous -
+  // reads whatever Archive's cache already has (populated by the async fetch kicked off when this card was
+  // opened; see the data-act click handler's "opening" branch). Empty before that fetch resolves, same as
+  // the thread simply not existing yet - re-rendered once real data arrives, no spinner/placeholder needed
+  // since the window between open and re-render is normally under a second.
+  function threadHTML(it) {
+    const matches = Archive._cache.get(it.id.replace(/^L/, '')) || [];
+    if (!matches.length) return '';
+    const IMP_VAR2 = { Critical: 'var(--crit)', High: 'var(--high)', Medium: 'var(--med)', Low: 'var(--low)' };
+    const rows = matches.map(a => `<li>
+        <span class="thr-date">${esc((a.published || '').slice(0, 10))}</span>
+        <span class="thr-imp" style="color:${IMP_VAR2[a.importance] || 'var(--ink2)'}">${esc(a.importance || '')}</span>
+        <span class="thr-hl">${esc(a.headline || '')}</span>
+      </li>`).join('');
+    return `<div class="thread"><b>Part of an ongoing situation</b><ul class="thr-list">${rows}
+        <li class="thr-current"><span class="thr-date">${esc(it.date || dayISO(it.addedAt))}</span><span class="thr-imp" style="color:${IMP_VAR2[it.importance] || 'var(--ink2)'}">${esc(it.importance)}</span><span class="thr-hl">${esc(it.headline)} <i>(this story)</i></span></li>
+      </ul></div>`;
+  }
+
+  // Deeper reading block: up to 2 Substack articles from Longform.forStory() (the pipeline's own web-search
+  // match, not re-ranked here - see find_deeper_reading() in pipeline.py). Same synchronous-cache/re-render
+  // pattern as threadHTML() above.
+  function deeperReadingHTML(it) {
+    const articles = Longform._cache.get(it.id.replace(/^L/, '')) || [];
+    if (!articles.length) return '';
+    const items = articles.map(a => `<a class="dr-card" href="${esc(a.url)}" target="_blank" rel="noopener">
+        <span class="dr-src">${esc(a.source || 'Substack')}</span>
+        <span class="dr-title">${esc(a.title)}</span>
+        ${a.snippet ? `<span class="dr-snippet">${esc(a.snippet)}</span>` : ''}
+      </a>`).join('');
+    return `<div class="deeper"><b>Deeper reading</b>${items}</div>`;
+  }
+
   function detailsHTML(it, opts) {
     const inSaved = !!(opts && opts.inSaved);
     const rel = (it.related || []).map(id => all().find(x => x.id === id)).filter(Boolean);
@@ -3623,12 +3750,14 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       <dl class="kv">
         ${row('Also involved', (it.involved || []).map(c => flagOf(c) + ' ' + esc(c)).join(', '))}
         ${row('Companies', (it.companies || []).map(esc).join(', '))}
-        
-        
+
+
         ${row('Source date', esc(it.date || dayISO(it.addedAt)))}
         ${row('Sources', (it.sources || []).map(s => s.url ? `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)}</a>` : esc(s.name)).join(', '))}
       </dl>
       ${rel.length ? `<div class="rel"><b>Related stories</b>${rel.map(r => `<button class="link" data-act="goto" data-id="${r.id}">${flagOf(r.country)} ${esc(r.headline)}</button>`).join('')}</div>` : ''}
+      ${threadHTML(it)}
+      ${deeperReadingHTML(it)}
       ${it.live ? '' : `<div class="edit">
         <label>Country<select data-edit="country">${opt(E.COUNTRY_NAMES, it.country)}</select></label>
         <label>Sector<select data-edit="sector">${opt(E.SECTOR_NAMES, it.sector)}</select></label>
@@ -4439,6 +4568,24 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       track(opening ? 'open_story' : 'close_story', { id });
       const it = all().find(i => i.id === id);
       if (it) card.outerHTML = card.closest('#savedList,#savedInvestList') ? savedCardHTML(it) : entryHTML(it);
+      // Thread timeline / deeper reading: both need a network round trip (qs_archive/qs_longform), so they
+      // aren't ready on the very first render above - kick the fetch off now the card is open, then
+      // re-render just this one card once each resolves. Both are independent and cached per story id (see
+      // Archive.forStory()/Longform.forStory()), so re-opening the same card later is instant and does no
+      // further network work. Skipped entirely for an already-saved item being un-rendered (opening false)
+      // and for non-live manual items (it.live false), which were never archived/searched in the first place.
+      if (opening && it && it.live) {
+        Archive.forStory(it).then(() => {
+          if (!S.open.has(id)) return;    // closed again before this resolved - nothing to update
+          const freshCard = document.querySelector(`.entry[data-id="${CSS.escape(id)}"]`);
+          if (freshCard) freshCard.outerHTML = freshCard.closest('#savedList,#savedInvestList') ? savedCardHTML(it) : entryHTML(it);
+        });
+        Longform.forStory(it).then(() => {
+          if (!S.open.has(id)) return;
+          const freshCard = document.querySelector(`.entry[data-id="${CSS.escape(id)}"]`);
+          if (freshCard) freshCard.outerHTML = freshCard.closest('#savedList,#savedInvestList') ? savedCardHTML(it) : entryHTML(it);
+        });
+      }
     }
   });
 

@@ -1,7 +1,39 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-48-v1';  // This round: moved Export out of the bottom tab bar entirely - it's an
+const VERSION = 'gni-phase3-49-v1';  // This round: two new features addressing a real gap - feed.json keeps
+                                      // only 24h of stories (pipeline.py's prune() rewrites it every run), so
+                                      // once a story aged out, there was no way to reconstruct "what happened
+                                      // a few days ago" - the data was simply gone, for everyone, permanently.
+                                      // (1) Story threads: the pipeline now writes a small permanent record
+                                      // to a new qs_archive Firestore collection at the exact moment prune()
+                                      // would otherwise discard a story (see write_archive() in pipeline.py).
+                                      // A story's detail view (app.js's new Archive module) groups archived
+                                      // stories sharing a company with the current one into a timeline - "part
+                                      // of an ongoing situation" - computed client-side using the same
+                                      // findCompanies() logic every item already uses, so there's one source
+                                      // of truth for company matching rather than a second copy in Python.
+                                      // Grouping-by-shared-company is a deliberate starting point, not a
+                                      // finished algorithm - it'll over/under-group sometimes; refining it
+                                      // needs real accumulated archive data to tune against. (2) Deeper
+                                      // reading: the pipeline now runs a real web search (site:substack.com,
+                                      // via Serper.dev - see find_deeper_reading() in pipeline.py) for every
+                                      // genuinely new story and attaches the top 2 matching Substack articles
+                                      // to a new qs_longform collection. This is a live search, not a curated
+                                      // feed list, because Substack has no reliable way to search articles by
+                                      // topic otherwise (its own search finds newsletters, not posts). Both
+                                      // features are attached to a story's own detail view, not a new
+                                      // standalone tab - deeper reading stays scoped to the specific story it
+                                      // adds context to, keeping Signals the fast, scored feed it's meant to
+                                      // be. Deeper reading is inert (skipped, logged once) until a
+                                      // SERPER_API_KEY secret is added - nothing else depends on it running.
+                                      // Also: fixed the ticket-attachment Firestore rules (qs_tickets) to
+                                      // validate the base64 attachment_data/attachment_type/attachment_name
+                                      // fields from the earlier Storage-to-base64 pivot, instead of the old
+                                      // (now-removed) attachment_url field - this was a carried-over gap from
+                                      // that round, not new this round.
+                                      //
+                                      // Previous round: moved Export out of the bottom tab bar entirely - it's an
                                       // occasional action (a few times a month, at most), not something checked
                                       // daily like Signals/Saved, so it no longer takes a permanent slot next to
                                       // controls people use constantly. It now lives as a destination inside

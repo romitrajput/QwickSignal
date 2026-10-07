@@ -45,6 +45,26 @@
 //                       subscription a push attempt reports as gone (HTTP 404/410), so
 //                       uninstalled/revoked devices don't accumulate forever.
 //
+//   qs_tickets/{id}     Signed-in bug/feedback reports (app.js's Tickets module). Write-only for a
+//                       normal visitor (create but never read, not even their own), owner-only
+//                       get/list/update/delete. Attachments are stored as base64 directly on the
+//                       document (no Firebase Storage/Blaze plan needed - see TICKET_ATTACH_MAX_BYTES
+//                       in app.js), bounded well under Firestore's 1 MiB per-document cap.
+//
+//   qs_archive/{id}     A permanent record of a story once it ages out of feed.json's rolling 24h
+//                       window (pipeline.py's prune(), at the exact moment it would otherwise be
+//                       discarded for good - feed.json itself is rewritten every run and keeps
+//                       nothing older). Public read (a visitor's own browser renders the story
+//                       thread/timeline from this), pipeline-only create, no update, owner-only
+//                       delete. Small by design (no sources/facts/images) since it accumulates
+//                       forever.
+//
+//   qs_longform/{id}    "Deeper reading": real Substack articles the pipeline finds via a live web
+//                       search for each new story (Substack has no reliable article-topic search of
+//                       its own - see search_substack_articles() in pipeline.py), up to 2 per story.
+//                       Same public-read/pipeline-write shape as qs_archive. Inert (writes nothing)
+//                       until a SERPER_API_KEY secret is configured.
+//
 // OWNER_EMAIL below must exactly match the OWNER_EMAIL constant in app.js - both are simple
 // string constants, not a secret (the value is already public in the shipped client code);
 // the real protection is that only Firebase Auth itself can produce a signed token asserting
@@ -167,7 +187,7 @@ service cloud.firestore {
       allow create: if
         request.auth != null &&
         id.matches('tk[a-z0-9]{10,40}') &&
-        request.resource.data.keys().hasOnly(['kind', 'message', 'status', 'created_at', 'user_email', 'user_id', 'ticket_number', 'attachment_url']) &&
+        request.resource.data.keys().hasOnly(['kind', 'message', 'status', 'created_at', 'user_email', 'user_id', 'ticket_number', 'attachment_data', 'attachment_type', 'attachment_name']) &&
         request.resource.data.kind in ['bug', 'support', 'feedback'] &&
         request.resource.data.message is string && request.resource.data.message.size() > 0 &&
           request.resource.data.message.size() <= 4000 &&
@@ -177,12 +197,17 @@ service cloud.firestore {
         // Must be tagged to the caller's own account - never on someone else's behalf.
         request.resource.data.user_id is string && request.resource.data.user_id == request.auth.uid &&
         request.resource.data.ticket_number is string && request.resource.data.ticket_number.size() <= 32 &&
-        // attachment_url is optional (a ticket with no file simply omits it, same optional-field pattern as
-        // hiddenChannels/companies on qs_sync/qs_users above) - just bounded in length if present, since the
-        // real safety (whether the URL points somewhere sane) is enforced by storage.rules on the Storage
-        // side, not here.
-        (!('attachment_url' in request.resource.data) ||
-          (request.resource.data.attachment_url is string && request.resource.data.attachment_url.size() <= 1000));
+        // Attachments are stored as base64 directly on this document, not in Firebase Storage (that would
+        // need the project on a paid "Blaze" plan - see TICKET_ATTACH_MAX_BYTES in app.js for the full
+        // reasoning). All three attachment fields are optional together (a ticket with no file omits all
+        // three, same optional-field pattern as hiddenChannels/companies on qs_sync/qs_users above), and
+        // only ever written together - app.js never sends one without the other two. 820,000 characters
+        // comfortably covers TICKET_ATTACH_MAX_BYTES (600 KB raw) after base64's ~33% size inflation, while
+        // keeping real headroom under Firestore's 1 MiB whole-document cap alongside the other fields above.
+        (!('attachment_data' in request.resource.data) ||
+          (request.resource.data.attachment_data is string && request.resource.data.attachment_data.size() <= 820000 &&
+           request.resource.data.attachment_type is string && request.resource.data.attachment_type.size() <= 100 &&
+           request.resource.data.attachment_name is string && request.resource.data.attachment_name.size() <= 200));
 
       // Only the owner can change a ticket afterwards, and only to flip status between open/done -
       // never to rewrite the reporter's original message or who filed it.
@@ -190,6 +215,78 @@ service cloud.firestore {
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']) &&
         request.resource.data.status in ['open', 'done'];
 
+      allow delete: if isOwner();
+    }
+
+    // qs_archive/{id}   A permanent record of a story that has aged out of feed.json's rolling 24h window
+    //                   (or been bumped off by the max_items cap) - written by the pipeline at the moment
+    //                   prune() would otherwise discard it for good (see write_archive() in pipeline.py).
+    //                   feed.json itself is rewritten every run and keeps nothing beyond 24h, so without
+    //                   this collection there would be NO way to reconstruct "what a story said 3 days
+    //                   ago" - the data would already be gone, for everyone, forever. Deliberately a small
+    //                   subset of fields (no sources/facts/images) since this accumulates forever and
+    //                   nothing ever prunes it back out.
+    //                   Public read, same reasoning as qs_config/defaults: a visitor's own browser is what
+    //                   renders a story's thread/timeline (see the Archive module in app.js), so it has to
+    //                   be able to list these directly. Write is pipeline-only in practice (the same
+    //                   unauthenticated-create pattern as qs_channels/qs_push_subs - there's no real
+    //                   identity to check against for a server-side batch job), but the id format and
+    //                   field shape are still validated here rather than trusted blindly, same as every
+    //                   other collection in this file. No client update or delete: an archived record is
+    //                   exactly that - a fixed historical fact, never edited after the fact.
+    match /qs_archive/{id} {
+      allow get, list: if true;
+
+      allow create: if
+        id.matches('s[a-z0-9]{6,40}') &&
+        request.resource.data.keys().hasOnly(['headline', 'excerpt', 'importance', 'country', 'companies', 'published', 'archived_at']) &&
+        request.resource.data.headline is string && request.resource.data.headline.size() <= 300 &&
+        request.resource.data.excerpt is string && request.resource.data.excerpt.size() <= 600 &&
+        request.resource.data.importance in ['Critical', 'High', 'Medium', 'Low'] &&
+        request.resource.data.country is string && request.resource.data.country.size() <= 64 &&
+        request.resource.data.published is string &&
+        request.resource.data.archived_at is string &&
+        // companies is optional - only ever present on an AI-classified item in the first place (see the
+        // module note above write_archive() in pipeline.py for why most items won't have it yet).
+        (!('companies' in request.resource.data) ||
+          (request.resource.data.companies is list && request.resource.data.companies.size() <= 8));
+
+      allow update: if false;
+      allow delete: if isOwner();
+    }
+
+    // qs_longform/{id}   "Deeper reading": real Substack articles the pipeline found via a live web search
+    //                     for each genuinely new story (there is no reliable way to search Substack BY
+    //                     TOPIC and get matching articles any other way - see the long comment above
+    //                     search_substack_articles() in pipeline.py). Up to 2 per story (story_id), chosen
+    //                     by the pipeline's own ranking, never more - app.js's Longform module reads these
+    //                     back by story_id and shows them in that story's detail view, not as a separate
+    //                     always-on feed. Same public-read/pipeline-write/no-client-update shape as
+    //                     qs_archive above, for the same reasons.
+    match /qs_longform/{id} {
+      allow get, list: if true;
+
+      allow create: if
+        id.matches('lf[a-z0-9]{10,40}') &&
+        request.resource.data.keys().hasOnly(['story_id', 'title', 'url', 'snippet', 'source', 'found_at']) &&
+        request.resource.data.story_id is string && request.resource.data.story_id.size() <= 64 &&
+        request.resource.data.title is string && request.resource.data.title.size() <= 300 &&
+        request.resource.data.url is string && request.resource.data.url.size() <= 1000 &&
+        request.resource.data.snippet is string && request.resource.data.snippet.size() <= 500 &&
+        request.resource.data.source is string && request.resource.data.source.size() <= 64 &&
+        request.resource.data.found_at is string;
+
+      // The pipeline overwrites the same doc id on a re-search (see write_longform_match()'s deterministic
+      // id), so this allows that one case: the story_id/url/etc fields can change, but only via the exact
+      // same create-shaped write a brand new doc would need to pass - update here is really "create again."
+      allow update: if
+        request.resource.data.keys().hasOnly(['story_id', 'title', 'url', 'snippet', 'source', 'found_at']) &&
+        request.resource.data.story_id is string && request.resource.data.story_id.size() <= 64 &&
+        request.resource.data.title is string && request.resource.data.title.size() <= 300 &&
+        request.resource.data.url is string && request.resource.data.url.size() <= 1000 &&
+        request.resource.data.snippet is string && request.resource.data.snippet.size() <= 500 &&
+        request.resource.data.source is string && request.resource.data.source.size() <= 64 &&
+        request.resource.data.found_at is string;
       allow delete: if isOwner();
     }
   }
