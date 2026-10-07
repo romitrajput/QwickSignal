@@ -2502,6 +2502,30 @@ if (typeof document !== 'undefined') (function () {
     return groups;
   }
 
+  /* ---------- Company Status (Investment mode's equivalent of Country Status) ----------
+     Same WhatsApp-Status-style ring row as countryGroups()/renderCountryBar() above, just keyed by tracked
+     COMPANY instead of country - one ring per company in S.myCompanies, segments per active story about
+     that company, most-recently-active / has-unread companies floating first. Unlike investmentGroups()
+     (which nests sector -> company -> stories for the grouped list), this is a flat per-company list
+     because the status row, like the country one, is a single horizontal strip with no sector grouping. */
+  function companyGroups() {
+    const want = S.myCompanies;
+    if (!want.size) return [];
+    const byCompany = new Map();
+    for (const name of want) byCompany.set(name, []);   // every tracked company gets a ring even with 0 stories
+    for (const it of all()) {
+      if (itemStatus(it) !== 'active') continue;         // saved/dismissed/expired don't appear here
+      const matched = (it.companies || []).filter(c => want.has(c));
+      matched.forEach(c => byCompany.get(c).push(it));
+    }
+    const groups = [...byCompany.entries()].map(([company, stories]) => {
+      stories.sort((a, b) => b.addedAt - a.addedAt);
+      return { company, stories, unread: stories.some(s => !S.reviewed.has(s.id)), latest: stories.length ? stories[0].addedAt : 0 };
+    });
+    groups.sort((a, b) => (b.unread - a.unread) || (b.latest - a.latest) || a.company.localeCompare(b.company));
+    return groups;
+  }
+
   /* ---------- Investment tab: sector -> tracked-company groups ----------
      Deliberately NOT filtered by channelVisible()/followed channels - the Investment tab is scoped by
      which COMPANIES the user tracks, not which Telegram channels they follow, so a story about a tracked
@@ -2589,18 +2613,52 @@ if (typeof document !== 'undefined') (function () {
     }).join('');
   }
 
-  // S.cv keeps the whole ordered list of country groups (frozen at the moment the viewer opened, so the
-  // row doesn't reshuffle under the user's thumb mid-session as reviewed state changes reorder it), plus
-  // which country and which story within it is current - so ">" can walk off the end of one country
-  // straight into the next, the way swiping past the last status/story usually works.
+  // Company Status bar: Investment mode's equivalent of the country ring row above, same .cstatus/.cstop/
+  // .qs-ring markup and ringGradient() math, just keyed by tracked company (companyGroups()) and showing
+  // each company's initial instead of a flag emoji, since companies don't have one. Opens the SAME shared
+  // viewer modal as the country bar (see openCompany()/the generalized S.cv below) rather than a second
+  // modal - the viewer only cares about a flat ordered list of {name, stories}, which both bars produce.
+  function renderCompanyBar() {
+    const box = $('#companyStatus');
+    if (!box) return;
+    const groups = companyGroups();
+    box.hidden = !groups.length;
+    if (!groups.length) { box.innerHTML = ''; return; }
+    box.innerHTML = groups.map(g => {
+      const n = g.stories.length;
+      const label = esc(g.company) + ' – ' + n + (n === 1 ? ' story' : ' stories') + (g.unread ? ', new' : '');
+      const initial = esc((g.company || '?').trim().charAt(0).toUpperCase() || '?');
+      return `<button class="cstop" data-act="opencompany" data-c="${esc(g.company)}" aria-label="${label}">
+        <span class="qs-ring" style="background:${ringGradient(g.stories)}"><span class="qs-ring-inner">${initial}</span></span>
+        <span class="cstop-name">${esc(g.company)}</span>
+      </button>`;
+    }).join('');
+  }
+
+  // S.cv keeps the whole ordered list of groups (frozen at the moment the viewer opened, so the row
+  // doesn't reshuffle under the user's thumb mid-session as reviewed state changes reorder it), which kind
+  // of row opened it ('country' or 'company' - decides flag-vs-initial and which bar gets re-rendered on
+  // close), plus which group and which story within it is current - so ">" can walk off the end of one
+  // group straight into the next, the way swiping past the last status/story usually works.
   function cvStories() { return S.cv.groups[S.cv.groupIdx].stories; }
-  function cvCountry() { return S.cv.groups[S.cv.groupIdx].country; }
+  function cvName() { const g = S.cv.groups[S.cv.groupIdx]; return S.cv.kind === 'company' ? g.company : g.country; }
 
   function openCountry(country) {
     const groups = countryGroups();
     const gi = groups.findIndex(x => x.country === country);
     if (gi === -1 || !groups[gi].stories.length) return;
-    S.cv = { groups, groupIdx: gi, idx: 0 };
+    S.cv = { kind: 'country', groups, groupIdx: gi, idx: 0 };
+    $('#countryViewer').hidden = false;
+    document.body.classList.add('cv-lock');
+    renderCountryViewer();
+    markCurrentReviewed();
+  }
+
+  function openCompany(company) {
+    const groups = companyGroups();
+    const gi = groups.findIndex(x => x.company === company);
+    if (gi === -1 || !groups[gi].stories.length) return;
+    S.cv = { kind: 'company', groups, groupIdx: gi, idx: 0 };
     $('#countryViewer').hidden = false;
     document.body.classList.add('cv-lock');
     renderCountryViewer();
@@ -2609,10 +2667,12 @@ if (typeof document !== 'undefined') (function () {
 
   function closeCountryViewer() {
     if (!S.cv) return;
+    const kind = S.cv.kind;
     S.cv = null;
     $('#countryViewer').hidden = true;
     document.body.classList.remove('cv-lock');
-    renderCountryBar();     // ring segments may have flipped from unread to reviewed while open
+    // ring segments may have flipped from unread to reviewed while open - refresh whichever bar was open.
+    if (kind === 'company') renderCompanyBar(); else renderCountryBar();
   }
 
   function markCurrentReviewed() {
@@ -2634,10 +2694,10 @@ if (typeof document !== 'undefined') (function () {
       markCurrentReviewed();
       return;
     }
-    // Past an edge: move on to the next (or previous) country's stories, starting from its near end,
-    // instead of just stopping - this is the ">" transition between countries.
+    // Past an edge: move on to the next (or previous) country's/company's stories, starting from its near
+    // end, instead of just stopping - this is the ">" transition between groups.
     const gi = S.cv.groupIdx + (delta > 0 ? 1 : -1);
-    if (gi < 0 || gi >= S.cv.groups.length) { closeCountryViewer(); return; }   // no more countries either way: done
+    if (gi < 0 || gi >= S.cv.groups.length) { closeCountryViewer(); return; }   // no more groups either way: done
     S.cv.groupIdx = gi;
     S.cv.idx = delta > 0 ? 0 : S.cv.groups[gi].stories.length - 1;
     renderCountryViewer();
@@ -2646,7 +2706,7 @@ if (typeof document !== 'undefined') (function () {
 
   function renderCountryViewer() {
     if (!S.cv) return;
-    const country = cvCountry(), idx = S.cv.idx, stories = cvStories();
+    const name = cvName(), idx = S.cv.idx, stories = cvStories();
     const it = stories[idx];
     ensureTranslated(collectTranslatable([it]));   // just the current story - no need to translate every story in every country up front
     const dashes = stories.map((s, i) => {
@@ -2654,23 +2714,30 @@ if (typeof document !== 'undefined') (function () {
       return `<span class="cv-dash ${cls}"></span>`;
     }).join('');
     // Headlines only, per explicit feedback: no sector subtext, no Sources line, and no why-it-matters/
-    // facts body copy - just the flag, country, headline, date/time and (if found) an image. A date+time
-    // stamp was added back per later feedback asking for it against every headline, feed included.
+    // facts body copy - just the flag/initial, country/company, headline, date/time and (if found) an
+    // image. A date+time stamp was added back per later feedback asking for it against every headline,
+    // feed included.
     $('#cvDashes').innerHTML = dashes;
     const body = $('#cvBody');
     // onerror hides a broken/expired image link instead of leaving a broken-image icon - a missing photo
     // should never look like an app bug, the story still reads fine as headline-only.
     const img = it.image ? `<div class="cv-img"><img src="${esc(it.image.url)}" alt="" loading="lazy" onerror="this.closest('.cv-img').hidden=true"></div>` : '';
+    // Company mode has no flag, so the same slot shows a round initial badge instead, styled from the
+    // existing .gc-ring/.gc-ring-inner tokens (same look as the Investment company cards) rather than the
+    // raw 56px flag glyph, which would look like a stray oversized letter without a frame around it.
+    const glyph = S.cv.kind === 'company'
+      ? `<div class="cv-flag cv-companyglyph"><span class="gc-ring-inner">${esc((name || '?').trim().charAt(0).toUpperCase() || '?')}</span></div>`
+      : `<div class="cv-flag">${flagOf(name)}</div>`;
     body.innerHTML = `
       ${img}
-      <div class="cv-flag">${flagOf(country)}</div>
-      <div class="cv-country">${esc(country)}</div>
+      ${glyph}
+      <div class="cv-country">${esc(name)}</div>
       <h2 class="cv-headline">${esc(trOf(it.headline))}</h2>
       <div class="cv-time">${esc(fmtDateTime(it.addedAt))}</div>
       <div class="cv-pos">${idx + 1} / ${stories.length}</div>
     `;
-    // A quick crossfade so moving between stories - and especially between countries - reads as a smooth
-    // transition rather than a hard cut.
+    // A quick crossfade so moving between stories - and especially between countries/companies - reads as
+    // a smooth transition rather than a hard cut.
     body.classList.remove('cv-fade'); void body.offsetWidth; body.classList.add('cv-fade');
   }
 
@@ -3504,13 +3571,36 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     }
   }
 
+  // What Export should pull together depends on the current mode, same as the main feed/Saved/Settings
+  // already do - exporting used to always use visibleItems() (News-mode data) even while the user was
+  // sitting in Investment mode, so "Export report" from the Investment tab silently downloaded a News
+  // report instead. In Investment mode this is the flat union of every story matched to a tracked company
+  // (the same source investmentGroups() builds its sector->company nesting from), deduped by id since one
+  // story can be tagged with more than one tracked company.
+  function exportItems() {
+    if (S.mode === 'investment') {
+      const want = S.myCompanies;
+      if (!want.size) return [];
+      const seen = new Set(), out = [];
+      for (const it of all()) {
+        const st = itemStatus(it);
+        if (st === 'dismissed' || st === 'expired') continue;
+        if (!(it.companies || []).some(c => want.has(c))) continue;
+        if (seen.has(it.id)) continue;
+        seen.add(it.id); out.push(it);
+      }
+      return out;
+    }
+    return visibleItems();
+  }
+
   async function renderExport() {
     $$('#exportSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === S.exportRange));
-    const c = visibleItems().filter(i => inRange(i, S.exportRange)).length;
-    $('#exportCount').textContent = c + (c === 1 ? ' item' : ' items') + ' in this period';
+    const c = exportItems().filter(i => inRange(i, S.exportRange)).length;
+    $('#exportCount').textContent = c + (c === 1 ? ' item' : ' items') + ' in this period' + (S.mode === 'investment' ? ' (Investment)' : '');
   }
   function renderAll() {
-    if (S.mode === 'investment') { renderList(); if (S.tab === 'saved') renderSaved(); return; }
+    if (S.mode === 'investment') { renderList(); renderCompanyBar(); if (S.tab === 'saved') renderSaved(); return; }
     renderControls(); renderList(); renderExport(); renderCountryBar();
     if (S.tab === 'saved') renderSaved();
     // keep the just-added cards in sync when they are toggled
@@ -3550,6 +3640,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     if (mode === 'investment') {
       investmentOnlyHide.forEach(sel => { const el = $(sel); if (el) el.hidden = true; });
       renderInvestmentList();
+      renderCompanyBar();   // Company Status: the Investment-mode counterpart of the country ring row
     } else {
       // renderControls() fills countryFilter/sectorFilter but never un-hides them (it only reacts to filter
       // state, not mode), so that's cleared here first; #countryStatus/#hasFilter are restored by
@@ -3557,6 +3648,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       // dropdown with no render function of its own, so it's un-hidden explicitly here too, the same way -
       // otherwise coming back to News mode from Investment would leave it hidden forever.
       ['#countryFilter', '#sectorFilter', '#viewFilter'].forEach(sel => { const el = $(sel); if (el) el.hidden = false; });
+      const companyBar = $('#companyStatus'); if (companyBar) { companyBar.hidden = true; companyBar.innerHTML = ''; }
       renderControls(); renderList(); renderCountryBar();
     }
     // Settings: swap which Telegram/watchlist block shows, per mode.
@@ -3572,6 +3664,22 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     if (savedNews) savedNews.hidden = mode === 'investment';
     if (savedInv) savedInv.hidden = mode !== 'investment';
     if (S.tab === 'saved') renderSaved();
+    // Export: the item count shown there (and what Download PDF/CSV will actually pull - see
+    // exportItems()) depends on mode, so refresh it if that tab happens to be open already.
+    if (S.tab === 'export') renderExport();
+  }
+
+  // Plays the wifi-sweep/candle-tick animation on #modeSym exactly once per tap (the .pulse-once CSS rules
+  // have no "infinite" - see index.html - so without this they'd never run at all). Forces a reflow before
+  // re-adding the class so a second quick tap restarts the animation from the beginning instead of being a
+  // no-op (the class would otherwise already be present and adding it again does nothing).
+  function pulseModeSym() {
+    const btn = $('#modeSym');
+    if (!btn) return;
+    btn.classList.remove('pulse-once');
+    void btn.offsetWidth;   // force reflow so the next class add is seen as a fresh change
+    btn.classList.add('pulse-once');
+    setTimeout(() => btn.classList.remove('pulse-once'), 1000);
   }
 
   /* ---------- tabs ---------- */
@@ -3581,7 +3689,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     $$('.view').forEach(v => v.hidden = v.id !== 'view-' + name);
     $$('.tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === name));
     window.scrollTo(0, 0);
-    if (name === 'brief') { if (S.mode === 'investment') renderInvestmentList(); else { renderControls(); renderList(); } }
+    if (name === 'brief') { if (S.mode === 'investment') { renderInvestmentList(); renderCompanyBar(); } else { renderControls(); renderList(); } }
     if (name === 'export') renderExport();
     if (name === 'saved') renderSaved();
     // Settings used to be the app's default first screen ("Link Pages"), so its Account/Telegram/Appearance
@@ -3601,18 +3709,19 @@ Give a concise, event-specific analysis - decide for yourself which structure be
   const RANGE_LABEL = { today: 'Today', '7d': 'Last 7 days', all: 'All items' };
 
   function exportCSV() {
-    const items = visibleItems().filter(i => inRange(i, S.exportRange)).sort(byPriority);
+    const items = exportItems().filter(i => inRange(i, S.exportRange)).sort(byPriority);
     if (!items.length) { toast('Nothing to export for that period.'); return; }
-    download('qwicksignal-' + dayISO(Date.now()) + '.csv', E.toCSV(items), 'text/csv;charset=utf-8');
+    const tag = S.mode === 'investment' ? 'qwicksignal-investment-' : 'qwicksignal-';
+    download(tag + dayISO(Date.now()) + '.csv', E.toCSV(items), 'text/csv;charset=utf-8');
     toast('CSV saved to Downloads.');
-    track('export', { format: 'csv', range: S.exportRange, count: items.length });
+    track('export', { format: 'csv', range: S.exportRange, count: items.length, mode: S.mode });
   }
 
   async function exportPDF() {
-    const items = visibleItems().filter(i => inRange(i, S.exportRange)).sort(byPriority);
+    const items = exportItems().filter(i => inRange(i, S.exportRange)).sort(byPriority);
     if (!items.length) { toast('Nothing to export for that period.'); return; }
     toast('Building the PDF\u2026');
-    track('export', { format: 'pdf', range: S.exportRange, count: items.length });
+    track('export', { format: 'pdf', range: S.exportRange, count: items.length, mode: S.mode });
     try { await loadScript(URLS.jspdf); }
     catch (e) { toast('The PDF tool could not load. Connect to the internet once and try again.'); return; }
     const doc = new window.jspdf.jsPDF({ unit: 'pt', format: 'a4' });
@@ -3636,9 +3745,11 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       doc.setDrawColor(...INK); doc.setLineWidth(0.8); doc.line(M, y, PW - M, y); y += 10;
     }
 
-    // masthead
+    // masthead - titled "Investment Report" while exporting from Investment mode, so the PDF itself makes
+    // clear which report this is rather than always reading as the News one.
     doc.setFillColor(...INK); doc.rect(0, 0, PW, 92, 'F');
-    doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'bold'); doc.setFontSize(23); doc.text('QwickSignal Report', M, 44);
+    doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'bold'); doc.setFontSize(23);
+    doc.text('QwickSignal ' + (S.mode === 'investment' ? 'Investment Report' : 'Report'), M, 44);
     doc.setFont('helvetica', 'normal'); doc.setFontSize(10.5);
     doc.text(new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) + '   |   ' + RANGE_LABEL[S.exportRange], M, 64);
     y = 116;
@@ -3659,7 +3770,16 @@ Give a concise, event-specific analysis - decide for yourself which structure be
         need(70);
         doc.setFillColor(...COL[it.importance]); doc.rect(M, y + 2, 7, 9, 'F');
         put(it.headline, { size: 11.5, bold: true, indent: 14, after: 1 });
-        put(it.country + '  |  ' + it.sector + (it.subsector ? ' / ' + it.subsector : '') + '  |  ' + it.importance + ((it.sources || []).length > 1 ? '  |  ' + it.sources.length + ' sources' : ''), { size: 8.5, color: GREY, indent: 14, after: 2 });
+        // Investment mode leads the meta line with which tracked company/companies this story matched
+        // (what the user actually tracks it by), ahead of country/sector - that's the field that mattered
+        // enough to end up in this export in the first place.
+        const trackedHere = S.mode === 'investment' ? (it.companies || []).filter(c => S.myCompanies.has(c)) : [];
+        const metaBits = [
+          trackedHere.length ? trackedHere.join(', ') : null,
+          it.country, it.sector + (it.subsector ? ' / ' + it.subsector : ''), it.importance,
+          (it.sources || []).length > 1 ? it.sources.length + ' sources' : null
+        ].filter(Boolean);
+        put(metaBits.join('  |  '), { size: 8.5, color: GREY, indent: 14, after: 2 });
         if (it.summary) put(it.summary, { size: 9.5, indent: 14, after: 9 }); else y += 7;
       });
     });
@@ -3669,7 +3789,8 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       doc.setPage(p); doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(120, 130, 140);
       doc.text('QwickSignal, generated on device   |   page ' + p + ' of ' + pages, PW / 2, PH - 22, { align: 'center' });
     }
-    doc.save('QwickSignal-Report-' + dayISO(Date.now()) + '.pdf');
+    const pdfTag = S.mode === 'investment' ? 'QwickSignal-Investment-Report-' : 'QwickSignal-Report-';
+    doc.save(pdfTag + dayISO(Date.now()) + '.pdf');
     toast('PDF saved to Downloads.');
   }
 
@@ -3694,7 +3815,11 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     if (SWIPE.justSwiped) { ev.preventDefault(); ev.stopPropagation(); return; }
     const el = ev.target.closest('[data-act],[data-tab],[data-v]');
     if (el && el.dataset.tab) { setTab(el.dataset.tab); return; }
-    if (el && el.closest('#modeSym')) { setMode(S.mode === 'investment' ? 'news' : 'investment'); return; }
+    if (el && el.closest('#modeSym')) {
+      setMode(S.mode === 'investment' ? 'news' : 'investment');
+      pulseModeSym();
+      return;
+    }
     if (el && el.closest('#rangeSeg')) { S.f.range = el.dataset.v; renderControls(); renderList(); return; }
     if (el && el.closest('#viewSeg')) { S.f.view = el.dataset.v; renderControls(); renderList(); return; }
     if (el && el.closest('#exportSeg')) { S.exportRange = el.dataset.v; renderExport(); return; }
@@ -3775,6 +3900,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
         await DefaultChannels.toggle(el.dataset.v);
       }
       else if (act === 'opencountry') { track('open_country_viewer', { country: el.dataset.c }); openCountry(el.dataset.c); }
+      else if (act === 'opencompany') { track('open_company_viewer', { company: el.dataset.c }); openCompany(el.dataset.c); }
       else if (act === 'cvclose') { closeCountryViewer(); }
       else if (act === 'cvprev') { cvGo(-1); }
       else if (act === 'cvnext') { cvGo(1); }

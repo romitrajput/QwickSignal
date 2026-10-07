@@ -1,15 +1,25 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-39-v1';  // Fix this round: the Signal/Investment mode switch is now ONE button
-                                      // in the bottom tab bar, sized exactly like the other four tab icons
-                                      // (Signals/Saved/Export/Settings) - the previous round shipped it as
-                                      // two separate large circles that rendered far bigger than the rest of
-                                      // the bar. Tapping the single button now toggles mode and crossfades
-                                      // between the wifi-signal icon (Signal/News) and the candlestick-chart
-                                      // icon (Investment), styled after codepen.io/Onur-E/pen/mddzmKK's
-                                      // icon-fades-and-rotates-away interaction, scaled down to fit the
-                                      // normal tab-icon size instead of the CodePen's much larger circle.
+const VERSION = 'gni-phase3-40-v1';  // Three fixes this round, all against the mode-switch/Investment work:
+                                      // (1) Company Status is back - Investment mode was missing its
+                                      // equivalent of the News-mode country ring row entirely. Added
+                                      // #companyStatus: one ring per tracked company (companyGroups()),
+                                      // opening the SAME shared story viewer the country ring row uses
+                                      // (generalized via S.cv.kind, with a round initial badge standing in
+                                      // for the flag a company doesn't have). (2) The #modeSym button now
+                                      // has a permanent reddish ring so it reads as different from the four
+                                      // plain tab icons at rest, not just while mid-animation; and the
+                                      // wifi-sweep/candle-tick animation no longer loops forever - it was
+                                      // set to run "infinite" by mistake, so it now plays once per tap
+                                      // (pulseModeSym() toggles a .pulse-once class for ~1s) and sits still
+                                      // otherwise. (3) "Export report" was always exporting News-mode data
+                                      // even while the user was in Investment mode - exportCSV()/exportPDF()
+                                      // now read a new exportItems() that switches source by S.mode, so
+                                      // Investment mode exports the stories matched to tracked companies
+                                      // (titled "Investment Report" in the PDF, tagged -investment- in the
+                                      // filename), and the Export tab's on-screen count is labeled
+                                      // "(Investment)" to make the distinction visible before downloading.
                                       //
                                       // Previous round's changes, still in effect: the News/Investment mode
                                       // switch moved out of the Signals screen (the old #modeSeg segmented
