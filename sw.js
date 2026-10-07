@@ -1,7 +1,33 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-42-v1';  // Three fixes this round, all on the #modeSym mode-switch button:
+const VERSION = 'gni-phase3-43-v1';  // Settings redesign (Option 2: drill-down list) and a News-feed card
+                                      // refinement (Style A: priority chip), both picked from a set of
+                                      // mockups generated for review. (1) Settings used to be one long
+                                      // scroll of every block in a fixed order (Account, Get the app,
+                                      // Notifications, Telegram channels, Investment watchlist, Sync,
+                                      // Feedback, owner-only Tickets) - it's now a short list of destinations
+                                      // (#settingsHome, built by renderSettingsNav() in app.js), each opening
+                                      // its own sub-screen with a "< Settings" back button. Every existing
+                                      // block kept its id and is still populated by exactly the same render
+                                      // function as before (renderAccount(), renderChannels(),
+                                      // renderInvestmentBox(), renderNotifBox(), renderGetApp(),
+                                      // renderTicketBox(), renderTicketAdmin()), called from the same places
+                                      // (setTab('settings'), setMode()'s mode-swap block) - only which
+                                      // wrapper is visible changed, never how a block's content is produced.
+                                      // The News-channels / Investment-watchlist destinations are mode-scoped
+                                      // (SETTINGS_SECTIONS' own `mode` field), same split as the old
+                                      // #settingsSignalGroup/#settingsInvestmentGroup it replaces. (2) Every
+                                      // news card (Signals, Saved) already had a left accent border colored
+                                      // by priority (.entry.imp-*) but never named the level in words - a
+                                      // new small chip in the card footer (impChipHTML() in app.js) now
+                                      // reads "●●● Critical" / "●● High" / "● Medium" / "Low" next to the
+                                      // existing sources-count/relative-time metadata, using the same
+                                      // IMP_VAR colors and wording already used elsewhere in the app (the
+                                      // Signals priority-group headers, the importance bar) - a new
+                                      // rendering of existing vocabulary, not a new taxonomy.
+                                      //
+                                      // Previous round's three fixes, still in effect, all on the #modeSym mode-switch button:
                                       // (1) BUG: a single tap on #modeSym switched mode immediately, so one
                                       // accidental tap (easy to land on, between Saved and Export in the tab
                                       // bar) could drop a visitor straight onto Investment mode's "Track

@@ -137,6 +137,36 @@ input[type=search]:focus-visible{border-color:var(--accent);box-shadow:0 0 0 4px
 }
 .lp-defaultbadge{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;background:var(--accent);color:#fff;font-size:11px;font-weight:700;vertical-align:middle}
 
+/* Settings: drill-down navigation (Option 2). Settings used to be one long scroll of every block in a
+   fixed order; that got harder to scan as more blocks were added (News channels, Investment watchlist,
+   Investment channels, Notifications, Get the app, Sync, Feedback, owner-only Tickets). Now #settingsHome
+   shows a short list of destinations instead - the existing blocks (#tgList, #invList, #notifBox, etc.,
+   all untouched - same ids, same render functions, same event listeners) each move inside their own
+   .settingspage wrapper, shown one at a time via openSettingsPage()/closeSettingsPage() in app.js. Nothing
+   about how a block is POPULATED changed, only which wrapper is visible - renderChannels()/
+   renderInvestmentBox()/renderNotifBox()/etc. all still run unconditionally every time Settings opens or
+   mode changes, exactly as before, so a destination's content is already current the moment it's opened. */
+.settingsnav{display:flex;flex-direction:column;gap:8px;margin:18px 0 0}
+.settingsnav-item{display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:var(--radius-ctrl);border:1px solid var(--line);background:var(--surface);cursor:pointer;text-align:left;width:100%;font:inherit;color:inherit;
+  box-shadow:var(--card-shadow);transition:box-shadow .2s var(--ease),transform .2s var(--ease)}
+@media (hover:hover){.settingsnav-item:hover{box-shadow:var(--card-shadow-hover);transform:translateY(-1px)}}
+.settingsnav-item .sn-icon{flex:none;width:20px;height:20px;color:var(--accent)}
+.settingsnav-item .sn-text{flex:1;min-width:0;display:flex;flex-direction:column}
+.settingsnav-item .sn-title{font-weight:700;font-size:14.5px}
+.settingsnav-item .sn-sub{font-size:12px;color:var(--ink2);margin-top:2px}
+.settingsnav-item .sn-count{flex:none;font-size:11px;font-weight:700;background:var(--chip-bg,var(--paper));color:var(--ink2);padding:3px 9px;border-radius:999px;border:1px solid var(--line)}
+.settingsnav-item .sn-chevron{flex:none;color:var(--ink2);font-size:18px;line-height:1}
+.settingsnav-acct{display:flex;align-items:center;gap:12px;padding:14px;border-radius:var(--radius-ctrl);border:1px solid var(--line);background:var(--surface);margin:0 0 20px;cursor:pointer;text-align:left;width:100%;font:inherit;color:inherit}
+.settingsnav-acct .sn-avatar{flex:none;width:40px;height:40px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px}
+.settingsnav-acct .sn-text{flex:1;min-width:0;display:flex;flex-direction:column}
+.settingsnav-acct .sn-title{font-weight:700;font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.settingsnav-acct .sn-sub{font-size:12px;color:var(--ink2);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.settingsnav-foot{margin:22px 0 0;font-size:11.5px;color:var(--ink2);text-align:center}
+
+.settingspage-back{display:flex;align-items:center;gap:6px;border:0;background:transparent;color:var(--accent);font:inherit;font-weight:700;font-size:14px;padding:6px 0 16px;cursor:pointer;margin:0}
+.settingspage-back svg{width:18px;height:18px}
+#settingsHome.sp-hidden,.settingspage.sp-hidden{display:none}
+
 /* Account (Phase E) */
 .acct-form{display:flex;flex-direction:column;gap:8px;max-width:340px}
 .acct-form input{min-height:44px;padding:0 12px;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font:inherit}
@@ -243,6 +273,13 @@ input[type=search]:focus-visible{border-color:var(--accent);box-shadow:0 0 0 4px
 .entry.open .sum{display:block;-webkit-line-clamp:unset}
 .foot{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:9px;font-size:12.5px;color:var(--ink2);font-weight:600}
 .foot .ts{color:var(--ink2);opacity:.8}
+/* News display, Style A: a small priority label in the card footer (impChipHTML() in app.js), naming in
+   words what the card's left accent border (.entry.imp-*, set via --c) already shows in color alone - a
+   quick scan of the list can now tell Critical from High from the footer text too, not just border hue,
+   which also helps anyone who can't distinguish the border colors by sight. Letter-spacing kept tight
+   (not the uppercase-tracked-out label look elsewhere) since this sits inline with plain sentence-case
+   metadata (sources count, relative time) rather than as a standalone section header. */
+.imp-chip{font-weight:700}
 .imp{display:inline-flex;align-items:center;gap:6px;color:var(--c)}
 .imp i{width:8px;height:8px;border-radius:50%;background:var(--c)}
 .details{margin-top:12px;padding-top:12px;border-top:1px solid var(--line);cursor:default}
@@ -736,34 +773,49 @@ body.pre-app .top, body.pre-app main, body.pre-app .tabs{display:none}
   <section id="view-settings" class="view" hidden>
     <h1 data-i18n="settings">Settings</h1>
 
-    <div class="lp-block">
-      <h2 class="lp-h" data-i18n="account">Account</h2>
-      <p class="lp-sub" data-i18n="accountSub">Optional. Sign in to keep your own saved articles, dismissed items and followed channels tied to your account instead of a code - and separate from anyone else's.</p>
-      <div id="accountBox"></div>
+    <!-- Settings home: a short list of destinations instead of one long scroll (Option 2, drill-down).
+         Populated/updated by renderSettingsNav() in app.js - row visibility/counts follow the same state
+         (S.mode, S.myChannels, S.myInvestChannels, S.myCompanies, isOwner()) the old flat layout already
+         used, just surfaced as a summary here instead of the full block. Account keeps its own larger row
+         up top since it's the one destination almost everyone opens first. -->
+    <div id="settingsHome">
+      <button type="button" class="settingsnav-acct" data-act="spopen" data-v="account">
+        <span class="sn-avatar" id="snAcctAvatar">?</span>
+        <span class="sn-text">
+          <span class="sn-title" id="snAcctTitle" data-i18n="account">Account</span>
+          <span class="sn-sub" id="snAcctSub"></span>
+        </span>
+        <span class="sn-chevron">›</span>
+      </button>
+
+      <div class="settingsnav" id="settingsNavList" aria-label="Settings sections"></div>
+      <p class="settingsnav-foot">QwickSignal</p>
     </div>
 
-    <!-- Get the app: platform-detected (renderGetApp() in app.js, via a simple iOS/Android userAgent check).
-         Android gets the direct APK download (the zipped single asset on the GitHub release - zipped since
-         GitHub's release-asset uploader rejects raw .apk files; item #9). iOS can't install a .apk at all
-         (Apple blocks sideloading outright), so it gets "Add to Home Screen" steps instead - the PWA already
-         supports real push notifications on iOS 16.4+, so this isn't a lesser option, just a different
-         install path. A third "other" case (desktop, or a platform check that can't tell) shows both so
-         nobody sees a dead end. -->
-    <div class="lp-block">
-      <h2 class="lp-h" data-i18n="getAppHeading">Get the app</h2>
-      <div id="getAppBox"></div>
+    <!-- Account -->
+    <div class="settingspage sp-hidden" id="sp-account">
+      <button type="button" class="settingspage-back" data-act="spback"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>Settings</button>
+      <div class="lp-block">
+        <h2 class="lp-h" data-i18n="account">Account</h2>
+        <p class="lp-sub" data-i18n="accountSub">Optional. Sign in to keep your own saved articles, dismissed items and followed channels tied to your account instead of a code - and separate from anyone else's.</p>
+        <div id="accountBox"></div>
+      </div>
+      <!-- Signed-in accounts already sync automatically (Auth.uid keyed, no code needed) - this block is
+           guest-only now, and only ever shows a login prompt (syncing by shareable code was removed; see
+           renderSyncCode()). Stays in the DOM so it keeps its own place, but is always `hidden` for a
+           signed-in account. -->
+      <div class="lp-block" id="syncBlock">
+        <h2 class="lp-h" data-i18n="syncHeading">Sync across your devices</h2>
+        <p class="lp-sub" data-i18n="agSyncBody">Syncing across devices now needs a free account - it keeps everything a little safer and tied to you, not a shareable code.</p>
+        <button class="btn primary small" data-act="agGoto" data-i18n="agGoToAccount">Go to Account</button>
+      </div>
     </div>
 
-    <div class="lp-block">
-      <h2 class="lp-h" data-i18n="notifHeading">Notifications</h2>
-      <p class="lp-sub" data-i18n="notifSub">Get a notification on this device when a new story arrives - even when the app isn't open.</p>
-      <div id="notifBox"></div>
-    </div>
-
-    <!-- Signal (News) settings: only shown while the wifi-signal symbol is the active mode. Telegram
-         channel-linking here is specifically the News feed's source list. See setMode() in app.js, which
-         toggles #settingsSignalGroup/#settingsInvestmentGroup hidden state alongside the main feed. -->
-    <div id="settingsSignalGroup">
+    <!-- Signal (News) Telegram channels: only listed in the nav while the wifi-signal symbol is the active
+         mode - see setMode() in app.js, which now toggles #snNewsChannels (the nav row) the same way it
+         used to toggle #settingsSignalGroup. -->
+    <div class="settingspage sp-hidden" id="sp-newschannels">
+      <button type="button" class="settingspage-back" data-act="spback"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>Settings</button>
       <div class="lp-block">
         <h2 class="lp-h" data-i18n="telegram">Telegram channels for News</h2>
         <p class="lp-sub" data-i18n="telegramNewsSub">Link Telegram channels to follow for your Signal/News feed.</p>
@@ -777,10 +829,11 @@ body.pre-app .top, body.pre-app main, body.pre-app .tabs{display:none}
       </div>
     </div>
 
-    <!-- Investment settings: only shown while the candlestick symbol is the active mode. Two blocks - the
-         watchlist (which companies/tickers to track) and a SEPARATE Telegram channel list scoped to
-         investment-related channels, distinct from the News one above. -->
-    <div id="settingsInvestmentGroup" hidden>
+    <!-- Investment watchlist + its own Telegram channels: only listed in the nav while the candlestick
+         symbol is the active mode. Two blocks, same as before - the watchlist (which companies/tickers to
+         track) and a SEPARATE Telegram channel list scoped to investment-related channels. -->
+    <div class="settingspage sp-hidden" id="sp-investwatchlist">
+      <button type="button" class="settingspage-back" data-act="spback"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>Settings</button>
       <!-- Investment watchlist (Phase: News/Investment toggle). Companies the user is tracking - invested in,
            or planning to - personal to the account, never a shared pool like Telegram channels, so there's no
            owner-curation/approval step here, just add and remove. Login-gated the same way as Telegram +Add
@@ -809,29 +862,50 @@ body.pre-app .top, body.pre-app main, body.pre-app .tabs{display:none}
       </div>
     </div>
 
-    <!-- Signed-in accounts already sync automatically (Auth.uid keyed, no code needed) - this block is
-         guest-only now, and only ever shows a login prompt (syncing by shareable code was removed; see
-         renderSyncCode()). Stays in the DOM as a dedicated block so it keeps its own place in Settings,
-         but is always `hidden` for a signed-in account. -->
-    <div class="lp-block" id="syncBlock">
-      <h2 class="lp-h" data-i18n="syncHeading">Sync across your devices</h2>
-      <p class="lp-sub" data-i18n="agSyncBody">Syncing across devices now needs a free account - it keeps everything a little safer and tied to you, not a shareable code.</p>
-      <button class="btn primary small" data-act="agGoto" data-i18n="agGoToAccount">Go to Account</button>
+    <!-- Notifications -->
+    <div class="settingspage sp-hidden" id="sp-notifications">
+      <button type="button" class="settingspage-back" data-act="spback"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>Settings</button>
+      <div class="lp-block">
+        <h2 class="lp-h" data-i18n="notifHeading">Notifications</h2>
+        <p class="lp-sub" data-i18n="notifSub">Get a notification on this device when a new story arrives - even when the app isn't open.</p>
+        <div id="notifBox"></div>
+      </div>
     </div>
 
-    <!-- Everyone sees this: a simple bug/feedback/support form, writing to qs_tickets in Firestore (same
-         unauthenticated-write, owner-only-read pattern as qs_push_subs - see firestore.rules). -->
-    <div class="lp-block">
-      <h2 class="lp-h" data-i18n="feedbackHeading">Feedback &amp; support</h2>
-      <p class="lp-sub" data-i18n="feedbackSub">Found a bug, or have a suggestion? Send it here - it goes straight to the app owner.</p>
-      <div id="ticketBox"></div>
+    <!-- Get the app: platform-detected (renderGetApp() in app.js, via a simple iOS/Android userAgent check).
+         Android gets the direct APK download (the zipped single asset on the GitHub release - zipped since
+         GitHub's release-asset uploader rejects raw .apk files; item #9). iOS can't install a .apk at all
+         (Apple blocks sideloading outright), so it gets "Add to Home Screen" steps instead - the PWA already
+         supports real push notifications on iOS 16.4+, so this isn't a lesser option, just a different
+         install path. A third "other" case (desktop, or a platform check that can't tell) shows both so
+         nobody sees a dead end. -->
+    <div class="settingspage sp-hidden" id="sp-getapp">
+      <button type="button" class="settingspage-back" data-act="spback"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>Settings</button>
+      <div class="lp-block">
+        <h2 class="lp-h" data-i18n="getAppHeading">Get the app</h2>
+        <div id="getAppBox"></div>
+      </div>
     </div>
 
-    <!-- Owner-only: a read-only list of everyone's submitted tickets. Hidden entirely (not just styled
-         hidden - removed from layout) for every other signed-in account, via isOwner() in renderTickets(). -->
-    <div class="lp-block" id="ticketAdminBlock" hidden>
-      <h2 class="lp-h" data-i18n="ticketAdminHeading">Tickets (owner only)</h2>
-      <div id="ticketAdminBox"></div>
+    <!-- Feedback & support: everyone sees this, a simple bug/feedback/support form, writing to qs_tickets in
+         Firestore (same unauthenticated-write, owner-only-read pattern as qs_push_subs - see
+         firestore.rules). -->
+    <div class="settingspage sp-hidden" id="sp-feedback">
+      <button type="button" class="settingspage-back" data-act="spback"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>Settings</button>
+      <div class="lp-block">
+        <h2 class="lp-h" data-i18n="feedbackHeading">Feedback &amp; support</h2>
+        <p class="lp-sub" data-i18n="feedbackSub">Found a bug, or have a suggestion? Send it here - it goes straight to the app owner.</p>
+        <div id="ticketBox"></div>
+      </div>
+
+      <!-- Owner-only: a read-only list of everyone's submitted tickets. Hidden entirely (not just styled
+           hidden - removed from layout) for every other signed-in account, via isOwner() in
+           renderTickets(). Kept on the same Feedback page rather than its own nav row, since it's a small
+           owner-only addendum, not a destination most visitors would ever see listed. -->
+      <div class="lp-block" id="ticketAdminBlock" hidden>
+        <h2 class="lp-h" data-i18n="ticketAdminHeading">Tickets (owner only)</h2>
+        <div id="ticketAdminBox"></div>
+      </div>
     </div>
   </section>
 

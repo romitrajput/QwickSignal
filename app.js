@@ -1234,7 +1234,9 @@ if (typeof document !== 'undefined') (function () {
                                   // only (unlike myChannels/Channels.*, there's no shared owner-curated pool
                                   // here; this is simpler on purpose, same personal-list pattern as myCompanies)
     mode: 'news',            // 'news' (country-grouped, unchanged) or 'investment' (sector->company groups, tracked companies only)
-    cv: null                 // { country, idx, stories } while the Country Status viewer is open; not persisted
+    cv: null,                // { country, idx, stories } while the Country Status viewer is open; not persisted
+    settingsPage: null       // id of the open Settings drill-down sub-page (e.g. 'notifications'), or null while
+                             // on the Settings destinations list - see openSettingsPage()/closeSettingsPage()
   };
 
   /* ---------- storage (IndexedDB) ---------- */
@@ -3016,6 +3018,20 @@ if (typeof document !== 'undefined') (function () {
     cmState = null;
   }
 
+  // News display, Style A (left-accent card): the card already carried a left border colored by priority
+  // (.entry.imp-* -> --c, set long ago) but the footer never named the priority in words - a quick scan of
+  // the list could see "something is more urgent" from the border color alone, but not which level without
+  // opening the card. impChipHTML() adds a small dot-count + label chip (●●● Critical / ●● High / ● Medium,
+  // Low gets a plain label with no dots - it's the resting/default level, nothing to call out) using the
+  // same IMP_TITLES wording and IMP_VAR colors already used elsewhere (the Signals priority-group headers,
+  // the importance bar), so this is a new rendering of existing vocabulary, not a new taxonomy.
+  const IMP_DOTS = { Critical: '●●●', High: '●●', Medium: '●', Low: '' };
+  function impChipHTML(importance) {
+    const label = { Critical: 'Critical', High: 'High', Medium: 'Medium', Low: 'Low' }[importance] || importance;
+    const dots = IMP_DOTS[importance] || '';
+    return `<span class="imp-chip" style="color:${IMP_VAR[importance] || 'var(--ink2)'}">${dots ? dots + ' ' : ''}${esc(label)}</span>`;
+  }
+
   function entryHTML(it) {
     const open = S.open.has(it.id);
     const n = (it.sources || []).length;
@@ -3035,7 +3051,7 @@ if (typeof document !== 'undefined') (function () {
         ${thumb}
       </div>
       ${videoHTML(it)}
-      <div class="foot">${n > 1 ? `<span>${n} sources</span>` : ''}${rel ? `<span>${rel} related</span>` : ''}<span title="${esc(fmtDateTime(it.addedAt))}">${ago(it.addedAt)}</span><span class="ts">${esc(fmtDateTime(it.addedAt))}</span></div>
+      <div class="foot">${impChipHTML(it.importance)}${n > 1 ? `<span>${n} sources</span>` : ''}${rel ? `<span>${rel} related</span>` : ''}<span title="${esc(fmtDateTime(it.addedAt))}">${ago(it.addedAt)}</span><span class="ts">${esc(fmtDateTime(it.addedAt))}</span></div>
       ${open ? detailsHTML(it) : ''}
     </article>`;
   }
@@ -3071,7 +3087,7 @@ if (typeof document !== 'undefined') (function () {
         ${thumb}
       </div>
       ${videoHTML(it)}
-      <div class="foot">${n > 1 ? `<span>${n} sources</span>` : ''}<span title="${esc(fmtDateTime(it.addedAt))}">${ago(it.addedAt)}</span><span class="ts">${esc(fmtDateTime(it.addedAt))}</span></div>
+      <div class="foot">${impChipHTML(it.importance)}${n > 1 ? `<span>${n} sources</span>` : ''}<span title="${esc(fmtDateTime(it.addedAt))}">${ago(it.addedAt)}</span><span class="ts">${esc(fmtDateTime(it.addedAt))}</span></div>
       ${open ? detailsHTML(it, { inSaved: true }) : ''}
       ${open ? '' : `<button class="link unsave" data-act="unsave" data-id="${esc(it.id)}">Remove from Saved</button>`}
     </article>`;
@@ -3643,10 +3659,10 @@ Give a concise, event-specific analysis - decide for yourself which structure be
      Driven by the single #modeSym button in the bottom tab bar (one button, same size as the other tab
      icons, showing whichever symbol matches the current mode - see the click handler above, which toggles
      to the other mode on tap) instead of the old #modeSeg segmented control, which has been removed from
-     the Signals view. Same mode state (S.mode) as before, just a different control surface - plus two new
-     mode-scoped areas (Settings' #settingsSignalGroup/#settingsInvestmentGroup, Saved's
-     #savedList/#savedInvestList) that now also follow S.mode, per the user's request to split Saved/
-     Settings content by Signal vs Investment. */
+     the Signals view. Same mode state (S.mode) as before, just a different control surface - plus two
+     mode-scoped areas (Settings' destinations list, filtered by SETTINGS_SECTIONS' `mode` field - see
+     renderSettingsNav() below - and Saved's #savedList/#savedInvestList) that now also follow S.mode, per
+     the user's request to split Saved/Settings content by Signal vs Investment. */
   function setMode(mode) {
     if (mode === S.mode) return;
     S.mode = mode;
@@ -3684,13 +3700,16 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       const companyBar = $('#companyStatus'); if (companyBar) { companyBar.hidden = true; companyBar.innerHTML = ''; }
       renderControls(); renderList(); renderCountryBar();
     }
-    // Settings: swap which Telegram/watchlist block shows, per mode.
-    const sigGroup = $('#settingsSignalGroup'), invGroup = $('#settingsInvestmentGroup');
-    if (sigGroup) sigGroup.hidden = mode === 'investment';
-    if (invGroup) invGroup.hidden = mode !== 'investment';
+    // Settings: the News-channels / Investment-watchlist destinations in #settingsNavList are mode-scoped
+    // (SETTINGS_SECTIONS' own `mode` field, filtered in renderSettingsNav()) - refresh the list so the right
+    // one shows, and back out of a sub-page that no longer applies to the new mode (e.g. News channels was
+    // open and the mode flipped to Investment - that destination isn't listed anymore, so its sub-page
+    // shouldn't be either; closeSettingsPage() is a harmless no-op if no sub-page was open).
     if (S.tab === 'settings') {
       if (mode === 'investment') renderInvestmentBox(); else renderChannels();
       renderInvestChannels();
+      renderSettingsNav();
+      if (S.settingsPage === 'newschannels' || S.settingsPage === 'investwatchlist') closeSettingsPage();
     }
     // Saved: swap which saved-items list shows, re-render if that tab happens to be open already.
     const savedNews = $('#savedList'), savedInv = $('#savedInvestList');
@@ -3741,6 +3760,74 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     }
   }
 
+  /* ---------- Settings: drill-down navigation (Option 2) ----------
+     Settings used to be one long scroll of every block, in a fixed order, all always visible. That's now
+     replaced by a short list of destinations (#settingsHome, built by renderSettingsNav()) plus one
+     .settingspage wrapper per destination, shown one at a time by openSettingsPage()/closeSettingsPage().
+     Every existing block inside a .settingspage - #accountBox, #tgList, #invList, #notifBox, #getAppBox,
+     #ticketBox, #ticketAdminBox, etc. - kept its id and is still populated by exactly the render function
+     that always populated it (renderAccount(), renderChannels(), ...), called from the same places as
+     before (setTab('settings') below, and setMode()'s mode-swap block) - this only changes which wrapper is
+     visible, never how a block's content is produced, so none of that existing logic needed to change. */
+  const SETTINGS_SECTIONS = [
+    { id: 'newschannels', mode: 'news', icon: 'wifi', title: 'Telegram channels for News', subKey: () => S.myChannels.size + ' linked', count: () => S.myChannels.size },
+    { id: 'investwatchlist', mode: 'investment', icon: 'candle', title: 'Investment watchlist & channels', subKey: () => S.myCompanies.size + ' tracked · ' + S.myInvestChannels.size + ' channels', count: () => S.myCompanies.size + S.myInvestChannels.size },
+    { id: 'notifications', mode: null, icon: 'bell', title: 'Notifications', subKey: () => 'New story alerts', count: null },
+    { id: 'getapp', mode: null, icon: 'plus', title: 'Get the app', subKey: () => 'Install on this device', count: null },
+    { id: 'feedback', mode: null, icon: 'help', title: 'Feedback & support', subKey: () => isOwner() ? 'Send feedback · view tickets' : 'Send feedback', count: null }
+  ];
+  const SN_ICON = {
+    wifi: '<path d="M2 8.5a19 19 0 0 1 20 0M5.5 12.5a13.5 13.5 0 0 1 13 0M9 16.5a7.5 7.5 0 0 1 6 0"/><circle cx="12" cy="20" r="1.2" fill="currentColor" stroke="none"/>',
+    candle: '<rect x="4" y="9" width="3.4" height="9" rx="1"/><rect x="10.3" y="4" width="3.4" height="12" rx="1"/><rect x="16.6" y="11" width="3.4" height="7" rx="1"/>',
+    bell: '<path d="M12 2a7 7 0 0 1 7 7c0 5 2 7 2 7H3s2-2 2-7a7 7 0 0 1 7-7z"/><path d="M9.5 19a2.5 2.5 0 0 0 5 0"/>',
+    plus: '<path d="M12 4v16M4 12h16"/>',
+    help: '<circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/>'
+  };
+  function renderSettingsNav() {
+    const avatar = $('#snAcctAvatar'), title = $('#snAcctTitle'), sub = $('#snAcctSub');
+    if (avatar) {
+      if (Auth.uid) {
+        const initial = (Auth.email || '?').trim().charAt(0).toUpperCase() || '?';
+        avatar.textContent = initial;
+        if (sub) sub.textContent = Auth.email || '';
+      } else {
+        avatar.textContent = '?';
+        if (sub) sub.textContent = 'Sign in to keep your saves and channels with you';
+      }
+    }
+    const list = $('#settingsNavList');
+    if (!list) return;
+    const html = SETTINGS_SECTIONS
+      .filter(s => !s.mode || s.mode === S.mode)
+      .map(s => {
+        const n = s.count ? s.count() : null;
+        return `<button type="button" class="settingsnav-item" data-act="spopen" data-v="${s.id}">
+          <svg class="sn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${SN_ICON[s.icon]}</svg>
+          <span class="sn-text"><span class="sn-title">${esc(s.title)}</span><span class="sn-sub">${esc(s.subKey())}</span></span>
+          ${n !== null ? `<span class="sn-count">${n}</span>` : ''}
+          <span class="sn-chevron" aria-hidden="true">›</span>
+        </button>`;
+      }).join('');
+    list.innerHTML = html;
+  }
+  function openSettingsPage(id) {
+    const page = $('#sp-' + id);
+    if (!page) return;
+    $('#settingsHome').classList.add('sp-hidden');
+    $$('.settingspage').forEach(p => p.classList.add('sp-hidden'));
+    page.classList.remove('sp-hidden');
+    S.settingsPage = id;
+    window.scrollTo(0, 0);
+    track('settings_section_open', { section: id });
+  }
+  function closeSettingsPage() {
+    $$('.settingspage').forEach(p => p.classList.add('sp-hidden'));
+    const home = $('#settingsHome');
+    if (home) home.classList.remove('sp-hidden');
+    S.settingsPage = null;
+    window.scrollTo(0, 0);
+  }
+
   /* ---------- tabs ---------- */
   function setTab(name) {
     if (name !== S.tab) track('tab_view', { tab: name });
@@ -3755,7 +3842,14 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     // blocks were always rendered on load regardless of which tab was showing. Now that it's reached only via
     // the Settings tab, re-render its dynamic bits on every visit so they're never stale (e.g. after signing
     // in from the landing page while this tab wasn't open yet).
-    if (name === 'settings') { renderAccount(); renderChannels(); renderInvestChannels(); renderSyncCode(); renderGetApp(); renderNotifBox(); renderTicketBox(); renderTicketAdmin(); renderInvestmentBox(); }
+    if (name === 'settings') {
+      renderAccount(); renderChannels(); renderInvestChannels(); renderSyncCode(); renderGetApp(); renderNotifBox(); renderTicketBox(); renderTicketAdmin(); renderInvestmentBox();
+      renderSettingsNav();
+      // Always land on the destinations list, never a sub-page left open from a previous visit - a user who
+      // drilled into Notifications last time and then switched tabs would otherwise find Settings reopening
+      // straight into that sub-page instead of the list, with no visible way back to the other destinations.
+      closeSettingsPage();
+    }
   }
 
   /* ---------- export ---------- */
@@ -3887,7 +3981,9 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       const v = el.dataset.v;
       if (act === 'untrack') { Companies.remove(v); }
       else if (act === 'tginvremove') { InvestChannels.remove(v); }
-      else if (act === 'gotoWatchlist') { setTab('settings'); const inp = $('#invInput'); if (inp) inp.focus(); }
+      else if (act === 'spopen') { openSettingsPage(v); }
+      else if (act === 'spback') { closeSettingsPage(); }
+      else if (act === 'gotoWatchlist') { setTab('settings'); openSettingsPage('investwatchlist'); const inp = $('#invInput'); if (inp) inp.focus(); }
       else if (act === 'viewChart') { openChartModal(v, el, el.dataset.sector); }
       else if (act === 'cmclose') { closeChartModal(); }
       else if (act === 'cmSeg') { setChartSeg(v); }
