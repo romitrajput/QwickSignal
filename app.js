@@ -940,7 +940,7 @@ if (typeof document !== 'undefined') (function () {
       investEmptyTitle: 'Track companies to see investment-related news.', investEmptyBtn: 'Add companies to track',
       investNoNews: 'No recent news for this company.', investRemove: 'Remove',
       investNoNewsHint: "This updates automatically as new stories come in - it's not a sign anything is wrong.",
-      investNoSearchMatch: 'No stories match your search for this company.', investSearchActiveHint: 'Clear the search to see all of its recent news.',
+      investAllSectors: 'All sectors',
       viewChart: 'View Chart', chartLoading: 'Loading chart…',
       chartStock: 'Stock', chartSectorFallback: 'Sector',
       obSkip: 'Skip', obNext: 'Next', obDone: 'Got it',
@@ -1294,7 +1294,7 @@ if (typeof document !== 'undefined') (function () {
     tab: 'brief',
     open: new Set(),
     exportRange: 'today',
-    f: { range: '7d', country: '', sector: '', imp: '', q: '', view: 'priority' },
+    f: { range: '7d', country: '', sector: '', imp: '', q: '', view: 'priority', investSector: '' },
     syncCode: null,          // this device's sync code (also usable on other devices to share state)
     saved: new Set(),        // article ids saved by the user (Phase B, kept here so Sync can use it early)
     dismissed: new Set(),    // article ids dismissed by the user (Phase B)
@@ -4013,24 +4013,36 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     return `<h2 class="grp">${color ? `<span class="sw" style="background:${color}"></span>` : ''}${html}<span class="n">${n}</span></h2>`;
   }
 
-  // Investment mode's search/priority filter: same fields as filtered()'s own search, applied per-story
-  // within each company group, so the existing search box and priority chips keep working without
-  // duplicating their UI. Country/sector dropdown filters don't apply here - sector is already the
-  // Investment tab's own grouping - so only q and imp are relevant.
-  function investmentStoryMatches(it) {
-    // No longer checks f.imp (priority) - the priority dropdown (#viewFilter) is hidden in Investment mode
-    // (see setMode()) at the user's explicit request, and applying a filter with no visible control to show
-    // or clear it would silently hide stories for no reason the user could see or undo from this screen.
-    const f = S.f, q = f.q.trim().toLowerCase();
-    if (q && !(it.headline + ' ' + it.summary + ' ' + it.country + ' ' + it.sector + ' ' + it.subsector + ' ' + (it.companies || []).join(' ') + ' ' + it.text).toLowerCase().includes(q)) return false;
-    return true;
+  // Fills #investSectorFilter from whichever sectors the user's tracked companies actually fall under right
+  // now (investmentGroups() already computes this, sorted by story volume), plus a leading "All sectors"
+  // option - same idea as fillSelect()'s News-mode dropdowns, but simpler (no per-option counts, and the
+  // list only ever changes when companies are tracked/untracked, not on every render) so it's kept as its
+  // own small helper rather than overloading fillSelect() with a third shape. Only rebuilds the <option>
+  // list when the actual sector set changed (dataset.sig guard, same trick fillSelect() uses), so a normal
+  // re-render (new stories arriving, a vote, etc) never resets whatever the user has selected mid-session.
+  function syncInvestSectorFilter(groups) {
+    const sel = $('#investSectorFilter');
+    if (!sel) return;
+    const sectors = groups.map(g => g.sector);
+    const sig = sectors.join('\u0001');
+    if (sel.dataset.sig !== sig) {
+      const html = `<option value="">${esc(t('investAllSectors'))}</option>` +
+        sectors.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join('');
+      sel.innerHTML = html;
+      sel.dataset.sig = sig;
+    }
+    // The previously-selected sector can stop existing (its last tracked company was removed, or a sector
+    // simply has no tracked companies left to report) - fall back to "All sectors" rather than silently
+    // showing a dropdown stuck on a value no longer in its own option list.
+    if (S.f.investSector && !sectors.includes(S.f.investSector)) S.f.investSector = '';
+    sel.value = S.f.investSector;
   }
 
   function renderInvestmentList() {
     // Same guard as renderList(): don't yank #list's DOM out from under an in-progress swipe gesture.
     if (SWIPE.active) { SWIPE.renderPending = true; return; }
     const box = $('#list');
-    const groups = investmentGroups();
+    const allGroups = investmentGroups();
     const empty = $('#investEmpty');
     if (!S.myCompanies.size) {
       if (empty) empty.hidden = false;
@@ -4039,25 +4051,15 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       return;
     }
     if (empty) empty.hidden = true;
-    // Whether a search term is actually active right now - distinguishes two very different reasons a
-    // company's story list can be empty: no story about it exists yet at all (investNoNews/investNoNewsHint,
-    // same reassurance as before), versus stories DO exist but none of them match what was just typed
-    // (investNoSearchMatch/investSearchActiveHint) - without this distinction both cases rendered the exact
-    // same "No recent news for this company" text, so typing a search term that matched nothing looked
-    // identical to the search box having no effect at all, which is what was reported as "search isn't
-    // working." Reported against the company's full (pre-search) story count, not stories.length itself,
-    // since stories here is already the post-filter list.
-    const searching = !!S.f.q.trim();
+    syncInvestSectorFilter(allGroups);
+    const groups = S.f.investSector ? allGroups.filter(g => g.sector === S.f.investSector) : allGroups;
     let html = '';
     for (const g of groups) {
       const companyBlocks = g.companies.map(c => {
-        const stories = c.stories.filter(investmentStoryMatches);
-        const hasAnyStories = c.stories.length > 0;
+        const stories = c.stories;
         const body = stories.length
           ? stories.map(entryWrapHTML).join('')
-          : (searching && hasAnyStories)
-            ? `<p class="empty-note">${esc(t('investNoSearchMatch'))}<br><span class="empty-note-hint">${esc(t('investSearchActiveHint'))}</span></p>`
-            : `<p class="empty-note">${esc(t('investNoNews'))}<br><span class="empty-note-hint">${esc(t('investNoNewsHint'))}</span></p>`;
+          : `<p class="empty-note">${esc(t('investNoNews'))}<br><span class="empty-note-hint">${esc(t('investNoNewsHint'))}</span></p>`;
         const initial = esc((c.company || '?').trim().charAt(0).toUpperCase() || '?');
         return `<h3 class="grp-company">
           <div class="gc-top">
@@ -4070,7 +4072,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
           </div>
         </h3>${body}`;
       }).join('');
-      const sectorTotal = g.companies.reduce((n, c) => n + c.stories.filter(investmentStoryMatches).length, 0);
+      const sectorTotal = g.companies.reduce((n, c) => n + c.stories.length, 0);
       html += groupHead(esc(g.sector), sectorTotal) + companyBlocks;
     }
     box.innerHTML = html || `<div class="empty"><p>${esc(t('investNoNews'))}</p></div>`;
@@ -4434,17 +4436,21 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     S.mode = mode;
     track('mode_view', { mode });
     // The News-only chrome (country status ring, country/sector/priority dropdown filters) has no meaning in
-    // Investment mode, which is already grouped by sector/company - hide it rather than render it against
-    // the wrong data. #rangeSeg/#sectors/#countries/#viewSeg are left alone entirely: they're already
-    // permanently hidden in the markup (their buttons are commented out - unused/future UI), independent of
-    // mode. The search box stays visible in both modes (investmentStoryMatches() still honors S.f.q), but the
-    // priority dropdown (#viewFilter) is hidden here too, at the user's explicit request - Investment mode no
-    // longer applies S.f.imp as a filter either (see investmentStoryMatches()), so hiding the control without
-    // also dropping its effect would otherwise leave stories silently filtered by a priority value selected
-    // back in News mode, with no visible control in Investment mode to explain or clear it.
+    // Investment mode, which has its own sector dropdown instead (#investSectorFilter, swapped in below) -
+    // hide it rather than render it against the wrong data. #rangeSeg/#sectors/#countries/#viewSeg are left
+    // alone entirely: they're already permanently hidden in the markup (their buttons are commented out -
+    // unused/future UI), independent of mode. The priority dropdown (#viewFilter) is hidden here too, at the
+    // user's explicit request - Investment mode doesn't apply S.f.imp as a filter, so hiding the control
+    // without also dropping its effect would otherwise leave stories silently filtered by a priority value
+    // selected back in News mode, with no visible control in Investment mode to explain or clear it.
     const investmentOnlyHide = ['#countryStatus', '#countryFilter', '#sectorFilter', '#hasFilter', '#viewFilter'];
     if (mode === 'investment') {
       investmentOnlyHide.forEach(sel => { const el = $(sel); if (el) el.hidden = true; });
+      // Investment mode swaps the free-text search box for its own sector dropdown (#investSectorFilter) -
+      // see renderInvestmentList()'s own comment for why a sector picker is more useful here than typing a
+      // search term, now that sector is a real filter instead of just a grouping label.
+      const qBox = $('#q'); if (qBox) qBox.hidden = true;
+      const sectorBox = $('#investSectorFilter'); if (sectorBox) sectorBox.hidden = false;
       renderInvestmentList();
       renderCompanyBar();   // Company Status: the Investment-mode counterpart of the country ring row
     } else {
@@ -4454,6 +4460,8 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       // dropdown with no render function of its own, so it's un-hidden explicitly here too, the same way -
       // otherwise coming back to News mode from Investment would leave it hidden forever.
       ['#countryFilter', '#sectorFilter', '#viewFilter'].forEach(sel => { const el = $(sel); if (el) el.hidden = false; });
+      const qBox = $('#q'); if (qBox) qBox.hidden = false;
+      const sectorBox = $('#investSectorFilter'); if (sectorBox) sectorBox.hidden = true;
       const companyBar = $('#companyStatus'); if (companyBar) { companyBar.hidden = true; companyBar.innerHTML = ''; }
       renderControls(); renderList(); renderCountryBar();
     }
@@ -4877,6 +4885,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     if (t.id === 'countryFilter') { S.f.country = t.value; renderControls(); renderList(); }
     else if (t.id === 'sectorFilter') { S.f.sector = t.value; renderControls(); renderList(); }
     else if (t.id === 'viewFilter') { S.f.imp = t.value; renderControls(); renderList(); }
+    else if (t.id === 'investSectorFilter') { S.f.investSector = t.value; renderInvestmentList(); }
   });
   document.addEventListener('keydown', ev => {
     const box = $('#videoModal');

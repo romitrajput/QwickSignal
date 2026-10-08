@@ -969,6 +969,12 @@ body.pre-app .top, body.pre-app main, body.pre-app .tabs{display:none}
 
     <div class="tools">
       <input type="search" id="q" placeholder="Search" aria-label="Search" data-i18n-placeholder="searchPlaceholder">
+      <!-- Investment mode's own sector picker, replacing the free-text search box in that mode (see
+           setMode()/renderInvestmentList() in app.js) - Investment already groups tracked companies by
+           sector, so narrowing to one sector is a more useful control here than typing a search term.
+           Hidden in News mode, where #q (search) is the control instead. Options are filled in by
+           renderInvestmentList() from whichever sectors the user's tracked companies actually fall under. -->
+      <select id="investSectorFilter" class="filter-dropdown" aria-label="Filter by sector" hidden></select>
       <div class="strip" id="impchips" hidden></div>
       <div id="filterBox" class="filters">
         <select id="countryFilter" class="filter-dropdown" aria-label="Filter by country"></select>

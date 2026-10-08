@@ -1,7 +1,21 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-55-v1';  // This round: rebuilt the bottom tab bar as 5 separate, directly-
+const VERSION = 'gni-phase3-56-v1';  // This round: replaced Investment mode's free-text search box with a
+                                      // sector dropdown (#investSectorFilter) - Investment already groups
+                                      // tracked companies by sector, so picking one sector to narrow the
+                                      // view is more useful there than typing a search term, and search
+                                      // wasn't reliably discoverable/used in that mode anyway. The dropdown
+                                      // lists only the sectors the user's own tracked companies actually
+                                      // fall under (from investmentGroups()), plus "All sectors". Selecting
+                                      // a sector hides every other sector's group entirely, rather than
+                                      // thinning stories within groups that stay - sector was always a
+                                      // grouping label in Investment, now it's also a real filter. The
+                                      // search box (#q) and its old per-story filtering in Investment mode
+                                      // are removed; News mode is unaffected (#q keeps working there as
+                                      // before). Previous round's #modeSym/5-tab notes below.
+                                      //
+                                      // Previous round (gni-phase3-55-v1): rebuilt the bottom tab bar as 5 separate, directly-
                                       // tappable, always-visible tabs - Signals, Saved, Investment, Community,
                                       // Settings - replacing the old 3-tabs-plus-1-combined-mode-toggle layout.
                                       // The retired #modeSym button swapped between a Signal icon and a
