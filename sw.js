@@ -1,19 +1,34 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-54-v1';  // This round: four fixes.
-                                      // (1) Redesigned sentiment Pulse from PER STORY to PER COMPANY - voting
-                                      // on individual stories meant a company with 3 separate news items could
-                                      // show 3 unrelated little polls (e.g. Marico: 2 Bullish + 1 Bearish
-                                      // across 3 different headlines), which looked like "the crowd can't make
-                                      // up its mind" when really it was just 3 different headlines each
-                                      // getting one honest reaction - not a real read on the company at all.
-                                      // Voting is now one Bullish/Bearish choice per person per COMPANY
-                                      // (qs_pulse/qs_pulse_votes keyed by a slugified company name, not a
-                                      // story id - see Pulse.companySlug()/firestore.rules), shown once above
-                                      // that company's whole story list in Investment mode rather than inside
-                                      // each story's expanded details. A person's one vote now applies across
-                                      // every story about that company automatically.
+const VERSION = 'gni-phase3-55-v1';  // This round: rebuilt the bottom tab bar as 5 separate, directly-
+                                      // tappable, always-visible tabs - Signals, Saved, Investment, Community,
+                                      // Settings - replacing the old 3-tabs-plus-1-combined-mode-toggle layout.
+                                      // The retired #modeSym button swapped between a Signal icon and a
+                                      // candlestick icon via a two-tap arm/switch gesture (tap once to "arm" it,
+                                      // tap again within 600ms to actually flip mode), sitting inside a
+                                      // permanent filled red circle so it read as visually distinct from the
+                                      // three plain icons around it - reported as confusing/hard to use ("this
+                                      // doesn't look [right]"). Investment is now its own plain tab (setTab()
+                                      // pins S.mode to match whichever of Signals/Investment is open, instead
+                                      // of mode being a separate thing toggled by its own gesture), and
+                                      // sentiment Pulse - previously a row inline inside each of Investment's
+                                      // company story groups - moved to a brand-new dedicated Community tab:
+                                      // one card per tracked company with its collective bull/bear crowd read
+                                      // and vote buttons, listed whether or not that company has news today
+                                      // (renderCommunity() in app.js). Settings' destinations list now always
+                                      // shows both the News-channels and Investment-watchlist entries, rather
+                                      // than only whichever one matched the old mode toggle's position.
+                                      //
+                                      // Previous round (gni-phase3-54-v1): four fixes - (1) redesigned sentiment
+                                      // Pulse from PER STORY to PER COMPANY - voting on individual stories meant
+                                      // a company with 3 separate news items could show 3 unrelated little polls
+                                      // (e.g. Marico: 2 Bullish + 1 Bearish across 3 different headlines), which
+                                      // looked like "the crowd can't make up its mind" when really it was just 3
+                                      // different headlines each getting one honest reaction - not a real read
+                                      // on the company at all. Voting became one Bullish/Bearish choice per
+                                      // person per COMPANY (qs_pulse/qs_pulse_votes keyed by a slugified company
+                                      // name, not a story id - see Pulse.companySlug()/firestore.rules).
                                       // (2) Fixed a real headline bug: image_ocr.py's "[Text read from image]"
                                       // marker line (prepended ahead of OCR text when a post already had a
                                       // short caption) could itself get picked as a story's headline by

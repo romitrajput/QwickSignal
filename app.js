@@ -884,7 +884,7 @@ if (typeof document !== 'undefined') (function () {
 
   const I18N = {
     en: {
-      linkPages: 'Link Pages', settings: 'Settings', signals: 'Signals', saved: 'Saved', export: 'Export',
+      linkPages: 'Link Pages', settings: 'Settings', signals: 'Signals', saved: 'Saved', export: 'Export', community: 'Community',
       landingTitle: 'QwickSignal', landingTag: 'Sort news, messages and reports by country, sector and importance.',
       landingOr: 'or', continueAsGuest: 'Continue as guest',
       landingGuestNote: "You can look around and follow the default channels without an account. Sign in any time later from Settings to keep your own saved articles and channels.",
@@ -949,13 +949,15 @@ if (typeof document !== 'undefined') (function () {
       obStep3Title: 'Country, sector & priority', obStep3Body: 'Narrow the feed to one country or sector, or show only Critical/High priority stories.',
       obStep4Title: 'A news card', obStep4Body: 'Tap a story to read more, swipe right to save it, or swipe left to dismiss it.',
       obStep5Title: 'Saved', obStep5Body: 'Swipe a story right, or tap Save, to keep it here past the usual 24-hour window.',
-      obStep6Title: 'Switch to Investment', obStep6Body: 'Double-tap to flip between Signal (general news) and Investment (news grouped by company). A single tap won’t switch it by accident.',
+      obStep6Title: 'Investment', obStep6Body: 'News grouped by the companies you track, instead of by country.',
       obStep7Title: 'Settings', obStep7Body: 'Channels, your investment watchlist, notifications, account, export, and feedback - all in one place.',
+      obStep8Title: 'Community', obStep8Body: 'See the crowd’s bullish/bearish read on every company you track, and cast your own vote.',
       pulseLabel: 'Crowd read:', pulseBull: 'Bullish', pulseBear: 'Bearish',
+      communityPending: 'Votes will appear here shortly.',
       agPulseTitle: 'Log in to vote', agPulseBody: 'A free account keeps one vote per person honest - no limit on reading, just on voting.'
     },
     hi: {
-      linkPages: 'लिंक पेज', settings: 'सेटिंग्स', signals: 'सिग्नल्स', saved: 'सेव किए गए', export: 'एक्सपोर्ट',
+      linkPages: 'लिंक पेज', settings: 'सेटिंग्स', signals: 'सिग्नल्स', saved: 'सेव किए गए', export: 'एक्सपोर्ट', community: 'कम्युनिटी',
       landingTitle: 'QwickSignal', landingTag: 'खबरों, संदेशों और रिपोर्ट को देश, क्षेत्र और महत्व के अनुसार छाँटें।',
       landingOr: 'या', continueAsGuest: 'गेस्ट के रूप में जारी रखें',
       landingGuestNote: 'आप बिना खाते के भी देख सकते हैं और डिफ़ॉल्ट चैनल फॉलो कर सकते हैं। बाद में कभी भी सेटिंग्स से साइन इन करके अपने सेव किए गए लेख और चैनल रख सकते हैं।',
@@ -1008,13 +1010,15 @@ if (typeof document !== 'undefined') (function () {
       obStep3Title: 'देश, क्षेत्र और महत्व', obStep3Body: 'फ़ीड को किसी एक देश या क्षेत्र तक सीमित करें, या केवल क्रिटिकल/हाई प्राथमिकता वाली खबरें दिखाएं।',
       obStep4Title: 'एक न्यूज़ कार्ड', obStep4Body: 'अधिक पढ़ने के लिए किसी खबर पर टैप करें, सेव करने के लिए दाईं ओर स्वाइप करें, या हटाने के लिए बाईं ओर स्वाइप करें।',
       obStep5Title: 'सेव किए गए', obStep5Body: 'किसी खबर को दाईं ओर स्वाइप करें, या सेव पर टैप करें, ताकि वह सामान्य 24 घंटे के बाद भी यहां रहे।',
-      obStep6Title: 'इन्वेस्टमेंट पर जाएं', obStep6Body: 'सिग्नल (सामान्य खबरें) और इन्वेस्टमेंट (कंपनी के अनुसार समूहित खबरें) के बीच बदलने के लिए डबल-टैप करें। एक टैप से गलती से नहीं बदलेगा।',
+      obStep6Title: 'इन्वेस्टमेंट', obStep6Body: 'आपकी ट्रैक की गई कंपनियों के अनुसार समूहित खबरें, देश के बजाय।',
       obStep7Title: 'सेटिंग्स', obStep7Body: 'चैनल, आपकी इन्वेस्टमेंट वॉचलिस्ट, नोटिफिकेशन, खाता, एक्सपोर्ट, और फ़ीडबैक - सब एक ही जगह।',
+      obStep8Title: 'कम्युनिटी', obStep8Body: 'अपनी हर ट्रैक की गई कंपनी पर जनता की तेज़ी/मंदी राय देखें, और अपना वोट डालें।',
       pulseLabel: 'जनता की राय:', pulseBull: 'तेज़ी', pulseBear: 'मंदी',
+      communityPending: 'वोट जल्द ही यहां दिखेंगे।',
       agPulseTitle: 'वोट करने के लिए साइन इन करें', agPulseBody: 'मुफ़्त खाता यह सुनिश्चित करता है कि हर व्यक्ति सिर्फ़ एक बार वोट करे - पढ़ने की कोई सीमा नहीं, सिर्फ़ वोट करने की।'
     },
     mr: {
-      linkPages: 'लिंक पेजेस', settings: 'सेटिंग्ज', signals: 'सिग्नल्स', saved: 'सेव्ह केलेले', export: 'एक्सपोर्ट',
+      linkPages: 'लिंक पेजेस', settings: 'सेटिंग्ज', signals: 'सिग्नल्स', saved: 'सेव्ह केलेले', export: 'एक्सपोर्ट', community: 'कम्युनिटी',
       landingTitle: 'QwickSignal', landingTag: 'बातम्या, मेसेज आणि रिपोर्ट्स देश, क्षेत्र आणि महत्त्वानुसार क्रमवारी लावा.',
       landingOr: 'किंवा', continueAsGuest: 'गेस्ट म्हणून सुरू ठेवा',
       landingGuestNote: 'तुम्ही खात्याशिवायही पाहू शकता आणि डीफॉल्ट चॅनेल्स फॉलो करू शकता. नंतर कधीही सेटिंग्जमधून साइन इन करून तुमचे सेव्ह केलेले लेख आणि चॅनेल्स ठेवू शकता.',
@@ -1067,13 +1071,15 @@ if (typeof document !== 'undefined') (function () {
       obStep3Title: 'देश, क्षेत्र आणि महत्त्व', obStep3Body: 'फीड एका देशापुरते किंवा क्षेत्रापुरते मर्यादित करा, किंवा फक्त क्रिटिकल/हाय प्राधान्याच्या बातम्या दाखवा.',
       obStep4Title: 'एक न्यूज कार्ड', obStep4Body: 'अधिक वाचण्यासाठी बातमीवर टॅप करा, सेव्ह करण्यासाठी उजवीकडे स्वाइप करा, किंवा काढण्यासाठी डावीकडे स्वाइप करा.',
       obStep5Title: 'सेव्ह केलेले', obStep5Body: 'एखादी बातमी उजवीकडे स्वाइप करा, किंवा सेव्हवर टॅप करा, जेणेकरून ती नेहमीच्या 24 तासांनंतरही इथे राहील.',
-      obStep6Title: 'इन्व्हेस्टमेंटवर जा', obStep6Body: 'सिग्नल (सामान्य बातम्या) आणि इन्व्हेस्टमेंट (कंपनीनुसार गटबद्ध बातम्या) यामध्ये बदलण्यासाठी डबल-टॅप करा. एका टॅपने चुकून बदलणार नाही.',
+      obStep6Title: 'इन्व्हेस्टमेंट', obStep6Body: 'देशाऐवजी, तुम्ही ट्रॅक करत असलेल्या कंपन्यांनुसार गटबद्ध बातम्या.',
       obStep7Title: 'सेटिंग्ज', obStep7Body: 'चॅनेल्स, तुमची इन्व्हेस्टमेंट वॉचलिस्ट, नोटिफिकेशन्स, खाते, एक्सपोर्ट, आणि फीडबॅक - सर्व एकाच ठिकाणी.',
+      obStep8Title: 'कम्युनिटी', obStep8Body: 'तुम्ही ट्रॅक करत असलेल्या प्रत्येक कंपनीवरील जनमताचा तेजी/मंदी कल पहा, आणि तुमचे मत द्या.',
       pulseLabel: 'जनमत:', pulseBull: 'तेजी', pulseBear: 'मंदी',
+      communityPending: 'मते लवकरच इथे दिसतील.',
       agPulseTitle: 'मतदानासाठी साइन इन करा', agPulseBody: 'मोफत खाते खात्री करते की प्रत्येक व्यक्ती फक्त एकदाच मत देईल - वाचण्यावर मर्यादा नाही, फक्त मतदानावर.'
     },
     gu: {
-      linkPages: 'લિંક પેજીસ', settings: 'સેટિંગ્સ', signals: 'સિગ્નલ્સ', saved: 'સેવ કરેલ', export: 'એક્સપોર્ટ',
+      linkPages: 'લિંક પેજીસ', settings: 'સેટિંગ્સ', signals: 'સિગ્નલ્સ', saved: 'સેવ કરેલ', export: 'એક્સપોર્ટ', community: 'કમ્યુનિટી',
       landingTitle: 'QwickSignal', landingTag: 'સમાચાર, સંદેશા અને અહેવાલોને દેશ, ક્ષેત્ર અને મહત્વ પ્રમાણે ગોઠવો.',
       landingOr: 'અથવા', continueAsGuest: 'ગેસ્ટ તરીકે ચાલુ રાખો',
       landingGuestNote: 'તમે ખાતા વગર પણ જોઈ શકો છો અને ડિફોલ્ટ ચેનલ્સ ફોલો કરી શકો છો. પછી ગમે ત્યારે સેટિંગ્સમાંથી સાઇન ઇન કરીને તમારા સેવ કરેલા લેખો અને ચેનલ્સ રાખી શકો છો.',
@@ -1126,9 +1132,11 @@ if (typeof document !== 'undefined') (function () {
       obStep3Title: 'દેશ, ક્ષેત્ર અને મહત્વ', obStep3Body: 'ફીડને એક દેશ કે ક્ષેત્ર પૂરતું મર્યાદિત કરો, અથવા ફક્ત ક્રિટિકલ/હાઈ પ્રાથમિકતાના સમાચાર બતાવો.',
       obStep4Title: 'એક ન્યૂઝ કાર્ડ', obStep4Body: 'વધુ વાંચવા સમાચાર પર ટેપ કરો, સેવ કરવા જમણી બાજુ સ્વાઇપ કરો, અથવા હટાવવા ડાબી બાજુ સ્વાઇપ કરો.',
       obStep5Title: 'સેવ કરેલ', obStep5Body: 'કોઈ સમાચારને જમણી બાજુ સ્વાઇપ કરો, અથવા સેવ પર ટેપ કરો, જેથી તે સામાન્ય 24 કલાક પછી પણ અહીં રહે.',
-      obStep6Title: 'ઇન્વેસ્ટમેન્ટ પર જાઓ', obStep6Body: 'સિગ્નલ (સામાન્ય સમાચાર) અને ઇન્વેસ્ટમેન્ટ (કંપની પ્રમાણે જૂથબદ્ધ સમાચાર) વચ્ચે બદલવા ડબલ-ટેપ કરો. એક ટેપથી ભૂલથી નહીં બદલાય.',
+      obStep6Title: 'ઇન્વેસ્ટમેન્ટ', obStep6Body: 'દેશને બદલે, તમે ટ્રેક કરો છો તે કંપનીઓ પ્રમાણે જૂથબદ્ધ સમાચાર.',
       obStep7Title: 'સેટિંગ્સ', obStep7Body: 'ચેનલો, તમારી ઇન્વેસ્ટમેન્ટ વોચલિસ્ટ, નોટિફિકેશન, ખાતું, એક્સપોર્ટ, અને પ્રતિસાદ - બધું એક જ જગ્યાએ.',
+      obStep8Title: 'કમ્યુનિટી', obStep8Body: 'તમે ટ્રેક કરો છો તે દરેક કંપની પર જનમતનો તેજી/મંદી વલણ જુઓ, અને તમારો મત આપો.',
       pulseLabel: 'જનમત:', pulseBull: 'તેજી', pulseBear: 'મંદી',
+      communityPending: 'મત ટૂંક સમયમાં અહીં દેખાશે.',
       agPulseTitle: 'વોટ કરવા સાઇન ઇન કરો', agPulseBody: 'મફત ખાતું ખાતરી કરે છે કે દરેક વ્યક્તિ ફક્ત એક જ વાર વોટ કરે - વાંચવા પર કોઈ મર્યાદા નથી, ફક્ત વોટિંગ પર.'
     }
   };
@@ -1283,7 +1291,7 @@ if (typeof document !== 'undefined') (function () {
     videoMeta: null,
     brief: null,
     lastLive: 0,
-    tab: 'inbox',
+    tab: 'brief',
     open: new Set(),
     exportRange: 'today',
     f: { range: '7d', country: '', sector: '', imp: '', q: '', view: 'priority' },
@@ -1791,7 +1799,8 @@ if (typeof document !== 'undefined') (function () {
       { anchor: '#countryFilter', titleKey: 'obStep3Title', bodyKey: 'obStep3Body' },
       { anchor: '#list .entry', titleKey: 'obStep4Title', bodyKey: 'obStep4Body' },
       { anchor: '[data-tab="saved"]', titleKey: 'obStep5Title', bodyKey: 'obStep5Body' },
-      { anchor: '#modeSym', titleKey: 'obStep6Title', bodyKey: 'obStep6Body' },
+      { anchor: '[data-tab="investment"]', titleKey: 'obStep6Title', bodyKey: 'obStep6Body' },
+      { anchor: '[data-tab="community"]', titleKey: 'obStep8Title', bodyKey: 'obStep8Body' },
       { anchor: '[data-tab="settings"]', titleKey: 'obStep7Title', bodyKey: 'obStep7Body' }
     ],
     _idx: 0,
@@ -3925,12 +3934,13 @@ Give a concise, event-specific analysis - decide for yourself which structure be
   // opened; see the data-act click handler's "opening" branch). Empty before that fetch resolves, same as
   // the thread simply not existing yet - re-rendered once real data arrives, no spinner/placeholder needed
   // since the window between open and re-render is normally under a second.
-  // Sentiment-pulse row, PER COMPANY: rendered once above a company's whole story group in Investment mode
-  // (see renderInvestmentList()), not per story - see the Pulse module's own doc-comment for why. Synchronous,
-  // same convention as threadHTML() below - reads whatever Pulse.forCompany() last cached; the actual fetch
-  // is kicked off the first time this company's group renders (see renderInvestmentList()) and this
-  // re-renders once it resolves. Shows nothing (not even a loading state) until the first fetch lands, same
-  // as the thread timeline.
+  // Sentiment-pulse row, PER COMPANY: rendered once per tracked company in the dedicated Community/Pulse tab
+  // (see renderCommunity()), not per story and no longer inline inside Investment's story groups either -
+  // see the Pulse module's own doc-comment for why it's company-scoped, and renderCommunity()'s own comment
+  // for why it moved to its own tab. Synchronous, same convention as threadHTML() below - reads whatever
+  // Pulse.forCompany() last cached; the actual fetch is kicked off the first time a company's row renders
+  // (see renderCommunity()) and this re-renders once it resolves. Shows nothing (not even a loading state)
+  // until the first fetch lands, same as the thread timeline.
   function pulseHTML(company) {
     const counts = Pulse.counts(company);
     if (!counts) return '';
@@ -4058,29 +4068,56 @@ Give a concise, event-specific analysis - decide for yourself which structure be
             <button class="btn-chart" data-act="viewChart" data-v="${esc(c.company)}" data-sector="${esc(g.sector)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l5-5 4 4 8-9"/><path d="M15 7h5v5"/></svg>${esc(t('viewChart'))}</button>
             <button class="gc-remove" data-act="untrack" data-v="${esc(c.company)}" aria-label="${esc(t('investRemove'))} ${esc(c.company)}" title="${esc(t('investRemove'))}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
           </div>
-        </h3>${hasAnyStories ? pulseHTML(c.company) : ''}${body}`;
+        </h3>${body}`;
       }).join('');
       const sectorTotal = g.companies.reduce((n, c) => n + c.stories.filter(investmentStoryMatches).length, 0);
       html += groupHead(esc(g.sector), sectorTotal) + companyBlocks;
     }
     box.innerHTML = html || `<div class="empty"><p>${esc(t('investNoNews'))}</p></div>`;
     seenObserveVisible(box);
-    // Sentiment pulse is per company, not per story (see the Pulse module's doc-comment) - one fetch per
-    // tracked company that actually has news, kicked off right after render rather than eagerly for every
-    // company regardless of whether it has stories (a company with nothing to show has nothing to vote on
-    // either). Pulse.forCompany() already skips any company it has cached, but ONLY fetch for (and only
-    // re-render after) companies that are still genuinely uncached - calling forCompany() again on an
-    // already-cached company resolves on the same microtask tick with nothing fetched, so re-rendering
-    // unconditionally here would call this function again, which would again "resolve immediately and
-    // re-render", forever - a real infinite render loop with no network calls to ever break it, caught by
-    // simulation before shipping. Re-rendering only when at least one fetch actually completes is what
-    // keeps this a one-shot "patch in the data once it arrives", same as every other async-then-re-render
-    // spot in this file (Archive.forStory(), etc).
-    const uncached = groups.flatMap(g => g.companies)
-      .filter(c => c.stories.length > 0 && !Pulse._cache.has(Pulse.companySlug(c.company)));
+    // Sentiment pulse no longer renders inline here - per the user's explicit "Dedicated Pulse screen"
+    // choice, it moved to its own Community tab (see renderCommunity()), which lists every tracked company
+    // once, with its sentiment bar, independent of whether that company currently has news. Nothing to
+    // fetch or patch in on an Investment render any more.
+  }
+
+  // Community/Pulse tab: one row per tracked company (S.myCompanies), each with its collective bull/bear
+  // sentiment bar and vote buttons (pulseHTML()/Pulse module - unchanged from the per-company redesign
+  // earlier this round). Deliberately NOT scoped to companies that currently have news, unlike Investment's
+  // story groups - this is a company-sentiment screen, not a story feed, so a company with nothing new to
+  // report today still keeps its place and its crowd read here (per the user's confirmed "list of all your
+  // tracked companies with their sentiment bars in one place" answer). Companies are listed alphabetically,
+  // same convention as the Investment watchlist's own list in Settings.
+  function renderCommunity() {
+    const box = $('#communityList');
+    const empty = $('#communityEmpty');
+    if (!box) return;
+    if (!S.myCompanies.size) {
+      if (empty) empty.hidden = false;
+      box.innerHTML = '';
+      return;
+    }
+    if (empty) empty.hidden = true;
+    const names = [...S.myCompanies].sort((a, b) => a.localeCompare(b));
+    box.innerHTML = names.map(name => {
+      const initial = esc((name || '?').trim().charAt(0).toUpperCase() || '?');
+      return `<div class="community-row">
+        <div class="gc-top">
+          <span class="gc-ring"><span class="gc-ring-inner">${initial}</span></span>
+          <span class="gc-name">${esc(name)}</span>
+        </div>
+        ${pulseHTML(name) || `<p class="empty-note community-pending">${esc(t('communityPending'))}</p>`}
+      </div>`;
+    }).join('');
+    seenObserveVisible(box);
+    // Same "only fetch/re-render for companies still uncached" guard as the old Investment-inline version
+    // had (see the infinite-render-loop fix in that history) - Pulse.forCompany() resolving instantly for
+    // an already-cached company must never trigger another unconditional re-render, or this becomes the
+    // same same-tick infinite loop that was caught by simulation before anything shipped.
+    const uncached = names.filter(name => !Pulse._cache.has(Pulse.companySlug(name)));
     if (uncached.length) {
-      Promise.all(uncached.map(c => Pulse.forCompany(c.company))).then(() => {
-        if (S.mode === 'investment') renderInvestmentList();
+      Promise.all(uncached.map(name => Pulse.forCompany(name))).then(() => {
+        if (S.tab === 'community') renderCommunity();
       });
     }
   }
@@ -4380,27 +4417,22 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     // keep the just-added cards in sync when they are toggled
   }
 
-  /* ---------- News/Signal / Investment mode toggle ----------
-     Driven by the single #modeSym button in the bottom tab bar (one button, same size as the other tab
-     icons, showing whichever symbol matches the current mode - see the click handler above, which toggles
-     to the other mode on tap) instead of the old #modeSeg segmented control, which has been removed from
-     the Signals view. Same mode state (S.mode) as before, just a different control surface - plus two
-     mode-scoped areas (Settings' destinations list, filtered by SETTINGS_SECTIONS' `mode` field - see
-     renderSettingsNav() below - and Saved's #savedList/#savedInvestList) that now also follow S.mode, per
-     the user's request to split Saved/Settings content by Signal vs Investment. */
+  /* ---------- News/Signal / Investment mode ----------
+     S.mode is now a plain CONSEQUENCE of which tab is open, not an independent toggle a visitor switches
+     with its own gesture. Signals/Saved/Settings keep S.mode = 'news'; Investment (its own, directly-
+     tappable tab now - see setTab()) sets it to 'investment'. This used to be driven by a single combined
+     #modeSym button (double-tap to flip between a Signal icon and a candlestick icon, sitting inside a
+     filled red circle) layered on top of the 'brief' tab slot - replaced per the user's explicit "5 tabs,
+     not 4 icons" request: Signals, Saved, Investment, Community, Settings, each a plain, always-visible,
+     single-tap button, with Investment promoted to a first-class tab instead of a mode hidden behind a
+     gesture. setMode() itself is kept as an internal helper (called only from setTab() now) so the large
+     block of mode-scoped rendering below - which several other render paths still correctly key off
+     S.mode rather than S.tab (exportItems(), renderCompanyBar(), the PDF/CSV export masthead, etc) -
+     didn't need to be rewritten, just re-triggered from a different place. */
   function setMode(mode) {
     if (mode === S.mode) return;
     S.mode = mode;
     track('mode_view', { mode });
-    const symBtn = $('#modeSym');
-    if (symBtn) {
-      symBtn.dataset.v = mode;
-      symBtn.dataset.mode = mode;
-      const label = mode === 'investment' ? 'Investment' : 'Signal';
-      const hint = mode === 'investment' ? 'tap to switch to Signal' : 'tap to switch to Investment';
-      symBtn.setAttribute('aria-label', label);
-      symBtn.setAttribute('title', label + ' · ' + hint);
-    }
     // The News-only chrome (country status ring, country/sector/priority dropdown filters) has no meaning in
     // Investment mode, which is already grouped by sector/company - hide it rather than render it against
     // the wrong data. #rangeSeg/#sectors/#countries/#viewSeg are left alone entirely: they're already
@@ -4431,10 +4463,8 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     // open and the mode flipped to Investment - that destination isn't listed anymore, so its sub-page
     // shouldn't be either; closeSettingsPage() is a harmless no-op if no sub-page was open).
     if (S.tab === 'settings') {
-      if (mode === 'investment') renderInvestmentBox(); else renderChannels();
-      renderInvestChannels();
+      renderInvestmentBox(); renderChannels(); renderInvestChannels();
       renderSettingsNav();
-      if (S.settingsPage === 'newschannels' || S.settingsPage === 'investwatchlist') closeSettingsPage();
     }
     // Saved: swap which saved-items list shows, re-render if that tab happens to be open already.
     const savedNews = $('#savedList'), savedInv = $('#savedInvestList');
@@ -4445,45 +4475,6 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     // exportItems()) depends on mode, so refresh it if that settings sub-page happens to be open already
     // (Export now lives under Settings, not its own tab - see SETTINGS_SECTIONS/openSettingsPage()).
     if (S.tab === 'settings' && S.settingsPage === 'export') renderExport();
-  }
-
-  // Plays the wifi-sweep/candle-tick animation on #modeSym exactly once per tap (the .pulse-once CSS rules
-  // have no "infinite" - see index.html - so without this they'd never run at all). Forces a reflow before
-  // re-adding the class so a second quick tap restarts the animation from the beginning instead of being a
-  // no-op (the class would otherwise already be present and adding it again does nothing).
-  function pulseModeSym() {
-    const btn = $('#modeSym');
-    if (!btn) return;
-    btn.classList.remove('pulse-once');
-    void btn.offsetWidth;   // force reflow so the next class add is seen as a fresh change
-    btn.classList.add('pulse-once');
-    setTimeout(() => btn.classList.remove('pulse-once'), 1000);
-  }
-
-  // BUG FIX: a single tap on #modeSym used to switch mode immediately. With nothing tracked yet in
-  // Investment mode, that single accidental tap (easy to land on, since it sits between Saved and Export
-  // in the tab bar) dropped the visitor straight onto the "Track companies to see investment-related
-  // news / Add companies to track" empty state - reported as an unwanted tab/screen appearing out of
-  // nowhere. Fix: #modeSym now requires two taps within MODE_TAP_WINDOW_MS to actually switch mode - a
-  // single tap only "arms" the button (a brief .armed highlight, see CSS, plus pulseModeSym()'s usual
-  // one-shot icon animation so the tap still feels acknowledged) and does nothing else; a second tap
-  // within the window completes the switch. A tap after the window has elapsed is treated as a fresh
-  // first tap, not a second one.
-  const MODE_TAP_WINDOW_MS = 600;
-  let modeArmedAt = 0;
-  function tryModeSwitch() {
-    const btn = $('#modeSym');
-    const now = Date.now();
-    if (now - modeArmedAt <= MODE_TAP_WINDOW_MS) {
-      modeArmedAt = 0;
-      if (btn) btn.classList.remove('armed');
-      setMode(S.mode === 'investment' ? 'news' : 'investment');
-      pulseModeSym();
-    } else {
-      modeArmedAt = now;
-      if (btn) { btn.classList.add('armed'); setTimeout(() => btn.classList.remove('armed'), MODE_TAP_WINDOW_MS); }
-      pulseModeSym();   // still plays the one-shot icon animation so a single tap isn't silent/dead-feeling
-    }
   }
 
   /* ---------- Settings: drill-down navigation (Option 2) ----------
@@ -4525,8 +4516,14 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     }
     const list = $('#settingsNavList');
     if (!list) return;
+    // Both the News-channels and Investment-watchlist destinations are listed now, regardless of S.mode -
+    // Settings used to show only whichever one matched the old combined mode-toggle's current position
+    // (so seeing "Investment watchlist" meant first switching the whole app into Investment mode), but now
+    // that Investment is its own separate tab, Settings is reached the same way from either Signals or
+    // Investment and must offer both destinations every time, not hide one depending on which tab a visitor
+    // arrived from. The `mode` field on each section is kept only for subKey()/count() styling elsewhere,
+    // not as a filter here any more.
     const html = SETTINGS_SECTIONS
-      .filter(s => !s.mode || s.mode === S.mode)
       .map(s => {
         const n = s.count ? s.count() : null;
         return `<button type="button" class="settingsnav-item" data-act="spopen" data-v="${s.id}">
@@ -4558,14 +4555,27 @@ Give a concise, event-specific analysis - decide for yourself which structure be
   }
 
   /* ---------- tabs ---------- */
+  // Tabs map 1:1 to the 5 bottom-bar buttons (Signals, Saved, Investment, Community, Settings). 'brief' and
+  // 'investment' are two DIFFERENT tabs now but share one underlying screen, #view-brief, the same way
+  // S.mode already split that single screen's content in two before this round - see setMode() above. So
+  // switching to either tab both shows #view-brief AND pins S.mode to match, rather than leaving mode as a
+  // separate thing a visitor could set out of step with which of the two tabs they're on.
   function setTab(name) {
     if (name !== S.tab) track('tab_view', { tab: name });
     S.tab = name;
-    $$('.view').forEach(v => v.hidden = v.id !== 'view-' + name);
+    const screen = (name === 'investment') ? 'brief' : name;
+    $$('.view').forEach(v => v.hidden = v.id !== 'view-' + screen);
     $$('.tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === name));
     window.scrollTo(0, 0);
-    if (name === 'brief') { if (S.mode === 'investment') { renderInvestmentList(); renderCompanyBar(); } else { renderControls(); renderList(); } }
+    if (name === 'brief' || name === 'investment') {
+      setMode(name === 'investment' ? 'investment' : 'news');
+      // setMode() only re-renders when the mode actually changed (e.g. arriving at Investment from
+      // Settings, already in investment mode from a previous visit) - force a render here too so the
+      // screen is never stale on a tab switch that didn't also cross a mode boundary.
+      if (S.mode === 'investment') { renderInvestmentList(); renderCompanyBar(); } else { renderControls(); renderList(); }
+    }
     if (name === 'saved') renderSaved();
+    if (name === 'community') renderCommunity();
     // Settings used to be the app's default first screen ("Link Pages"), so its Account/Telegram/Appearance
     // blocks were always rendered on load regardless of which tab was showing. Now that it's reached only via
     // the Settings tab, re-render its dynamic bits on every visit so they're never stale (e.g. after signing
@@ -4696,10 +4706,6 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     if (SWIPE.justSwiped) { ev.preventDefault(); ev.stopPropagation(); return; }
     const el = ev.target.closest('[data-act],[data-tab],[data-v]');
     if (el && el.dataset.tab) { setTab(el.dataset.tab); return; }
-    if (el && el.closest('#modeSym')) {
-      tryModeSwitch();
-      return;
-    }
     if (el && el.closest('#rangeSeg')) { S.f.range = el.dataset.v; renderControls(); renderList(); return; }
     if (el && el.closest('#viewSeg')) { S.f.view = el.dataset.v; renderControls(); renderList(); return; }
     if (el && el.closest('#exportSeg')) { S.exportRange = el.dataset.v; renderExport(); return; }
@@ -4725,14 +4731,15 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       }
       else if (act === 'vclose') { closeVideo(); }
       else if (act === 'pulse') {
-        // Voting is per company now (see the Pulse module), and pulseHTML() renders as part of a whole
-        // company header block inside renderInvestmentList()'s own markup, not as a standalone swappable
-        // element - so a full re-render is the simple correct fix here, not a targeted outerHTML patch.
-        // This does NOT re-fetch anything: Pulse.vote() already updated _cache/_mine optimistically before
-        // this await resolves, so renderInvestmentList()'s own "only fetch what's still uncached" check
-        // (see its own comment) finds nothing new to fetch and just re-paints with the fresh local data.
+        // Voting is per company now (see the Pulse module). pulseHTML() only ever renders inside the
+        // Community tab these days (renderCommunity()), so that's the only screen that ever needs
+        // re-painting after a vote - a full re-render is the simple correct fix here, not a targeted
+        // outerHTML patch. This does NOT re-fetch anything: Pulse.vote() already updated _cache/_mine
+        // optimistically before this await resolves, so renderCommunity()'s own "only fetch what's still
+        // uncached" check (see its own comment) finds nothing new to fetch and just re-paints with the
+        // fresh local data.
         await Pulse.vote(el.dataset.company, v);
-        if (S.mode === 'investment') renderInvestmentList();
+        if (S.tab === 'community') renderCommunity();
       }
       else if (act === 'agclose') { closeAuthGate(); }
       else if (act === 'agGoto') { closeAuthGate(); setTab('settings'); const eb = $('#authEmail'); if (eb) eb.focus(); }
