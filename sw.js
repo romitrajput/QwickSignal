@@ -1,7 +1,38 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-56-v1';  // This round: replaced Investment mode's free-text search box with a
+const VERSION = 'gni-phase3-58-v1';  // This round: re-themed the whole app to the Wada Sanzo "Classic 303"
+                                      // historical Japanese color combination (Naples Yellow #fbe6a0, Peach
+                                      // Red #f15a30, Deep Slate Olive #253122, Neutral Gray #b6bfc1). Picked
+                                      // "Option F" out of 7 live-previewed mappings: white/cream page
+                                      // (#FFFAF0), gray cards (#D8DEDF), olive text (#253122/#56614F), gray
+                                      // hairlines (#9AA5A6), red accent (#F15A30/#FFFAF0 on-accent). Applied
+                                      // to index.html's :root theme tokens, the <meta name="theme-color">
+                                      // tag, and manifest.webmanifest's background_color/theme_color. Naples
+                                      // Yellow itself isn't used in this mapping (kept as a comment for a
+                                      // future round). Semantic colors - Bullish/Bearish green/red and the
+                                      // Critical/High/Medium/Low priority colors - are deliberately UNCHANGED,
+                                      // by explicit request, since 4 colors alone can't keep those meanings
+                                      // distinguishable. app.js has no code changes this round (its colors
+                                      // all come from CSS custom properties, confirmed via grep).
+                                      //
+                                      // Previous round (gni-phase3-57-v1): real company logos (well, favicons) on every company
+                                      // ring - Investment's company cards, the Community tab, the Company
+                                      // Status bar, and the story-viewer modal - replacing the plain letter-
+                                      // initial circle wherever a logo is available. New guessLogoDomain() in
+                                      // Engine guesses each tracked company's web domain (a curated table for
+                                      // ~70 well-known names, e.g. "JSW Steel" -> jsw.in, plus a generic
+                                      // name-to-".com" guess for anything else), fetched through Google's
+                                      // public favicon endpoint (no account/key needed) at companyLogoHTML()
+                                      // in the UI layer. Originally built against Clearbit's free Logo API,
+                                      // which turned out to have been shut down for good in December 2025 -
+                                      // caught before shipping, switched to Google's favicon service instead.
+                                      // A company with no logo/favicon on file still falls back to the
+                                      // original letter circle; a wrong/placeholder icon for an obscure or
+                                      // freehand company name is the accepted trade-off of a free, no-key
+                                      // source (see companyLogoHTML()'s own comment for the full reasoning).
+                                      //
+                                      // Previous round (gni-phase3-56-v1): replaced Investment mode's free-text search box with a
                                       // sector dropdown (#investSectorFilter) - Investment already groups
                                       // tracked companies by sector, so picking one sector to narrow the
                                       // view is more useful there than typing a search term, and search

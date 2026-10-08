@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>QwickSignal</title>
 <meta name="description" content="Sort news, messages and reports by country, sector and importance. Runs entirely on your phone.">
-<meta name="theme-color" content="#F9ECDC">
+<meta name="theme-color" content="#FFFAF0">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -27,15 +27,24 @@
 <style>
 /* ============================================================
    THEME
-   Cream/red palette matched to QwickSignal's marketing colors (cream
-   background, near-black text, a strong red accent) - this is the sole,
+   Wada Sanzo "Classic 303" palette (Naples Yellow #fbe6a0, Peach Red
+   #f15a30, Deep Slate Olive #253122, Neutral Gray #b6bfc1), mapped as:
+   white/cream page, gray cards, olive text, red accent - the user's
+   chosen option ("F") out of 7 previewed combinations. This is the sole,
    permanent look now; there is no toggle, no second palette, and no
-   dark-mode override, by explicit request.
+   dark-mode override, by explicit request (unchanged from the previous
+   cream/red theme this replaces). Naples Yellow itself isn't used
+   anywhere in this mapping - kept here as a comment in case a future
+   round wants to bring it back in: #fbe6a0.
+   Semantic colors (priority levels, bull/bear) are deliberately NOT
+   drawn from this palette and are unchanged - green/red/orange/brown
+   stay as they were, so Bullish vs Bearish and Critical..Low stay
+   distinguishable by color, which 4 colors alone couldn't support.
    ============================================================ */
 :root{
-  --paper:#F9ECDC; --surface:#FFF8EF; --ink:#241A12; --ink2:#7A6A57; --line:#E4D3B9;
-  --head:#F9ECDC; --head-ink:#241A12;
-  --accent:#D3131E; --accent-ink:#FFFFFF;
+  --paper:#FFFAF0; --surface:#D8DEDF; --ink:#253122; --ink2:#56614F; --line:#9AA5A6;
+  --head:#FFFAF0; --head-ink:#253122;
+  --accent:#F15A30; --accent-ink:#FFFAF0;
   --crit:#D3131E; --high:#C97A0E; --med:#8A6A2E; --low:#9C8B72; --save:#2E8B4F;
   --bull:#2E8B4F; --bear:#D3131E;
   --card-shadow:none; --card-shadow-hover:none;
@@ -250,6 +259,13 @@ input[type=search]:focus-visible{border-color:var(--accent);box-shadow:0 0 0 4px
 .gc-top{display:flex;align-items:center;gap:10px}
 .gc-ring{flex:none;width:40px;height:40px;border-radius:50%;padding:2px;background:conic-gradient(var(--accent) 0deg 360deg);display:flex;align-items:center;justify-content:center}
 .gc-ring-inner{width:100%;height:100%;border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:var(--accent);box-shadow:0 0 0 1px var(--line) inset}
+/* Real company logo variant (see companyLogoHTML() in app.js) - same ring size/shadow as the plain-initial
+   version above, just padded a touch so a square/wide logo doesn't touch the circular edge, and padding
+   collapses back to 0 for the plain-initial fallback (a <span> with no nested <img>) via :has(), so neither
+   version needs its own separate ring markup. */
+.gc-ring-inner-logo{padding:5px}
+.gc-ring-inner-logo:not(:has(img)){padding:0}
+.gc-ring-inner-logo img{width:100%;height:100%;object-fit:contain}
 .gc-name{font-size:15px;font-weight:700;color:var(--ink);line-height:1.3}
 .gc-top .n{margin-left:auto;flex:none;min-width:20px;padding:2px 7px;border-radius:999px;background:var(--paper);color:var(--ink2);font-weight:700;font-size:11.5px;text-align:center;font-variant-numeric:tabular-nums}
 .gc-actions{display:flex;align-items:center;gap:8px}
@@ -561,6 +577,10 @@ body.cv-lock{overflow:hidden}
 .cstop:active .qs-ring{transform:scale(.94)}
 @media (hover:hover){.cstop:hover .qs-ring{transform:scale(1.05)}}
 .qs-ring-inner{width:100%;height:100%;border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:26px;box-shadow:0 0 0 1px var(--line) inset,var(--card-shadow)}
+/* Real company logo variant, same idea as .gc-ring-inner-logo above (see companyLogoHTML() in app.js). */
+.qs-ring-inner-logo{padding:8px}
+.qs-ring-inner-logo:not(:has(img)){padding:0}
+.qs-ring-inner-logo img{width:100%;height:100%;object-fit:contain}
 .cstop-name{font-size:11.5px;font-weight:600;color:var(--ink2);max-width:66px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* Country story viewer - a full-screen "status" reader: dashes at top, one story centered, tap zones either side */
