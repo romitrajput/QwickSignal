@@ -5178,7 +5178,33 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     // code) on the very first pull - neither ever blocks the news feed itself from loading.
     Auth.restore().then(() => Sync.init()).then(() => { renderAccount(); renderSyncCode(); renderChannels(); renderAll(); });
     if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
-      window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').then(() => Push.resync()).catch(() => { }));
+      window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').then(reg => {
+        Push.resync();
+        // Browsers only check sw.js for a new VERSION on their own schedule (roughly once a day, often
+        // less eager than that) - a tab left open across a deploy, or even a plain refresh soon after one,
+        // can easily keep running the OLD cached app.js/index.html for a long time with no sign anything
+        // is wrong, which is exactly how a shipped feature (e.g. this round's sentiment Pulse) can look
+        // completely missing even though the right files are live on the server. Forcing an update() check
+        // right after registration closes that gap: if a newer sw.js is already on the server, this starts
+        // installing it immediately instead of waiting for the browser's own timer.
+        reg.update().catch(() => {});
+      }).catch(() => { }));
+      // Once a new service worker actually takes control (it finished installing - skipWaiting()/
+      // clients.claim() in sw.js - and is now live), every file this page fetches from here on is already
+      // being served fresh/network-first by the NEW version, but this tab's own JS (app.js, already
+      // parsed and running) is still the OLD code until the page itself reloads. One automatic reload is
+      // what actually gets the new app.js running. Two guards: HAD_CONTROLLER skips the reload on a
+      // brand-new visitor's very first load (there's no "old" controller to replace yet in that case -
+      // controllerchange still fires once as the first SW takes over, and reloading then would just be a
+      // pointless flash on someone who was never running stale code to begin with); RELOADING caps it to
+      // once per tab regardless, since a reload loop would be far worse than a slightly-stale tab.
+      const HAD_CONTROLLER = !!navigator.serviceWorker.controller;
+      let RELOADING = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!HAD_CONTROLLER || RELOADING) return;
+        RELOADING = true;
+        location.reload();
+      });
       // A push notification's "Check Now" tap (see sw.js's notificationclick): an already-open tab gets
       // focused and sent this message directly instead of relying on the hash above.
       navigator.serviceWorker.addEventListener('message', ev => {

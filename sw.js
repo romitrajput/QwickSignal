@@ -1,7 +1,24 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-52-v1';  // This round: Phase 1 sentiment pulse (Community feature) - a one-tap
+const VERSION = 'gni-phase3-53-v1';  // This round: fixed a real "deployed but not showing up" bug - a tab
+                                      // left open across a deploy (or even refreshed soon after one) could
+                                      // keep running the OLD cached app.js for a long time with no sign
+                                      // anything was wrong, because nothing ever forced a service-worker
+                                      // update check or reloaded the page once a new one took over. This is
+                                      // exactly why last round's Pulse feature looked completely missing
+                                      // even once the right files were live on the server. app.js now calls
+                                      // reg.update() right after registering (forces an immediate check
+                                      // instead of waiting on the browser's own, much lazier timer) and
+                                      // reloads the page exactly once when a new service worker actually
+                                      // takes control (guarded so a brand-new visitor's first-ever load
+                                      // never reloads, and so a tab can never loop). One-time catch-up for
+                                      // anyone already stuck on an old cached version before this fix
+                                      // shipped: a hard refresh (or closing every tab of the app and
+                                      // reopening it) gets them unstuck; after this round, it should never
+                                      // be necessary again.
+                                      //
+                                      // Previous round (gni-phase3-52-v1): Phase 1 sentiment pulse (Community feature) - a one-tap
                                       // bullish/bearish vote on Investment-mode, company-tagged stories. New
                                       // Pulse module in app.js reads the public qs_pulse/{storyId} aggregate
                                       // plus (if signed in) the caller's own qs_pulse_votes/{storyId_uid}
