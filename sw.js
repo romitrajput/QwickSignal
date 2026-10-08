@@ -1,20 +1,20 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-58-v1';  // This round: re-themed the whole app to the Wada Sanzo "Classic 303"
-                                      // historical Japanese color combination (Naples Yellow #fbe6a0, Peach
-                                      // Red #f15a30, Deep Slate Olive #253122, Neutral Gray #b6bfc1). Picked
-                                      // "Option F" out of 7 live-previewed mappings: white/cream page
-                                      // (#FFFAF0), gray cards (#D8DEDF), olive text (#253122/#56614F), gray
-                                      // hairlines (#9AA5A6), red accent (#F15A30/#FFFAF0 on-accent). Applied
-                                      // to index.html's :root theme tokens, the <meta name="theme-color">
-                                      // tag, and manifest.webmanifest's background_color/theme_color. Naples
-                                      // Yellow itself isn't used in this mapping (kept as a comment for a
-                                      // future round). Semantic colors - Bullish/Bearish green/red and the
-                                      // Critical/High/Medium/Low priority colors - are deliberately UNCHANGED,
-                                      // by explicit request, since 4 colors alone can't keep those meanings
-                                      // distinguishable. app.js has no code changes this round (its colors
-                                      // all come from CSS custom properties, confirmed via grep).
+const VERSION = 'gni-phase3-59-v1';  // This round: reverted the Wada Sanzo "Classic 303" re-theme from the
+                                      // previous round - back to the original cream/red look (--paper:#F9ECDC,
+                                      // --surface:#FFF8EF, --ink:#241A12, --ink2:#7A6A57, --line:#E4D3B9,
+                                      // --accent:#D3131E), by request. index.html's :root theme tokens and
+                                      // <meta name="theme-color">, plus manifest.webmanifest's
+                                      // background_color/theme_color, are all restored to their gni-phase3-
+                                      // 57-v1 values. Semantic colors (Bullish/Bearish, priority levels) were
+                                      // never touched by either round. app.js has no code changes.
+                                      //
+                                      // Previous round (gni-phase3-58-v1): re-themed the whole app to the Wada Sanzo "Classic
+                                      // 303" historical Japanese color combination (Naples Yellow #fbe6a0,
+                                      // Peach Red #f15a30, Deep Slate Olive #253122, Neutral Gray #b6bfc1) -
+                                      // "Option F": white/cream page (#FFFAF0), gray cards (#D8DEDF), olive
+                                      // text, gray hairlines, red accent. Reverted this round per the above.
                                       //
                                       // Previous round (gni-phase3-57-v1): real company logos (well, favicons) on every company
                                       // ring - Investment's company cards, the Community tab, the Company
