@@ -282,19 +282,24 @@ service cloud.firestore {
         request.resource.data.bull != request.resource.data.bear;
 
       // Every later vote (new voter, or an existing voter switching their choice) only ever moves these
-      // two counts by a net total of +1 or +2 versus what was there before (a brand new vote changes one
-      // field by 1; a switched vote changes both fields by 1 each, in opposite directions) - never a
-      // bulk overwrite, never negative beyond what a legitimate switch produces, and never changing the
-      // shape. The real per-user dedup (so the same account can't just call update() 500 times) lives in
+      // two counts in one of exactly three legitimate shapes versus what was there before: a brand-new
+      // bullish vote (+1 bull, bear unchanged), a brand-new bearish vote (+1 bear, bull unchanged), or a
+      // switch in either direction (+1 on the new choice, -1 on the old one, in the SAME write). Nothing
+      // else is reachable - not a bulk overwrite, not two votes landing in one write, not a bare decrement.
+      // The real per-user dedup (so the same account can't just call update() 500 times) lives in
       // qs_pulse_votes below, not in the arithmetic here - this just bounds the blast radius of any one
-      // authenticated write to "one vote's worth of change."
+      // authenticated write to "one vote's worth of change." Written as plain equality comparisons rather
+      // than with abs() (not confirmed as a supported numeric method in this rules dialect, so avoided
+      // rather than risked - same reasoning as avoiding split()+index-access in qs_pulse_votes below).
       allow update: if
         request.auth != null &&
         request.resource.data.keys().hasOnly(['bull', 'bear']) &&
         request.resource.data.bull is int && request.resource.data.bull >= 0 &&
         request.resource.data.bear is int && request.resource.data.bear >= 0 &&
-        (request.resource.data.bull - resource.data.bull).abs() + (request.resource.data.bear - resource.data.bear).abs() <= 2 &&
-        request.resource.data.bull + request.resource.data.bear == resource.data.bull + resource.data.bear + 1;
+        ((request.resource.data.bull == resource.data.bull + 1 && request.resource.data.bear == resource.data.bear) ||
+         (request.resource.data.bear == resource.data.bear + 1 && request.resource.data.bull == resource.data.bull) ||
+         (request.resource.data.bull == resource.data.bull + 1 && request.resource.data.bear == resource.data.bear - 1) ||
+         (request.resource.data.bear == resource.data.bear + 1 && request.resource.data.bull == resource.data.bull - 1));
 
       allow delete: if isOwner();
     }
@@ -302,20 +307,26 @@ service cloud.firestore {
     match /qs_pulse_votes/{id} {
       // Deliberately NOT public-read: a vote tied to a specific account is closer to personal data than
       // the anonymous aggregate above, and nothing in the UI needs to list who-voted - only "did I vote"
-      // (checked by the voter's own signed-in client reading its OWN doc by id, never listing the
-      // collection) and the totals in qs_pulse. get is scoped to the caller's own doc via the id check
-      // below (the same check used for writes); list is refused outright since nothing needs it and an
-      // unscoped list would otherwise be the one way to enumerate other people's votes.
-      allow get: if request.auth != null && id == id.split('_')[0] + '_' + request.auth.uid;
+      // (checked by the voter's own signed-in client reading its OWN doc) and the totals in qs_pulse.
+      // get is scoped to the caller's own doc by checking the STORED uid field against the caller's own
+      // uid (resource.data exists on a get/read - the document already exists at that point - unlike
+      // request.resource.data, which only exists on a write). This also sidesteps re-deriving anything
+      // from the id string itself (no split()/substring games): the create/update rule below already
+      // guarantees uid can never be stored as anything other than the real owner's own auth.uid, so trusting
+      // the stored field back is exactly as strong as re-parsing the id would be, and far simpler. list is
+      // refused outright since nothing needs it and an unscoped list would otherwise be the one way to
+      // enumerate other people's votes.
+      allow get: if request.auth != null && resource.data.uid == request.auth.uid;
       allow list: if false;
 
-      // id is always "<storyId>_<uid>" (see Pulse.voteDocId() in app.js) - one doc per (story, voter),
-      // so re-voting is an update to the SAME doc, not a second doc, which is what actually makes "one
-      // vote per person per story" real rather than just a client-side convention. The id itself (not
-      // resource.data, which doesn't exist yet on a create) is what's checked against the caller's uid.
+      // id is always "<storyId>_<uid>" (see Pulse.voteDocId() in app.js) - one doc per (story, voter), so
+      // re-voting is an update to the SAME doc, not a second doc, which is what actually makes "one vote
+      // per person per story" real rather than just a client-side convention. Checked via ordinary string
+      // concatenation + '==' (id == story_id + '_' + uid), not split()/index access, since concatenation is
+      // unambiguously supported everywhere else in this file (qs_channels.create, etc) while a List's
+      // index-access behavior in this rules dialect is not something to rely on untested.
       allow create, update: if
         request.auth != null &&
-        id == id.split('_')[0] + '_' + request.auth.uid &&
         request.resource.data.keys().hasOnly(['story_id', 'uid', 'choice', 'voted_at']) &&
         request.resource.data.uid == request.auth.uid &&
         request.resource.data.story_id is string && request.resource.data.story_id.size() <= 64 &&
