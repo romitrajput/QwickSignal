@@ -14,9 +14,11 @@
 //                       never read back). Owner-only get/list/update(status)/delete.
 //   qs_archive/{id}     Permanent story record once feed.json's 24h window drops it. Public read,
 //                       pipeline-only create, no update, owner-only delete.
-//   qs_pulse/{storyId}        Phase 1 sentiment pulse: public bull/bear aggregate. Signed-in create
-//   qs_pulse_votes/{id}       (first vote) + update (increment, bounded below); per-voter dedup doc,
-//                              scoped get only (never listable), keyed "<storyId>_<uid>".
+//   qs_pulse/{companySlug}     Phase 1 sentiment pulse, PER COMPANY (not per story): public bull/bear
+//   qs_pulse_votes/{id}        aggregate. Signed-in create (first vote) + update (increment, bounded
+//                              below); per-voter dedup doc, scoped get only (never listable), keyed
+//                              "<companySlug>_<uid>" - one vote per person per company, applying across
+//                              every story about that company rather than needing a fresh vote per story.
 //
 // OWNER_EMAIL below must exactly match the OWNER_EMAIL constant in app.js (public by design - real
 // protection is that only Firebase Auth can produce a signed token asserting that email, which a
@@ -155,9 +157,15 @@ service cloud.firestore {
       allow delete: if isOwner();
     }
 
-    // qs_pulse: public bull/bear aggregate. qs_pulse_votes: private per-(story,user) dedup record,
-    // always written together from Pulse.vote() in app.js. storyId is the raw feed item id (no "L" prefix).
-    match /qs_pulse/{storyId} {
+    // qs_pulse: public bull/bear aggregate, now PER COMPANY (not per story - the per-story design made
+    // one stock look "mixed" whenever its several, unrelated news items each drew a different crowd
+    // reaction, which wasn't a real signal about the company at all, just noise from the news being
+    // chopped into separate stories - see Pulse.companySlug() in app.js). qs_pulse_votes: private
+    // per-(company,user) dedup record, always written together from Pulse.vote() in app.js. The doc id in
+    // both collections is a slugified company name (lowercase, [a-z0-9-] only - see companySlug()), never
+    // a raw story id and never the raw company string, so voting merges correctly regardless of case/
+    // punctuation and the id is always a valid Firestore document id.
+    match /qs_pulse/{companySlug} {
       allow get, list: if true;
 
       // First voter creates the doc with exactly one of the two counts at 1, the other at 0.
@@ -189,14 +197,16 @@ service cloud.firestore {
       allow get: if request.auth != null && resource.data.uid == request.auth.uid;
       allow list: if false;
 
-      // id is always "<storyId>_<uid>" (Pulse.voteDocId() in app.js) - one doc per (story, voter), so
-      // re-voting updates the SAME doc. Checked via string concatenation, not split()/index access.
+      // id is always "<companySlug>_<uid>" (Pulse.voteDocId() in app.js) - one doc per (company, voter),
+      // so re-voting updates the SAME doc, and a person's one vote applies across every story about that
+      // company rather than needing a fresh vote per headline. Checked via string concatenation, not
+      // split()/index access.
       allow create, update: if
         request.auth != null &&
-        request.resource.data.keys().hasOnly(['story_id', 'uid', 'choice', 'voted_at']) &&
+        request.resource.data.keys().hasOnly(['company_slug', 'uid', 'choice', 'voted_at']) &&
         request.resource.data.uid == request.auth.uid &&
-        request.resource.data.story_id is string && request.resource.data.story_id.size() <= 64 &&
-        id == request.resource.data.story_id + '_' + request.auth.uid &&
+        request.resource.data.company_slug is string && request.resource.data.company_slug.size() <= 80 &&
+        id == request.resource.data.company_slug + '_' + request.auth.uid &&
         request.resource.data.choice in ['bull', 'bear'] &&
         request.resource.data.voted_at is string;
 

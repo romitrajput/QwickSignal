@@ -1,7 +1,34 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-53-v1';  // This round: fixed a real "deployed but not showing up" bug - a tab
+const VERSION = 'gni-phase3-54-v1';  // This round: four fixes.
+                                      // (1) Redesigned sentiment Pulse from PER STORY to PER COMPANY - voting
+                                      // on individual stories meant a company with 3 separate news items could
+                                      // show 3 unrelated little polls (e.g. Marico: 2 Bullish + 1 Bearish
+                                      // across 3 different headlines), which looked like "the crowd can't make
+                                      // up its mind" when really it was just 3 different headlines each
+                                      // getting one honest reaction - not a real read on the company at all.
+                                      // Voting is now one Bullish/Bearish choice per person per COMPANY
+                                      // (qs_pulse/qs_pulse_votes keyed by a slugified company name, not a
+                                      // story id - see Pulse.companySlug()/firestore.rules), shown once above
+                                      // that company's whole story list in Investment mode rather than inside
+                                      // each story's expanded details. A person's one vote now applies across
+                                      // every story about that company automatically.
+                                      // (2) Fixed a real headline bug: image_ocr.py's "[Text read from image]"
+                                      // marker line (prepended ahead of OCR text when a post already had a
+                                      // short caption) could itself get picked as a story's headline by
+                                      // pipeline.py's first_headline(), since at 23 characters it cleared the
+                                      // "looks like a real line" bar on its own. first_headline() now skips
+                                      // that exact marker line. Also added image_ocr.py's looks_like_prose()
+                                      // gate so OCR output that's long enough to pass the length check but
+                                      // reads as scattered noise (a calendar-strip artifact, not a sentence)
+                                      // is rejected the same as "OCR found nothing usable," instead of
+                                      // becoming a story's actual headline/body text.
+                                      // (3) Removed the "Indian exchange data is end-of-day..." and "Wrong
+                                      // listing? Click the ticker name..." hint text from the chart modal
+                                      // (owner's call - no longer wanted in the app).
+                                      //
+                                      // Previous round (gni-phase3-53-v1): fixed a real "deployed but not showing up" bug - a tab
                                       // left open across a deploy (or even refreshed soon after one) could
                                       // keep running the OLD cached app.js for a long time with no sign
                                       // anything was wrong, because nothing ever forced a service-worker

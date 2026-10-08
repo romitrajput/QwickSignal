@@ -1336,6 +1336,13 @@ def first_headline(text: str, channel: str = "") -> str:
     channel's own name/handle/watermark in its post text doesn't end up as the headline content (there is
     no AI step in free mode to instruct not to do this, so it has to be handled here directly instead)."""
     for line in text.split("\n"):
+        # image_ocr.py prepends this exact marker line ahead of OCR'd text when a post already had a
+        # short caption (see ocr_posts()). At 23 characters it clears the len(line) < 18 bar below on its
+        # own, so without this skip it could win as "the headline" outright - a real bug this fixes: a
+        # genuine headline buried a line or two further down loses to a literal "[Text read from image]"
+        # label whenever the caption above it was non-empty but too short to qualify as a headline itself.
+        if line.strip() == "[Text read from image]":
+            continue
         line = re.sub(r"https?://\S+", "", EMOJI.sub("", line))
         line = re.sub(r"^[\s\-\u2013\u2014\u2022*#>|]+", "", line)
         line = re.sub(r"^(breaking|just in|alert|update|exclusive|flash|news)\s*[:\-\u2013\u2014|]\s*", "", line, flags=re.I)

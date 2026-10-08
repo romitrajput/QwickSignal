@@ -942,9 +942,7 @@ if (typeof document !== 'undefined') (function () {
       investNoNewsHint: "This updates automatically as new stories come in - it's not a sign anything is wrong.",
       investNoSearchMatch: 'No stories match your search for this company.', investSearchActiveHint: 'Clear the search to see all of its recent news.',
       viewChart: 'View Chart', chartLoading: 'Loading chart…',
-      chartSearchHint: 'Wrong listing? Click the ticker name at the top-left of the chart to search for the right one.',
       chartStock: 'Stock', chartSectorFallback: 'Sector',
-      chartEodHint: 'Indian exchange data shown here is end-of-day, not live intraday - a data-licensing limit on TradingView’s side, not a bug in this app.',
       obSkip: 'Skip', obNext: 'Next', obDone: 'Got it',
       obStep1Title: 'Country-wise news', obStep1Body: 'Each flag is a country with stories waiting - tap one to jump straight to its news.',
       obStep2Title: 'Search', obStep2Body: 'Search across every story in your feed - headlines, summaries, and company names.',
@@ -2684,109 +2682,127 @@ if (typeof document !== 'undefined') (function () {
   };
 
   /* ---------- Pulse (Phase 1 community: one-tap bullish/bearish sentiment) ----------
-     Investment-mode, company-tagged stories only (see pulseHTML()'s own guard). Two Firestore collections
-     (see firestore.rules): qs_pulse/{storyId} is the public-read aggregate {bull, bear} the UI displays,
-     and qs_pulse_votes/{storyId_uid} is the private per-(story,voter) record that actually enforces "one
-     vote per person" - a running total alone can't stop someone tapping 500 times, so that real dedup has
-     to live somewhere server-checkable, and this is it. The two are always written together from vote()
-     below; a request that updates one but not the other (a dropped connection mid-sequence) is a known,
-     accepted inconsistency - worst case a vote is double-counted or missed once, never a security hole and
-     never user-generated text to moderate (see the project's own PM phasing notes on why Phase 1 has
-     nothing to moderate by construction).
+     PER COMPANY, not per story. The first version of this voted per individual story, which looked right
+     in isolation but broke down in practice: a company with 3 separate news items (a broker upgrade, an
+     acquisition, a broker downgrade) ended up with 3 unrelated little polls, and a person who voted
+     Bullish on two and Bearish on the third had no way to tell "what does the crowd think of this stock"
+     from that - each bar was really just a reaction to one headline, not a read on the company. Voting is
+     now one Bullish/Bearish choice per person per COMPANY, shown once above that company's whole story
+     list (see renderInvestmentList()), and it applies to every story about that company automatically -
+     there's nothing left to vote on per card.
 
-     Firestore's increment transform (used for the 2nd+ vote on a story) requires the target document to
-     already exist - it does NOT create one - so the FIRST vote on any story has to be a plain create with
-     explicit {bull:1,bear:0} or {bull:0,bear:1}, and every vote after that is an update. vote() below
+     Two Firestore collections (see firestore.rules): qs_pulse/{companySlug} is the public-read aggregate
+     {bull, bear} the UI displays, and qs_pulse_votes/{companySlug_uid} is the private per-(company,voter)
+     record that actually enforces "one vote per person per company" - a running total alone can't stop
+     someone tapping 500 times, so that real dedup has to live somewhere server-checkable, and this is it.
+     The two are always written together from vote() below; a request that updates one but not the other
+     (a dropped connection mid-sequence) is a known, accepted inconsistency - worst case a vote is
+     double-counted or missed once, never a security hole and never user-generated text to moderate (see
+     the project's own PM phasing notes on why Phase 1 has nothing to moderate by construction).
+
+     Firestore's increment transform (used for the 2nd+ vote on a company) requires the target document to
+     already exist - it does NOT create one - so the FIRST vote on any company has to be a plain create
+     with explicit {bull:1,bear:0} or {bull:0,bear:1}, and every vote after that is an update. vote() below
      tries create first and falls back to update on ALREADY_EXISTS, rather than reading the doc first to
      decide, since that read-then-write shape has a race (two people's first vote landing at once) that
      try-create-then-fall-back doesn't. */
   const Pulse = {
-    _cache: new Map(),     // raw story id -> { bull, bear } aggregate, or undefined if never fetched
-    _mine: new Map(),      // raw story id -> 'bull'|'bear'|null (this signed-in user's own vote), or undefined if never fetched
+    _cache: new Map(),     // companySlug -> { bull, bear } aggregate, or undefined if never fetched
+    _mine: new Map(),      // companySlug -> 'bull'|'bear'|null (this signed-in user's own vote), or undefined if never fetched
 
-    voteDocId(rawId, uid) { return rawId + '_' + uid; },
+    // Deterministic, Firestore-doc-id-safe key for a company name: lowercase, strip to [a-z0-9], join
+    // with single hyphens. This (not the raw company string) is what both collections are keyed by, so
+    // "Marico", "MARICO" and "marico " all vote into the same place, and the id is always valid regardless
+    // of punctuation (&, ', ., commas) a company's display name might contain - see COMPANY_NAME_RX above
+    // for the characters a tracked company name can actually have.
+    companySlug(company) {
+      return (company || '').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '')
+        .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80) || 'company';
+    },
+    voteDocId(slug, uid) { return slug + '_' + uid; },
 
     // Best-effort read of the public aggregate plus (if signed in) the caller's own vote, both cached per
-    // story id so re-opening the same card is instant. Like Archive.forStory(), this is meant to be kicked
-    // off when a card opens and re-rendered into once it resolves - see the data-act click handler below.
-    async forStory(it) {
-      const rawId = it.id.replace(/^L/, '');
+    // company so re-rendering the same company group is instant. Kicked off once per company the first
+    // time its group is rendered in Investment mode (see renderInvestmentList()), then re-rendered into
+    // once it resolves - same pattern Archive.forStory() uses for the per-story thread timeline.
+    async forCompany(company) {
+      const slug = this.companySlug(company);
       const tasks = [];
-      if (!this._cache.has(rawId)) {
+      if (!this._cache.has(slug)) {
         tasks.push((async () => {
           try {
-            const r = await fetch(`${FS_BASE}/qs_pulse/${rawId}?key=${FIREBASE.apiKey}`, { cache: 'no-store' });
-            if (r.status === 404) { this._cache.set(rawId, { bull: 0, bear: 0 }); return; }
-            if (!r.ok) return;   // leave uncached; try again next time this card opens
+            const r = await fetch(`${FS_BASE}/qs_pulse/${slug}?key=${FIREBASE.apiKey}`, { cache: 'no-store' });
+            if (r.status === 404) { this._cache.set(slug, { bull: 0, bear: 0 }); return; }
+            if (!r.ok) return;   // leave uncached; try again next time this group renders
             const doc = await r.json();
             const rec = fsFieldsToObject(doc.fields);
-            this._cache.set(rawId, { bull: rec.bull || 0, bear: rec.bear || 0 });
+            this._cache.set(slug, { bull: rec.bull || 0, bear: rec.bear || 0 });
           } catch (e) { /* offline etc: leave uncached, same as "not loaded yet" */ }
         })());
       }
-      if (Auth.uid && !this._mine.has(rawId)) {
+      if (Auth.uid && !this._mine.has(slug)) {
         tasks.push((async () => {
           try {
-            const r = await fetch(`${FS_BASE}/qs_pulse_votes/${this.voteDocId(rawId, Auth.uid)}?key=${FIREBASE.apiKey}`, {
+            const r = await fetch(`${FS_BASE}/qs_pulse_votes/${this.voteDocId(slug, Auth.uid)}?key=${FIREBASE.apiKey}`, {
               headers: await Sync.authHeaders(), cache: 'no-store'
             });
-            if (r.status === 404) { this._mine.set(rawId, null); return; }
+            if (r.status === 404) { this._mine.set(slug, null); return; }
             if (!r.ok) return;
             const doc = await r.json();
             const rec = fsFieldsToObject(doc.fields);
-            this._mine.set(rawId, rec.choice || null);
+            this._mine.set(slug, rec.choice || null);
           } catch (e) { /* leave uncached */ }
         })());
       }
       if (tasks.length) await Promise.all(tasks);
     },
 
-    // Current aggregate for a story, synchronous - reads whatever forStory() last cached (undefined if
+    // Current aggregate for a company, synchronous - reads whatever forCompany() last cached (null if
     // never fetched, same convention as Archive._cache.get() used by threadHTML()).
-    counts(it) {
-      return this._cache.get(it.id.replace(/^L/, '')) || null;
+    counts(company) {
+      return this._cache.get(this.companySlug(company)) || null;
     },
-    mine(it) {
-      return this._mine.get(it.id.replace(/^L/, '')) || null;
+    mine(company) {
+      return this._mine.get(this.companySlug(company)) || null;
     },
 
-    // choice is 'bull' or 'bear'. Handles all three cases: first-ever vote on this story (create), a new
-    // voter on an already-voted-on story (increment), and an existing voter switching their pick (move one
-    // from their old choice to their new one). Optimistically updates the local caches before the network
-    // call resolves so the tap feels instant, then reconciles or reverts on failure - same honesty-over-
-    // silent-drift pattern as Channels.follow()/tgfollow above.
-    async vote(it, choice) {
+    // choice is 'bull' or 'bear'. Handles all three cases: first-ever vote on this company (create), a new
+    // voter on an already-voted-on company (increment), and an existing voter switching their pick (move
+    // one from their old choice to their new one). Optimistically updates the local caches before the
+    // network call resolves so the tap feels instant, then reconciles or reverts on failure - same
+    // honesty-over-silent-drift pattern as Channels.follow()/tgfollow above.
+    async vote(company, choice) {
       if (!Auth.uid) { openAuthGate('agPulseTitle', 'agPulseBody'); return false; }
-      const rawId = it.id.replace(/^L/, '');
-      const prev = this._mine.get(rawId) || null;
+      const slug = this.companySlug(company);
+      const prev = this._mine.get(slug) || null;
       if (prev === choice) return true;   // tapping the same choice twice is a no-op, not an "undo"
-      const before = this._cache.get(rawId) || { bull: 0, bear: 0 };
+      const before = this._cache.get(slug) || { bull: 0, bear: 0 };
       const after = Object.assign({}, before);
       if (prev) after[prev] = Math.max(0, after[prev] - 1);   // switching: release the old choice
       after[choice] = (after[choice] || 0) + 1;
-      this._cache.set(rawId, after);
-      this._mine.set(rawId, choice);
+      this._cache.set(slug, after);
+      this._mine.set(slug, choice);
       try {
         const headers = Object.assign({ 'Content-Type': 'application/json' }, await Sync.authHeaders());
-        const voteId = this.voteDocId(rawId, Auth.uid);
+        const voteId = this.voteDocId(slug, Auth.uid);
         const voteBody = JSON.stringify({ fields: {
-          story_id: toFsValue(rawId), uid: toFsValue(Auth.uid), choice: toFsValue(choice), voted_at: toFsValue(new Date().toISOString())
+          company_slug: toFsValue(slug), uid: toFsValue(Auth.uid), choice: toFsValue(choice), voted_at: toFsValue(new Date().toISOString())
         } });
         const voteR = await fetch(`${FS_BASE}/qs_pulse_votes/${voteId}?key=${FIREBASE.apiKey}`, { method: 'PATCH', headers, body: voteBody });
         if (!voteR.ok) throw new Error(await describeFailure(voteR, null));
 
-        // The aggregate write depends on whether this story has ever had a vote before. Try a plain create
-        // first (works only when the doc doesn't exist yet); if it already exists, fall back to an
+        // The aggregate write depends on whether this company has ever had a vote before. Try a plain
+        // create first (works only when the doc doesn't exist yet); if it already exists, fall back to an
         // increment-transform update instead of re-reading first (see module doc-comment above for why).
         const createBody = JSON.stringify({ fields: { bull: toFsValue(choice === 'bull' ? 1 : 0), bear: toFsValue(choice === 'bear' ? 1 : 0) } });
-        const createR = await fetch(`${FS_BASE}/qs_pulse?documentId=${rawId}&key=${FIREBASE.apiKey}`, { method: 'POST', headers, body: createBody });
+        const createR = await fetch(`${FS_BASE}/qs_pulse?documentId=${slug}&key=${FIREBASE.apiKey}`, { method: 'POST', headers, body: createBody });
         if (createR.status === 409 || createR.status === 400) {
           // Doc already exists (or this isn't genuinely the first vote anymore) - move one vote via a
           // commit with field transforms: +1 on the new choice, and if switching, -1 on the old one too.
           const transforms = [{ fieldPath: choice, increment: { integerValue: '1' } }];
           if (prev) transforms.push({ fieldPath: prev, increment: { integerValue: '-1' } });
           const commitBody = JSON.stringify({ writes: [{
-            transform: { document: `${FS_BASE}/qs_pulse/${rawId}`, fieldTransforms: transforms }
+            transform: { document: `${FS_BASE}/qs_pulse/${slug}`, fieldTransforms: transforms }
           }] });
           const commitR = await fetch(`${FS_BASE}:commit?key=${FIREBASE.apiKey}`, { method: 'POST', headers, body: commitBody });
           if (!commitR.ok) throw new Error(await describeFailure(commitR, null));
@@ -2796,10 +2812,10 @@ if (typeof document !== 'undefined') (function () {
         track('pulse_vote', { choice, switched: !!prev });
         return true;
       } catch (e) {
-        // Revert the optimistic update - this story's counts/mine go back to "not reliably known" so the
+        // Revert the optimistic update - this company's counts/mine go back to "not reliably known" so the
         // next render re-fetches fresh truth instead of displaying a number that never actually landed.
-        this._cache.delete(rawId);
-        this._mine.set(rawId, prev);
+        this._cache.delete(slug);
+        this._mine.set(slug, prev);
         toast('Couldn’t record your vote: ' + (e && e.message ? e.message : String(e)));
         return false;
       }
@@ -3566,10 +3582,10 @@ if (typeof document !== 'undefined') (function () {
   /* ---------- View Chart (Investment tab) ----------
      TradingView's free Advanced Chart widget, embedded directly - no API key, no backend. The opening
      symbol is only a best-effort guess (see guessSymbol() above); the widget's own built-in symbol search
-     (click the ticker name top-left of the chart) is the real correction path for anything guessed wrong,
-     which is why #cmNote points the user at it. A fresh script tag is created on every open (rather than
-     a single reused one) because the widget's config is baked in at script-load time - there's no
-     documented "change symbol" call for this particular embed, so a different company means a fresh widget. */
+     (click the ticker name top-left of the chart) is the real correction path for anything guessed wrong.
+     A fresh script tag is created on every open (rather than a single reused one) because the widget's
+     config is baked in at script-load time - there's no documented "change symbol" call for this
+     particular embed, so a different company means a fresh widget. */
   let cmOpener = null;
   let cmState = null; // { stockSymbol, sectorSymbol, sectorLabel } for the currently-open modal, so the
                        // Stock/Sector toggle can re-render without needing the company name/sector again.
@@ -3598,11 +3614,6 @@ if (typeof document !== 'undefined') (function () {
     // loader finds where to inject the chart. Appending it one level too deep (a bug in an earlier version
     // of this function) left the chart area blank with no visible error.
     chart.querySelector('.tradingview-widget-container').appendChild(script);
-    // BSE data in TradingView's free widget is end-of-day only (a licensing limit on TradingView's side, not
-    // a bug here - see EXCHANGE_BY_COUNTRY's comment) - surfaced plainly rather than left for the user to
-    // wonder why an Indian stock's chart doesn't move intraday like a US one does.
-    const note = $('#cmNote');
-    if (note) note.textContent = symbol.startsWith('BSE:') ? t('chartEodHint') : t('chartSearchHint');
   }
   function setChartSeg(which) {
     // which: 'stock' or 'sector'. No-op (and the toggle is hidden) when there's no sector symbol to show -
@@ -3914,24 +3925,24 @@ Give a concise, event-specific analysis - decide for yourself which structure be
   // opened; see the data-act click handler's "opening" branch). Empty before that fetch resolves, same as
   // the thread simply not existing yet - re-rendered once real data arrives, no spinner/placeholder needed
   // since the window between open and re-render is normally under a second.
-  // Sentiment-pulse row: Investment-mode, company-tagged stories only (Phase 1's explicit scope - see the
-  // project's own PM phasing notes). Synchronous, same convention as threadHTML() below - reads whatever
-  // Pulse.forStory() last cached; the actual fetch is kicked off when the card opens (see the click
-  // handler) and this re-renders once it resolves. Shows nothing (not even a loading state) until the
-  // first fetch lands, which matches how the thread timeline already behaves.
-  function pulseHTML(it) {
-    if (!(S.mode === 'investment' && (it.companies || []).length)) return '';
-    const counts = Pulse.counts(it);
+  // Sentiment-pulse row, PER COMPANY: rendered once above a company's whole story group in Investment mode
+  // (see renderInvestmentList()), not per story - see the Pulse module's own doc-comment for why. Synchronous,
+  // same convention as threadHTML() below - reads whatever Pulse.forCompany() last cached; the actual fetch
+  // is kicked off the first time this company's group renders (see renderInvestmentList()) and this
+  // re-renders once it resolves. Shows nothing (not even a loading state) until the first fetch lands, same
+  // as the thread timeline.
+  function pulseHTML(company) {
+    const counts = Pulse.counts(company);
     if (!counts) return '';
-    const mine = Pulse.mine(it);
+    const mine = Pulse.mine(company);
     const total = counts.bull + counts.bear;
     const bullPct = total ? Math.round((counts.bull / total) * 100) : 50;
     return `<div class="pulse-row">
         <b>${esc(t('pulseLabel'))}</b>
         <div class="pulse-bar"><span class="fill-bull" style="width:${bullPct}%"></span><span class="fill-bear" style="width:${100 - bullPct}%"></span></div>
         <div class="pulse-btns">
-          <button class="pulse-btn bull${mine === 'bull' ? ' active' : ''}" data-act="pulse" data-v="bull" data-id="${esc(it.id)}">▲ ${esc(t('pulseBull'))} <span class="pulse-count">${counts.bull}</span></button>
-          <button class="pulse-btn bear${mine === 'bear' ? ' active' : ''}" data-act="pulse" data-v="bear" data-id="${esc(it.id)}">▼ ${esc(t('pulseBear'))} <span class="pulse-count">${counts.bear}</span></button>
+          <button class="pulse-btn bull${mine === 'bull' ? ' active' : ''}" data-act="pulse" data-v="bull" data-company="${esc(company)}">▲ ${esc(t('pulseBull'))} <span class="pulse-count">${counts.bull}</span></button>
+          <button class="pulse-btn bear${mine === 'bear' ? ' active' : ''}" data-act="pulse" data-v="bear" data-company="${esc(company)}">▼ ${esc(t('pulseBear'))} <span class="pulse-count">${counts.bear}</span></button>
         </div>
       </div>`;
   }
@@ -3963,7 +3974,6 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       : '';
     return `<div class="details">
       ${quickacts}
-      ${pulseHTML(it)}
       ${aiLinks(it)}
       ${it.why ? `<p class="why"><b>Why it matters</b> ${esc(trOf(it.why))}</p>` : ''}
       ${(it.facts || []).length ? `<ul class="facts">${trList(it.facts).map(f => `<li>${esc(f)}</li>`).join('')}</ul>` : ''}
@@ -4048,13 +4058,31 @@ Give a concise, event-specific analysis - decide for yourself which structure be
             <button class="btn-chart" data-act="viewChart" data-v="${esc(c.company)}" data-sector="${esc(g.sector)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l5-5 4 4 8-9"/><path d="M15 7h5v5"/></svg>${esc(t('viewChart'))}</button>
             <button class="gc-remove" data-act="untrack" data-v="${esc(c.company)}" aria-label="${esc(t('investRemove'))} ${esc(c.company)}" title="${esc(t('investRemove'))}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
           </div>
-        </h3>${body}`;
+        </h3>${hasAnyStories ? pulseHTML(c.company) : ''}${body}`;
       }).join('');
       const sectorTotal = g.companies.reduce((n, c) => n + c.stories.filter(investmentStoryMatches).length, 0);
       html += groupHead(esc(g.sector), sectorTotal) + companyBlocks;
     }
     box.innerHTML = html || `<div class="empty"><p>${esc(t('investNoNews'))}</p></div>`;
     seenObserveVisible(box);
+    // Sentiment pulse is per company, not per story (see the Pulse module's doc-comment) - one fetch per
+    // tracked company that actually has news, kicked off right after render rather than eagerly for every
+    // company regardless of whether it has stories (a company with nothing to show has nothing to vote on
+    // either). Pulse.forCompany() already skips any company it has cached, but ONLY fetch for (and only
+    // re-render after) companies that are still genuinely uncached - calling forCompany() again on an
+    // already-cached company resolves on the same microtask tick with nothing fetched, so re-rendering
+    // unconditionally here would call this function again, which would again "resolve immediately and
+    // re-render", forever - a real infinite render loop with no network calls to ever break it, caught by
+    // simulation before shipping. Re-rendering only when at least one fetch actually completes is what
+    // keeps this a one-shot "patch in the data once it arrives", same as every other async-then-re-render
+    // spot in this file (Archive.forStory(), etc).
+    const uncached = groups.flatMap(g => g.companies)
+      .filter(c => c.stories.length > 0 && !Pulse._cache.has(Pulse.companySlug(c.company)));
+    if (uncached.length) {
+      Promise.all(uncached.map(c => Pulse.forCompany(c.company))).then(() => {
+        if (S.mode === 'investment') renderInvestmentList();
+      });
+    }
   }
 
   function renderList() {
@@ -4697,14 +4725,14 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       }
       else if (act === 'vclose') { closeVideo(); }
       else if (act === 'pulse') {
-        const it = all().find(x => x.id === el.dataset.id);
-        if (it) {
-          const ok = await Pulse.vote(it, v);
-          if (ok) {
-            const freshCard = document.querySelector(`.entry[data-id="${CSS.escape(it.id)}"]`);
-            if (freshCard) freshCard.outerHTML = freshCard.closest('#savedList,#savedInvestList') ? savedCardHTML(it) : entryHTML(it);
-          }
-        }
+        // Voting is per company now (see the Pulse module), and pulseHTML() renders as part of a whole
+        // company header block inside renderInvestmentList()'s own markup, not as a standalone swappable
+        // element - so a full re-render is the simple correct fix here, not a targeted outerHTML patch.
+        // This does NOT re-fetch anything: Pulse.vote() already updated _cache/_mine optimistically before
+        // this await resolves, so renderInvestmentList()'s own "only fetch what's still uncached" check
+        // (see its own comment) finds nothing new to fetch and just re-paints with the fresh local data.
+        await Pulse.vote(el.dataset.company, v);
+        if (S.mode === 'investment') renderInvestmentList();
       }
       else if (act === 'agclose') { closeAuthGate(); }
       else if (act === 'agGoto') { closeAuthGate(); setTab('settings'); const eb = $('#authEmail'); if (eb) eb.focus(); }
@@ -4815,16 +4843,9 @@ Give a concise, event-specific analysis - decide for yourself which structure be
           if (freshCard) freshCard.outerHTML = freshCard.closest('#savedList,#savedInvestList') ? savedCardHTML(it) : entryHTML(it);
         });
       }
-      // Same deal for the sentiment-pulse aggregate (qs_pulse/qs_pulse_votes) - only fetched once a card is
-      // actually opened, never eagerly for every rendered card, since Investment mode can have 300+ cards
-      // on screen and pulseHTML() is only ever shown inside the expanded details anyway (see detailsHTML()).
-      if (opening && it && S.mode === 'investment' && (it.companies || []).length) {
-        Pulse.forStory(it).then(() => {
-          if (!S.open.has(id)) return;
-          const freshCard = document.querySelector(`.entry[data-id="${CSS.escape(id)}"]`);
-          if (freshCard) freshCard.outerHTML = freshCard.closest('#savedList,#savedInvestList') ? savedCardHTML(it) : entryHTML(it);
-        });
-      }
+      // Sentiment pulse is fetched/rendered per COMPANY now, not per story - see renderInvestmentList()'s
+      // own fetch-then-patch-in logic and the Pulse module's doc-comment. Nothing to do here on a card
+      // open any more; a story card opening/closing has no effect on pulse data.
     }
   });
 

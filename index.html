@@ -297,11 +297,10 @@ input[type=search]:focus-visible{border-color:var(--accent);box-shadow:0 0 0 4px
 .kv dd{margin:0;overflow-wrap:anywhere}
 .rel{margin:0 0 12px;font-size:13.5px}
 .rel b{display:block;margin-bottom:4px}
-/* Sentiment pulse (Phase 1 community): a one-tap bullish/bearish reaction on an Investment-mode,
-   company-tagged story. Lives inside the expanded .details only (see detailsHTML()/pulseHTML() in
-   app.js) - not on every closed card - since fetching qs_pulse for 300+ rendered cards eagerly would
-   cost a lot for a number most people will never look at; opening a card is already the signal that
-   this one is worth a closer look. */
+/* Sentiment pulse (Phase 1 community): a one-tap bullish/bearish reaction, PER COMPANY (not per story -
+   see the Pulse module's own doc-comment in app.js for why that changed). Rendered once right under a
+   company's header, above its story list (see renderInvestmentList()/pulseHTML() in app.js), as a sibling
+   of .grp-company rather than nested inside any one story's .details. */
 .pulse-row{margin:0 0 12px;font-size:13.5px}
 .pulse-row b{display:block;margin-bottom:6px}
 .pulse-bar{height:5px;border-radius:999px;background:var(--line);overflow:hidden;display:flex;margin-bottom:8px}
@@ -1132,7 +1131,6 @@ body.pre-app .top, body.pre-app main, body.pre-app .tabs{display:none}
       <button type="button" data-act="cmSeg" data-v="sector" aria-pressed="false"><span id="cmSectorLabel">Sector</span></button>
     </div>
     <div class="vstage cstage"><div id="cmChart" class="cmchart"></div></div>
-    <div class="vfoot"><span id="cmNote" data-i18n="chartSearchHint">Wrong listing? Click the ticker name at the top-left of the chart to search for the right one.</span></div>
   </div>
 </div>
 

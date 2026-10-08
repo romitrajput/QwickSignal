@@ -38,6 +38,13 @@ DEFAULTS = {
 
 _WS = re.compile(r"[ \t]+")
 _BLANKLINES = re.compile(r"\n{3,}")
+_WORDCHARS = re.compile(r"[^\W\d_]", re.UNICODE)       # letters only (any script) - used by looks_like_prose()
+_WORD_TOKENS = re.compile(r"[^\W\d_]+|\d+", re.UNICODE)  # letter-runs or digit-runs, used by looks_like_prose()
+_MONTHS = {
+    "january", "february", "march", "april", "may", "june", "july", "august", "september",
+    "october", "november", "december",
+    "jan", "feb", "mar", "apr", "jun", "jul", "aug", "sep", "sept", "oct", "nov", "dec",
+}
 
 
 class OcrUnavailable(Exception):
@@ -59,6 +66,47 @@ def clean_ocr_text(raw: str) -> str:
     lines = [ _WS.sub(" ", ln).strip() for ln in raw.splitlines() ]
     text = "\n".join(ln for ln in lines if ln)
     return _BLANKLINES.sub("\n\n", text).strip()
+
+
+def looks_like_prose(text: str) -> bool:
+    """A cheap sanity gate on tesseract's output, separate from the ocr_min_chars length check.
+
+    A real printed headline/caption is mostly letters with occasional digits/punctuation. A bad OCR read
+    off a low-text or non-text image (a chart screenshot, a logo, a calendar strip, a photo with sparse
+    scattered captions) often comes back long enough to pass the length check while actually being noise -
+    one real case this was written for looked exactly like "<All dates October 2026 November 2026 Utkal
+    Speciality T 7 October 2026" and was used, unfixed, as a story's actual headline/body. None of these
+    checks need a real language model - they're cheap structural signals a genuine sentence won't trip:
+
+    1. date-token dominance - a run of text made mostly of month names and bare year/day numbers reads as
+       a scraped calendar artifact, not a sentence about anything. A real headline often DOES mention a
+       date, but as a minority of its words, not most of them.
+    2. single-character "words" - stray OCR noise (a leftover punctuation mark misread as a letter) should
+       be rare in real prose; a pile of them signals junk.
+    3. letters should be the majority of non-whitespace characters overall - a pure number/punctuation dump
+       skews the other way.
+    4. the text should mostly be one flowing block, not a pile of very short fragment-lines (avg line
+       under ~12 chars across 3+ lines) - the signature of OCR picking up scattered unrelated text.
+    """
+    stripped = text.strip()
+    if not stripped:
+        return False
+    words = _WORD_TOKENS.findall(stripped)
+    if len(words) >= 4:
+        date_tokens = sum(1 for w in words if w.lower() in _MONTHS or (w.isdigit() and (len(w) == 4 or len(w) <= 2)))
+        if date_tokens / len(words) > 0.45:
+            return False
+        singles = sum(1 for w in words if len(w) == 1)
+        if singles / len(words) > 0.2:
+            return False
+    letters = len(_WORDCHARS.findall(stripped))
+    non_space = len(re.sub(r"\s", "", stripped))
+    if non_space and (letters / non_space) < 0.55:
+        return False
+    lines = [ln for ln in stripped.splitlines() if ln.strip()]
+    if len(lines) >= 3 and (sum(len(ln) for ln in lines) / len(lines)) < 12:
+        return False
+    return True
 
 
 def ocr_image_bytes(data: bytes, languages: str = "eng+hin") -> str:
@@ -85,7 +133,7 @@ def ocr_posts(posts: list[dict], settings: dict, http, log=lambda *a, **k: None)
     Returns a small stats dict for logging. Never raises - any failure just means fewer posts get an
     OCR pass this run, same fallback behaviour as video_intel.py / image_intel.py.
     """
-    stats = {"attempted": 0, "ok": 0, "empty": 0, "failed": 0, "skipped_no_tesseract": 0}
+    stats = {"attempted": 0, "ok": 0, "empty": 0, "garbled": 0, "failed": 0, "skipped_no_tesseract": 0}
     if not settings.get("ocr_enabled", True):
         return stats
     min_chars = int(settings.get("ocr_min_chars", 20))
@@ -118,6 +166,14 @@ def ocr_posts(posts: list[dict], settings: dict, http, log=lambda *a, **k: None)
             continue
         if len(text) < min_chars:
             stats["empty"] += 1
+            continue
+        if not looks_like_prose(text):
+            # Long enough to pass the length check above, but doesn't read as real sentences - a date
+            # strip, scattered watermark text, a chart screenshot's axis labels. Treated the same as "OCR
+            # found nothing usable" (skip, don't use it as this post's text) rather than letting a human
+            # reader see something like "<All dates October 2026 November 2026 ..." as a story's headline
+            # or body - see looks_like_prose()'s own docstring for the real case this fixes.
+            stats["garbled"] += 1
             continue
         # Keep any real caption the post already had (rare for image-only posts, but cheap to preserve)
         # ahead of the OCR text, clearly labelled, so the extraction model can tell them apart.
