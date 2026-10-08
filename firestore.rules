@@ -1,68 +1,26 @@
 // QwickSignal: Firestore Security Rules
 //
-// Login (Phase E) is optional, so there are now four trust models side by side:
+// Four trust models:
+//   qs_sync/{code}      Guest mode. Anyone with the code can read/write (that's the sharing
+//                       mechanism). Rules only stop abuse: wrong shape, oversized lists, extra fields.
+//   qs_users/{uid}      Signed-in mode. Same shape as qs_sync, but keyed by real Firebase Auth uid;
+//                       only that uid can read/write its own doc.
+//   qs_channels/{name}  Linked Telegram channels. Anyone can create as "approved" (no review step).
+//                       No client update. Delete is owner-only.
+//   qs_config/defaults  Owner-curated default-channel list. Public read, owner-only write.
+//   qs_push_subs/{id}   Web Push subscriptions, one per device. No login needed. Public get/list so
+//                       the pipeline can send pushes; a device can delete its own subscription.
+//   qs_tickets/{id}     Signed-in bug/feedback reports. Write-only for a normal visitor (create only,
+//                       never read back). Owner-only get/list/update(status)/delete.
+//   qs_archive/{id}     Permanent story record once feed.json's 24h window drops it. Public read,
+//                       pipeline-only create, no update, owner-only delete.
+//   qs_pulse/{storyId}        Phase 1 sentiment pulse: public bull/bear aggregate. Signed-in create
+//   qs_pulse_votes/{id}       (first vote) + update (increment, bounded below); per-voter dedup doc,
+//                              scoped get only (never listable), keyed "<storyId>_<uid>".
 //
-//   qs_sync/{code}      Guest mode, unchanged. One record per sync code. Anyone who has the
-//                       code can read and write it (that IS the sharing mechanism - see
-//                       Sync in app.js). Rules here only stop abuse: wrong shape, oversized
-//                       lists, or a client trying to invent a new field.
-//
-//   qs_users/{uid}      Signed-in mode (Phase E). Same shape as qs_sync, but the doc id is a
-//                       real Firebase Auth uid, and only that signed-in user can read or
-//                       write their own doc - the first real per-user security boundary in
-//                       this app, now that there's a real identity to check against. This
-//                       replaces "remember/share a code" with "sign in on any device."
-//
-//   qs_channels/{name}  One record per linked Telegram channel. Anyone (guest or signed in)
-//                       can still create a NEW one directly as "approved" - there is no
-//                       review step for adding a channel. The next pipeline run
-//                       (fetch_approved_channels() in pipeline.py) picks up every "approved"
-//                       doc and starts fetching it into the shared pool. A channel document
-//                       can't be rewritten by the client (no update - status can't be
-//                       flipped, ownership can't be changed). Delete USED to be open to
-//                       anyone; it is now restricted to the owner account only (see
-//                       OWNER_EMAIL below) - removing a channel that other people may be
-//                       following should not be a click any visitor can make.
-//
-//   qs_config/defaults  One doc: the owner-curated list of "default" channels shown to a
-//                       guest, or to a signed-in user who hasn't followed any channel of
-//                       their own yet (see app.js's DefaultChannels and the filtering in
-//                       filtered()/countryGroups()). Public read (so the feed isn't blank
-//                       for a first-time visitor), owner-only write.
-//
-//   qs_push_subs/{id}   One doc per device that has turned on "new story" notifications
-//                       (see app.js's Push.subscribe()). id is a random token the device
-//                       generates itself and keeps in localStorage - there's no login
-//                       requirement, matching qs_sync above, since most visitors use the
-//                       app signed out. The doc holds only a Web Push subscription (an
-//                       endpoint URL plus two public keys) - never anything that lets
-//                       someone read a person's data, only push TO that one device. The
-//                       pipeline (pipeline.py: send_push_notifications()) lists every doc
-//                       in this collection the same unauthenticated way it already lists
-//                       qs_channels, and posts a Web Push payload to each endpoint for a
-//                       newly-published story. A subscription a device no longer wants is
-//                       deleted by that same device; the pipeline also deletes any
-//                       subscription a push attempt reports as gone (HTTP 404/410), so
-//                       uninstalled/revoked devices don't accumulate forever.
-//
-//   qs_tickets/{id}     Signed-in bug/feedback reports (app.js's Tickets module). Write-only for a
-//                       normal visitor (create but never read, not even their own), owner-only
-//                       get/list/update/delete. Attachments are stored as base64 directly on the
-//                       document (no Firebase Storage/Blaze plan needed - see TICKET_ATTACH_MAX_BYTES
-//                       in app.js), bounded well under Firestore's 1 MiB per-document cap.
-//
-//   qs_archive/{id}     A permanent record of a story once it ages out of feed.json's rolling 24h
-//                       window (pipeline.py's prune(), at the exact moment it would otherwise be
-//                       discarded for good - feed.json itself is rewritten every run and keeps
-//                       nothing older). Public read (a visitor's own browser renders the story
-//                       thread/timeline from this), pipeline-only create, no update, owner-only
-//                       delete. Small by design (no sources/facts/images) since it accumulates
-//                       forever.
-//
-// OWNER_EMAIL below must exactly match the OWNER_EMAIL constant in app.js - both are simple
-// string constants, not a secret (the value is already public in the shipped client code);
-// the real protection is that only Firebase Auth itself can produce a signed token asserting
-// "this request's email really is that address," which a visitor cannot forge.
+// OWNER_EMAIL below must exactly match the OWNER_EMAIL constant in app.js (public by design - real
+// protection is that only Firebase Auth can produce a signed token asserting that email, which a
+// visitor can't forge).
 //
 // To use: Firebase console -> Firestore Database -> Rules -> paste this file -> Publish.
 
@@ -84,15 +42,10 @@ service cloud.firestore {
         request.resource.data.saved is list && request.resource.data.saved.size() <= 5000 &&
         request.resource.data.dismissed is list && request.resource.data.dismissed.size() <= 5000 &&
         request.resource.data.channels is list && request.resource.data.channels.size() <= 200 &&
-        // reviewed is optional: an older client that hasn't picked up Phase C yet still writes without it.
         (!('reviewed' in request.resource.data) ||
           (request.resource.data.reviewed is list && request.resource.data.reviewed.size() <= 5000)) &&
-        // hiddenChannels is optional too, for the same reason (an older client written before this field
-        // existed still writes without it) - the personal per-user "Remove"/hide list for channels.
         (!('hiddenChannels' in request.resource.data) ||
           (request.resource.data.hiddenChannels is list && request.resource.data.hiddenChannels.size() <= 200)) &&
-        // companies is optional too (added for the News/Investment toggle's watchlist) - an older client
-        // that hasn't picked it up yet still writes without it, same pattern as reviewed/hiddenChannels.
         (!('companies' in request.resource.data) ||
           (request.resource.data.companies is list && request.resource.data.companies.size() <= 300));
 
@@ -129,10 +82,6 @@ service cloud.firestore {
         request.resource.data.added_by is string && request.resource.data.added_by.size() <= 128 &&
         request.resource.data.added_at is string;
 
-      // No client update: once a channel is linked, nobody can rewrite its fields or flip
-      // its status. Delete is restricted to the owner account (see isOwner() above and the
-      // note at the top of this file) - app.js's Channels.remove() already checks this
-      // client-side too, but this is the check that actually matters.
       allow update: if false;
       allow delete: if isOwner();
     }
@@ -147,9 +96,6 @@ service cloud.firestore {
     }
 
     match /qs_push_subs/{id} {
-      // get/list so the unauthenticated pipeline (same pattern as qs_channels) can fetch every
-      // subscription and send pushes; a subscription only allows pushing TO that device, so making
-      // it listable carries none of the risk a personal-data collection would.
       allow get, list: if true;
 
       allow create, update: if
@@ -160,21 +106,9 @@ service cloud.firestore {
         request.resource.data.auth is string && request.resource.data.auth.size() <= 64 &&
         request.resource.data.created_at is string;
 
-      // A device can drop its own subscription (toggling notifications off); the pipeline also prunes
-      // dead ones (push attempt returned 404/410) using the same unauthenticated access.
       allow delete: if true;
     }
 
-    // qs_tickets/{id}   The in-app bug/feedback box (app.js's Tickets module). Originally anyone, signed in
-    //                   or not, could file a ticket; now requires sign-in (owner's request - tickets carry a
-    //                   ticket_number and user_id tying them to a real account, so the owner can follow up
-    //                   with whoever filed one). Tickets are write-only for a normal visitor: they can
-    //                   create one but can never read any ticket back (not even their own), so this
-    //                   collection can't be used to browse what other people have reported. Only the
-    //                   owner account can list/read/update tickets, which is also how the hidden admin
-    //                   view in Settings is actually secured - renderTicketAdmin()'s isOwner() check in
-    //                   app.js is a convenience that skips a doomed request, never real security by
-    //                   itself (same note as isOwner() elsewhere in this file).
     match /qs_tickets/{id} {
       allow get, list: if isOwner();
 
@@ -188,23 +122,13 @@ service cloud.firestore {
         request.resource.data.status == 'open' &&
         request.resource.data.created_at is string &&
         request.resource.data.user_email is string && request.resource.data.user_email.size() <= 256 &&
-        // Must be tagged to the caller's own account - never on someone else's behalf.
         request.resource.data.user_id is string && request.resource.data.user_id == request.auth.uid &&
         request.resource.data.ticket_number is string && request.resource.data.ticket_number.size() <= 32 &&
-        // Attachments are stored as base64 directly on this document, not in Firebase Storage (that would
-        // need the project on a paid "Blaze" plan - see TICKET_ATTACH_MAX_BYTES in app.js for the full
-        // reasoning). All three attachment fields are optional together (a ticket with no file omits all
-        // three, same optional-field pattern as hiddenChannels/companies on qs_sync/qs_users above), and
-        // only ever written together - app.js never sends one without the other two. 820,000 characters
-        // comfortably covers TICKET_ATTACH_MAX_BYTES (600 KB raw) after base64's ~33% size inflation, while
-        // keeping real headroom under Firestore's 1 MiB whole-document cap alongside the other fields above.
         (!('attachment_data' in request.resource.data) ||
           (request.resource.data.attachment_data is string && request.resource.data.attachment_data.size() <= 820000 &&
            request.resource.data.attachment_type is string && request.resource.data.attachment_type.size() <= 100 &&
            request.resource.data.attachment_name is string && request.resource.data.attachment_name.size() <= 200));
 
-      // Only the owner can change a ticket afterwards, and only to flip status between open/done -
-      // never to rewrite the reporter's original message or who filed it.
       allow update: if isOwner() &&
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']) &&
         request.resource.data.status in ['open', 'done'];
@@ -212,22 +136,6 @@ service cloud.firestore {
       allow delete: if isOwner();
     }
 
-    // qs_archive/{id}   A permanent record of a story that has aged out of feed.json's rolling 24h window
-    //                   (or been bumped off by the max_items cap) - written by the pipeline at the moment
-    //                   prune() would otherwise discard it for good (see write_archive() in pipeline.py).
-    //                   feed.json itself is rewritten every run and keeps nothing beyond 24h, so without
-    //                   this collection there would be NO way to reconstruct "what a story said 3 days
-    //                   ago" - the data would already be gone, for everyone, forever. Deliberately a small
-    //                   subset of fields (no sources/facts/images) since this accumulates forever and
-    //                   nothing ever prunes it back out.
-    //                   Public read, same reasoning as qs_config/defaults: a visitor's own browser is what
-    //                   renders a story's thread/timeline (see the Archive module in app.js), so it has to
-    //                   be able to list these directly. Write is pipeline-only in practice (the same
-    //                   unauthenticated-create pattern as qs_channels/qs_push_subs - there's no real
-    //                   identity to check against for a server-side batch job), but the id format and
-    //                   field shape are still validated here rather than trusted blindly, same as every
-    //                   other collection in this file. No client update or delete: an archived record is
-    //                   exactly that - a fixed historical fact, never edited after the fact.
     match /qs_archive/{id} {
       allow get, list: if true;
 
@@ -240,8 +148,6 @@ service cloud.firestore {
         request.resource.data.country is string && request.resource.data.country.size() <= 64 &&
         request.resource.data.published is string &&
         request.resource.data.archived_at is string &&
-        // companies is optional - only ever present on an AI-classified item in the first place (see the
-        // module note above write_archive() in pipeline.py for why most items won't have it yet).
         (!('companies' in request.resource.data) ||
           (request.resource.data.companies is list && request.resource.data.companies.size() <= 8));
 
@@ -249,31 +155,12 @@ service cloud.firestore {
       allow delete: if isOwner();
     }
 
-    // qs_pulse/{storyId}        Phase 1 "sentiment pulse": a one-tap bullish/bearish reaction on an
-    // qs_pulse_votes/{id}       Investment-mode story card (app.js's Pulse module/pulseHTML()). Two
-    //                           collections, not one, because a running total alone can't stop someone
-    //                           voting 500 times by just tapping again - qs_pulse_votes is the real
-    //                           per-(story,user) record that prevents that, and qs_pulse is only the
-    //                           public-read aggregate the UI actually displays. The two are always
-    //                           written together from one client-side helper (Pulse.vote() in app.js),
-    //                           never independently - this file can't enforce that atomicity itself
-    //                           (two separate HTTP requests, not a transaction), so a vote that updates
-    //                           qs_pulse but fails to write qs_pulse_votes (or the reverse, from a flaky
-    //                           connection) is a known, accepted inconsistency: worst case is one vote
-    //                           not perfectly deduplicated, never a security hole, and never advice or
-    //                           user-generated text - just a count. This is deliberately NOT exposed as
-    //                           a moderation surface: there is no free-text field anywhere in either
-    //                           collection, which is the whole point of doing Phase 1 this way instead
-    //                           of an open comment thread (see the project's own PM assessment of why
-    //                           the community feature was phased - this is the phase with nothing to
-    //                           moderate, and these rules keep it that way by construction).
-    //
-    // storyId is the live feed's own item id (e.g. "s1a2b3c4d5"), never the "L"-prefixed client-side
-    // wrapper id used elsewhere in app.js - see Pulse.rawId() there for the one place that strips it.
+    // qs_pulse: public bull/bear aggregate. qs_pulse_votes: private per-(story,user) dedup record,
+    // always written together from Pulse.vote() in app.js. storyId is the raw feed item id (no "L" prefix).
     match /qs_pulse/{storyId} {
       allow get, list: if true;
 
-      // First voter on a story creates this doc with exactly one of the two counts at 1, the other at 0.
+      // First voter creates the doc with exactly one of the two counts at 1, the other at 0.
       allow create: if
         request.auth != null &&
         request.resource.data.keys().hasOnly(['bull', 'bear']) &&
@@ -281,16 +168,8 @@ service cloud.firestore {
         request.resource.data.bear is int && request.resource.data.bear >= 0 && request.resource.data.bear <= 1 &&
         request.resource.data.bull != request.resource.data.bear;
 
-      // Every later vote (new voter, or an existing voter switching their choice) only ever moves these
-      // two counts in one of exactly three legitimate shapes versus what was there before: a brand-new
-      // bullish vote (+1 bull, bear unchanged), a brand-new bearish vote (+1 bear, bull unchanged), or a
-      // switch in either direction (+1 on the new choice, -1 on the old one, in the SAME write). Nothing
-      // else is reachable - not a bulk overwrite, not two votes landing in one write, not a bare decrement.
-      // The real per-user dedup (so the same account can't just call update() 500 times) lives in
-      // qs_pulse_votes below, not in the arithmetic here - this just bounds the blast radius of any one
-      // authenticated write to "one vote's worth of change." Written as plain equality comparisons rather
-      // than with abs() (not confirmed as a supported numeric method in this rules dialect, so avoided
-      // rather than risked - same reasoning as avoiding split()+index-access in qs_pulse_votes below).
+      // Later votes only ever move the counts in one of 4 legitimate shapes: new bull vote, new bear
+      // vote, or a switch (+1 new choice, -1 old choice, same write). No abs() - plain equality instead.
       allow update: if
         request.auth != null &&
         request.resource.data.keys().hasOnly(['bull', 'bear']) &&
@@ -305,26 +184,13 @@ service cloud.firestore {
     }
 
     match /qs_pulse_votes/{id} {
-      // Deliberately NOT public-read: a vote tied to a specific account is closer to personal data than
-      // the anonymous aggregate above, and nothing in the UI needs to list who-voted - only "did I vote"
-      // (checked by the voter's own signed-in client reading its OWN doc) and the totals in qs_pulse.
-      // get is scoped to the caller's own doc by checking the STORED uid field against the caller's own
-      // uid (resource.data exists on a get/read - the document already exists at that point - unlike
-      // request.resource.data, which only exists on a write). This also sidesteps re-deriving anything
-      // from the id string itself (no split()/substring games): the create/update rule below already
-      // guarantees uid can never be stored as anything other than the real owner's own auth.uid, so trusting
-      // the stored field back is exactly as strong as re-parsing the id would be, and far simpler. list is
-      // refused outright since nothing needs it and an unscoped list would otherwise be the one way to
-      // enumerate other people's votes.
+      // Not public-read: scoped to the caller's own doc via the stored uid field. list is refused
+      // outright (nothing needs it; an unscoped list would let anyone enumerate other people's votes).
       allow get: if request.auth != null && resource.data.uid == request.auth.uid;
       allow list: if false;
 
-      // id is always "<storyId>_<uid>" (see Pulse.voteDocId() in app.js) - one doc per (story, voter), so
-      // re-voting is an update to the SAME doc, not a second doc, which is what actually makes "one vote
-      // per person per story" real rather than just a client-side convention. Checked via ordinary string
-      // concatenation + '==' (id == story_id + '_' + uid), not split()/index access, since concatenation is
-      // unambiguously supported everywhere else in this file (qs_channels.create, etc) while a List's
-      // index-access behavior in this rules dialect is not something to rely on untested.
+      // id is always "<storyId>_<uid>" (Pulse.voteDocId() in app.js) - one doc per (story, voter), so
+      // re-voting updates the SAME doc. Checked via string concatenation, not split()/index access.
       allow create, update: if
         request.auth != null &&
         request.resource.data.keys().hasOnly(['story_id', 'uid', 'choice', 'voted_at']) &&
