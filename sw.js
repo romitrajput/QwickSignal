@@ -1,7 +1,47 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-50-v1';  // This round: removed "Deeper reading" entirely (owner's call - didn't
+const VERSION = 'gni-phase3-52-v1';  // This round: Phase 1 sentiment pulse (Community feature) - a one-tap
+                                      // bullish/bearish vote on Investment-mode, company-tagged stories. New
+                                      // Pulse module in app.js reads the public qs_pulse/{storyId} aggregate
+                                      // plus (if signed in) the caller's own qs_pulse_votes/{storyId_uid}
+                                      // doc, and writes both together on vote() - create on a story's first
+                                      // vote (Firestore's increment transform can't create a doc), increment
+                                      // transform on every vote after that, with a switch (bull<->bear)
+                                      // moving one vote between the two fields. Deliberately rendered ONLY
+                                      // inside the expanded card details (pulseHTML() inside detailsHTML()),
+                                      // never on every closed card - Investment mode can show 300+ cards at
+                                      // once, and eagerly fetching a Firestore doc per card for a number most
+                                      // people won't look at isn't worth the read cost; opening a card is
+                                      // already the signal this one's worth a closer look. Voting requires
+                                      // sign-in (openAuthGate, same pattern as tracking a company), so one
+                                      // vote per person is a real server-enforced constraint, not a client
+                                      // convention - see firestore.rules' qs_pulse/qs_pulse_votes rules.
+                                      //
+                                      // Previous round (gni-phase3-51-v1): unread stories now sort above read ones everywhere a
+                                      // story list is shown (byPriority in app.js), including ABOVE
+                                      // importance - a read Critical story sinks below an unread Low one,
+                                      // not the reverse, since 300+ stories/day made "already read" the
+                                      // thing worth getting out of the way first. The Country/Company
+                                      // Status rings already worked this way (countryGroups()/
+                                      // companyGroups() both had unread-first sorting from an earlier
+                                      // round); this round is the main Signals/Investment list and each
+                                      // Investment company's own story list catching up to match.
+                                      // New in this round: a story can now become "read" just by being
+                                      // scrolled past and dwelt on, not only by being tapped open - most
+                                      // people skim headlines without opening every card, so requiring a
+                                      // tap left "read" almost meaningless at this volume. See the new
+                                      // SeenTracker block in app.js (seenArm/seenDisarm/seenObserveVisible)
+                                      // for the mechanism: an IntersectionObserver watches for a card
+                                      // sitting >=60% on-screen, gated on scroll having actually settled
+                                      // (not mid-flick) for 1.5s running, before marking it reviewed.
+                                      // Explicit product call: marking a card reviewed never re-sorts the
+                                      // list immediately - that would shuffle cards under a scrolling
+                                      // user's thumb. The reorder only shows up next time the list
+                                      // naturally re-renders (pull-to-refresh, the 60s auto-poll, a tab
+                                      // switch), same as how Country/Company Status already behaved.
+                                      //
+                                      // Previous round (gni-phase3-50-v1): removed "Deeper reading" entirely (owner's call - didn't
                                       // want to add a new search-provider key right now). Pulled
                                       // search_substack_articles()/write_longform_match()/find_deeper_reading()
                                       // from pipeline.py, the Longform module/deeperReadingHTML()/its card-open

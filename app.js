@@ -952,7 +952,9 @@ if (typeof document !== 'undefined') (function () {
       obStep4Title: 'A news card', obStep4Body: 'Tap a story to read more, swipe right to save it, or swipe left to dismiss it.',
       obStep5Title: 'Saved', obStep5Body: 'Swipe a story right, or tap Save, to keep it here past the usual 24-hour window.',
       obStep6Title: 'Switch to Investment', obStep6Body: 'Double-tap to flip between Signal (general news) and Investment (news grouped by company). A single tap won’t switch it by accident.',
-      obStep7Title: 'Settings', obStep7Body: 'Channels, your investment watchlist, notifications, account, export, and feedback - all in one place.'
+      obStep7Title: 'Settings', obStep7Body: 'Channels, your investment watchlist, notifications, account, export, and feedback - all in one place.',
+      pulseLabel: 'Crowd read:', pulseBull: 'Bullish', pulseBear: 'Bearish',
+      agPulseTitle: 'Log in to vote', agPulseBody: 'A free account keeps one vote per person honest - no limit on reading, just on voting.'
     },
     hi: {
       linkPages: 'लिंक पेज', settings: 'सेटिंग्स', signals: 'सिग्नल्स', saved: 'सेव किए गए', export: 'एक्सपोर्ट',
@@ -1009,7 +1011,9 @@ if (typeof document !== 'undefined') (function () {
       obStep4Title: 'एक न्यूज़ कार्ड', obStep4Body: 'अधिक पढ़ने के लिए किसी खबर पर टैप करें, सेव करने के लिए दाईं ओर स्वाइप करें, या हटाने के लिए बाईं ओर स्वाइप करें।',
       obStep5Title: 'सेव किए गए', obStep5Body: 'किसी खबर को दाईं ओर स्वाइप करें, या सेव पर टैप करें, ताकि वह सामान्य 24 घंटे के बाद भी यहां रहे।',
       obStep6Title: 'इन्वेस्टमेंट पर जाएं', obStep6Body: 'सिग्नल (सामान्य खबरें) और इन्वेस्टमेंट (कंपनी के अनुसार समूहित खबरें) के बीच बदलने के लिए डबल-टैप करें। एक टैप से गलती से नहीं बदलेगा।',
-      obStep7Title: 'सेटिंग्स', obStep7Body: 'चैनल, आपकी इन्वेस्टमेंट वॉचलिस्ट, नोटिफिकेशन, खाता, एक्सपोर्ट, और फ़ीडबैक - सब एक ही जगह।'
+      obStep7Title: 'सेटिंग्स', obStep7Body: 'चैनल, आपकी इन्वेस्टमेंट वॉचलिस्ट, नोटिफिकेशन, खाता, एक्सपोर्ट, और फ़ीडबैक - सब एक ही जगह।',
+      pulseLabel: 'जनता की राय:', pulseBull: 'तेज़ी', pulseBear: 'मंदी',
+      agPulseTitle: 'वोट करने के लिए साइन इन करें', agPulseBody: 'मुफ़्त खाता यह सुनिश्चित करता है कि हर व्यक्ति सिर्फ़ एक बार वोट करे - पढ़ने की कोई सीमा नहीं, सिर्फ़ वोट करने की।'
     },
     mr: {
       linkPages: 'लिंक पेजेस', settings: 'सेटिंग्ज', signals: 'सिग्नल्स', saved: 'सेव्ह केलेले', export: 'एक्सपोर्ट',
@@ -1066,7 +1070,9 @@ if (typeof document !== 'undefined') (function () {
       obStep4Title: 'एक न्यूज कार्ड', obStep4Body: 'अधिक वाचण्यासाठी बातमीवर टॅप करा, सेव्ह करण्यासाठी उजवीकडे स्वाइप करा, किंवा काढण्यासाठी डावीकडे स्वाइप करा.',
       obStep5Title: 'सेव्ह केलेले', obStep5Body: 'एखादी बातमी उजवीकडे स्वाइप करा, किंवा सेव्हवर टॅप करा, जेणेकरून ती नेहमीच्या 24 तासांनंतरही इथे राहील.',
       obStep6Title: 'इन्व्हेस्टमेंटवर जा', obStep6Body: 'सिग्नल (सामान्य बातम्या) आणि इन्व्हेस्टमेंट (कंपनीनुसार गटबद्ध बातम्या) यामध्ये बदलण्यासाठी डबल-टॅप करा. एका टॅपने चुकून बदलणार नाही.',
-      obStep7Title: 'सेटिंग्ज', obStep7Body: 'चॅनेल्स, तुमची इन्व्हेस्टमेंट वॉचलिस्ट, नोटिफिकेशन्स, खाते, एक्सपोर्ट, आणि फीडबॅक - सर्व एकाच ठिकाणी.'
+      obStep7Title: 'सेटिंग्ज', obStep7Body: 'चॅनेल्स, तुमची इन्व्हेस्टमेंट वॉचलिस्ट, नोटिफिकेशन्स, खाते, एक्सपोर्ट, आणि फीडबॅक - सर्व एकाच ठिकाणी.',
+      pulseLabel: 'जनमत:', pulseBull: 'तेजी', pulseBear: 'मंदी',
+      agPulseTitle: 'मतदानासाठी साइन इन करा', agPulseBody: 'मोफत खाते खात्री करते की प्रत्येक व्यक्ती फक्त एकदाच मत देईल - वाचण्यावर मर्यादा नाही, फक्त मतदानावर.'
     },
     gu: {
       linkPages: 'લિંક પેજીસ', settings: 'સેટિંગ્સ', signals: 'સિગ્નલ્સ', saved: 'સેવ કરેલ', export: 'એક્સપોર્ટ',
@@ -1123,7 +1129,9 @@ if (typeof document !== 'undefined') (function () {
       obStep4Title: 'એક ન્યૂઝ કાર્ડ', obStep4Body: 'વધુ વાંચવા સમાચાર પર ટેપ કરો, સેવ કરવા જમણી બાજુ સ્વાઇપ કરો, અથવા હટાવવા ડાબી બાજુ સ્વાઇપ કરો.',
       obStep5Title: 'સેવ કરેલ', obStep5Body: 'કોઈ સમાચારને જમણી બાજુ સ્વાઇપ કરો, અથવા સેવ પર ટેપ કરો, જેથી તે સામાન્ય 24 કલાક પછી પણ અહીં રહે.',
       obStep6Title: 'ઇન્વેસ્ટમેન્ટ પર જાઓ', obStep6Body: 'સિગ્નલ (સામાન્ય સમાચાર) અને ઇન્વેસ્ટમેન્ટ (કંપની પ્રમાણે જૂથબદ્ધ સમાચાર) વચ્ચે બદલવા ડબલ-ટેપ કરો. એક ટેપથી ભૂલથી નહીં બદલાય.',
-      obStep7Title: 'સેટિંગ્સ', obStep7Body: 'ચેનલો, તમારી ઇન્વેસ્ટમેન્ટ વોચલિસ્ટ, નોટિફિકેશન, ખાતું, એક્સપોર્ટ, અને પ્રતિસાદ - બધું એક જ જગ્યાએ.'
+      obStep7Title: 'સેટિંગ્સ', obStep7Body: 'ચેનલો, તમારી ઇન્વેસ્ટમેન્ટ વોચલિસ્ટ, નોટિફિકેશન, ખાતું, એક્સપોર્ટ, અને પ્રતિસાદ - બધું એક જ જગ્યાએ.',
+      pulseLabel: 'જનમત:', pulseBull: 'તેજી', pulseBear: 'મંદી',
+      agPulseTitle: 'વોટ કરવા સાઇન ઇન કરો', agPulseBody: 'મફત ખાતું ખાતરી કરે છે કે દરેક વ્યક્તિ ફક્ત એક જ વાર વોટ કરે - વાંચવા પર કોઈ મર્યાદા નથી, ફક્ત વોટિંગ પર.'
     }
   };
   let currentLang = 'en';
@@ -2675,6 +2683,129 @@ if (typeof document !== 'undefined') (function () {
     }
   };
 
+  /* ---------- Pulse (Phase 1 community: one-tap bullish/bearish sentiment) ----------
+     Investment-mode, company-tagged stories only (see pulseHTML()'s own guard). Two Firestore collections
+     (see firestore.rules): qs_pulse/{storyId} is the public-read aggregate {bull, bear} the UI displays,
+     and qs_pulse_votes/{storyId_uid} is the private per-(story,voter) record that actually enforces "one
+     vote per person" - a running total alone can't stop someone tapping 500 times, so that real dedup has
+     to live somewhere server-checkable, and this is it. The two are always written together from vote()
+     below; a request that updates one but not the other (a dropped connection mid-sequence) is a known,
+     accepted inconsistency - worst case a vote is double-counted or missed once, never a security hole and
+     never user-generated text to moderate (see the project's own PM phasing notes on why Phase 1 has
+     nothing to moderate by construction).
+
+     Firestore's increment transform (used for the 2nd+ vote on a story) requires the target document to
+     already exist - it does NOT create one - so the FIRST vote on any story has to be a plain create with
+     explicit {bull:1,bear:0} or {bull:0,bear:1}, and every vote after that is an update. vote() below
+     tries create first and falls back to update on ALREADY_EXISTS, rather than reading the doc first to
+     decide, since that read-then-write shape has a race (two people's first vote landing at once) that
+     try-create-then-fall-back doesn't. */
+  const Pulse = {
+    _cache: new Map(),     // raw story id -> { bull, bear } aggregate, or undefined if never fetched
+    _mine: new Map(),      // raw story id -> 'bull'|'bear'|null (this signed-in user's own vote), or undefined if never fetched
+
+    voteDocId(rawId, uid) { return rawId + '_' + uid; },
+
+    // Best-effort read of the public aggregate plus (if signed in) the caller's own vote, both cached per
+    // story id so re-opening the same card is instant. Like Archive.forStory(), this is meant to be kicked
+    // off when a card opens and re-rendered into once it resolves - see the data-act click handler below.
+    async forStory(it) {
+      const rawId = it.id.replace(/^L/, '');
+      const tasks = [];
+      if (!this._cache.has(rawId)) {
+        tasks.push((async () => {
+          try {
+            const r = await fetch(`${FS_BASE}/qs_pulse/${rawId}?key=${FIREBASE.apiKey}`, { cache: 'no-store' });
+            if (r.status === 404) { this._cache.set(rawId, { bull: 0, bear: 0 }); return; }
+            if (!r.ok) return;   // leave uncached; try again next time this card opens
+            const doc = await r.json();
+            const rec = fsFieldsToObject(doc.fields);
+            this._cache.set(rawId, { bull: rec.bull || 0, bear: rec.bear || 0 });
+          } catch (e) { /* offline etc: leave uncached, same as "not loaded yet" */ }
+        })());
+      }
+      if (Auth.uid && !this._mine.has(rawId)) {
+        tasks.push((async () => {
+          try {
+            const r = await fetch(`${FS_BASE}/qs_pulse_votes/${this.voteDocId(rawId, Auth.uid)}?key=${FIREBASE.apiKey}`, {
+              headers: await Sync.authHeaders(), cache: 'no-store'
+            });
+            if (r.status === 404) { this._mine.set(rawId, null); return; }
+            if (!r.ok) return;
+            const doc = await r.json();
+            const rec = fsFieldsToObject(doc.fields);
+            this._mine.set(rawId, rec.choice || null);
+          } catch (e) { /* leave uncached */ }
+        })());
+      }
+      if (tasks.length) await Promise.all(tasks);
+    },
+
+    // Current aggregate for a story, synchronous - reads whatever forStory() last cached (undefined if
+    // never fetched, same convention as Archive._cache.get() used by threadHTML()).
+    counts(it) {
+      return this._cache.get(it.id.replace(/^L/, '')) || null;
+    },
+    mine(it) {
+      return this._mine.get(it.id.replace(/^L/, '')) || null;
+    },
+
+    // choice is 'bull' or 'bear'. Handles all three cases: first-ever vote on this story (create), a new
+    // voter on an already-voted-on story (increment), and an existing voter switching their pick (move one
+    // from their old choice to their new one). Optimistically updates the local caches before the network
+    // call resolves so the tap feels instant, then reconciles or reverts on failure - same honesty-over-
+    // silent-drift pattern as Channels.follow()/tgfollow above.
+    async vote(it, choice) {
+      if (!Auth.uid) { openAuthGate('agPulseTitle', 'agPulseBody'); return false; }
+      const rawId = it.id.replace(/^L/, '');
+      const prev = this._mine.get(rawId) || null;
+      if (prev === choice) return true;   // tapping the same choice twice is a no-op, not an "undo"
+      const before = this._cache.get(rawId) || { bull: 0, bear: 0 };
+      const after = Object.assign({}, before);
+      if (prev) after[prev] = Math.max(0, after[prev] - 1);   // switching: release the old choice
+      after[choice] = (after[choice] || 0) + 1;
+      this._cache.set(rawId, after);
+      this._mine.set(rawId, choice);
+      try {
+        const headers = Object.assign({ 'Content-Type': 'application/json' }, await Sync.authHeaders());
+        const voteId = this.voteDocId(rawId, Auth.uid);
+        const voteBody = JSON.stringify({ fields: {
+          story_id: toFsValue(rawId), uid: toFsValue(Auth.uid), choice: toFsValue(choice), voted_at: toFsValue(new Date().toISOString())
+        } });
+        const voteR = await fetch(`${FS_BASE}/qs_pulse_votes/${voteId}?key=${FIREBASE.apiKey}`, { method: 'PATCH', headers, body: voteBody });
+        if (!voteR.ok) throw new Error(await describeFailure(voteR, null));
+
+        // The aggregate write depends on whether this story has ever had a vote before. Try a plain create
+        // first (works only when the doc doesn't exist yet); if it already exists, fall back to an
+        // increment-transform update instead of re-reading first (see module doc-comment above for why).
+        const createBody = JSON.stringify({ fields: { bull: toFsValue(choice === 'bull' ? 1 : 0), bear: toFsValue(choice === 'bear' ? 1 : 0) } });
+        const createR = await fetch(`${FS_BASE}/qs_pulse?documentId=${rawId}&key=${FIREBASE.apiKey}`, { method: 'POST', headers, body: createBody });
+        if (createR.status === 409 || createR.status === 400) {
+          // Doc already exists (or this isn't genuinely the first vote anymore) - move one vote via a
+          // commit with field transforms: +1 on the new choice, and if switching, -1 on the old one too.
+          const transforms = [{ fieldPath: choice, increment: { integerValue: '1' } }];
+          if (prev) transforms.push({ fieldPath: prev, increment: { integerValue: '-1' } });
+          const commitBody = JSON.stringify({ writes: [{
+            transform: { document: `${FS_BASE}/qs_pulse/${rawId}`, fieldTransforms: transforms }
+          }] });
+          const commitR = await fetch(`${FS_BASE}:commit?key=${FIREBASE.apiKey}`, { method: 'POST', headers, body: commitBody });
+          if (!commitR.ok) throw new Error(await describeFailure(commitR, null));
+        } else if (!createR.ok) {
+          throw new Error(await describeFailure(createR, null));
+        }
+        track('pulse_vote', { choice, switched: !!prev });
+        return true;
+      } catch (e) {
+        // Revert the optimistic update - this story's counts/mine go back to "not reliably known" so the
+        // next render re-fetches fresh truth instead of displaying a number that never actually landed.
+        this._cache.delete(rawId);
+        this._mine.set(rawId, prev);
+        toast('Couldn’t record your vote: ' + (e && e.message ? e.message : String(e)));
+        return false;
+      }
+    }
+  };
+
   /* ---------- Default channels (owner-curated) ----------
      Section 1 of Link Pages, from the user's own words: "By default channel which are linked to this app to
      avoid showing blank when user visit this page. Kind of like guest mode. So owner will have the access to
@@ -2777,7 +2908,14 @@ if (typeof document !== 'undefined') (function () {
     if (range === 'today') return new Date(it.addedAt).toDateString() === new Date().toDateString();
     return Date.now() - it.addedAt <= 7 * 864e5;
   }
-  const byPriority = (a, b) => E.impRank(b.importance) - E.impRank(a.importance) || b.addedAt - a.addedAt;
+  // Unread outranks everything else, including importance: a read Critical story sinks below an unread
+  // Low one, because "read" means the user already saw it - ranking it above unread stories just makes
+  // someone re-scan something they've dealt with to reach what they haven't. Within the same read/unread
+  // group, importance still decides order (Critical first), then recency, exactly as before. See
+  // SeenTracker below for how/when a story actually becomes "read" without requiring a tap to open it.
+  const byPriority = (a, b) =>
+    (S.reviewed.has(a.id) ? 1 : 0) - (S.reviewed.has(b.id) ? 1 : 0) ||
+    E.impRank(b.importance) - E.impRank(a.importance) || b.addedAt - a.addedAt;
   const prep = it => {
     if (!it._p) Object.defineProperty(it, '_p', {
       value: { hash: it.hash, len: it.len, country: it.country, involved: it.involved || [], sector: it.sector, head: new Set(it.head), key: new Set(it.key) },
@@ -3115,6 +3253,107 @@ if (typeof document !== 'undefined') (function () {
     S.reviewed.add(it.id);
     Sync.pushSoon();
     renderCountryViewer();   // update the dash for the now-reviewed story without a full re-render
+  }
+
+  /* ---------- SeenTracker: marking a card "read" without requiring a tap ----------
+     With 300+ stories in the list, most users skim headlines scrolling past rather than tapping every
+     card open - markCurrentReviewed() above only fires inside the separate Country/Company Status
+     viewer modal, so the main Signals/Investment list had no way to learn "the user actually saw this"
+     at all. A flat "visible for N seconds" timer is the obvious first idea, but it has a real failure
+     mode: a fast flick-scroll carries a card through the viewport in well under a second, so a timer
+     short enough to catch normal reading pace also marks cards "read" during a scroll the user never
+     paused on - and a timer long enough to avoid that false-positive makes genuinely-read cards wait
+     too long during slow, attentive scrolling.
+
+     So this gates the dwell timer on TWO signals together, not one:
+       1. Visibility fraction - a card must be at least IO_THRESHOLD (60%) on-screen, via
+          IntersectionObserver, which is native and event-driven (no polling every card's
+          getBoundingClientRect on every scroll frame).
+       2. Scroll having actually settled - lastScrollAt is updated on every scroll event, and a card's
+          dwell timer is only allowed to START while scroll has been quiet for SCROLL_SETTLE_MS; if the
+          page is still moving, the card is "passing through" the viewport, not being read, however much
+          of it is technically visible.
+     Only once both hold for READ_DWELL_MS does a card actually get marked reviewed. Leaving the 60%
+     region, or scrolling resuming, cancels a pending timer outright - re-entering starts a fresh one,
+     never resumes a partial count, so a card genuinely has to sit still on screen once, uninterrupted.
+
+     Per the owner's explicit call: marking reviewed never triggers an immediate re-render/re-sort here -
+     byPriority (which now ranks unread above read) is only re-applied the next time renderList()/
+     renderInvestmentList() runs on their own (pull-to-refresh, the 60s auto-poll, tab switch, etc.), so
+     cards never visibly reshuffle under a user's thumb mid-scroll. */
+  const SEEN = {
+    io: null,
+    pending: new Map(),       // element -> timeout id, for cards currently mid-dwell
+    lastScrollAt: 0,
+    settleCheckRaf: null,
+  };
+  const IO_THRESHOLD = 0.6;
+  const READ_DWELL_MS = 1500;
+  const SCROLL_SETTLE_MS = 150;
+
+  function seenScrollSettled() {
+    return Date.now() - SEEN.lastScrollAt >= SCROLL_SETTLE_MS;
+  }
+
+  // Called once a card has been >=IO_THRESHOLD visible continuously; re-checks scroll-settle on a short
+  // rAf loop rather than starting the real dwell timer immediately, since the card may have crossed the
+  // threshold mid-flick (still moving) rather than at rest.
+  function seenArm(el, id) {
+    if (S.reviewed.has(id) || SEEN.pending.has(el)) return;
+    const tryStart = () => {
+      if (!SEEN.pending.has(el)) return;   // cancelled (left the viewport) while waiting to settle
+      if (!seenScrollSettled()) { SEEN.pending.set(el, requestAnimationFrame(tryStart)); return; }
+      const timeoutId = setTimeout(() => {
+        SEEN.pending.delete(el);
+        if (S.reviewed.has(id)) return;
+        S.reviewed.add(id);
+        Sync.pushSoon();   // background persist only - no renderList()/renderAll() call, by design (see above)
+      }, READ_DWELL_MS);
+      SEEN.pending.set(el, timeoutId);
+    };
+    SEEN.pending.set(el, requestAnimationFrame(tryStart));
+  }
+
+  // Cancels whatever's pending for this card - a rAf settle-check or a live dwell timeout, both stored
+  // the same way in SEEN.pending since only one is ever active per element at a time. Harmless (and a
+  // no-op) to call on a card that was never armed, since cancelAnimationFrame/clearTimeout both silently
+  // ignore an id that doesn't correspond to their own kind of handle.
+  function seenDisarm(el) {
+    const handle = SEEN.pending.get(el);
+    if (handle == null) return;
+    cancelAnimationFrame(handle);
+    clearTimeout(handle);
+    SEEN.pending.delete(el);
+  }
+
+  function seenInit() {
+    if (SEEN.io) return;   // already set up - observe()/unobserve() calls below are enough from here on
+    window.addEventListener('scroll', () => { SEEN.lastScrollAt = Date.now(); }, { passive: true });
+    SEEN.io = new IntersectionObserver(entries => {
+      for (const entry of entries) {
+        const el = entry.target, id = el.dataset.id;
+        if (!id) continue;
+        if (entry.intersectionRatio >= IO_THRESHOLD) seenArm(el, id);
+        else seenDisarm(el);
+      }
+    }, { threshold: [IO_THRESHOLD] });
+  }
+
+  // Re-points the observer at exactly the cards currently in the DOM - called at the end of every
+  // renderList()/renderInvestmentList()/renderSaved(), since those replace #list's/#savedList's
+  // innerHTML wholesale each time, which silently drops every previous observe() target along with the
+  // old nodes. disconnect() first, rather than tracking individual unobserve() calls, because there's no
+  // cheaper way to know which of the old elements even still exist once innerHTML has already been
+  // reassigned - and re-observing a fresh, fully-current set is exactly as correct either way.
+  function seenObserveVisible(container) {
+    seenInit();
+    SEEN.io.disconnect();
+    SEEN.pending.forEach((handle) => { cancelAnimationFrame(handle); clearTimeout(handle); });
+    SEEN.pending.clear();
+    if (!container) return;
+    container.querySelectorAll('.entry[data-id]').forEach(el => {
+      if (!S.reviewed.has(el.dataset.id)) SEEN.io.observe(el);
+    });
   }
 
   function cvGo(delta) {
@@ -3675,6 +3914,28 @@ Give a concise, event-specific analysis - decide for yourself which structure be
   // opened; see the data-act click handler's "opening" branch). Empty before that fetch resolves, same as
   // the thread simply not existing yet - re-rendered once real data arrives, no spinner/placeholder needed
   // since the window between open and re-render is normally under a second.
+  // Sentiment-pulse row: Investment-mode, company-tagged stories only (Phase 1's explicit scope - see the
+  // project's own PM phasing notes). Synchronous, same convention as threadHTML() below - reads whatever
+  // Pulse.forStory() last cached; the actual fetch is kicked off when the card opens (see the click
+  // handler) and this re-renders once it resolves. Shows nothing (not even a loading state) until the
+  // first fetch lands, which matches how the thread timeline already behaves.
+  function pulseHTML(it) {
+    if (!(S.mode === 'investment' && (it.companies || []).length)) return '';
+    const counts = Pulse.counts(it);
+    if (!counts) return '';
+    const mine = Pulse.mine(it);
+    const total = counts.bull + counts.bear;
+    const bullPct = total ? Math.round((counts.bull / total) * 100) : 50;
+    return `<div class="pulse-row">
+        <b>${esc(t('pulseLabel'))}</b>
+        <div class="pulse-bar"><span class="fill-bull" style="width:${bullPct}%"></span><span class="fill-bear" style="width:${100 - bullPct}%"></span></div>
+        <div class="pulse-btns">
+          <button class="pulse-btn bull${mine === 'bull' ? ' active' : ''}" data-act="pulse" data-v="bull" data-id="${esc(it.id)}">▲ ${esc(t('pulseBull'))} <span class="pulse-count">${counts.bull}</span></button>
+          <button class="pulse-btn bear${mine === 'bear' ? ' active' : ''}" data-act="pulse" data-v="bear" data-id="${esc(it.id)}">▼ ${esc(t('pulseBear'))} <span class="pulse-count">${counts.bear}</span></button>
+        </div>
+      </div>`;
+  }
+
   function threadHTML(it) {
     const matches = Archive._cache.get(it.id.replace(/^L/, '')) || [];
     if (!matches.length) return '';
@@ -3702,6 +3963,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       : '';
     return `<div class="details">
       ${quickacts}
+      ${pulseHTML(it)}
       ${aiLinks(it)}
       ${it.why ? `<p class="why"><b>Why it matters</b> ${esc(trOf(it.why))}</p>` : ''}
       ${(it.facts || []).length ? `<ul class="facts">${trList(it.facts).map(f => `<li>${esc(f)}</li>`).join('')}</ul>` : ''}
@@ -3753,6 +4015,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     if (!S.myCompanies.size) {
       if (empty) empty.hidden = false;
       box.innerHTML = '';
+      seenObserveVisible(box);
       return;
     }
     if (empty) empty.hidden = true;
@@ -3791,6 +4054,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       html += groupHead(esc(g.sector), sectorTotal) + companyBlocks;
     }
     box.innerHTML = html || `<div class="empty"><p>${esc(t('investNoNews'))}</p></div>`;
+    seenObserveVisible(box);
   }
 
   function renderList() {
@@ -3804,6 +4068,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     const box = $('#list');
     if (!all().length) {
       box.innerHTML = `<div class="empty"><p>Nothing here right now.</p><p>Stories move here as they come in from your followed channels. Check back shortly, or pull down to refresh.</p><button class="btn" data-act="refresh">Refresh</button></div>`;
+      seenObserveVisible(box);
       return;
     }
     if (!items.length) {
@@ -3814,6 +4079,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       box.innerHTML = hasRealFilter
         ? `<div class="empty"><p>No items match these filters.</p><button class="btn" data-act="reset">Clear filters</button></div>`
         : `<div class="empty"><p>Nothing here right now.</p><p>Stories move here as they come in, and drop off the list automatically after 24 hours unless you save them.</p></div>`;
+      seenObserveVisible(box);
       return;
     }
     let html = '';
@@ -3830,6 +4096,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
         .forEach(([k, g]) => { html += groupHead((key === 'country' ? flagOf(k) + ' ' : '') + esc(k), g.length) + g.map(entryWrapHTML).join(''); });
     }
     box.innerHTML = html;
+    seenObserveVisible(box);
   }
 
   // Saved is split by mode, same as the main feed: a saved story that's tagged with one of the user's
@@ -4429,6 +4696,16 @@ Give a concise, event-specific analysis - decide for yourself which structure be
         if (it) openVideo(it, el);
       }
       else if (act === 'vclose') { closeVideo(); }
+      else if (act === 'pulse') {
+        const it = all().find(x => x.id === el.dataset.id);
+        if (it) {
+          const ok = await Pulse.vote(it, v);
+          if (ok) {
+            const freshCard = document.querySelector(`.entry[data-id="${CSS.escape(it.id)}"]`);
+            if (freshCard) freshCard.outerHTML = freshCard.closest('#savedList,#savedInvestList') ? savedCardHTML(it) : entryHTML(it);
+          }
+        }
+      }
       else if (act === 'agclose') { closeAuthGate(); }
       else if (act === 'agGoto') { closeAuthGate(); setTab('settings'); const eb = $('#authEmail'); if (eb) eb.focus(); }
       else if (act === 'fi') { S.f.imp = v; if (S.mode === 'investment') renderInvestmentList(); else { renderControls(); renderList(); } }
@@ -4534,6 +4811,16 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       if (opening && it && it.live) {
         Archive.forStory(it).then(() => {
           if (!S.open.has(id)) return;    // closed again before this resolved - nothing to update
+          const freshCard = document.querySelector(`.entry[data-id="${CSS.escape(id)}"]`);
+          if (freshCard) freshCard.outerHTML = freshCard.closest('#savedList,#savedInvestList') ? savedCardHTML(it) : entryHTML(it);
+        });
+      }
+      // Same deal for the sentiment-pulse aggregate (qs_pulse/qs_pulse_votes) - only fetched once a card is
+      // actually opened, never eagerly for every rendered card, since Investment mode can have 300+ cards
+      // on screen and pulseHTML() is only ever shown inside the expanded details anyway (see detailsHTML()).
+      if (opening && it && S.mode === 'investment' && (it.companies || []).length) {
+        Pulse.forStory(it).then(() => {
+          if (!S.open.has(id)) return;
           const freshCard = document.querySelector(`.entry[data-id="${CSS.escape(id)}"]`);
           if (freshCard) freshCard.outerHTML = freshCard.closest('#savedList,#savedInvestList') ? savedCardHTML(it) : entryHTML(it);
         });
