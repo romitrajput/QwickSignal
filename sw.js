@@ -1,7 +1,61 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-60-v1';  // This round: two real bug fixes. (1) Tracked companies could vanish
+const VERSION = 'gni-phase3-62-v1';  // This round: second batch of the approved UX-review items (#2, #3, #5),
+                                      // all free of any paid service per the owner's standing constraint.
+                                      // (1) #2 "since you left" digest: a dismissible summary card at the
+                                      // top of Signals counting the unread stories that arrived while the
+                                      // app wasn't in front of the user, by priority tier, with the single
+                                      // most important headline tappable. Purely client-side - it reads
+                                      // S.live and S.reviewed, both already on the device, so there's no
+                                      // new fetch, endpoint or cost. Only appears after a REAL gap
+                                      // (DIGEST_GAP_MS, 20min), tracked via its own lastActive timestamp
+                                      // rather than S.lastLive (which is about feed freshness, not user
+                                      // presence), so a tab switch or the 2-minute auto-poll never triggers
+                                      // it. (2) #3 tiered, per-device push alerts: Settings >
+                                      // Notifications now has a priority floor (Critical only / High+ /
+                                      // Medium+ / Everything), quiet hours (22:00-07:00 local, Critical
+                                      // still breaks through), and the digest control below. Stored on this
+                                      // device's own qs_push_subs doc (min_imp/quiet/tz_min/digest, all
+                                      // optional - an older subscription keeps the previous "every story"
+                                      // behaviour untouched) and honoured server-side by
+                                      // parse_push_prefs()/sub_wants() in pipeline.py, which now filters
+                                      // per device instead of sending every story to everyone.
+                                      // (3) #5 daily/weekly summary: send_digests() in pipeline.py sends
+                                      // ONE round-up push per device in its own local morning window,
+                                      // riding the existing 5-minute cron (no new schedule, no new
+                                      // service). Deliberately push, not email - email needs a paid or
+                                      // rate-limited sending service, Web Push is already set up and free.
+                                      // Repeat-suppressed via state["digest_sent"], and given its own
+                                      // notification tag in sw.js so a digest and a story push can never
+                                      // silently replace each other.
+                                      //
+                                      // Previous round (gni-phase3-61-v1): first batch of the approved UX-review items (#4, #12, #13).
+                                      // (1) #4 dead-code cleanup: removed 3 orphaned i18n keys (copyBtn,
+                                      // syncInputPlaceholder, useCodeBtn, all 4 languages) left over from a
+                                      // manual sync-code UI that was already removed in an earlier round -
+                                      // confirmed #savedInvestList itself was NOT actually dead code (it's
+                                      // correctly populated by renderSaved(), the earlier audit was wrong
+                                      // about that one). (2) #12 real dark mode: a second :root palette
+                                      // (same accent hue, same flat/shadowless card language, only
+                                      // paper/surface/ink/ink2/line/head change), picked up automatically
+                                      // via prefers-color-scheme or explicitly via a new Settings >
+                                      // Appearance toggle (System/Light/Dark, on-device only, THEME_KEY/
+                                      // Theme module in app.js) - zero risk to the existing light theme
+                                      // since every color was already a CSS custom property. Also fixed
+                                      // the "new story" toast, which used to borrow var(--ink)/var(--paper)
+                                      // for its deliberate always-dark look - that would have inverted
+                                      // along with the page in dark mode, so it now has its own fixed
+                                      // --toast-bg/--toast-ink/--toast-accent tokens instead. (3) #13
+                                      // color-blind-safe sentiment: the Community tab's bull/bear split bar
+                                      // used to be readable by fill color alone - added a text percentage
+                                      // pair above the bar and a diagonal stripe texture on the bear fill,
+                                      // so the split doesn't depend on telling red from green (the vote
+                                      // buttons already had ▲/▼ glyphs from an earlier round; priority
+                                      // chips already pair color with dot-count and a text label, so
+                                      // neither needed a change).
+                                      //
+                                      // Previous round (gni-phase3-60-v1): two real bug fixes. (1) Tracked companies could vanish
                                       // back to the empty "add companies" screen after a real app restart
                                       // (not just a reload) - root cause was Sync.init()'s pull() always
                                       // trusting the server's copy over the local one, even when a company
@@ -430,11 +484,15 @@ self.addEventListener('push', e => {
   const title = (data.flag ? data.flag + ' ' : '') + (data.country || 'QwickSignal');
   const body = data.headline || 'A new story just came in.';
   const id = data.id || '';
+  // A digest (pipeline.py's send_digests(), one morning round-up per device) must NOT share the per-story
+  // tag space: tagging it by story id would let a later push about that same story silently replace the
+  // digest, and vice versa. Its own fixed tag also means a second digest replaces the first, which is
+  // right - yesterday's round-up is never worth keeping on screen.
   e.waitUntil(self.registration.showNotification(title, {
     body,
     icon: 'icon-192.png',
     badge: 'icon-192.png',
-    tag: id || 'qs-story',       // a second push for the same story replaces the first instead of stacking
+    tag: data.digest ? 'qs-digest' : (id || 'qs-story'),
     renotify: !!id,
     data: { id, kicker: data.sector ? (data.country || '') + ' · ' + data.sector : (data.country || '') }
   }));

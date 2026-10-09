@@ -468,6 +468,55 @@ def send_one_push(sub: dict, payload: dict) -> int:
         return 0
 
 
+# ----------------------------------------------------------------- per-device alert preferences
+# Settings -> Notifications lets each device choose (all optional, stored on its own qs_push_subs doc - see
+# Push.savePrefs() in app.js and the qs_push_subs block in firestore.rules):
+#   min_imp    lowest priority worth a push ("Critical" / "High" / "Medium" / "Low")
+#   countries  only push stories about these countries (empty = every country)
+#   quiet      quiet hours, 22:00-07:00 in the device's own time zone: only Critical stories get through
+#   tz_min     the device's UTC offset in minutes (for quiet hours and the digest's local send time)
+#   digest     "off" / "daily" / "weekly" - a once-a-day/once-a-week summary push (send_digests() below)
+# A subscription written before these existed has none of the fields, and gets exactly the old behaviour
+# (every story, no quiet hours, no digest) - nobody's notifications change until they choose otherwise.
+QUIET_START_HOUR, QUIET_END_HOUR = 22, 7
+DIGEST_HOUR_FROM, DIGEST_HOUR_TO = 8, 12     # local-time window the digest goes out in (see send_digests)
+
+
+def parse_push_prefs(f: dict) -> dict:
+    min_imp = (f.get("min_imp") or {}).get("stringValue") or "Low"
+    if min_imp not in RANK:
+        min_imp = "Low"
+    countries = [v.get("stringValue", "") for v in ((f.get("countries") or {}).get("arrayValue") or {}).get("values", [])]
+    digest = (f.get("digest") or {}).get("stringValue") or "off"
+    try:
+        tz_min = int((f.get("tz_min") or {}).get("integerValue") or 0)
+    except (TypeError, ValueError):
+        tz_min = 0
+    return {"min_imp": min_imp, "countries": [c for c in countries if c],
+            "quiet": bool((f.get("quiet") or {}).get("booleanValue")),
+            "digest": digest if digest in ("off", "daily", "weekly") else "off",
+            "tz_min": max(-14 * 60, min(14 * 60, tz_min))}
+
+
+def sub_local_time(sub: dict, now: dt.datetime) -> dt.datetime:
+    return now + dt.timedelta(minutes=sub.get("tz_min", 0))
+
+
+def sub_wants(sub: dict, item: dict, now: dt.datetime) -> bool:
+    """Whether this one device asked to be pushed this one story, by its own saved preferences."""
+    imp = item.get("importance") or "Low"
+    if RANK.get(imp, 0) < RANK.get(sub.get("min_imp", "Low"), 0):
+        return False
+    countries = sub.get("countries") or []
+    if countries and (item.get("country") or "Global") not in countries:
+        return False
+    if sub.get("quiet") and imp != "Critical":
+        hour = sub_local_time(sub, now).hour
+        if hour >= QUIET_START_HOUR or hour < QUIET_END_HOUR:
+            return False
+    return True
+
+
 def fetch_push_subscriptions() -> list[dict]:
     """Every device currently subscribed for notifications (see app.js's Push.subscribe(), qs_push_subs in
     firestore.rules). Same unauthenticated list pattern as fetch_approved_channels() above. Never raises."""
@@ -489,7 +538,8 @@ def fetch_push_subscriptions() -> list[dict]:
             p256dh = (f.get("p256dh") or {}).get("stringValue")
             auth = (f.get("auth") or {}).get("stringValue")
             if endpoint and p256dh and auth:
-                subs.append({"name": doc.get("name", ""), "endpoint": endpoint, "p256dh": p256dh, "auth": auth})
+                subs.append({"name": doc.get("name", ""), "endpoint": endpoint, "p256dh": p256dh, "auth": auth,
+                             **parse_push_prefs(f)})
         return subs
     except Exception as exc:  # noqa: BLE001
         log(f"  push subs unavailable ({exc}), skipping this run's notifications")
@@ -584,33 +634,136 @@ def send_push_notifications(new_items: list[dict]) -> None:
         log(f"  push: {len(worthy)} new storie(s) this run, capped to the top {len(capped)} (PUSH_MAX_PER_RUN) to avoid flooding devices, {len(subs)} device(s) subscribed")
     else:
         log(f"  push: {len(worthy)} new storie(s) this run, {len(subs)} device(s) subscribed")
-    total_sent = total_dead = 0
+    now = utcnow()
+    total_sent = total_dead = total_filtered = 0
     dead_names: set[str] = set()
     for i, item in enumerate(capped):
-        if i > 0:
+        # Which devices actually asked for THIS story (priority tier, country filter, quiet hours - see
+        # sub_wants()). Worked out before the spacing sleep below, so a story nobody wants costs no delay.
+        alive = [s for s in subs if s.get("name", "") not in dead_names]
+        targets = [s for s in alive if sub_wants(s, item, now)]
+        total_filtered += len(alive) - len(targets)
+        if not targets:
+            continue
+        if i > 0 and total_sent:
             # Spread this run's own stories out instead of firing every notification in the same instant -
-            # see PUSH_SPACING_SECONDS above. No wait before the first one, so a run with just one new story
-            # (the common case) is unaffected.
+            # see PUSH_SPACING_SECONDS above. No wait before the first one actually sent, so a run with just
+            # one new story (the common case) is unaffected.
             time.sleep(PUSH_SPACING_SECONDS)
         country = item.get("country") or "Global"
         payload = {
             "id": "L" + item["id"], "flag": push_flag(country), "country": country,
             "sector": item.get("sector") or "", "headline": item.get("headline") or "",
         }
-        sent = 0
-        for sub in subs:
-            if sub.get("name", "") in dead_names:
-                continue   # already found dead earlier in this same run - don't retry it per story
+        for sub in targets:
             status = send_one_push(sub, payload)
             if status in (201, 200, 204):
-                sent += 1
+                total_sent += 1
             elif status in (404, 410):
                 delete_push_subscription(sub.get("name", ""))
                 dead_names.add(sub.get("name", ""))
                 total_dead += 1
-        total_sent += sent
     log(f"  push: sent {total_sent} notification(s) across {len(capped)} stor{'y' if len(capped) == 1 else 'ies'}"
+        + (f", {total_filtered} skipped by device alert preferences" if total_filtered > 0 else "")
         + (f", removed {total_dead} dead subscription(s)" if total_dead else ""))
+
+
+def digest_window_items(feed: dict, since: dt.datetime, sub: dict) -> list[dict]:
+    """The stories a given device would want summarised: published inside the window, at or above its
+    priority floor, and in its country filter (quiet hours deliberately don't apply - a digest is sent in
+    the morning on purpose, see send_digests)."""
+    out = []
+    for it in feed.get("items", []):
+        try:
+            pub = dt.datetime.fromisoformat((it.get("published") or "").replace("Z", "+00:00"))
+        except ValueError:
+            continue
+        if pub.tzinfo is None:
+            pub = pub.replace(tzinfo=dt.timezone.utc)
+        if pub < since:
+            continue
+        imp = it.get("importance") or "Low"
+        if RANK.get(imp, 0) < RANK.get(sub.get("min_imp", "Low"), 0):
+            continue
+        countries = sub.get("countries") or []
+        if countries and (it.get("country") or "Global") not in countries:
+            continue
+        out.append(it)
+    out.sort(key=lambda i: (-RANK.get(i.get("importance"), 0), i.get("published") or ""))
+    return out
+
+
+def send_digests() -> None:
+    """One summary push per device that asked for a daily/weekly digest (Settings -> Notifications).
+
+    Deliberately NOT email: email needs a paid or rate-limited sending service, while Web Push is already
+    set up here, costs nothing, and reaches a phone the same way. Runs off the SAME 5-minute pipeline cron
+    rather than its own schedule - each device's digest goes out on the first run inside its own local
+    DIGEST_HOUR_FROM..DIGEST_HOUR_TO window (so a person in Mumbai and one in New York each get a morning
+    digest, not one fired at the pipeline's UTC convenience), and state["digest_sent"] stops it repeating
+    for the rest of that day/week. Never raises - same contract as send_push_notifications()."""
+    if not VAPID_PRIVATE_KEY or not VAPID_PUBLIC_KEY:
+        return
+    subs = [s for s in fetch_push_subscriptions() if s.get("digest") in ("daily", "weekly")]
+    if not subs:
+        return
+    feed = read_json(PATHS["feed"], {})
+    if not feed.get("items"):
+        return
+    state = load_state()
+    sent_map = state.get("digest_sent") or {}
+    now = utcnow()
+    sent_any = 0
+    for sub in subs:
+        name = sub.get("name", "")
+        local = sub_local_time(sub, now)
+        if not (DIGEST_HOUR_FROM <= local.hour < DIGEST_HOUR_TO):
+            continue
+        period_hours = 24 if sub["digest"] == "daily" else 24 * 7
+        last_raw = sent_map.get(name)
+        if last_raw:
+            try:
+                last = dt.datetime.fromisoformat(last_raw.replace("Z", "+00:00"))
+                if last.tzinfo is None:
+                    last = last.replace(tzinfo=dt.timezone.utc)
+                # A day's/week's worth minus a couple of hours, so a run that lands slightly earlier in
+                # tomorrow's window than today's did still counts as a new day rather than being skipped.
+                if (now - last) < dt.timedelta(hours=period_hours - 3):
+                    continue
+            except ValueError:
+                pass
+        # feed.json only holds 24h (prune()), so a weekly digest necessarily summarises the last 24h of it
+        # rather than a true 7 days - said plainly in the notification text below instead of pretending.
+        items = digest_window_items(feed, now - dt.timedelta(hours=24), sub)
+        if not items:
+            sent_map[name] = iso(now)   # nothing to say today; still counts as "done", don't retry all morning
+            continue
+        crit = sum(1 for i in items if i.get("importance") == "Critical")
+        high = sum(1 for i in items if i.get("importance") == "High")
+        bits = [f"{len(items)} stor{'y' if len(items) == 1 else 'ies'}"]
+        if crit:
+            bits.append(f"{crit} critical")
+        if high:
+            bits.append(f"{high} high")
+        top = items[0]
+        payload = {
+            "id": "L" + top["id"], "flag": push_flag(top.get("country") or "Global"),
+            "country": "Your digest", "sector": ", ".join(bits),
+            "headline": f"{', '.join(bits)}. Top: {top.get('headline') or ''}",
+            "digest": True,
+        }
+        status = send_one_push(sub, payload)
+        if status in (201, 200, 204):
+            sent_map[name] = iso(now)
+            sent_any += 1
+        elif status in (404, 410):
+            delete_push_subscription(name)
+            sent_map.pop(name, None)
+    if sent_any or sent_map != (state.get("digest_sent") or {}):
+        state["digest_sent"] = {k: v for k, v in sent_map.items()}
+        write_json(PATHS["state"], state)
+    if sent_any:
+        log(f"  digest: sent {sent_any} summary push(es)")
 
 
 def load_config() -> dict:
@@ -636,6 +789,7 @@ def load_state() -> dict:
     st.setdefault("x_user_ids", {})
     st.setdefault("x_since", {})
     st.setdefault("x_last_poll", 0)
+    st.setdefault("digest_sent", {})   # qs_push_subs doc name -> ISO timestamp of its last digest push
     return st
 
 
@@ -1628,6 +1782,13 @@ def cmd_fetch(client=None) -> int:
             send_push_notifications(new_items)
         except Exception as exc:  # noqa: BLE001
             log(f"  ! push notifications failed, not fatal to the run: {exc}")
+    # Runs every fetch (not only when there's new news): a device's digest is due based on ITS local clock,
+    # which has nothing to do with whether this particular run happened to find a story. Reads state.json
+    # back fresh, so the write above is never clobbered. Same never-fatal contract as the push block.
+    try:
+        send_digests()
+    except Exception as exc:  # noqa: BLE001
+        log(f"  ! digest send failed, not fatal to the run: {exc}")
     if candidates and stats["failed_batches"] and not (stats["new"] + stats["merged"] + stats["not_news"]):
         return 1  # every AI call failed: make the run go red
     return 0

@@ -100,13 +100,27 @@ service cloud.firestore {
     match /qs_push_subs/{id} {
       allow get, list: if true;
 
+      // min_imp/countries/quiet/tz_min/digest are this device's own alert preferences (Settings ->
+      // Notifications; see parse_push_prefs()/sub_wants() in pipeline.py). All optional - a subscription
+      // written before they existed stays valid and keeps the old "every story" behaviour.
       allow create, update: if
         id.matches('[A-Za-z0-9_-]{16,64}') &&
-        request.resource.data.keys().hasOnly(['endpoint', 'p256dh', 'auth', 'created_at']) &&
+        request.resource.data.keys().hasOnly(['endpoint', 'p256dh', 'auth', 'created_at',
+                                              'min_imp', 'countries', 'quiet', 'tz_min', 'digest']) &&
         request.resource.data.endpoint is string && request.resource.data.endpoint.size() <= 1024 &&
         request.resource.data.p256dh is string && request.resource.data.p256dh.size() <= 256 &&
         request.resource.data.auth is string && request.resource.data.auth.size() <= 64 &&
-        request.resource.data.created_at is string;
+        request.resource.data.created_at is string &&
+        (!('min_imp' in request.resource.data) ||
+          request.resource.data.min_imp in ['Critical', 'High', 'Medium', 'Low']) &&
+        (!('countries' in request.resource.data) ||
+          (request.resource.data.countries is list && request.resource.data.countries.size() <= 60)) &&
+        (!('quiet' in request.resource.data) || request.resource.data.quiet is bool) &&
+        (!('tz_min' in request.resource.data) ||
+          (request.resource.data.tz_min is int &&
+           request.resource.data.tz_min >= -840 && request.resource.data.tz_min <= 840)) &&
+        (!('digest' in request.resource.data) ||
+          request.resource.data.digest in ['off', 'daily', 'weekly']);
 
       allow delete: if true;
     }

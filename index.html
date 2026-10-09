@@ -5,7 +5,27 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>QwickSignal</title>
 <meta name="description" content="Sort news, messages and reports by country, sector and importance. Runs entirely on your phone.">
-<meta name="theme-color" content="#F9ECDC">
+<!-- Two scoped theme-color tags (the media attribute, not CSS) follow the system light/dark setting
+     automatically - the browser picks whichever matches. app.js's applyTheme() additionally sets
+     content= directly on whichever tag matches the CURRENT theme when the person makes an explicit
+     in-app choice, so an explicit "Dark" pick still updates the browser chrome color even against a
+     light-OS device, and vice versa. -->
+<meta name="theme-color" content="#F9ECDC" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#18140F" media="(prefers-color-scheme: dark)">
+<!-- Sets data-theme on <html> as early as possible - before index.html's own <style> block is even
+     parsed - so an explicit "Dark" choice on a light-OS device (or vice versa) never flashes the wrong
+     theme for a frame on load; app.js's Theme module (see its own comment) does everything else
+     (meta-tag sync, the Settings toggle) once the app is actually running. Reads the same THEME_KEY
+     localStorage key Theme.pref()/Theme.set() use - kept in sync with that module's own logic by hand,
+     since this has to run before app.js loads at all. -->
+<script>
+  (function(){
+    try {
+      var v = localStorage.getItem('qs-theme-v1');
+      if (v === 'light' || v === 'dark') document.documentElement.setAttribute('data-theme', v);
+    } catch (e) { /* private browsing etc: falls back to the system setting via CSS alone */ }
+  })();
+</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -28,9 +48,24 @@
 /* ============================================================
    THEME
    Cream/red palette matched to QwickSignal's marketing colors (cream
-   background, near-black text, a strong red accent) - this is the sole,
-   permanent look now; there is no toggle, no second palette, and no
-   dark-mode override, by explicit request.
+   background, near-black text, a strong red accent). This light palette
+   is unchanged and stays the default - but a dark palette now exists
+   alongside it (see the two blocks below), added per the UX review's
+   "add dark mode, keep the light theme as-is" recommendation: a markets/
+   news app gets opened at odd hours, and every color here was already a
+   CSS custom property rather than a hardcoded hex, which is what makes
+   this purely additive rather than a redesign. The dark palette keeps
+   the exact same accent hue, the same flat/shadowless/square-corner card
+   language, and the same semantic colors (priority levels, bull/bear) -
+   only --paper/--surface/--ink/--ink2/--line/--head change.
+   Two ways a viewer lands on a theme: (1) system default ("System" in
+   Settings, and the default for everyone until they change it) - no
+   explicit choice, follows the OS/browser's prefers-color-scheme
+   automatically; (2) explicit in-app choice via Settings ("Light"/"Dark"),
+   stored as data-theme="light"/"dark" on <html> (see the Theme module/
+   THEME_KEY in app.js), which wins over the OS setting either way. No
+   third palette, no per-component overrides - the same small token set
+   drives both themes everywhere.
    ============================================================ */
 :root{
   --paper:#F9ECDC; --surface:#FFF8EF; --ink:#241A12; --ink2:#7A6A57; --line:#E4D3B9;
@@ -42,7 +77,28 @@
   --radius-card:0; --radius-ctrl:8px;
   --ease:cubic-bezier(.2,.7,.3,1);
   --font:'Public Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  color-scheme: light;
 }
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#18140F; --surface:#231D16; --ink:#F2ECE0; --ink2:#B8AD9A; --line:#342C22;
+    --head:#18140F; --head-ink:#F2ECE0;
+    --accent:#E0473A; --accent-ink:#18140F;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#18140F; --surface:#231D16; --ink:#F2ECE0; --ink2:#B8AD9A; --line:#342C22;
+  --head:#18140F; --head-ink:#F2ECE0;
+  --accent:#E0473A; --accent-ink:#18140F;
+  color-scheme: dark;
+}
+/* The "new story" toast (#storyToast) is a deliberate always-dark "breaking news" card - an inverted
+   look by design, independent of the page theme, same in light or dark mode. It used to borrow var(--ink)/
+   var(--paper) for that inversion, which worked only because --ink was always dark and --paper always
+   light; now that dark mode can flip those, the toast gets its own fixed tokens instead so it keeps
+   looking like a dark alert card in both themes rather than inverting along with the page. */
+:root{ --toast-bg:#241A12; --toast-ink:#F9ECDC; --toast-accent:#F0604D; }
 *{box-sizing:border-box}
 /* Stops the browser/WebView's own native "pull down to reload the page" gesture and spinner - inside
    the installed Android app this reads as a stray blue loading circle with no obvious source, since the
@@ -117,6 +173,16 @@ input[type=search]:focus-visible{border-color:var(--accent);box-shadow:0 0 0 4px
 .lp-add input{flex:1;min-width:0;min-height:44px;padding:0 12px;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font:inherit}
 .lp-add input:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .lp-syncnote{margin:8px 0 0;font-size:13px;color:var(--ink2)}
+
+/* Per-device alert preferences inside Settings -> Notifications (rendered by renderNotifBox() in app.js).
+   Only shown once notifications are actually on, so these never appear as dead controls. */
+.notif-prefs{margin-top:18px;padding-top:4px;border-top:1px solid var(--line);display:flex;flex-direction:column}
+.np-row{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;margin-top:10px}
+.np-label{font-size:14px;font-weight:600;flex:1;min-width:0}
+.np-select{min-height:38px;padding:0 10px;border-radius:var(--radius-ctrl);border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-size:13.5px;max-width:58%}
+.np-select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.np-check{width:22px;height:22px;flex:none;accent-color:var(--accent)}
+.np-hint{margin:2px 0 0;font-size:12.5px;color:var(--ink2);line-height:1.45;max-width:52ch}
 .lp-list{display:flex;flex-direction:column;gap:8px;margin-top:12px}
 .lp-row{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:var(--radius-ctrl);border:1px solid var(--line);background:var(--surface);
   box-shadow:var(--card-shadow);transition:box-shadow .2s var(--ease),transform .2s var(--ease)}
@@ -310,9 +376,17 @@ input[type=search]:focus-visible{border-color:var(--accent);box-shadow:0 0 0 4px
    one per tracked company - no longer rendered inline inside Investment's story groups. */
 .pulse-row{margin:0;font-size:13.5px}
 .pulse-row b{display:block;margin-bottom:6px}
+/* Accessibility fix: the bull/bear split used to be readable by color alone (green vs. red fill), which
+   fails for anyone who can't easily tell red from green - a common form of color blindness, and exactly
+   the kind of signal a markets app shouldn't gate behind color. Two additions, no redesign: a diagonal
+   stripe pattern on the bear segment (so the two halves differ in texture, not just hue) and a text
+   percentage pair above the bar (pulse-pct) read before either color is interpreted. */
+.pulse-pct{display:flex;justify-content:space-between;font-size:11.5px;font-weight:700;color:var(--ink2);margin-bottom:4px}
+.pulse-pct .pct-bull{color:var(--bull)}
+.pulse-pct .pct-bear{color:var(--bear)}
 .pulse-bar{height:5px;border-radius:999px;background:var(--line);overflow:hidden;display:flex;margin-bottom:8px}
 .pulse-bar .fill-bull{background:var(--bull)}
-.pulse-bar .fill-bear{background:var(--bear)}
+.pulse-bar .fill-bear{background:var(--bear);background:repeating-linear-gradient(135deg,var(--bear) 0 3px,color-mix(in srgb,var(--bear) 70%,#000) 3px 6px)}
 .pulse-btns{display:flex;gap:8px}
 .pulse-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;border:1.5px solid var(--line);background:var(--paper);border-radius:999px;padding:8px 10px;font:inherit;font-size:12.5px;font-weight:700;color:var(--ink2);cursor:pointer;min-height:38px}
 .pulse-btn.bull{color:var(--bull);border-color:var(--bull)}
@@ -396,6 +470,25 @@ ol.steps li{margin:4px 0}
 .chain li::before{content:"";position:absolute;left:-19px;top:11px;width:8px;height:8px;border-radius:50%;background:var(--accent)}
 .watch li{padding:4px 0;font-size:14px}
 .why{margin:0 0 10px;font-size:14px}
+
+/* "Since you left" digest - a dismissible summary card, distinct from the AI briefing (.ai) below it via
+   the accent-colored left edge, so it reads as "what happened" rather than "analysis." */
+.digest{background:var(--surface);border:1.5px solid var(--ink);border-left:4px solid var(--accent);border-radius:var(--radius-card);padding:14px 16px;margin:0 0 18px;box-shadow:var(--card-shadow);display:flex;flex-direction:column;gap:8px}
+.digest-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.digest-head h2{margin:0;font-size:15.5px;font-weight:800}
+.digest-close{flex:none;background:none;border:0;color:var(--ink2);font-size:13px;font-weight:700;cursor:pointer;padding:2px 0 2px 10px}
+/* Tier counts sit on one wrapping row rather than a stack: four stacked lines turned a glanceable
+   summary into something to read top-to-bottom, and the card is meant to be taken in at once. */
+.digest-rows{display:flex;flex-wrap:wrap;gap:4px 14px}
+.digest-row{display:flex;align-items:baseline;gap:5px;font-size:13.5px}
+.digest-row .dg-count{flex:none;font-weight:800}
+.digest-row.crit .dg-count{color:var(--crit)}
+.digest-row.high .dg-count{color:var(--high)}
+.digest-row .dg-label{color:var(--ink2)}
+.digest-headline{font-size:13.5px;color:var(--ink);line-height:1.4;padding-top:8px;border-top:1px solid var(--line);margin-top:2px}
+/* Clamped: the top headline is a pointer to the story, not the story - an unclamped one can run five
+   lines on a phone and push the feed itself off screen. */
+.digest-headline button{border:0;background:none;padding:0;color:inherit;font:inherit;text-align:left;cursor:pointer;text-decoration:underline;text-decoration-color:var(--line);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 
 /* AI Analysis buttons */
 .ai-actions{margin:0 0 14px;padding-bottom:12px;border-bottom:1px solid var(--line);font-size:14px}
@@ -516,19 +609,19 @@ body.noscroll{overflow:hidden}
 
 /* Story-arrival notification ("Waveform Arrival" design) */
 #storyToast{position:fixed;left:0;right:0;top:max(14px,env(safe-area-inset-top));z-index:250;display:flex;justify-content:center;padding:0 14px;pointer-events:none}
-#storyToast .stcard{pointer-events:auto;width:min(94vw,420px);background:var(--ink);color:var(--paper);border-radius:14px;box-shadow:0 16px 40px -10px rgba(0,0,0,.45);display:flex;align-items:center;gap:11px;padding:12px 14px;transform:translateY(-14px);opacity:0;position:relative;overflow:hidden;cursor:pointer}
+#storyToast .stcard{pointer-events:auto;width:min(94vw,420px);background:var(--toast-bg);color:var(--toast-ink);border-radius:14px;box-shadow:0 16px 40px -10px rgba(0,0,0,.45);display:flex;align-items:center;gap:11px;padding:12px 14px;transform:translateY(-14px);opacity:0;position:relative;overflow:hidden;cursor:pointer}
 #storyToast.show .stcard{animation:stIn .4s var(--ease) forwards}
 #storyToast.hide .stcard{animation:stOut .26s ease-in forwards}
 @keyframes stIn{to{transform:translateY(0);opacity:1}}
 @keyframes stOut{to{transform:translateY(-10px);opacity:0}}
-#storyToast .stsweep{position:absolute;left:0;right:0;height:1.5px;background:linear-gradient(90deg,transparent 0%,rgba(240,96,77,0) 0%,rgba(240,96,77,.9) 50%,rgba(240,96,77,0) 100%);background-size:55% 100%;background-repeat:no-repeat;background-position:-60% 0;opacity:0;pointer-events:none}
+#storyToast .stsweep{position:absolute;left:0;right:0;height:1.5px;background:linear-gradient(90deg,transparent 0%,color-mix(in srgb,var(--toast-accent) 0%,transparent) 0%,color-mix(in srgb,var(--toast-accent) 90%,transparent) 50%,color-mix(in srgb,var(--toast-accent) 0%,transparent) 100%);background-size:55% 100%;background-repeat:no-repeat;background-position:-60% 0;opacity:0;pointer-events:none}
 #storyToast .stsweep.top{top:0}
 #storyToast .stsweep.bottom{bottom:0}
 #storyToast.show .stsweep{animation:stSweepIn .2s ease-out .45s forwards,stSweep 2.2s ease-in-out .5s infinite}
 @keyframes stSweepIn{to{opacity:1}}
 @keyframes stSweep{0%{background-position:-60% 0}100%{background-position:160% 0}}
 #storyToast .stwave{display:flex;align-items:center;gap:3px;height:26px;flex:none}
-#storyToast .stwave i{display:block;width:3.5px;border-radius:3px;background:#F0604D;transform:scaleY(0);transform-origin:center;opacity:.35}
+#storyToast .stwave i{display:block;width:3.5px;border-radius:3px;background:var(--toast-accent);transform:scaleY(0);transform-origin:center;opacity:.35}
 #storyToast.show .stwave i{animation-duration:.38s,1.6s;animation-timing-function:cubic-bezier(.3,1.4,.4,1),ease-in-out;animation-iteration-count:1,infinite;animation-fill-mode:forwards,both}
 #storyToast.show .stwave i:nth-child(1){height:10px;animation-delay:0s,.55s;animation-name:stRise1,stIdle1}
 #storyToast.show .stwave i:nth-child(2){height:20px;animation-delay:.06s,.55s;animation-name:stRise2,stIdle2}
@@ -549,9 +642,9 @@ body.noscroll{overflow:hidden}
 #storyToast.show .stflag{animation:stPop .3s cubic-bezier(.3,1.5,.4,1) .3s forwards}
 @keyframes stPop{to{opacity:1;transform:scale(1)}}
 #storyToast .stbody{min-width:0;flex:1}
-#storyToast .stkicker{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#F0604D}
-#storyToast .sthead{font-size:13px;font-weight:600;line-height:1.3;margin-top:2px;color:var(--paper);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-#storyToast .stgo{flex:none;font-size:11.5px;font-weight:800;color:var(--ink);background:var(--paper);padding:6px 13px;border-radius:999px;border:none;cursor:pointer;font-family:inherit}
+#storyToast .stkicker{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--toast-accent)}
+#storyToast .sthead{font-size:13px;font-weight:600;line-height:1.3;margin-top:2px;color:var(--toast-ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+#storyToast .stgo{flex:none;font-size:11.5px;font-weight:800;color:var(--toast-bg);background:var(--toast-ink);padding:6px 13px;border-radius:999px;border:none;cursor:pointer;font-family:inherit}
 @media (prefers-reduced-motion:reduce){
   #storyToast .stcard,#storyToast .stsweep,#storyToast .stwave i,#storyToast .stflag{animation:none!important;opacity:1!important;transform:none!important}
 }
@@ -886,6 +979,24 @@ body.pre-app .top, body.pre-app main, body.pre-app .tabs{display:none}
     </div>
 
     <!-- Notifications -->
+    <!-- Appearance: System/Light/Dark, stored on-device only (THEME_KEY in app.js) - not synced across
+         devices, same as the language picker, since screen brightness preference is a per-device thing,
+         not a per-account one. "System" (the default) means no explicit choice at all - data-theme is
+         removed from <html> entirely so prefers-color-scheme alone decides, exactly like before this
+         setting existed. -->
+    <div class="settingspage sp-hidden" id="sp-appearance">
+      <button type="button" class="settingspage-back" data-act="spback"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>Settings</button>
+      <div class="lp-block">
+        <h2 class="lp-h" data-i18n="appearanceHeading">Appearance</h2>
+        <p class="lp-sub" data-i18n="appearanceSub">Choose how QwickSignal looks on this device.</p>
+        <div class="seg" id="themeSeg" role="group" aria-label="Theme">
+          <button type="button" data-theme-choice="system" data-i18n="themeSystem">System</button>
+          <button type="button" data-theme-choice="light" data-i18n="themeLight">Light</button>
+          <button type="button" data-theme-choice="dark" data-i18n="themeDark">Dark</button>
+        </div>
+      </div>
+    </div>
+
     <div class="settingspage sp-hidden" id="sp-notifications">
       <button type="button" class="settingspage-back" data-act="spback"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>Settings</button>
       <div class="lp-block">
@@ -958,6 +1069,10 @@ body.pre-app .top, body.pre-app main, body.pre-app .tabs{display:none}
          bottom tab bar; Signals and Investment are now two separate, directly-tappable tabs (data-tab="brief"
          / data-tab="investment") that both point at this one screen and pin S.mode to match - see setTab()/
          setMode() in app.js. -->
+    <!-- "Since you left" digest: a dismissible summary of what arrived while this device was away, shown
+         above everything else in the Brief view. Populated by renderDigest() in app.js, which decides on
+         its own whether there's a real gap worth summarizing - the div just needs to exist for it to fill. -->
+    <div id="digestCard" class="digest" hidden></div>
     <div id="countryStatus" class="cstatus" role="group" aria-label="Country status" hidden></div>
     <!-- Company Status: Investment mode's equivalent of the country ring row above - one ring per tracked
          company, shown instead of (never alongside) #countryStatus. Hidden by default/in News mode; shown

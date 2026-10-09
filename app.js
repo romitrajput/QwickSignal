@@ -954,7 +954,6 @@ if (typeof document !== 'undefined') (function () {
       noChannelsYet: 'No channels yet. Add one above to start following it.',
       couldntLoadChannels: 'Couldn’t load the channel list right now.', checkConnection: 'Check your connection.',
       syncHeading: 'Sync across your devices', syncSub: 'This code links your saved articles and followed channels on another phone or browser. Anyone with the code can use it, so keep it to yourself and your own devices.',
-      copyBtn: 'Copy', syncInputPlaceholder: 'Enter a code from another device', useCodeBtn: 'Use this code',
       searchPlaceholder: 'Search',
       allPriorities: 'All priorities', critical: 'Critical', high: 'High', medium: 'Medium', low: 'Low',
       clearFilters: 'Clear filters',
@@ -964,11 +963,18 @@ if (typeof document !== 'undefined') (function () {
       onThisPhone: 'On this phone', clearAllData: 'Clear all data',
       refresh: 'Refresh',
       loginToLinkChannels: 'Log in to link Telegram channels.',
+      appearanceHeading: 'Appearance', appearanceSub: 'Choose how QwickSignal looks on this device.',
+      themeSystem: 'System', themeLight: 'Light', themeDark: 'Dark',
       notifHeading: 'Notifications', notifSub: "Get a notification on this device when a new story arrives - even when the app isn't open.",
       notifEnable: 'Turn on notifications', notifDisable: 'Turn off notifications', notifOn: 'Notifications are on for this device.',
       notifUnsupported: "This browser doesn't support push notifications.",
       notifBlocked: 'Notifications are blocked for this site. Allow them in your browser/site settings, then try again.',
       notifFailed: "Couldn't turn on notifications. Check your connection and try again.",
+      notifTierLabel: 'Notify me about', notifTierHint: 'Lower tiers include everything above them.',
+      notifImpCritical: 'Critical only', notifImpHigh: 'High and above', notifImpMedium: 'Medium and above', notifImpLow: 'Everything',
+      notifQuietLabel: 'Quiet hours (10pm - 7am)', notifQuietHint: 'Only Critical stories come through overnight.',
+      notifDigestLabel: 'Summary', notifDigestOff: 'Off', notifDigestDaily: 'Daily', notifDigestWeekly: 'Weekly',
+      notifDigestHint: 'One morning notification rounding up recent stories, instead of each one as it lands.',
       getAppHeading: 'Get the app', getAppAndroidTab: 'Android', getAppIosTab: 'iPhone',
       getAppSub: 'Download the installable app (one file, zipped). Unzip it, then tap the .apk to install - you may need to allow "install unknown apps" for your browser once.', getAppBtn: 'Download QwickSignal.zip',
       getAppIosStep1: 'Open qwicksignal.netlify.app in Safari (it has to be Safari, not Chrome).', getAppIosStep2: 'Tap the Share icon, then "Add to Home Screen".', getAppIosStep3: 'Tap "Add" - QwickSignal now opens like a regular app, no browser bar.',
@@ -1027,7 +1033,6 @@ if (typeof document !== 'undefined') (function () {
       noChannelsYet: 'अभी कोई चैनल नहीं है। फॉलो करने के लिए ऊपर एक जोड़ें।',
       couldntLoadChannels: 'अभी चैनल सूची लोड नहीं हो सकी।', checkConnection: 'अपना कनेक्शन जांचें।',
       syncHeading: 'अपने डिवाइस में सिंक करें', syncSub: 'यह कोड आपके सेव किए गए लेख और फॉलो किए गए चैनल किसी दूसरे फोन या ब्राउज़र से जोड़ता है। कोड जिसके पास भी है वह इसे इस्तेमाल कर सकता है, इसलिए इसे अपने और अपने डिवाइस तक सीमित रखें।',
-      copyBtn: 'कॉपी करें', syncInputPlaceholder: 'दूसरे डिवाइस का कोड डालें', useCodeBtn: 'यह कोड इस्तेमाल करें',
       searchPlaceholder: 'खोजें',
       allPriorities: 'सभी प्राथमिकताएं', critical: 'गंभीर', high: 'उच्च', medium: 'मध्यम', low: 'निम्न',
       clearFilters: 'फ़िल्टर हटाएं',
@@ -1037,11 +1042,18 @@ if (typeof document !== 'undefined') (function () {
       onThisPhone: 'इस फोन पर', clearAllData: 'सारा डेटा हटाएं',
       refresh: 'रिफ्रेश करें',
       loginToLinkChannels: 'टेलीग्राम चैनल लिंक करने के लिए साइन इन करें।',
+      appearanceHeading: 'दिखावट', appearanceSub: 'इस डिवाइस पर क्विकसिग्नल कैसा दिखे, यह चुनें।',
+      themeSystem: 'सिस्टम', themeLight: 'लाइट', themeDark: 'डार्क',
       notifHeading: 'सूचनाएं', notifSub: 'जब कोई नई खबर आए तो इस डिवाइस पर सूचना पाएं - ऐप खुला न होने पर भी।',
       notifEnable: 'सूचनाएं चालू करें', notifDisable: 'सूचनाएं बंद करें', notifOn: 'इस डिवाइस के लिए सूचनाएं चालू हैं।',
       notifUnsupported: 'यह ब्राउज़र पुश सूचनाओं का समर्थन नहीं करता।',
       notifBlocked: 'इस साइट के लिए सूचनाएं ब्लॉक हैं। अपनी ब्राउज़र/साइट सेटिंग्स में उन्हें अनुमति दें, फिर दोबारा कोशिश करें।',
       notifFailed: 'सूचनाएं चालू नहीं हो सकीं। अपना कनेक्शन जांचें और फिर कोशिश करें।',
+      notifTierLabel: 'मुझे सूचित करें', notifTierHint: 'नीचे का स्तर अपने ऊपर के सभी स्तर भी शामिल करता है।',
+      notifImpCritical: 'केवल अति-महत्वपूर्ण', notifImpHigh: 'उच्च और उससे ऊपर', notifImpMedium: 'मध्यम और उससे ऊपर', notifImpLow: 'सब कुछ',
+      notifQuietLabel: 'शांत समय (रात 10 - सुबह 7)', notifQuietHint: 'रात में केवल अति-महत्वपूर्ण खबरें आएंगी।',
+      notifDigestLabel: 'सारांश', notifDigestOff: 'बंद', notifDigestDaily: 'रोज़', notifDigestWeekly: 'साप्ताहिक',
+      notifDigestHint: 'हर खबर अलग-अलग आने के बजाय सुबह एक सूचना में हाल की खबरों का सारांश।',
       getAppHeading: 'ऐप पाएं', getAppAndroidTab: 'Android', getAppIosTab: 'iPhone',
       getAppSub: 'इंस्टॉल करने योग्य ऐप डाउनलोड करें (एक फ़ाइल, ज़िप की हुई)। इसे अनज़िप करें, फिर इंस्टॉल करने के लिए .apk पर टैप करें - आपको अपने ब्राउज़र के लिए एक बार "अज्ञात ऐप्स इंस्टॉल करें" की अनुमति देनी पड़ सकती है।', getAppBtn: 'QwickSignal.zip डाउनलोड करें',
       getAppIosStep1: 'Safari में qwicksignal.netlify.app खोलें (Chrome में नहीं, Safari में ही)।', getAppIosStep2: 'शेयर आइकन टैप करें, फिर "Add to Home Screen" चुनें।', getAppIosStep3: '"Add" टैप करें - अब QwickSignal एक सामान्य ऐप की तरह खुलेगा, बिना ब्राउज़र बार के।',
@@ -1088,7 +1100,6 @@ if (typeof document !== 'undefined') (function () {
       noChannelsYet: 'अजून कोणतेही चॅनेल नाही. फॉलो करण्यासाठी वर एक जोडा.',
       couldntLoadChannels: 'सध्या चॅनेल यादी लोड होऊ शकली नाही.', checkConnection: 'तुमचे कनेक्शन तपासा.',
       syncHeading: 'तुमच्या डिव्हाइसेसवर सिंक करा', syncSub: 'हा कोड तुमचे सेव्ह केलेले लेख आणि फॉलो केलेले चॅनेल दुसऱ्या फोन किंवा ब्राउझरशी जोडतो. हा कोड ज्याच्याकडेही असेल तो वापरू शकतो, त्यामुळे तो फक्त स्वतःपुरता आणि स्वतःच्या डिव्हाइसेसपुरता ठेवा.',
-      copyBtn: 'कॉपी करा', syncInputPlaceholder: 'दुसऱ्या डिव्हाइसचा कोड टाका', useCodeBtn: 'हा कोड वापरा',
       searchPlaceholder: 'शोधा',
       allPriorities: 'सर्व प्राधान्ये', critical: 'गंभीर', high: 'उच्च', medium: 'मध्यम', low: 'कमी',
       clearFilters: 'फिल्टर्स साफ करा',
@@ -1098,11 +1109,18 @@ if (typeof document !== 'undefined') (function () {
       onThisPhone: 'या फोनवर', clearAllData: 'सर्व डेटा काढा',
       refresh: 'रिफ्रेश करा',
       loginToLinkChannels: 'टेलिग्राम चॅनेल लिंक करण्यासाठी साइन इन करा.',
+      appearanceHeading: 'दिसावा', appearanceSub: 'या डिव्हाइसवर क्विकसिग्नल कसे दिसावे ते निवडा.',
+      themeSystem: 'सिस्टम', themeLight: 'लाइट', themeDark: 'डार्क',
       notifHeading: 'सूचना', notifSub: 'नवीन बातमी आल्यावर या डिव्हाइसवर सूचना मिळवा - अ‍ॅप उघडे नसतानाही.',
       notifEnable: 'सूचना चालू करा', notifDisable: 'सूचना बंद करा', notifOn: 'या डिव्हाइससाठी सूचना चालू आहेत.',
       notifUnsupported: 'हा ब्राउझर पुश सूचनांना सपोर्ट करत नाही.',
       notifBlocked: 'या साइटसाठी सूचना ब्लॉक केलेल्या आहेत. तुमच्या ब्राउझर/साइट सेटिंग्जमध्ये त्यांना परवानगी द्या, नंतर पुन्हा प्रयत्न करा.',
       notifFailed: 'सूचना चालू करता आल्या नाहीत. तुमचे कनेक्शन तपासा आणि पुन्हा प्रयत्न करा.',
+      notifTierLabel: 'मला कळवा', notifTierHint: 'खालची पातळी वरच्या सर्व पातळ्या समाविष्ट करते.',
+      notifImpCritical: 'फक्त अति-महत्त्वाचे', notifImpHigh: 'उच्च आणि त्यावरील', notifImpMedium: 'मध्यम आणि त्यावरील', notifImpLow: 'सर्व काही',
+      notifQuietLabel: 'शांत वेळ (रात्री 10 - सकाळी 7)', notifQuietHint: 'रात्री फक्त अति-महत्त्वाच्या बातम्या येतील.',
+      notifDigestLabel: 'सारांश', notifDigestOff: 'बंद', notifDigestDaily: 'रोज', notifDigestWeekly: 'साप्ताहिक',
+      notifDigestHint: 'प्रत्येक बातमी वेगळी येण्याऐवजी सकाळी एका सूचनेत अलीकडच्या बातम्यांचा सारांश.',
       getAppHeading: 'अ‍ॅप मिळवा', getAppAndroidTab: 'Android', getAppIosTab: 'iPhone',
       getAppSub: 'इंस्टॉल करण्यायोग्य अ‍ॅप डाउनलोड करा (एक फाईल, झिप केलेली). अनझिप करा, मग इंस्टॉल करण्यासाठी .apk वर टॅप करा - तुम्हाला तुमच्या ब्राउझरसाठी एकदा "अज्ञात अ‍ॅप्स इंस्टॉल करा" ला परवानगी द्यावी लागू शकते.', getAppBtn: 'QwickSignal.zip डाउनलोड करा',
       getAppIosStep1: 'Safari मध्ये qwicksignal.netlify.app उघडा (Chrome नाही, Safari हवे).', getAppIosStep2: 'शेअर आयकॉन टॅप करा, मग "Add to Home Screen" निवडा.', getAppIosStep3: '"Add" टॅप करा - आता QwickSignal सामान्य अ‍ॅपसारखे उघडेल, ब्राउझर बारशिवाय.',
@@ -1149,7 +1167,6 @@ if (typeof document !== 'undefined') (function () {
       noChannelsYet: 'હજુ કોઈ ચેનલ નથી. ફોલો કરવા માટે ઉપર એક ઉમેરો.',
       couldntLoadChannels: 'હાલમાં ચેનલ યાદી લોડ થઈ શકી નથી.', checkConnection: 'તમારું જોડાણ તપાસો.',
       syncHeading: 'તમારા ડિવાઇસ પર સિંક કરો', syncSub: 'આ કોડ તમારા સેવ કરેલા લેખો અને ફોલો કરેલા ચેનલ્સને બીજા ફોન કે બ્રાઉઝર સાથે જોડે છે. આ કોડ જેની પાસે પણ હોય તે તેનો ઉપયોગ કરી શકે છે, તેથી તેને ફક્ત તમારા પોતાના ડિવાઇસ પૂરતો રાખો.',
-      copyBtn: 'કૉપિ કરો', syncInputPlaceholder: 'બીજા ડિવાઇસનો કોડ દાખલ કરો', useCodeBtn: 'આ કોડ વાપરો',
       searchPlaceholder: 'શોધો',
       allPriorities: 'બધી પ્રાથમિકતાઓ', critical: 'ગંભીર', high: 'ઊંચી', medium: 'મધ્યમ', low: 'નીચી',
       clearFilters: 'ફિલ્ટર્સ સાફ કરો',
@@ -1159,11 +1176,18 @@ if (typeof document !== 'undefined') (function () {
       onThisPhone: 'આ ફોન પર', clearAllData: 'બધો ડેટા કાઢી નાખો',
       refresh: 'રિફ્રેશ કરો',
       loginToLinkChannels: 'ટેલિગ્રામ ચેનલ લિંક કરવા સાઇન ઇન કરો.',
+      appearanceHeading: 'દેખાવ', appearanceSub: 'આ ડિવાઇસ પર ક્વિકસિગ્નલ કેવું દેખાય તે પસંદ કરો.',
+      themeSystem: 'સિસ્ટમ', themeLight: 'લાઇટ', themeDark: 'ડાર્ક',
       notifHeading: 'નોટિફિકેશન', notifSub: 'નવી સ્ટોરી આવે ત્યારે આ ડિવાઇસ પર નોટિફિકેશન મેળવો - ઍપ ખુલ્લી ન હોય ત્યારે પણ.',
       notifEnable: 'નોટિફિકેશન ચાલુ કરો', notifDisable: 'નોટિફિકેશન બંધ કરો', notifOn: 'આ ડિવાઇસ માટે નોટિફિકેશન ચાલુ છે.',
       notifUnsupported: 'આ બ્રાઉઝર પુશ નોટિફિકેશનને સપોર્ટ કરતું નથી.',
       notifBlocked: 'આ સાઇટ માટે નોટિફિકેશન બ્લોક કરેલા છે. તમારા બ્રાઉઝર/સાઇટ સેટિંગ્સમાં તેમને મંજૂરી આપો, પછી ફરી પ્રયાસ કરો.',
       notifFailed: 'નોટિફિકેશન ચાલુ કરી શકાયા નહીં. તમારું જોડાણ તપાસો અને ફરી પ્રયાસ કરો.',
+      notifTierLabel: 'મને જણાવો', notifTierHint: 'નીચેનું સ્તર તેની ઉપરનાં બધાં સ્તર પણ સમાવે છે.',
+      notifImpCritical: 'ફક્ત અતિ-મહત્વનું', notifImpHigh: 'ઉચ્ચ અને તેથી ઉપર', notifImpMedium: 'મધ્યમ અને તેથી ઉપર', notifImpLow: 'બધું',
+      notifQuietLabel: 'શાંત સમય (રાત્રે 10 - સવારે 7)', notifQuietHint: 'રાત્રે ફક્ત અતિ-મહત્વની સ્ટોરી આવશે.',
+      notifDigestLabel: 'સારાંશ', notifDigestOff: 'બંધ', notifDigestDaily: 'રોજ', notifDigestWeekly: 'સાપ્તાહિક',
+      notifDigestHint: 'દરેક સ્ટોરી અલગ આવવાને બદલે સવારે એક નોટિફિકેશનમાં તાજેતરની સ્ટોરીનો સારાંશ.',
       getAppHeading: 'ઍપ મેળવો', getAppAndroidTab: 'Android', getAppIosTab: 'iPhone',
       getAppSub: 'ઇન્સ્ટોલ કરી શકાય તેવી ઍપ ડાઉનલોડ કરો (એક ફાઇલ, ઝિપ કરેલી). તેને અનઝિપ કરો, પછી ઇન્સ્ટોલ કરવા માટે .apk પર ટૅપ કરો - તમારે તમારા બ્રાઉઝર માટે એકવાર "અજાણી ઍપ્સ ઇન્સ્ટોલ કરો"ની મંજૂરી આપવી પડી શકે.', getAppBtn: 'QwickSignal.zip ડાઉનલોડ કરો',
       getAppIosStep1: 'Safari માં qwicksignal.netlify.app ખોલો (Chrome નહીં, Safari જ જોઈએ).', getAppIosStep2: 'શેર આઇકન ટૅપ કરો, પછી "Add to Home Screen" પસંદ કરો.', getAppIosStep3: '"Add" ટૅપ કરો - હવે QwickSignal સામાન્ય ઍપની જેમ ખુલશે, બ્રાઉઝર બાર વગર.',
@@ -1222,6 +1246,121 @@ if (typeof document !== 'undefined') (function () {
     try { localStorage.setItem(LANG_KEY, currentLang); } catch (e) { /* private browsing etc. */ }
     applyI18n();
     renderAll(); renderCountryViewer();   // re-render the news itself too, not just the app chrome
+  }
+
+  /* ---------- Appearance (light/dark) ----------
+     Mirrors loadLang()/setLang() above exactly: a plain on-device preference (THEME_KEY), not synced
+     across devices via Sync - the index.html :root/@media blocks already do the actual color-swapping
+     (see the THEME comment there), this module only ever sets/clears data-theme="light"/"dark" on
+     <html> and keeps the <meta name=theme-color> tag that matches the ACTIVE theme in sync, so the
+     browser's own chrome (status bar, task switcher card) matches too. "system" (the default - no
+     explicit choice made yet) removes data-theme entirely so prefers-color-scheme alone decides, which
+     is exactly how the app behaved before this setting existed - approving dark mode never changes what
+     a visitor who's never touched this setting sees. */
+  const THEME_KEY = 'qs-theme-v1';
+  const THEME_LABEL = { system: 'System', light: 'Light', dark: 'Dark' };
+  const Theme = {
+    pref() { try { const v = localStorage.getItem(THEME_KEY); return (v === 'light' || v === 'dark') ? v : 'system'; } catch (e) { return 'system'; } },
+    set(pref) {
+      try {
+        if (pref === 'light' || pref === 'dark') localStorage.setItem(THEME_KEY, pref);
+        else localStorage.removeItem(THEME_KEY);
+      } catch (e) { /* private browsing etc: choice just won't survive a reload */ }
+      this.apply();
+    },
+    apply() {
+      const pref = this.pref();
+      if (pref === 'system') document.documentElement.removeAttribute('data-theme');
+      else document.documentElement.setAttribute('data-theme', pref);
+      // Which theme is ACTUALLY showing right now - "system" resolves through the OS setting, so the
+      // meta-tag sync below needs the resolved value, not the raw preference.
+      const active = pref === 'system'
+        ? (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+        : pref;
+      const light = $('meta[name="theme-color"][media*="light"]');
+      const dark = $('meta[name="theme-color"][media*="dark"]');
+      // Both scoped tags get the SAME content, matching the active theme - the browser still only honors
+      // the one whose media query matches, but keeping them equal means an explicit in-app choice (which
+      // can disagree with the OS setting) is reflected correctly rather than relying on a media match
+      // that may point the other way.
+      const color = active === 'dark' ? '#18140F' : '#F9ECDC';
+      if (light) light.setAttribute('content', color);
+      if (dark) dark.setAttribute('content', color);
+      const seg = $('#themeSeg');
+      if (seg) $$('#themeSeg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.themeChoice === pref)));
+    }
+  };
+
+  /* ---------- Digest: "since you left" summary ----------
+     User's request: a short recap of what arrived while the app wasn't being looked at, shown when it's
+     opened again - not a server feature (no new pipeline/API/cost), just a client-side read of data
+     already on the device: S.live (already-fetched stories) and S.reviewed (already-tracked read state,
+     see SeenTracker above). "Since you left" only means something after a real gap, not every 2-minute
+     background poll (AUTO_REFRESH_MS) or tab switch - so this tracks its own lastActiveAt, separate from
+     S.lastLive (which is about feed freshness, not user presence), and only treats the app as having
+     been "left" once that gap passes GAP_MS. Device-local only (localStorage), like Theme/loadLang() -
+     presence isn't account data and has no reason to sync across devices. */
+  const DIGEST_LAST_ACTIVE_KEY = 'qs-digest-lastactive-v1';
+  const DIGEST_GAP_MS = 20 * 60e3;      // below this, "away" was probably just a tab switch, not a real absence
+  const DIGEST_DISMISS_KEY = 'qs-digest-dismissed-v1';   // per-load only (see renderDigest) - not persisted
+  const Digest = {
+    lastActive() { try { return parseInt(localStorage.getItem(DIGEST_LAST_ACTIVE_KEY), 10) || 0; } catch (e) { return 0; } },
+    touch() { try { localStorage.setItem(DIGEST_LAST_ACTIVE_KEY, String(Date.now())); } catch (e) { /* ignore */ } },
+    // Returns the moment the user was last here if that was long enough ago to count as having left, or 0
+    // otherwise. renderDigest() needs the timestamp itself, not just a yes/no, because "since you left"
+    // has to mean stories that ARRIVED after that moment - counting every unread story instead would
+    // claim credit for a backlog the person had already scrolled past before closing the app. Touches the
+    // timestamp immediately, so a second call in the same session (another loadLive()) returns 0.
+    consumeGap() {
+      const last = this.lastActive();
+      this.touch();
+      if (!last) return 0;                 // first-ever load on this device - nothing to recap yet
+      return (Date.now() - last) >= DIGEST_GAP_MS ? last : 0;
+    }
+  };
+  // Keeps lastActive current while the app is actually in front of the user, so the NEXT open measures
+  // the gap from when they truly stopped looking, not from whenever start() last happened to run.
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) Digest.touch(); });
+  window.addEventListener('pagehide', () => Digest.touch());
+
+  // awaySince: the ms timestamp the user was last here, or 0 for "don't show this" (no real gap, or a
+  // first-ever launch) - see Digest.consumeGap().
+  function renderDigest(awaySince) {
+    const box = $('#digestCard');
+    if (!box) return;
+    let dismissed = false;
+    try { dismissed = sessionStorage.getItem(DIGEST_DISMISS_KEY) === '1'; } catch (e) { /* ignore */ }
+    if (!awaySince || dismissed) { box.hidden = true; return; }
+    // "Since you left" means both halves literally: published AFTER the moment they stopped looking (not
+    // merely unread - a backlog they'd already scrolled past before closing the app isn't news to them),
+    // and still worth showing (not dismissed/expired, in their channel selection). Live items only; a
+    // manually-added one never "arrived" while they were away.
+    const unread = S.live.filter(it => it.addedAt > awaySince && !S.reviewed.has(it.id)
+      && itemStatus(it) !== 'dismissed' && channelVisible(it));
+    if (!unread.length) { box.hidden = true; return; }
+    const counts = { Critical: 0, High: 0, Medium: 0, Low: 0 };
+    unread.forEach(it => { if (counts[it.importance] != null) counts[it.importance]++; });
+    const top = unread.slice().sort(byPriority)[0];
+    const rows = ['Critical', 'High', 'Medium', 'Low']
+      .filter(k => counts[k])
+      .map(k => `<div class="digest-row ${k.toLowerCase() === 'critical' ? 'crit' : k.toLowerCase()}">
+          <span class="dg-count">${counts[k]}</span><span class="dg-label">${esc(k)}</span>
+        </div>`).join('');
+    box.hidden = false;
+    box.innerHTML = `
+      <div class="digest-head">
+        <h2>${unread.length} ${unread.length === 1 ? 'story' : 'stories'} since you left</h2>
+        <button type="button" class="digest-close" aria-label="Dismiss">&times;</button>
+      </div>
+      <div class="digest-rows">${rows}</div>
+      ${top ? `<div class="digest-headline"><button type="button" data-id="${esc(top.id)}">${esc(flagOf(top.country))} ${esc(top.headline)}</button></div>` : ''}
+    `;
+    box.querySelector('.digest-close').addEventListener('click', () => {
+      try { sessionStorage.setItem(DIGEST_DISMISS_KEY, '1'); } catch (e) { /* ignore */ }
+      box.hidden = true;
+    });
+    const hl = box.querySelector('.digest-headline button');
+    if (hl) hl.addEventListener('click', () => { box.hidden = true; gotoItem(hl.dataset.id); });
   }
 
   /* ---------- Multilingual news content (headline/summary/why/facts) ----------
@@ -2123,9 +2262,35 @@ if (typeof document !== 'undefined') (function () {
       box.innerHTML = `<p class="lp-syncnote">${t('notifBlocked')}</p>`;
       return;
     }
-    box.innerHTML = on
+    const p = Push.prefs();
+    const impLabels = { Critical: t('notifImpCritical'), High: t('notifImpHigh'), Medium: t('notifImpMedium'), Low: t('notifImpLow') };
+    const prefsUI = !on ? '' : `
+      <div class="notif-prefs">
+        <div class="np-row">
+          <label class="np-label" for="npMinImp">${t('notifTierLabel')}</label>
+          <select id="npMinImp" class="np-select">
+            ${PUSH_IMP_TIERS.map(k => `<option value="${k}"${p.minImp === k ? ' selected' : ''}>${esc(impLabels[k])}</option>`).join('')}
+          </select>
+        </div>
+        <p class="np-hint">${t('notifTierHint')}</p>
+        <div class="np-row">
+          <label class="np-label" for="npQuiet">${t('notifQuietLabel')}</label>
+          <input type="checkbox" id="npQuiet" class="np-check"${p.quiet ? ' checked' : ''}>
+        </div>
+        <p class="np-hint">${t('notifQuietHint')}</p>
+        <div class="np-row">
+          <label class="np-label" for="npDigest">${t('notifDigestLabel')}</label>
+          <select id="npDigest" class="np-select">
+            <option value="off"${p.digest === 'off' ? ' selected' : ''}>${esc(t('notifDigestOff'))}</option>
+            <option value="daily"${p.digest === 'daily' ? ' selected' : ''}>${esc(t('notifDigestDaily'))}</option>
+            <option value="weekly"${p.digest === 'weekly' ? ' selected' : ''}>${esc(t('notifDigestWeekly'))}</option>
+          </select>
+        </div>
+        <p class="np-hint">${t('notifDigestHint')}</p>
+      </div>`;
+    box.innerHTML = (on
       ? `<p class="lp-syncnote">${t('notifOn')}</p><button id="notifBtn" class="btn small">${t('notifDisable')}</button>`
-      : `<button id="notifBtn" class="btn primary small">${t('notifEnable')}</button>`;
+      : `<button id="notifBtn" class="btn primary small">${t('notifEnable')}</button>`) + prefsUI;
     $('#notifBtn').addEventListener('click', async () => {
       $('#notifBtn').disabled = true;
       if (on) { await Push.unsubscribe(); } else {
@@ -2134,6 +2299,10 @@ if (typeof document !== 'undefined') (function () {
       }
       renderNotifBox();
     });
+    const minImp = $('#npMinImp'), quiet = $('#npQuiet'), digest = $('#npDigest');
+    if (minImp) minImp.addEventListener('change', () => Push.savePrefs({ minImp: minImp.value }));
+    if (quiet) quiet.addEventListener('change', () => Push.savePrefs({ quiet: quiet.checked }));
+    if (digest) digest.addEventListener('change', () => Push.savePrefs({ digest: digest.value }));
   }
 
   // Feedback/bug submission card. Requires an account (per the owner's request: tickets are now tied to a
@@ -2507,12 +2676,58 @@ if (typeof document !== 'undefined') (function () {
       return id;
     } catch (e) { return 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10); }
   }
+  /* Per-device alert preferences, stored on this device's own qs_push_subs doc so the pipeline can honour
+     them when it decides who to push (parse_push_prefs()/sub_wants() in pipeline.py). Kept in
+     localStorage too, purely so Settings can render the current choice instantly without a read back.
+     Device-scoped on purpose, like Theme: "quiet hours on my phone" shouldn't mute a desktop. */
+  const PUSH_PREFS_KEY = 'qs-push-prefs-v1';
+  const PUSH_PREFS_DEFAULT = { minImp: 'Low', quiet: false, digest: 'off' };
+  const PUSH_IMP_TIERS = ['Critical', 'High', 'Medium', 'Low'];
   const Push = {
     supported() { return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window; },
     // Reflects this device's own subscription bookkeeping, not the live OS permission (which can change
     // behind our back in the browser's own settings) - renderNotifBox() checks Notification.permission too.
     isOn() { try { return localStorage.getItem('qs-push-on-v1') === '1'; } catch (e) { return false; } },
     setOn(v) { try { localStorage.setItem('qs-push-on-v1', v ? '1' : '0'); } catch (e) { /* ignore */ } },
+
+    prefs() {
+      try {
+        const raw = JSON.parse(localStorage.getItem(PUSH_PREFS_KEY) || 'null');
+        if (!raw || typeof raw !== 'object') return Object.assign({}, PUSH_PREFS_DEFAULT);
+        return {
+          minImp: PUSH_IMP_TIERS.includes(raw.minImp) ? raw.minImp : PUSH_PREFS_DEFAULT.minImp,
+          quiet: !!raw.quiet,
+          digest: ['off', 'daily', 'weekly'].includes(raw.digest) ? raw.digest : 'off'
+        };
+      } catch (e) { return Object.assign({}, PUSH_PREFS_DEFAULT); }
+    },
+    // Writes the choice locally first (so the UI is never out of step with what the person just tapped),
+    // then pushes it to Firestore. A failed write leaves the local copy as the truth and is retried by the
+    // next resync()/subscribe(), which always sends the current prefs along with the keys.
+    async savePrefs(patch) {
+      const next = Object.assign(this.prefs(), patch || {});
+      try { localStorage.setItem(PUSH_PREFS_KEY, JSON.stringify(next)); } catch (e) { /* ignore */ }
+      if (!this.isOn()) return next;    // nothing subscribed yet: the choice ships with the next subscribe()
+      try {
+        const fields = this.prefFields(next);
+        await fetch(`${FS_BASE}/qs_push_subs/${pushId()}?key=${FIREBASE.apiKey}&` +
+          Object.keys(fields).map(k => 'updateMask.fieldPaths=' + k).join('&'), {
+          method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fields })
+        });
+      } catch (e) { /* local copy stands; resync() will carry it up later */ }
+      return next;
+    },
+    prefFields(p) {
+      const pr = p || this.prefs();
+      return {
+        min_imp: toFsValue(pr.minImp),
+        quiet: toFsValue(!!pr.quiet),
+        digest: toFsValue(pr.digest),
+        // The pipeline needs this device's UTC offset to work out ITS local quiet hours / digest time.
+        // Negated because getTimezoneOffset() reports minutes to ADD to local to reach UTC, the opposite sign.
+        tz_min: toFsValue(-new Date().getTimezoneOffset())
+      };
+    },
 
     async subscribe() {
       if (!this.supported()) return { ok: false, error: t('notifUnsupported') };
@@ -2524,12 +2739,12 @@ if (typeof document !== 'undefined') (function () {
         if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) });
         const j = sub.toJSON();
         const id = pushId();
-        const fields = {
+        const fields = Object.assign({
           endpoint: toFsValue(j.endpoint),
           p256dh: toFsValue((j.keys || {}).p256dh || ''),
           auth: toFsValue((j.keys || {}).auth || ''),
           created_at: toFsValue(new Date().toISOString())
-        };
+        }, this.prefFields());   // carries this device's alert preferences on every (re)subscribe
         const r = await fetch(`${FS_BASE}/qs_push_subs/${id}?key=${FIREBASE.apiKey}`, {
           method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fields })
         });
@@ -4099,8 +4314,13 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     const mine = Pulse.mine(company);
     const total = counts.bull + counts.bear;
     const bullPct = total ? Math.round((counts.bull / total) * 100) : 50;
+    // Accessibility fix: the bar's bull/bear split used to be readable by fill color alone. A text
+    // percentage pair above it (read before either color is interpreted) plus a stripe texture on the
+    // bear fill (CSS, see .fill-bear) mean the split no longer depends on being able to tell red from
+    // green - see the CSS comment above .pulse-pct for the full reasoning.
     return `<div class="pulse-row">
         <b>${esc(t('pulseLabel'))}</b>
+        <div class="pulse-pct"><span class="pct-bull">▲ ${bullPct}%</span><span class="pct-bear">▼ ${100 - bullPct}%</span></div>
         <div class="pulse-bar"><span class="fill-bull" style="width:${bullPct}%"></span><span class="fill-bear" style="width:${100 - bullPct}%"></span></div>
         <div class="pulse-btns">
           <button class="pulse-btn bull${mine === 'bull' ? ' active' : ''}" data-act="pulse" data-v="bull" data-company="${esc(company)}">▲ ${esc(t('pulseBull'))} <span class="pulse-count">${counts.bull}</span></button>
@@ -4645,6 +4865,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
      before (setTab('settings') below, and setMode()'s mode-swap block) - this only changes which wrapper is
      visible, never how a block's content is produced, so none of that existing logic needed to change. */
   const SETTINGS_SECTIONS = [
+    { id: 'appearance', mode: null, icon: 'theme', title: 'Appearance', subKey: () => THEME_LABEL[Theme.pref()] || 'System', count: null },
     { id: 'newschannels', mode: 'news', icon: 'wifi', title: 'Telegram channels for News', subKey: () => S.myChannels.size + ' linked', count: () => S.myChannels.size },
     { id: 'investwatchlist', mode: 'investment', icon: 'candle', title: 'Investment watchlist & channels', subKey: () => S.myCompanies.size + ' tracked · ' + S.myInvestChannels.size + ' channels', count: () => S.myCompanies.size + S.myInvestChannels.size },
     { id: 'notifications', mode: null, icon: 'bell', title: 'Notifications', subKey: () => 'New story alerts', count: null },
@@ -4653,6 +4874,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     { id: 'feedback', mode: null, icon: 'help', title: 'Feedback & support', subKey: () => isOwner() ? 'Send feedback · view tickets' : 'Send feedback', count: null }
   ];
   const SN_ICON = {
+    theme: '<circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor" stroke="none"/>',
     wifi: '<path d="M2 8.5a19 19 0 0 1 20 0M5.5 12.5a13.5 13.5 0 0 1 13 0M9 16.5a7.5 7.5 0 0 1 6 0"/><circle cx="12" cy="20" r="1.2" fill="currentColor" stroke="none"/>',
     candle: '<rect x="4" y="9" width="3.4" height="9" rx="1"/><rect x="10.3" y="4" width="3.4" height="12" rx="1"/><rect x="16.6" y="11" width="3.4" height="7" rx="1"/>',
     bell: '<path d="M12 2a7 7 0 0 1 7 7c0 5 2 7 2 7H3s2-2 2-7a7 7 0 0 1 7-7z"/><path d="M9.5 19a2.5 2.5 0 0 0 5 0"/>',
@@ -4867,6 +5089,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     if (el && el.closest('#rangeSeg')) { S.f.range = el.dataset.v; renderControls(); renderList(); return; }
     if (el && el.closest('#viewSeg')) { S.f.view = el.dataset.v; renderControls(); renderList(); return; }
     if (el && el.closest('#exportSeg')) { S.exportRange = el.dataset.v; renderExport(); return; }
+    if (el && el.closest('#themeSeg')) { Theme.set(el.dataset.themeChoice); renderSettingsNav(); return; }
     const act = el && el.dataset.act;
     if (act) {
      try {
@@ -5334,6 +5557,15 @@ Give a concise, event-specific analysis - decide for yourself which structure be
   /* ---------- start ---------- */
   (async function start() {
     setTimeout(dismissSplash, SPLASH_MIN_MS);
+    Theme.apply();
+    // Re-sync the meta-tag color (not the data-theme attribute itself - that's only ever set by an
+    // explicit choice) whenever the OS-level light/dark setting changes while on "System", so the
+    // browser chrome color tracks a live OS theme switch, not just app launches.
+    if (window.matchMedia) {
+      const mq = window.matchMedia('(prefers-color-scheme: dark)');
+      const onChange = () => { if (Theme.pref() === 'system') Theme.apply(); };
+      if (mq.addEventListener) mq.addEventListener('change', onChange); else if (mq.addListener) mq.addListener(onChange);
+    }
     currentLang = loadLang();
     applyI18n();
     const langSel = $('#langSelect');
@@ -5357,13 +5589,23 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     // load below has populated S.live, so the id is actually there to find.
     const hashGotoId = location.hash.length > 1 ? decodeURIComponent(location.hash.slice(1)) : '';
     if (hashGotoId) history.replaceState(null, '', location.pathname);
-    loadLive().then(() => { if (hashGotoId) gotoItem(hashGotoId); });
+    // Captured once, right at boot, before anything below can call Digest.touch() - this is the one
+    // moment that actually reflects the gap since the app was last in front of the user.
+    const awaySince = Digest.consumeGap();
+    const firstLoad = loadLive();
+    firstLoad.then(() => { if (hashGotoId) gotoItem(hashGotoId); });
     // The default-channels list is public read, so it loads independently of sign-in - a guest should never
     // see a blank feed while waiting for anything auth-related.
     DefaultChannels.load().then(() => renderAll());
     // Phase E: restore any signed-in session first, so Sync.init() reads the right doc (account vs. guest
-    // code) on the very first pull - neither ever blocks the news feed itself from loading.
-    Auth.restore().then(() => Sync.init()).then(() => { renderAccount(); renderSyncCode(); renderChannels(); renderAll(); });
+    // code) on the very first pull - neither ever blocks the news feed itself from loading. The digest
+    // reads AFTER both this and the first loadLive() settle (reusing the SAME call above, not a second
+    // fetch), so S.reviewed/S.live are the real, synced picture rather than whatever was on-device before
+    // either resolved.
+    Promise.all([Auth.restore().then(() => Sync.init()), firstLoad]).then(() => {
+      renderAccount(); renderSyncCode(); renderChannels(); renderAll();
+      renderDigest(awaySince);
+    });
     if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
       window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').then(reg => {
         Push.resync();
