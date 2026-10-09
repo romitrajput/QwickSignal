@@ -1,14 +1,40 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-59-v1';  // This round: reverted the Wada Sanzo "Classic 303" re-theme from the
-                                      // previous round - back to the original cream/red look (--paper:#F9ECDC,
-                                      // --surface:#FFF8EF, --ink:#241A12, --ink2:#7A6A57, --line:#E4D3B9,
-                                      // --accent:#D3131E), by request. index.html's :root theme tokens and
-                                      // <meta name="theme-color">, plus manifest.webmanifest's
-                                      // background_color/theme_color, are all restored to their gni-phase3-
-                                      // 57-v1 values. Semantic colors (Bullish/Bearish, priority levels) were
-                                      // never touched by either round. app.js has no code changes.
+const VERSION = 'gni-phase3-60-v1';  // This round: two real bug fixes. (1) Tracked companies could vanish
+                                      // back to the empty "add companies" screen after a real app restart
+                                      // (not just a reload) - root cause was Sync.init()'s pull() always
+                                      // trusting the server's copy over the local one, even when a company
+                                      // had just been added and its push() to Firestore hadn't landed yet
+                                      // (app closed/killed inside the 600ms debounce, or offline at the
+                                      // time) - the next launch would pull the server's OLDER copy and
+                                      // silently overwrite the newer local one, with no error shown. Fixed
+                                      // with a "dirty" flag (qs-sync-dirty-v1): set the instant a change is
+                                      // made (pushSoon()), cleared only once push() gets a real HTTP-ok
+                                      // response. Sync.init() now checks it first and, if a change is still
+                                      // unconfirmed, PUSHES the local (newer) state up instead of blindly
+                                      // pulling the server's (older) state down - falling back to the
+                                      // normal pull-is-truth behavior only once nothing is outstanding.
+                                      // (2) Company logos (favicons) were showing as plain letter circles
+                                      // instead of fetching - Google's public favicon service turned out to
+                                      // be an unofficial, undocumented API with no uptime/rate-limit
+                                      // guarantee, and it was failing outright in real use even though this
+                                      // sandbox can't reach google.com at all to verify either way.
+                                      // companyLogoHTML() now tries each company's own site favicon first
+                                      // (https://{domain}/favicon.ico - first-party, standard, not
+                                      // dependent on a third-party service), falls back to Google's
+                                      // endpoint second, and only falls back to the letter circle if both
+                                      // image loads fail.
+                                      //
+                                      // Previous round (gni-phase3-59-v1): reverted the Wada Sanzo "Classic 303" re-theme from
+                                      // the previous round - back to the original cream/red look
+                                      // (--paper:#F9ECDC, --surface:#FFF8EF, --ink:#241A12, --ink2:#7A6A57,
+                                      // --line:#E4D3B9, --accent:#D3131E), by request. index.html's :root
+                                      // theme tokens and <meta name="theme-color">, plus
+                                      // manifest.webmanifest's background_color/theme_color, are all
+                                      // restored to their gni-phase3-57-v1 values. Semantic colors
+                                      // (Bullish/Bearish, priority levels) were never touched by either
+                                      // round. app.js has no code changes.
                                       //
                                       // Previous round (gni-phase3-58-v1): re-themed the whole app to the Wada Sanzo "Classic
                                       // 303" historical Japanese color combination (Naples Yellow #fbe6a0,

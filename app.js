@@ -418,6 +418,64 @@ const Engine = (function () {
     const ticker = name.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
     return exch + ':' + ticker;
   }
+
+  // A small hand-curated name -> real web domain table, for well-known companies where a generic name-to-
+  // domain guess (below) would be wrong or just not exist - e.g. "JSW Steel" isn't jswsteel.com, it's
+  // jsw.in; "ICICI Bank" isn't icicibank.com (that domain exists but isn't ICICI's own site), it's
+  // icicibank.com actually... the point being: some of these needed a human to actually check, not guessed.
+  // NOT every COMPANIES entry needs one - most Western single-word names (Apple, Tesla, Nvidia, ...) guess
+  // correctly from the name alone (see the generic fallback below), so this only covers the cases that don't.
+  // Same spirit as COMPANY_ROWS' verified-ticker field: a short, deliberately incomplete list of confirmed-
+  // correct answers that wins over a guess, not an attempt at full coverage.
+  const COMPANY_DOMAIN = {
+    'jsw steel': 'jsw.in', 'tata motors': 'tatamotors.com', 'tata steel': 'tatasteel.com',
+    'tata consultancy services': 'tcs.com', 'tcs': 'tcs.com', 'tata power': 'tatapower.com',
+    'reliance industries': 'ril.com', 'bharti airtel': 'airtel.in', 'hdfc bank': 'hdfcbank.com',
+    'icici bank': 'icicibank.com', 'state bank of india': 'sbi.co.in', 'axis bank': 'axisbank.com',
+    'kotak mahindra bank': 'kotak.com', 'infosys': 'infosys.com', 'wipro': 'wipro.com',
+    'hcltech': 'hcltech.com', 'hcl technologies': 'hcltech.com', 'larsen and toubro': 'larsentoubro.com',
+    'maruti suzuki': 'marutisuzuki.com', 'mahindra and mahindra': 'mahindra.com', 'bajaj auto': 'bajajauto.com',
+    'bajaj finance': 'bajajfinserv.in', 'hindustan unilever': 'hul.co.in', 'itc': 'itcportal.com',
+    'asian paints': 'asianpaints.com', 'nestle': 'nestle.com', 'marico': 'marico.com',
+    'sun pharma': 'sunpharma.com', 'sun pharmaceutical': 'sunpharma.com', "dr reddy's": 'drreddys.com',
+    'cipla': 'cipla.com', 'adani enterprises': 'adani.com', 'adani ports': 'adaniports.com',
+    'adani green energy': 'adanigreenenergy.com', 'ntpc': 'ntpc.co.in', 'power grid corporation': 'powergrid.in',
+    'coal india': 'coalindia.in', 'ongc': 'ongcindia.com', 'sail': 'sail.co.in', 'nmdc': 'nmdc.co.in',
+    'vodafone idea': 'myvi.in', 'zee entertainment': 'zee.com', 'ultratech cement': 'ultratechcement.com',
+    'grasim industries': 'grasim.com', 'dlf': 'dlf.in', 'godrej properties': 'godrejproperties.com',
+    'ambuja cements': 'ambujacement.com', 'acc': 'acclimited.com', 'alphabet': 'abc.xyz', 'google': 'google.com',
+    'meta': 'meta.com', 'exxonmobil': 'exxonmobil.com', 'jpmorgan': 'jpmorganchase.com',
+    'goldman sachs': 'goldmansachs.com', 'general motors': 'gm.com', 'tsmc': 'tsmc.com', 'sk hynix': 'skhynix.com',
+    'tokyo electron': 'tel.com', 'softbank': 'group.softbank', 'byd': 'byd.com', 'huawei': 'huawei.com',
+    'alibaba': 'alibaba.com', 'tencent': 'tencent.com', 'catl': 'catl.com', 'smic': 'smics.com',
+    'xiaomi': 'mi.com', 'volkswagen': 'vw.com', 'mercedes-benz': 'mercedes-benz.com', 'saudi aramco': 'aramco.com',
+    'shell': 'shell.com', 'rio tinto': 'riotinto.com', 'bhp': 'bhp.com', 'vale': 'vale.com',
+    'novo nordisk': 'novonordisk.com', 'persistent systems': 'persistent.com'
+  };
+  // Best-effort logo lookup, same philosophy as guessSymbol() right above: never a hard claim, always a
+  // starting guess the UI can safely fall back away from if it's wrong (see companyLogoHTML() in the UI
+  // layer, which swaps back to a plain initial-letter circle on any image load failure - a wrong/missing
+  // domain guess here is a silently-handled cosmetic miss, never a broken-image icon the user actually sees).
+  // 1) COMPANY_DOMAIN's hand-checked answer always wins, keyed the same way as COMPANIES/aliases (lowercase
+  //    exact match on name or a known alias). 2) Otherwise, strip the name down to letters and guess
+  //    "name.com" - right often enough for simple single-word Western names (tesla.com, nvidia.com,
+  //    apple.com), and for ".in"-flavored Indian names tends to need the curated table above instead, which
+  //    is exactly why that table exists. Returns null (no logo attempted at all) only for a name that
+  //    produces zero letters once stripped - genuinely nothing to guess from.
+  function guessLogoDomain(name) {
+    const n = name.toLowerCase().trim();
+    const known = COMPANIES.find(c => c.name.toLowerCase() === n || c.aliases.some(a => a.toLowerCase() === n));
+    if (known) {
+      const key = known.name.toLowerCase();
+      if (COMPANY_DOMAIN[key]) return COMPANY_DOMAIN[key];
+      for (const a of known.aliases) { if (COMPANY_DOMAIN[a.toLowerCase()]) return COMPANY_DOMAIN[a.toLowerCase()]; }
+    }
+    if (COMPANY_DOMAIN[n]) return COMPANY_DOMAIN[n];
+    const stripped = n.replace(/[^a-z0-9]/g, '');
+    if (!stripped) return null;
+    return stripped + '.com';
+  }
+
   // Partial match against the full BSE scrip lookup - same spirit as the COMPANIES partial-match fallback
   // above (catching "Maruti" for "Maruti Suzuki"), but DELIBERATELY STRICTER: word-boundary containment,
   // not raw substring containment. The broad table has ~44 very short (<=3 char) company names (ITC, SRF,
@@ -849,7 +907,7 @@ const Engine = (function () {
     analyze, compare, setOf, splitMessages, parseCSV, csvToDocs, toCSV, tokens, flag,
     classifyCountry, classifySector, classifyImportance, findCompanies, findDate,
     COUNTRY_NAMES, COUNTRY_BY_NAME, SECTOR_NAMES, IMP_ORDER, impRank, clip,
-    COMPANIES, guessSymbol, guessSectorIndex
+    COMPANIES, guessSymbol, guessSectorIndex, guessLogoDomain
   };
 })();
 
@@ -1349,6 +1407,7 @@ if (typeof document !== 'undefined') (function () {
      to the device's own local copy. */
   const SYNC_KEY = 'qs-sync-code-v1';
   const SYNC_CACHE_KEY = 'qs-sync-cache-v1';
+  const SYNC_DIRTY_KEY = 'qs-sync-dirty-v1';   // see pushSoon()/push()/init() below for what this guards against
   const FIREBASE = {
     // Public web config: safe to ship in client code. Firestore access is controlled by server-side Security
     // Rules (see firestore.rules in the repo), not by keeping this object secret.
@@ -1555,6 +1614,20 @@ if (typeof document !== 'undefined') (function () {
     cacheRead() { try { return JSON.parse(localStorage.getItem(SYNC_CACHE_KEY) || 'null'); } catch (e) { return null; } },
     cacheWrite(obj) { try { localStorage.setItem(SYNC_CACHE_KEY, JSON.stringify(obj)); } catch (e) { /* ignore */ } },
 
+    // BUG FIX: a change (track a company, save a story, follow a channel...) used to be considered "safe"
+    // the moment pushSoon() wrote it to the local cache, but the local cache is only ever read back by
+    // Sync.init() on THIS SAME device/browser - it is never what makes a change durable across a real app
+    // restart on mobile, where the OS can and does kill a PWA outright (not just background it) well before
+    // pushSoon()'s 600ms debounce timer fires. The actual durable copy is the Firestore doc push() writes -
+    // and until that network call lands, init()'s own pull() on the next launch unconditionally overwrites
+    // S.* with whatever the server still has (see pull() below), silently discarding the unsent change with
+    // no error shown anywhere. This flag tracks "is there a change sitting only in the local cache that the
+    // server doesn't have yet" - set synchronously the instant a change is made (isDirty() below), cleared
+    // only once push() gets a real HTTP-ok response back. init() checks it before trusting a pull().
+    isDirty() { try { return localStorage.getItem(SYNC_DIRTY_KEY) === '1'; } catch (e) { return false; } },
+    markDirty() { try { localStorage.setItem(SYNC_DIRTY_KEY, '1'); } catch (e) { /* ignore */ } },
+    clearDirty() { try { localStorage.removeItem(SYNC_DIRTY_KEY); } catch (e) { /* ignore */ } },
+
     async init() {
       let code = this.localCode();
       if (!code) { code = newSyncCode(); this.saveLocalCode(code); }
@@ -1562,6 +1635,13 @@ if (typeof document !== 'undefined') (function () {
       S.syncCode = code;
       const cached = this.cacheRead();       // show something instantly; the network read (if any) refines it after
       if (cached) this.applyRecord(cached);
+      // If an earlier launch made a change that never actually made it to the server (app closed/killed
+      // before pushSoon()'s debounced push() fired, or the device was offline at the time), the local cache
+      // is AHEAD of the server - pulling now would silently throw that change away. Push the cached state up
+      // first so it becomes the server's copy; only once nothing is outstanding do we fall back to the
+      // normal pull-is-truth behavior. If this push also fails (still offline), the dirty flag stays set and
+      // the same recovery is retried on the next launch.
+      if ((this.code || Auth.uid) && this.isDirty()) { await this.push(); return; }
       await this.pull();
     },
 
@@ -1572,6 +1652,7 @@ if (typeof document !== 'undefined') (function () {
       this.code = code;
       S.syncCode = code;
       this.cacheWrite(null);
+      this.clearDirty();   // any unsent change belonged to the PREVIOUS code's doc, not this one - don't push it there
       S.saved = new Set(); S.dismissed = new Set(); S.myChannels = new Set(); S.hiddenChannels = new Set(); S.reviewed = new Set(); S.myCompanies = new Set(); S.myInvestChannels = new Set();
       const ok = await this.pull();
       toast(ok ? 'Synced. This device now shares saved articles and channels with that code.' : 'Saved the code, but couldn\u2019t reach the sync service just now. It will sync when back online.');
@@ -1632,10 +1713,13 @@ if (typeof document !== 'undefined') (function () {
     async push() {
       if (!this.code && !Auth.uid) return false;
       const rec = this.snapshot();
-      // Written for a signed-in account too, not just guests, as a crash-recovery fallback only (see
-      // pushSoon() below) - Sync.init()'s pull() still always overwrites this with the server's copy
-      // whenever the network succeeds, so this is never read as the source of truth while signed in, only
-      // when a reload happens to land before that pull resolves or while offline.
+      // Written for a signed-in account too, not just guests, as a crash-recovery fallback (see pushSoon()
+      // below). Previously the comment here said Sync.init()'s pull() "still always overwrites this with
+      // the server's copy whenever the network succeeds" - that was the actual bug (see isDirty()'s own
+      // comment above): if THIS push never lands before the app restarts, the next init() would pull the
+      // server's older copy and silently discard this change. init() now checks isDirty() first and pushes
+      // instead of pulling whenever a change is still outstanding, so this cache write is the thing that
+      // makes that recovery possible, not just a crash-recovery nicety.
       this.cacheWrite(rec);
       try {
         const fields = { saved: toFsValue(rec.saved), dismissed: toFsValue(rec.dismissed), channels: toFsValue(rec.channels), hiddenChannels: toFsValue(rec.hiddenChannels), reviewed: toFsValue(rec.reviewed), companies: toFsValue(rec.companies), investChannels: toFsValue(rec.investChannels) };
@@ -1643,27 +1727,37 @@ if (typeof document !== 'undefined') (function () {
         const r = await fetch(this.docUrl(), { method: 'PATCH', headers, body: JSON.stringify({ fields }) });
         if (!r.ok) throw new Error('HTTP ' + r.status);
         this.ready = true;
+        this.clearDirty();             // confirmed on the server now - nothing left for the next launch to recover
         return true;
       } catch (e) {
-        return false;                 // saved locally (guest mode); will retry on the next change or next launch
+        return false;                 // still only local; isDirty() stays set so the next launch (or next pushSoon) retries
       }
     },
 
-    // BUG FIX: pushSoon() used to ONLY schedule Sync.push() 600ms later, with nothing saved anywhere in the
-    // meantime - not even the local cache, since that write used to live inside push() itself, behind the
-    // same debounce, and only ever for a signed-OUT guest at that. A real cost of that: add a company (or
-    // save a story, follow a channel, etc), then switch away from the tab/app quickly - many mobile
-    // browsers suspend or discard a backgrounded page's timers, so the 600ms setTimeout never fires,
-    // nothing is ever written to localStorage, and the next load's Sync.init() (cacheRead() finding nothing
-    // new, then pull() loading the server's older copy) shows the watchlist exactly as it was before the
-    // add - the new company is just gone, with no error. Fix: write the local cache SYNCHRONOUSLY, right
-    // here, on every call, for both guest and signed-in - cheap (one JSON.stringify to localStorage) and
-    // cannot be lost to a suspended timer - and keep only the actual network round-trip debounced, since
-    // that's the part worth batching.
+    // BUG FIX (original): pushSoon() used to ONLY schedule Sync.push() 600ms later, with nothing saved
+    // anywhere in the meantime - not even the local cache, since that write used to live inside push()
+    // itself, behind the same debounce, and only ever for a signed-OUT guest at that. A real cost of that:
+    // add a company (or save a story, follow a channel, etc), then switch away from the tab/app quickly -
+    // many mobile browsers suspend or discard a backgrounded page's timers, so the 600ms setTimeout never
+    // fires, nothing is ever written to localStorage, and the next load's Sync.init() (cacheRead() finding
+    // nothing new, then pull() loading the server's older copy) shows the watchlist exactly as it was before
+    // the add - the new company is just gone, with no error. Fixed by writing the local cache SYNCHRONOUSLY,
+    // right here, on every call, for both guest and signed-in.
+    //
+    // BUG FIX (this round): that first fix made the change survive on THIS device's own localStorage, but
+    // did nothing about Sync.init()'s pull() on the NEXT launch still unconditionally overwriting S.* with
+    // the server's copy - so if the debounced push() below hadn't actually landed yet (app killed within
+    // that 600ms window, or offline at the time), the very next launch would pull the server's stale copy
+    // over the correct local one, and the add would vanish again despite being "saved" from the user's
+    // point of view. markDirty() here is the other half of that fix: it records, synchronously and
+    // immediately, that a push is now owed to the server. init() checks it on the next launch and pushes the
+    // (newer) local state up first instead of blindly pulling the (older) server state down; push() above
+    // only clears it once the server has actually confirmed the write.
     pushSoon: (() => {
       let t = null;
       return () => {
         Sync.cacheWrite(Sync.snapshot());
+        Sync.markDirty();
         clearTimeout(t);
         t = setTimeout(() => Sync.push(), 600);
       };
@@ -1699,6 +1793,10 @@ if (typeof document !== 'undefined') (function () {
     // signing in next on this same browser could briefly see the previous account's cached watchlist/saves
     // for the moment before Sync.init()'s pull() overwrites it with their own.
     Sync.cacheWrite(null);
+    // The dirty flag belonged to the account that's leaving - clearing it here (rather than leaving it set)
+    // stops the NEXT account that signs in on this browser from having isDirty() misfire and push ITS
+    // just-loaded state up as if it were an unsent change of its own.
+    Sync.clearDirty();
     renderAccount(); renderAll(); renderChannels(); renderInvestChannels(); renderSyncCode(); renderTicketBox(); renderTicketAdmin(); renderInvestmentBox();
     toast('Signed out. Back to guest mode on this device.');
     Sync.pull().then(() => { renderAll(); renderChannels(); renderInvestChannels(); });    // fall back to this browser's guest sync code
@@ -3223,9 +3321,8 @@ if (typeof document !== 'undefined') (function () {
     box.innerHTML = groups.map(g => {
       const n = g.stories.length;
       const label = esc(g.company) + ' – ' + n + (n === 1 ? ' story' : ' stories') + (g.unread ? ', new' : '');
-      const initial = esc((g.company || '?').trim().charAt(0).toUpperCase() || '?');
       return `<button class="cstop" data-act="opencompany" data-c="${esc(g.company)}" aria-label="${label}">
-        <span class="qs-ring" style="background:${ringGradient(g.stories)}"><span class="qs-ring-inner">${initial}</span></span>
+        <span class="qs-ring" style="background:${ringGradient(g.stories)}">${companyLogoHTML(g.company, 'qs-ring-inner')}</span>
         <span class="cstop-name">${esc(g.company)}</span>
       </button>`;
     }).join('');
@@ -3423,7 +3520,7 @@ if (typeof document !== 'undefined') (function () {
     // existing .gc-ring/.gc-ring-inner tokens (same look as the Investment company cards) rather than the
     // raw 56px flag glyph, which would look like a stray oversized letter without a frame around it.
     const glyph = S.cv.kind === 'company'
-      ? `<div class="cv-flag cv-companyglyph"><span class="gc-ring-inner">${esc((name || '?').trim().charAt(0).toUpperCase() || '?')}</span></div>`
+      ? `<div class="cv-flag cv-companyglyph">${companyLogoHTML(name, 'gc-ring-inner')}</div>`
       : `<div class="cv-flag">${flagOf(name)}</div>`;
     body.innerHTML = `
       ${img}
@@ -3929,6 +4026,61 @@ Give a concise, event-specific analysis - decide for yourself which structure be
   }
 
 
+  // Renders a company's ring icon - its real logo when one loads, the existing plain initial-letter circle
+  // otherwise. Used everywhere a company gets one of these rings: Investment's company cards, the Community
+  // tab, the Company Status bar, and the shared story-viewer modal's company glyph. innerClass is whichever
+  // of .qs-ring-inner/.gc-ring-inner that call site already used for the initial - kept so the existing ring
+  // CSS (size, border, background) continues to apply unchanged whichever way this renders.
+  //
+  // BUG FIX: this used to go straight to Google's public favicon service (google.com/s2/favicons) as the
+  // ONLY logo source, with the plain letter circle as the only fallback. In real use (not this sandbox,
+  // which can't reach google.com at all to test either way) that endpoint turned out to fail outright for
+  // users - it's an unofficial, undocumented Google API with "no published terms, rate limits, or uptime
+  // commitment" (it can reject or rate-limit hotlinked traffic from arbitrary third-party sites at any
+  // time, with no warning) - so every company silently fell back to its letter, which is exactly the
+  // "logos don't fetch, I just get letters" report. Fixed by trying each company's OWN site favicon FIRST
+  // (https://{domain}/favicon.ico - a standard, first-party file every real company domain is expected to
+  // serve, not a third-party service that can be blocked independently of the company's own site), with
+  // Google's endpoint kept only as a SECOND attempt, and the letter circle as the final fallback if both
+  // image loads fail. onerror chains through a small ordered list of candidate URLs instead of jumping
+  // straight to the letter on the first failure.
+  //
+  // Domain guess comes from guessLogoDomain() - same "never a hard claim" spirit as guessSymbol() guessing a
+  // ticker. Caveat carried over from the Google-only version: Google's endpoint can return a generic grey
+  // globe placeholder (a real, loadable image) for a domain with no icon on file, rather than failing in a
+  // way onerror can catch - so an occasional generic globe for an obscure/freehand company, if the direct
+  // favicon.ico attempt also fails to resolve, is the accepted trade-off of a free, no-key source.
+  function companyLogoHTML(company, innerClass) {
+    const initial = (company || '?').trim().charAt(0).toUpperCase() || '?';
+    const domain = E.guessLogoDomain(company || '');
+    if (!domain) return `<span class="${innerClass}">${esc(initial)}</span>`;
+    const encDomain = encodeURIComponent(domain);
+    // Ordered candidates: the company's own favicon.ico first (first-party, no third-party dependency),
+    // then Google's favicon service as a second attempt. '\u0001'-joined into one data attribute (';' or
+    // ',' could plausibly appear inside a URL) and consumed one at a time by the onerror handler below.
+    const candidates = [
+      'https://' + domain + '/favicon.ico',
+      'https://www.google.com/s2/favicons?sz=128&domain=' + encDomain
+    ];
+    const first = candidates[0];
+    const rest = candidates.slice(1).join('\u0001');
+    // The fallback letter/class/remaining-candidates go through data-* attributes rather than being
+    // interpolated straight into the onerror="" JS string - esc() HTML-escapes quotes (' -> &#39;) for safe
+    // use as attribute TEXT, but the browser decodes that back to a literal ' before handing onerror's
+    // string to the JS parser, which would break out of a hand-built JS string literal for any company name
+    // starting with a quote. Reading the values back out of dataset inside a fixed, argument-free handler
+    // avoids that whole class of bug. Each failure pops the next candidate off data-fallback-queue and
+    // retries the same <img>; only once the queue is empty does it give up and swap in the letter span.
+    return `<span class="${innerClass} ${innerClass}-logo">
+      <img src="${esc(first)}" alt="" loading="lazy" referrerpolicy="no-referrer"
+        data-fallback-queue="${esc(rest)}"
+        data-fallback-class="${esc(innerClass)}" data-fallback-text="${esc(initial)}"
+        onerror="var q=(this.dataset.fallbackQueue||'').split('\u0001').filter(Boolean);
+                 if(q.length){ this.src=q.shift(); this.dataset.fallbackQueue=q.join('\u0001'); }
+                 else { this.onerror=null; var s=document.createElement('span'); s.className=this.dataset.fallbackClass; s.textContent=this.dataset.fallbackText; this.replaceWith(s); }">
+    </span>`;
+  }
+
   // Thread timeline block: stories from Archive.forStory() that share a company with `it`. Synchronous -
   // reads whatever Archive's cache already has (populated by the async fetch kicked off when this card was
   // opened; see the data-act click handler's "opening" branch). Empty before that fetch resolves, same as
@@ -4060,10 +4212,9 @@ Give a concise, event-specific analysis - decide for yourself which structure be
         const body = stories.length
           ? stories.map(entryWrapHTML).join('')
           : `<p class="empty-note">${esc(t('investNoNews'))}<br><span class="empty-note-hint">${esc(t('investNoNewsHint'))}</span></p>`;
-        const initial = esc((c.company || '?').trim().charAt(0).toUpperCase() || '?');
         return `<h3 class="grp-company">
           <div class="gc-top">
-            <span class="gc-ring"><span class="gc-ring-inner">${initial}</span></span>
+            <span class="gc-ring">${companyLogoHTML(c.company, 'gc-ring-inner')}</span>
             <span class="gc-name">${esc(c.company)}</span><span class="n">${stories.length}</span>
           </div>
           <div class="gc-actions">
@@ -4102,10 +4253,9 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     if (empty) empty.hidden = true;
     const names = [...S.myCompanies].sort((a, b) => a.localeCompare(b));
     box.innerHTML = names.map(name => {
-      const initial = esc((name || '?').trim().charAt(0).toUpperCase() || '?');
       return `<div class="community-row">
         <div class="gc-top">
-          <span class="gc-ring"><span class="gc-ring-inner">${initial}</span></span>
+          <span class="gc-ring">${companyLogoHTML(name, 'gc-ring-inner')}</span>
           <span class="gc-name">${esc(name)}</span>
         </div>
         ${pulseHTML(name) || `<p class="empty-note community-pending">${esc(t('communityPending'))}</p>`}
