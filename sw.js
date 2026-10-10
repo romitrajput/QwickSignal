@@ -1,7 +1,33 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-62-v1';  // This round: second batch of the approved UX-review items (#2, #3, #5),
+const VERSION = 'gni-phase3-63-v1';  // This round: D2 from the impact review - "daily appetite". Instead of
+                                      // asking people to pick a priority floor (a question about the app's
+                                      // own vocabulary), it asks how many stories they want in a day and
+                                      // works backwards to the floor landing nearest that. No new tracking
+                                      // was needed: feed.json is a rolling 24h window, so counting the live
+                                      // stories a visitor can see IS their per-day volume by priority,
+                                      // measured rather than guessed (Appetite.volume()/ladder() in app.js).
+                                      // The resolved floor drives BOTH the feed and the push floor it
+                                      // replaces, so the two settings can't disagree; setting the tier by
+                                      // hand in Notifications switches appetite off rather than being
+                                      // silently overwritten on the next refresh.
+                                      //
+                                      // Three things found while building it, all now handled: (1) a cold
+                                      // start has an empty S.live, which would resolve to a zero-count floor
+                                      // and hide the ENTIRE feed - active() now requires a measurable feed
+                                      // before filtering anything. (2) Four priority tiers are coarse, and
+                                      // on a busy channel set every offered target (5/10/15/25/40) can
+                                      // resolve to the same rung - verified against the live feed, whose
+                                      // rungs are 24/62/126/284. The UI therefore always shows the number it
+                                      // actually resolved to, never the target, lists the full ladder with
+                                      // real counts, and says plainly when a target can't be met because
+                                      // going lower would mean holding back Critical stories. (3) Nothing is
+                                      // ever removed: everything below the floor stays one tap away at the
+                                      // bottom of the feed, with its exact count stated, and that reveal is
+                                      // session-only so it never quietly undoes the setting.
+                                      //
+                                      // Previous round (gni-phase3-62-v1): second batch of the approved UX-review items (#2, #3, #5),
                                       // all free of any paid service per the owner's standing constraint.
                                       // (1) #2 "since you left" digest: a dismissible summary card at the
                                       // top of Signals counting the unread stories that arrived while the

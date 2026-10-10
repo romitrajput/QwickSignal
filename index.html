@@ -174,6 +174,33 @@ input[type=search]:focus-visible{border-color:var(--accent);box-shadow:0 0 0 4px
 .lp-add input:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .lp-syncnote{margin:8px 0 0;font-size:13px;color:var(--ink2)}
 
+/* Settings -> Daily appetite (rendered by renderAppetiteBox() in app.js). */
+.ap-choices{display:flex;flex-wrap:wrap;gap:8px}
+.ap-choice{min-width:52px;min-height:44px;padding:0 14px;border-radius:var(--radius-ctrl);border:1.5px solid var(--line);
+  background:var(--surface);color:var(--ink);font:inherit;font-size:15px;font-weight:800;cursor:pointer;
+  font-variant-numeric:tabular-nums}
+.ap-choice.wide{font-size:13.5px;font-weight:700}
+.ap-choice.active{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.ap-choice:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.ap-readout{margin-top:18px}
+.ap-big{font-size:32px;font-weight:800;letter-spacing:-.025em;font-variant-numeric:tabular-nums;line-height:1.05}
+.ap-big span{font-size:14px;font-weight:700;color:var(--ink2);letter-spacing:0}
+.ap-note{margin:8px 0 0;font-size:13.5px;color:var(--ink2);line-height:1.5;max-width:52ch}
+.ap-note b{color:var(--ink)}
+.ap-ladder{margin-top:20px;border-top:1px solid var(--line);padding-top:14px}
+.ap-ladhead{margin:0 0 8px;font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2)}
+.ap-rung{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 11px;
+  border:1px solid transparent;font-size:13.5px;color:var(--ink2)}
+.ap-rung.active{border-color:var(--ink);background:var(--surface);color:var(--ink);font-weight:700}
+.ap-rc{font-weight:800;font-variant-numeric:tabular-nums;flex:none}
+.ap-foot{margin:14px 0 0;font-size:12.5px;color:var(--ink2);line-height:1.5;max-width:54ch}
+
+/* The row closing the feed when an appetite is set - see appetiteRestHTML() in app.js. */
+.appetite-rest{margin:18px 0 8px;padding:16px 16px 18px;border-top:1.5px solid var(--line);text-align:center}
+.appetite-rest .ar-title{margin:0;font-size:15px;font-weight:800;color:var(--ink)}
+.appetite-rest .ar-sub{margin:6px 0 0;font-size:13.5px;color:var(--ink2);line-height:1.5}
+.appetite-rest .btn{margin-top:12px}
+
 /* Per-device alert preferences inside Settings -> Notifications (rendered by renderNotifBox() in app.js).
    Only shown once notifications are actually on, so these never appear as dead controls. */
 .notif-prefs{margin-top:18px;padding-top:4px;border-top:1px solid var(--line);display:flex;flex-direction:column}
@@ -994,6 +1021,18 @@ body.pre-app .top, body.pre-app main, body.pre-app .tabs{display:none}
           <button type="button" data-theme-choice="light" data-i18n="themeLight">Light</button>
           <button type="button" data-theme-choice="dark" data-i18n="themeDark">Dark</button>
         </div>
+      </div>
+    </div>
+
+    <!-- Daily appetite: how much news this person wants per day. The box is filled by renderAppetiteBox()
+         in app.js, which measures what their channels actually produce and resolves it to a priority
+         floor - see the Appetite module there. -->
+    <div class="settingspage sp-hidden" id="sp-appetite">
+      <button type="button" class="settingspage-back" data-act="spback"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>Settings</button>
+      <div class="lp-block">
+        <h2 class="lp-h" data-i18n="appetiteHeading">Daily appetite</h2>
+        <p class="lp-sub" data-i18n="appetiteSub">Say how much news you want in a day. QwickSignal works out which priorities to lead with, and adjusts as the volume changes.</p>
+        <div id="appetiteBox"></div>
       </div>
     </div>
 

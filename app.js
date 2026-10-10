@@ -965,6 +965,21 @@ if (typeof document !== 'undefined') (function () {
       loginToLinkChannels: 'Log in to link Telegram channels.',
       appearanceHeading: 'Appearance', appearanceSub: 'Choose how QwickSignal looks on this device.',
       themeSystem: 'System', themeLight: 'Light', themeDark: 'Dark',
+      appetiteHeading: 'Daily appetite', appetiteSub: 'Say how much news you want in a day. QwickSignal works out which priorities to lead with, and adjusts as the volume changes.',
+      appetiteAll: 'Everything', appetitePerDay: 'stories a day',
+      appetiteResolved: 'To land near that, QwickSignal is holding the bar at',
+      appetiteApprox: 'Priorities come in four steps, so this is the closest it can get.',
+      appetiteFloorNote: "You asked for fewer, but going below this would mean holding back Critical stories.",
+      appetiteOffNote: 'No filtering. Everything in your channels reaches the feed.',
+      appetiteNoData: 'Once stories come in, this will show how many a day your channels produce.',
+      appetiteLadderHead: 'What your channels are producing right now, per day',
+      appetiteKeptNote: 'Nothing is ever deleted. Lower-priority stories stay in the app, one tap from the bottom of your feed.',
+      appetitePushNote: 'This also decides which stories are allowed to notify you.',
+      appetiteDoneTitle: "That's your news for today.",
+      appetiteRestSub: 'lower-priority stories are still here.',
+      appetiteRestBtn: 'Show the rest', appetiteShowingAll: 'Showing everything, including stories below your daily amount.',
+      appetiteFoldBtn: 'Back to my daily amount',
+      notifAppetiteManaged: 'Set by your daily appetite. Changing it here switches that off.',
       notifHeading: 'Notifications', notifSub: "Get a notification on this device when a new story arrives - even when the app isn't open.",
       notifEnable: 'Turn on notifications', notifDisable: 'Turn off notifications', notifOn: 'Notifications are on for this device.',
       notifUnsupported: "This browser doesn't support push notifications.",
@@ -1044,6 +1059,21 @@ if (typeof document !== 'undefined') (function () {
       loginToLinkChannels: 'टेलीग्राम चैनल लिंक करने के लिए साइन इन करें।',
       appearanceHeading: 'दिखावट', appearanceSub: 'इस डिवाइस पर क्विकसिग्नल कैसा दिखे, यह चुनें।',
       themeSystem: 'सिस्टम', themeLight: 'लाइट', themeDark: 'डार्क',
+      appetiteHeading: 'रोज़ कितनी खबरें', appetiteSub: 'बताएं कि आपको दिन में कितनी खबरें चाहिए। QwickSignal तय करेगा कि कौन-सी प्राथमिकताएं सबसे पहले दिखें, और खबरों की संख्या बदलने पर खुद बदलता रहेगा।',
+      appetiteAll: 'सब कुछ', appetitePerDay: 'खबरें रोज़',
+      appetiteResolved: 'इसके आसपास रहने के लिए QwickSignal ने स्तर रखा है',
+      appetiteApprox: 'प्राथमिकताएं चार स्तरों में हैं, इसलिए यह सबसे नज़दीकी आंकड़ा है।',
+      appetiteFloorNote: 'आपने इससे कम मांगा था, पर इससे नीचे जाने का मतलब होगा अति-महत्वपूर्ण खबरें रोकना।',
+      appetiteOffNote: 'कोई छंटाई नहीं। आपके चैनलों की हर खबर फ़ीड में आएगी।',
+      appetiteNoData: 'खबरें आने के बाद यहां दिखेगा कि आपके चैनल रोज़ कितनी खबरें देते हैं।',
+      appetiteLadderHead: 'आपके चैनल अभी रोज़ कितनी खबरें दे रहे हैं',
+      appetiteKeptNote: 'कुछ भी मिटाया नहीं जाता। कम प्राथमिकता वाली खबरें ऐप में रहती हैं, फ़ीड के नीचे एक टैप दूर।',
+      appetitePushNote: 'इससे यह भी तय होता है कि कौन-सी खबरें आपको सूचना भेज सकती हैं।',
+      appetiteDoneTitle: 'आज की ज़रूरी खबरें हो गईं।',
+      appetiteRestSub: 'कम प्राथमिकता वाली खबरें अब भी यहां हैं।',
+      appetiteRestBtn: 'बाकी दिखाएं', appetiteShowingAll: 'सब कुछ दिख रहा है, आपकी रोज़ की संख्या से नीचे की खबरें भी।',
+      appetiteFoldBtn: 'वापस मेरी रोज़ की संख्या पर',
+      notifAppetiteManaged: 'यह आपकी रोज़ की संख्या से तय होता है। यहां बदलने पर वह बंद हो जाएगा।',
       notifHeading: 'सूचनाएं', notifSub: 'जब कोई नई खबर आए तो इस डिवाइस पर सूचना पाएं - ऐप खुला न होने पर भी।',
       notifEnable: 'सूचनाएं चालू करें', notifDisable: 'सूचनाएं बंद करें', notifOn: 'इस डिवाइस के लिए सूचनाएं चालू हैं।',
       notifUnsupported: 'यह ब्राउज़र पुश सूचनाओं का समर्थन नहीं करता।',
@@ -1111,6 +1141,21 @@ if (typeof document !== 'undefined') (function () {
       loginToLinkChannels: 'टेलिग्राम चॅनेल लिंक करण्यासाठी साइन इन करा.',
       appearanceHeading: 'दिसावा', appearanceSub: 'या डिव्हाइसवर क्विकसिग्नल कसे दिसावे ते निवडा.',
       themeSystem: 'सिस्टम', themeLight: 'लाइट', themeDark: 'डार्क',
+      appetiteHeading: 'रोज किती बातम्या', appetiteSub: 'तुम्हाला दिवसातून किती बातम्या हव्यात ते सांगा. QwickSignal कोणत्या प्राधान्याच्या बातम्या आधी दाखवायच्या हे ठरवेल आणि संख्या बदलल्यावर स्वतः जुळवून घेईल.',
+      appetiteAll: 'सर्व काही', appetitePerDay: 'बातम्या रोज',
+      appetiteResolved: 'त्याच्या जवळ राहण्यासाठी QwickSignal ने पातळी ठेवली आहे',
+      appetiteApprox: 'प्राधान्ये चार पायऱ्यांत आहेत, त्यामुळे हा सर्वात जवळचा आकडा आहे.',
+      appetiteFloorNote: 'तुम्ही यापेक्षा कमी मागितले होते, पण याच्या खाली जाणे म्हणजे अति-महत्त्वाच्या बातम्या रोखणे.',
+      appetiteOffNote: 'कोणतेही गाळणे नाही. तुमच्या चॅनेलमधील प्रत्येक बातमी फीडमध्ये येईल.',
+      appetiteNoData: 'बातम्या आल्यावर इथे दिसेल की तुमचे चॅनेल रोज किती बातम्या देतात.',
+      appetiteLadderHead: 'तुमचे चॅनेल सध्या रोज किती बातम्या देत आहेत',
+      appetiteKeptNote: 'काहीही हटवले जात नाही. कमी प्राधान्याच्या बातम्या अ‍ॅपमध्येच राहतात, फीडच्या तळाशी एका टॅपवर.',
+      appetitePushNote: 'यावरून हेही ठरते की कोणत्या बातम्या तुम्हाला सूचना पाठवू शकतात.',
+      appetiteDoneTitle: 'आजच्या महत्त्वाच्या बातम्या झाल्या.',
+      appetiteRestSub: 'कमी प्राधान्याच्या बातम्या अजूनही इथे आहेत.',
+      appetiteRestBtn: 'बाकीच्या दाखवा', appetiteShowingAll: 'सर्व काही दिसत आहे, तुमच्या रोजच्या संख्येखालील बातम्यांसह.',
+      appetiteFoldBtn: 'परत माझ्या रोजच्या संख्येवर',
+      notifAppetiteManaged: 'हे तुमच्या रोजच्या संख्येवरून ठरते. इथे बदलल्यास ते बंद होईल.',
       notifHeading: 'सूचना', notifSub: 'नवीन बातमी आल्यावर या डिव्हाइसवर सूचना मिळवा - अ‍ॅप उघडे नसतानाही.',
       notifEnable: 'सूचना चालू करा', notifDisable: 'सूचना बंद करा', notifOn: 'या डिव्हाइससाठी सूचना चालू आहेत.',
       notifUnsupported: 'हा ब्राउझर पुश सूचनांना सपोर्ट करत नाही.',
@@ -1178,6 +1223,21 @@ if (typeof document !== 'undefined') (function () {
       loginToLinkChannels: 'ટેલિગ્રામ ચેનલ લિંક કરવા સાઇન ઇન કરો.',
       appearanceHeading: 'દેખાવ', appearanceSub: 'આ ડિવાઇસ પર ક્વિકસિગ્નલ કેવું દેખાય તે પસંદ કરો.',
       themeSystem: 'સિસ્ટમ', themeLight: 'લાઇટ', themeDark: 'ડાર્ક',
+      appetiteHeading: 'રોજ કેટલા સમાચાર', appetiteSub: 'તમને દિવસમાં કેટલા સમાચાર જોઈએ તે જણાવો. QwickSignal નક્કી કરશે કે કઈ પ્રાથમિકતા પહેલાં બતાવવી, અને સંખ્યા બદલાતાં જાતે ગોઠવાશે.',
+      appetiteAll: 'બધું', appetitePerDay: 'સ્ટોરી રોજ',
+      appetiteResolved: 'તેની નજીક રહેવા માટે QwickSignal એ સ્તર રાખ્યું છે',
+      appetiteApprox: 'પ્રાથમિકતા ચાર પગથિયાંમાં છે, તેથી આ સૌથી નજીકનો આંકડો છે.',
+      appetiteFloorNote: 'તમે આનાથી ઓછું માગ્યું હતું, પણ આનાથી નીચે જવાનો અર્થ અતિ-મહત્વની સ્ટોરી રોકવી થાય.',
+      appetiteOffNote: 'કોઈ ગાળણી નહીં. તમારી ચેનલની દરેક સ્ટોરી ફીડમાં આવશે.',
+      appetiteNoData: 'સ્ટોરી આવ્યા પછી અહીં દેખાશે કે તમારી ચેનલો રોજ કેટલી સ્ટોરી આપે છે.',
+      appetiteLadderHead: 'તમારી ચેનલો હાલમાં રોજ કેટલી સ્ટોરી આપે છે',
+      appetiteKeptNote: 'કશું કાઢી નખાતું નથી. ઓછી પ્રાથમિકતાની સ્ટોરી ઍપમાં જ રહે છે, ફીડના તળિયે એક ટૅપ દૂર.',
+      appetitePushNote: 'આનાથી એ પણ નક્કી થાય છે કે કઈ સ્ટોરી તમને નોટિફિકેશન મોકલી શકે.',
+      appetiteDoneTitle: 'આજના મહત્વના સમાચાર પૂરા.',
+      appetiteRestSub: 'ઓછી પ્રાથમિકતાની સ્ટોરી હજી અહીં છે.',
+      appetiteRestBtn: 'બાકીની બતાવો', appetiteShowingAll: 'બધું દેખાઈ રહ્યું છે, તમારી રોજની સંખ્યાથી નીચેની સ્ટોરી સહિત.',
+      appetiteFoldBtn: 'પાછા મારી રોજની સંખ્યા પર',
+      notifAppetiteManaged: 'આ તમારી રોજની સંખ્યાથી નક્કી થાય છે. અહીં બદલવાથી તે બંધ થશે.',
       notifHeading: 'નોટિફિકેશન', notifSub: 'નવી સ્ટોરી આવે ત્યારે આ ડિવાઇસ પર નોટિફિકેશન મેળવો - ઍપ ખુલ્લી ન હોય ત્યારે પણ.',
       notifEnable: 'નોટિફિકેશન ચાલુ કરો', notifDisable: 'નોટિફિકેશન બંધ કરો', notifOn: 'આ ડિવાઇસ માટે નોટિફિકેશન ચાલુ છે.',
       notifUnsupported: 'આ બ્રાઉઝર પુશ નોટિફિકેશનને સપોર્ટ કરતું નથી.',
@@ -1362,6 +1422,100 @@ if (typeof document !== 'undefined') (function () {
     const hl = box.querySelector('.digest-headline button');
     if (hl) hl.addEventListener('click', () => { box.hidden = true; gotoItem(hl.dataset.id); });
   }
+
+  /* ---------- Appetite: how much news this person actually wants ----------
+     The priority floor in Settings > Notifications asks people to think in the app's own vocabulary
+     ("High and above"), which is a question about how QwickSignal classifies things rather than a
+     question about their life. This asks the one they can answer without knowing anything about the
+     app - "about 15 stories a day" - and works backwards to the floor that lands nearest it.
+
+     No new tracking is needed to do that. feed.json is a rolling 24-hour window (prune() in
+     pipeline.py), so simply counting the live stories this visitor can see IS their stories-per-day
+     figure, broken down by priority, measured rather than guessed.
+
+     Two honesty constraints shape the whole feature:
+       1. Four priority tiers are coarse, so an exact match to a target is usually impossible. Every
+          screen shows the number it actually resolved to, never the target, and the full ladder of
+          options with their real counts is visible so the choice can be made directly instead.
+       2. Nothing is ever deleted or permanently hidden. Everything below the floor stays in the app,
+          one tap away, and the feed says plainly how much is sitting there.
+
+     Device-local (like Theme and language), and it drives the push floor it replaces - see syncPush()
+     below and the note in renderNotifBox(). */
+  const APPETITE_KEY = 'qs-appetite-v1';
+  const APPETITE_CHOICES = [5, 10, 15, 25, 40];   // plus 0, meaning "everything, don't filter"
+  const Appetite = {
+    // Session-only: "Show the rest" reveals everything below the floor until the next launch. Kept out
+    // of storage deliberately, so revealing once doesn't quietly undo the setting for good.
+    revealed: false,
+
+    target() {
+      try {
+        const n = parseInt(localStorage.getItem(APPETITE_KEY), 10);
+        return APPETITE_CHOICES.includes(n) ? n : 0;
+      } catch (e) { return 0; }
+    },
+    set(n) {
+      const v = APPETITE_CHOICES.includes(n) ? n : 0;
+      try {
+        if (v) localStorage.setItem(APPETITE_KEY, String(v));
+        else localStorage.removeItem(APPETITE_KEY);
+      } catch (e) { /* private browsing: holds for this session only */ }
+      this.revealed = false;
+      track('appetite_set', { target: v });
+      this.syncPush();
+    },
+    on() { return this.target() > 0; },
+
+    // Stories per day by priority, for this visitor's channel selection.
+    volume() {
+      const v = { Critical: 0, High: 0, Medium: 0, Low: 0 };
+      visibleItems().forEach(it => { if (it.live && v[it.importance] != null) v[it.importance]++; });
+      return v;
+    },
+    // The four choosable floors with their cumulative daily counts, most important first.
+    ladder() {
+      const v = this.volume();
+      let run = 0;
+      return E.IMP_ORDER.map(lv => { run += v[lv]; return { floor: lv, own: v[lv], count: run }; });
+    },
+    // The floor landing nearest the target. Ties and overshoots are both possible and both fine - what
+    // matters is that the resolved count is what gets displayed.
+    solve(target) {
+      const t = target == null ? this.target() : target;
+      const rungs = this.ladder();
+      const all = rungs[rungs.length - 1];
+      if (!t) return { floor: 'Low', count: all.count, over: false };
+      let best = rungs[0];
+      rungs.forEach(r => { if (Math.abs(r.count - t) < Math.abs(best.count - t)) best = r; });
+      return { floor: best.floor, count: best.count, over: best.count > t };
+    },
+    // Active only when a target is set AND there is a real feed to measure. Without the second check a
+    // cold start (S.live still empty) would resolve to a zero-count floor and hide the entire feed.
+    active() {
+      if (!this.on()) return false;
+      const rungs = this.ladder();
+      return rungs[rungs.length - 1].count > 0;
+    },
+    floor() { return this.active() ? this.solve().floor : 'Low'; },
+    allows(it) { return E.impRank(it.importance) >= E.impRank(this.floor()); },
+    // How many stories this visitor would otherwise see are sitting below the floor right now.
+    hidden() {
+      if (!this.active()) return 0;
+      const r = E.impRank(this.floor());
+      return visibleItems().filter(it => E.impRank(it.importance) < r).length;
+    },
+
+    /* The resolved floor also becomes the push floor, so "about 15 a day" governs what interrupts you
+       as well as what the feed leads with - otherwise the two settings would quietly disagree. Only
+       ever raises or lowers min_imp while appetite is on; turning appetite off leaves the last value in
+       place rather than resetting a choice the person may now want to keep. */
+    syncPush() {
+      if (!this.active() || !Push.isOn()) return;
+      const want = this.solve().floor;
+      if (Push.prefs().minImp !== want) Push.savePrefs({ minImp: want });
+    }
+  };
 
   /* ---------- Multilingual news content (headline/summary/why/facts) ----------
      A follow-up to the UI-only translation above: the person asked for the news itself to translate too, not
@@ -2249,6 +2403,57 @@ if (typeof document !== 'undefined') (function () {
     $$('.gatabs button', box).forEach(b => b.addEventListener('click', () => { gaTab = b.dataset.v; renderGetApp(); }));
   }
 
+  // Settings > Daily appetite. The ladder underneath the choice is deliberately informational rather
+  // than a second set of controls: there is one thing to decide here (how much), and the ladder exists
+  // so the number it resolves to is never a surprise.
+  const APPETITE_IMP_KEY = { Critical: 'notifImpCritical', High: 'notifImpHigh', Medium: 'notifImpMedium', Low: 'notifImpLow' };
+  function renderAppetiteBox() {
+    const box = $('#appetiteBox');
+    if (!box) return;
+    const target = Appetite.target();
+    const rungs = Appetite.ladder();
+    const total = rungs[rungs.length - 1].count;
+    const activeFloor = Appetite.active() ? Appetite.floor() : '';
+
+    const choices = APPETITE_CHOICES
+      .map(n => `<button type="button" class="ap-choice${target === n ? ' active' : ''}" data-act="appetiteSet" data-v="${n}" aria-pressed="${target === n}">${n}</button>`)
+      .join('') +
+      `<button type="button" class="ap-choice wide${target === 0 ? ' active' : ''}" data-act="appetiteSet" data-v="0" aria-pressed="${target === 0}">${esc(t('appetiteAll'))}</button>`;
+
+    let readout;
+    if (!total) {
+      // Cold start, or a channel selection with nothing in it yet - say so rather than show a zero.
+      readout = `<p class="ap-note">${esc(t('appetiteNoData'))}</p>`;
+    } else if (target) {
+      const r = Appetite.solve();
+      // A target below the Critical count can't be honoured: the only way to deliver fewer would be to
+      // hold back Critical stories, which this never does. Saying so plainly matters, because on a busy
+      // channel set several of the offered targets land on this same floor - leaving that unexplained
+      // would make the choices look interchangeable, or worse, ignored.
+      const forced = r.floor === 'Critical' && r.count > target;
+      readout = `<div class="ap-big">${r.count} <span>${esc(t('appetitePerDay'))}</span></div>
+        <p class="ap-note">${esc(t('appetiteResolved'))} <b>${esc(t(APPETITE_IMP_KEY[r.floor]))}</b>.
+        ${esc(forced ? t('appetiteFloorNote') : t('appetiteApprox'))}</p>`;
+    } else {
+      readout = `<div class="ap-big">${total} <span>${esc(t('appetitePerDay'))}</span></div>
+        <p class="ap-note">${esc(t('appetiteOffNote'))}</p>`;
+    }
+
+    const ladder = total ? `<div class="ap-ladder">
+        <p class="ap-ladhead">${esc(t('appetiteLadderHead'))}</p>
+        ${rungs.map(r => `<div class="ap-rung${activeFloor === r.floor ? ' active' : ''}">
+            <span class="ap-rl">${esc(t(APPETITE_IMP_KEY[r.floor]))}</span>
+            <span class="ap-rc">${r.count}</span>
+          </div>`).join('')}
+      </div>` : '';
+
+    box.innerHTML = `<div class="ap-choices" role="group" aria-label="${esc(t('appetiteHeading'))}">${choices}</div>
+      <div class="ap-readout">${readout}</div>
+      ${ladder}
+      <p class="ap-foot">${esc(t('appetiteKeptNote'))}</p>
+      ${target ? `<p class="ap-foot">${esc(t('appetitePushNote'))}</p>` : ''}`;
+  }
+
   function renderNotifBox() {
     const box = $('#notifBox');
     if (!box) return;
@@ -2272,7 +2477,7 @@ if (typeof document !== 'undefined') (function () {
             ${PUSH_IMP_TIERS.map(k => `<option value="${k}"${p.minImp === k ? ' selected' : ''}>${esc(impLabels[k])}</option>`).join('')}
           </select>
         </div>
-        <p class="np-hint">${t('notifTierHint')}</p>
+        <p class="np-hint">${Appetite.on() ? esc(t('notifAppetiteManaged')) : t('notifTierHint')}</p>
         <div class="np-row">
           <label class="np-label" for="npQuiet">${t('notifQuietLabel')}</label>
           <input type="checkbox" id="npQuiet" class="np-check"${p.quiet ? ' checked' : ''}>
@@ -2300,7 +2505,14 @@ if (typeof document !== 'undefined') (function () {
       renderNotifBox();
     });
     const minImp = $('#npMinImp'), quiet = $('#npQuiet'), digest = $('#npDigest');
-    if (minImp) minImp.addEventListener('change', () => Push.savePrefs({ minImp: minImp.value }));
+    if (minImp) minImp.addEventListener('change', () => {
+      // Setting the floor by hand takes it back off the daily appetite. Without this the next feed
+      // refresh would quietly overwrite the choice just made here, which is the kind of disagreement
+      // between two settings that makes an app feel broken.
+      if (Appetite.on()) { Appetite.set(0); renderSettingsNav(); }
+      Push.savePrefs({ minImp: minImp.value });
+      renderNotifBox();
+    });
     if (quiet) quiet.addEventListener('change', () => Push.savePrefs({ quiet: quiet.checked }));
     if (digest) digest.addEventListener('change', () => Push.savePrefs({ digest: digest.value }));
   }
@@ -3378,6 +3590,12 @@ if (typeof document !== 'undefined') (function () {
       if (skip !== 'country' && f.country && it.country !== f.country && !(it.involved || []).includes(f.country)) return false;
       if (skip !== 'sector' && f.sector && it.sector !== f.sector) return false;
       if (skip !== 'imp' && f.imp && it.importance !== f.imp) return false;
+      // Daily appetite (see the Appetite module): holds back everything below the resolved floor until
+      // "Show the rest" is tapped. Three deliberate exemptions - a saved story is never hidden, an
+      // explicit priority selection always wins over the automatic floor, and the priority dropdown's
+      // own counts (skip === 'imp') stay true so a tier never reads "0" when choosing it would reveal it.
+      if (skip !== 'imp' && st !== 'saved' && !f.imp && Appetite.active() && !Appetite.revealed
+        && !Appetite.allows(it)) return false;
       if (q && !(it.headline + ' ' + it.summary + ' ' + it.country + ' ' + it.sector + ' ' + it.subsector + ' ' + (it.companies || []).join(' ') + ' ' + it.text).toLowerCase().includes(q)) return false;
       return true;
     });
@@ -4513,7 +4731,14 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       // hiding items that simply expired or were dismissed is not a "filter" the person set, so it gets a plainer
       // message instead of a button that clears nothing meaningful.
       const hasRealFilter = !!(S.f.country || S.f.sector || S.f.imp || S.f.q);
-      box.innerHTML = hasRealFilter
+      const heldBack = Appetite.hidden();
+      box.innerHTML = (!hasRealFilter && heldBack)
+        // Nothing cleared the appetite floor today. That is the feature working, not an empty feed, so it
+        // says so and offers the way through instead of "Nothing here right now".
+        ? `<div class="empty"><p>${esc(t('appetiteDoneTitle'))}</p>
+            <p>${heldBack} ${esc(t('appetiteRestSub'))}</p>
+            <button class="btn" data-act="appetiteRest">${esc(t('appetiteRestBtn'))}</button></div>`
+        : hasRealFilter
         ? `<div class="empty"><p>No items match these filters.</p><button class="btn" data-act="reset">Clear filters</button></div>`
         : `<div class="empty"><p>Nothing here right now.</p><p>Stories move here as they come in, and drop off the list automatically after 24 hours unless you save them.</p></div>`;
       seenObserveVisible(box);
@@ -4532,8 +4757,28 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       [...map.entries()].sort((a, b) => E.impRank(b[1][0].importance) - E.impRank(a[1][0].importance) || b[1].length - a[1].length)
         .forEach(([k, g]) => { html += groupHead((key === 'country' ? flagOf(k) + ' ' : '') + esc(k), g.length) + g.map(entryWrapHTML).join(''); });
     }
-    box.innerHTML = html;
+    box.innerHTML = html + appetiteRestHTML();
     seenObserveVisible(box);
+  }
+
+  /* The row closing the feed when a daily appetite is set. It is always present while anything is held
+     back, and it states the count: a filter that quietly shrinks someone's feed without saying by how
+     much is precisely what makes people stop trusting it and go back to reading everything. */
+  function appetiteRestHTML() {
+    if (!Appetite.active()) return '';
+    if (Appetite.revealed) {
+      return `<div class="appetite-rest">
+          <p class="ar-sub">${esc(t('appetiteShowingAll'))}</p>
+          <button class="btn small" data-act="appetiteFold">${esc(t('appetiteFoldBtn'))}</button>
+        </div>`;
+    }
+    const n = Appetite.hidden();
+    if (!n) return '';
+    return `<div class="appetite-rest">
+        <p class="ar-title">${esc(t('appetiteDoneTitle'))}</p>
+        <p class="ar-sub">${n} ${esc(t('appetiteRestSub'))}</p>
+        <button class="btn small" data-act="appetiteRest">${esc(t('appetiteRestBtn'))}</button>
+      </div>`;
   }
 
   // Saved is split by mode, same as the main feed: a saved story that's tagged with one of the user's
@@ -4868,6 +5113,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     { id: 'appearance', mode: null, icon: 'theme', title: 'Appearance', subKey: () => THEME_LABEL[Theme.pref()] || 'System', count: null },
     { id: 'newschannels', mode: 'news', icon: 'wifi', title: 'Telegram channels for News', subKey: () => S.myChannels.size + ' linked', count: () => S.myChannels.size },
     { id: 'investwatchlist', mode: 'investment', icon: 'candle', title: 'Investment watchlist & channels', subKey: () => S.myCompanies.size + ' tracked · ' + S.myInvestChannels.size + ' channels', count: () => S.myCompanies.size + S.myInvestChannels.size },
+    { id: 'appetite', mode: null, icon: 'gauge', title: 'Daily appetite', subKey: () => Appetite.on() ? Appetite.target() + ' stories a day' : 'Everything', count: null },
     { id: 'notifications', mode: null, icon: 'bell', title: 'Notifications', subKey: () => 'New story alerts', count: null },
     { id: 'export', mode: null, icon: 'export', title: 'Export', subKey: () => 'Save a report or the raw table', count: null },
     { id: 'getapp', mode: null, icon: 'plus', title: 'Get the app', subKey: () => 'Install on this device', count: null },
@@ -4878,6 +5124,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     wifi: '<path d="M2 8.5a19 19 0 0 1 20 0M5.5 12.5a13.5 13.5 0 0 1 13 0M9 16.5a7.5 7.5 0 0 1 6 0"/><circle cx="12" cy="20" r="1.2" fill="currentColor" stroke="none"/>',
     candle: '<rect x="4" y="9" width="3.4" height="9" rx="1"/><rect x="10.3" y="4" width="3.4" height="12" rx="1"/><rect x="16.6" y="11" width="3.4" height="7" rx="1"/>',
     bell: '<path d="M12 2a7 7 0 0 1 7 7c0 5 2 7 2 7H3s2-2 2-7a7 7 0 0 1 7-7z"/><path d="M9.5 19a2.5 2.5 0 0 0 5 0"/>',
+    gauge: '<path d="M3.5 18a8.5 8.5 0 1 1 17 0"/><path d="M12 18l4.2-4.8"/><circle cx="12" cy="18" r="1.3" fill="currentColor" stroke="none"/>',
     plus: '<path d="M12 4v16M4 12h16"/>',
     help: '<circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/>',
     export: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>'
@@ -4925,6 +5172,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     window.scrollTo(0, 0);
     track('settings_section_open', { section: id });
     if (id === 'export') renderExport();
+    if (id === 'appetite') renderAppetiteBox();
   }
   function closeSettingsPage() {
     $$('.settingspage').forEach(p => p.classList.add('sp-hidden'));
@@ -4961,7 +5209,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     // the Settings tab, re-render its dynamic bits on every visit so they're never stale (e.g. after signing
     // in from the landing page while this tab wasn't open yet).
     if (name === 'settings') {
-      renderAccount(); renderChannels(); renderInvestChannels(); renderSyncCode(); renderGetApp(); renderNotifBox(); renderTicketBox(); renderTicketAdmin(); renderInvestmentBox();
+      renderAccount(); renderChannels(); renderInvestChannels(); renderSyncCode(); renderGetApp(); renderAppetiteBox(); renderNotifBox(); renderTicketBox(); renderTicketAdmin(); renderInvestmentBox();
       renderSettingsNav();
       // Always land on the destinations list, never a sub-page left open from a previous visit - a user who
       // drilled into Notifications last time and then switched tabs would otherwise find Settings reopening
@@ -5128,6 +5376,9 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       else if (act === 'fc') { S.f.country = S.f.country === v ? '' : v; renderControls(); renderList(); }
       else if (act === 'fs') { S.f.sector = S.f.sector === v ? '' : v; renderControls(); renderList(); }
       else if (act === 'reset') { S.f = Object.assign(S.f, { country: '', sector: '', imp: '', q: '', range: 'all' }); $('#q').value = ''; if (S.mode === 'investment') renderInvestmentList(); else { renderControls(); renderList(); } }
+      else if (act === 'appetiteSet') { Appetite.set(parseInt(v, 10) || 0); renderAppetiteBox(); renderSettingsNav(); renderControls(); renderList(); }
+      else if (act === 'appetiteRest') { Appetite.revealed = true; track('appetite_reveal', {}); renderControls(); renderList(); }
+      else if (act === 'appetiteFold') { Appetite.revealed = false; renderControls(); renderList(); window.scrollTo(0, 0); }
       else if (act === 'refresh') { await loadLive(true); }
       else if (act === 'tgfollow') {
         // Follow/unfollow used to fire-and-forget via Sync.pushSoon() (a 600ms-debounced background save) -
@@ -5605,6 +5856,9 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     Promise.all([Auth.restore().then(() => Sync.init()), firstLoad]).then(() => {
       renderAccount(); renderSyncCode(); renderChannels(); renderAll();
       renderDigest(awaySince);
+      // Once per launch, not on every 2-minute poll: the resolved floor moves with the day's volume, and
+      // re-pushing it to Firestore each time the feed ticks would churn for no benefit.
+      Appetite.syncPush();
     });
     if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
       window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').then(reg => {
