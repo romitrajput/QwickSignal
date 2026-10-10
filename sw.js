@@ -1,7 +1,25 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-63-v1';  // This round: D2 from the impact review - "daily appetite". Instead of
+const VERSION = 'gni-phase3-64-v1';  // This round: data-loss fix. Tracked companies, linked company channels
+                                      // and saved stories all vanished after signing out and back in.
+                                      // ROOT CAUSE: since 084ed30 every save has carried an investChannels
+                                      // field that firestore.rules' hasOnly() list never allowed, so
+                                      // Firestore refused every save outright, for every user. The device's
+                                      // own copy hid it; sign-out cleared that copy; sign-in pulled the
+                                      // server's stale one. (The earlier "companies vanish on restart" fix,
+                                      // gni-phase3-60, treated a symptom of this same rejection.)
+                                      // Fixed in firestore.rules, plus four guards in app.js so this class
+                                      // of failure can't silently destroy data again: sign-out now finishes
+                                      // any pending save first and, if the server can't confirm it, keeps a
+                                      // per-account copy that the next sign-in restores; push() never writes
+                                      // until it has read the server copy (signing in offline could
+                                      // otherwise overwrite an account with an empty screen); reviewed and
+                                      // dismissed are trimmed to their newest 2000 ids, because the 5000 cap
+                                      // was ~18 days from rejecting every save again; and a save the server
+                                      // REFUSES is now logged and shown once instead of failing silently.
+                                      //
+                                      // Previous round (gni-phase3-63-v1): D2 from the impact review - "daily appetite". Instead of
                                       // asking people to pick a priority floor (a question about the app's
                                       // own vocabulary), it asks how many stories they want in a day and
                                       // works backwards to the floor landing nearest that. No new tracking

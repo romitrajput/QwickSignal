@@ -1701,6 +1701,7 @@ if (typeof document !== 'undefined') (function () {
   const SYNC_KEY = 'qs-sync-code-v1';
   const SYNC_CACHE_KEY = 'qs-sync-cache-v1';
   const SYNC_DIRTY_KEY = 'qs-sync-dirty-v1';   // see pushSoon()/push()/init() below for what this guards against
+  const SYNC_RECENT_CAP = 2000;   // reviewed/dismissed ids kept in sync - see snapshot(); firestore.rules allows 5000
   const FIREBASE = {
     // Public web config: safe to ship in client code. Firestore access is controlled by server-side Security
     // Rules (see firestore.rules in the repo), not by keeping this object secret.
@@ -1999,12 +2000,80 @@ if (typeof document !== 'undefined') (function () {
 
     // Snapshot of S's syncable fields, as a plain object - shared by the immediate cache write below and
     // the (possibly much later) network push, so both always agree on exactly what "current state" means.
+    //
+    // BUG FIX: reviewed and dismissed were never pruned, and firestore.rules caps each at 5000 entries. The
+    // app marks every story scrolled past as reviewed (SeenTracker), and the feed publishes ~280 stories a
+    // day, so an active reader crosses 5000 in under three weeks - at which point Firestore rejects the
+    // ENTIRE document on every save and nothing (companies, channels, saved stories) syncs again. Both
+    // lists only matter for stories still in the 24-hour feed, so keeping the most recent SYNC_RECENT_CAP
+    // ids is far more than enough. A Set keeps insertion order, so the tail IS the most recent. saved is
+    // deliberately never trimmed: those are the user's own explicit choices.
     snapshot() {
-      return { saved: [...S.saved], dismissed: [...S.dismissed], channels: [...S.myChannels], hiddenChannels: [...S.hiddenChannels], reviewed: [...S.reviewed], companies: [...S.myCompanies], investChannels: [...S.myInvestChannels] };
+      const recent = set => { const a = [...set]; return a.length > SYNC_RECENT_CAP ? a.slice(-SYNC_RECENT_CAP) : a; };
+      return { saved: [...S.saved], dismissed: recent(S.dismissed), channels: [...S.myChannels], hiddenChannels: [...S.hiddenChannels], reviewed: recent(S.reviewed), companies: [...S.myCompanies], investChannels: [...S.myInvestChannels] };
+    },
+
+    // Reads the server copy WITHOUT applying it - push() needs to look before it writes (see below).
+    async fetchRecord() {
+      try {
+        const r = await fetch(this.docUrl(), { cache: 'no-store', headers: await this.authHeaders() });
+        if (r.status === 404) return { status: 'missing' };
+        if (!r.ok) return { status: 'error', code: r.status };
+        const doc = await r.json();
+        return { status: 'found', rec: fsFieldsToObject(doc.fields) };
+      } catch (e) { return { status: 'error' }; }
+    },
+
+    // Adds anything in rec that S doesn't already have. Union, never replace: when two copies of the same
+    // account disagree and it isn't certain which is newer, keeping both is the only choice that can't
+    // lose data. The cost is that something removed in one copy can reappear from the other - a far
+    // smaller harm than a watchlist vanishing. Returns how many items were added.
+    mergeInto(rec) {
+      let added = 0;
+      const add = (set, arr) => (arr || []).forEach(x => { if (!set.has(x)) { set.add(x); added++; } });
+      add(S.saved, rec.saved); add(S.dismissed, rec.dismissed); add(S.myChannels, rec.channels);
+      add(S.hiddenChannels, rec.hiddenChannels); add(S.reviewed, rec.reviewed);
+      add(S.myCompanies, rec.companies); add(S.myInvestChannels, rec.investChannels);
+      return added;
+    },
+    rerender() { renderAll(); renderChannels(); renderInvestChannels(); renderInvestmentBox(); },
+
+    // A per-account copy kept ONLY when signing out couldn't confirm the account's latest state reached
+    // the server (offline, or a rejected write). completeAuth() merges it back in on the next sign-in to
+    // the same account and deletes it once the server has it.
+    backupKey(uid) { return 'qs-sync-backup-v1-' + uid; },
+    readBackup(uid) { try { return JSON.parse(localStorage.getItem(this.backupKey(uid)) || 'null'); } catch (e) { return null; } },
+    writeBackup(uid, rec) {
+      const prev = this.readBackup(uid);
+      if (prev) for (const k in prev) rec[k] = [...new Set((prev[k] || []).concat(rec[k] || []))];   // never drop an older unsent backup
+      try { localStorage.setItem(this.backupKey(uid), JSON.stringify(rec)); } catch (e) { /* storage full */ }
+    },
+    clearBackup(uid) { try { localStorage.removeItem(this.backupKey(uid)); } catch (e) { /* ignore */ } },
+
+    // A save the SERVER refused (4xx) is not a network blip - it will fail identically every time until
+    // something is fixed. That is exactly how the missing-investChannels bug went unnoticed for days: every
+    // save failed silently while the on-device copy made everything look fine. Logged every time, shown to
+    // the user once per session.
+    _rejectReported: false,
+    reportRejected(status, body) {
+      console.error('[QwickSignal] sync save rejected by the server (HTTP ' + status + '):', body);
+      if (this._rejectReported) return;
+      this._rejectReported = true;
+      toast('Couldn’t save to your account just now. Your changes are kept on this device and will keep retrying.');
     },
 
     async push() {
       if (!this.code && !Auth.uid) return false;
+      // NEVER write blind. Until this session has successfully read the server's copy (ready), the local
+      // state can't be trusted to be complete - right after signing in while offline, for instance, S.* is
+      // empty, and a single tap that triggers a save would otherwise overwrite the account's real data with
+      // that near-empty state. So look first, fold in anything the server has that this device doesn't,
+      // and only then write. If the server can't be reached at all, don't write - stay dirty and retry.
+      if (!this.ready) {
+        const got = await this.fetchRecord();
+        if (got.status === 'error') return false;
+        if (got.status === 'found' && this.mergeInto(got.rec)) this.rerender();
+      }
       const rec = this.snapshot();
       // Written for a signed-in account too, not just guests, as a crash-recovery fallback (see pushSoon()
       // below). Previously the comment here said Sync.init()'s pull() "still always overwrites this with
@@ -2018,9 +2087,13 @@ if (typeof document !== 'undefined') (function () {
         const fields = { saved: toFsValue(rec.saved), dismissed: toFsValue(rec.dismissed), channels: toFsValue(rec.channels), hiddenChannels: toFsValue(rec.hiddenChannels), reviewed: toFsValue(rec.reviewed), companies: toFsValue(rec.companies), investChannels: toFsValue(rec.investChannels) };
         const headers = Object.assign({ 'Content-Type': 'application/json' }, await this.authHeaders());
         const r = await fetch(this.docUrl(), { method: 'PATCH', headers, body: JSON.stringify({ fields }) });
-        if (!r.ok) throw new Error('HTTP ' + r.status);
+        if (!r.ok) {
+          if (r.status >= 400 && r.status < 500) this.reportRejected(r.status, await r.text().catch(() => ''));
+          throw new Error('HTTP ' + r.status);
+        }
         this.ready = true;
         this.clearDirty();             // confirmed on the server now - nothing left for the next launch to recover
+        if (Auth.uid) this.clearBackup(Auth.uid);   // whatever a past sign-out set aside is now on the server too
         return true;
       } catch (e) {
         return false;                 // still only local; isDirty() stays set so the next launch (or next pushSoon) retries
@@ -2046,15 +2119,18 @@ if (typeof document !== 'undefined') (function () {
     // immediately, that a push is now owed to the server. init() checks it on the next launch and pushes the
     // (newer) local state up first instead of blindly pulling the (older) server state down; push() above
     // only clears it once the server has actually confirmed the write.
-    pushSoon: (() => {
-      let t = null;
-      return () => {
-        Sync.cacheWrite(Sync.snapshot());
-        Sync.markDirty();
-        clearTimeout(t);
-        t = setTimeout(() => Sync.push(), 600);
-      };
-    })()
+    //
+    // The timer handle now lives on the object (not a closure) so signOut() can cancel it: a save still
+    // pending when someone signs out used to fire AFTER S.* had been cleared and Auth.uid nulled, writing
+    // an empty record into the guest doc.
+    _pushTimer: null,
+    cancelPending() { clearTimeout(this._pushTimer); this._pushTimer = null; },
+    pushSoon: () => {
+      Sync.cacheWrite(Sync.snapshot());
+      Sync.markDirty();
+      clearTimeout(Sync._pushTimer);
+      Sync._pushTimer = setTimeout(() => { Sync._pushTimer = null; Sync.push(); }, 600);
+    }
   };
 
   /* ---------- Phase E: account UI ---------- */
@@ -2062,23 +2138,59 @@ if (typeof document !== 'undefined') (function () {
   // Sync.pull() below reads this account's own qs_users/{uid} doc instead of the guest one.
   async function completeAuth() {
     const hadGuestData = !!(S.saved.size || S.dismissed.size || S.myChannels.size || S.hiddenChannels.size || S.reviewed.size || S.myCompanies.size || S.myInvestChannels.size);
-    await Sync.pull();
-    // pull() found no existing doc for this account (a brand-new account, or a returning one that never
-    // synced from this browser before) - S.* still holds whatever was there before the pull, i.e. the
-    // guest data, unchanged. If the account already had its own cloud data, pull() has just loaded it and
-    // overwritten S.* with it - nothing to offer merging in, that data already IS what's now on screen.
-    if (hadGuestData && !Sync.lastPullFoundDoc) {
+    const clearState = () => { S.saved = new Set(); S.dismissed = new Set(); S.myChannels = new Set(); S.hiddenChannels = new Set(); S.reviewed = new Set(); S.myCompanies = new Set(); S.myInvestChannels = new Set(); };
+    Sync.lastPullFoundDoc = false;   // pull() only sets this on success - don't let a previous call's answer leak in
+    const pulled = await Sync.pull();
+    let msg = 'Signed in as ' + Auth.email + '.';
+    if (!pulled) {
+      // Couldn't reach the account at all, so whether it already has data is unknown. Showing the guest
+      // data as if it were the account's would be misleading, and offering to merge it is a question that
+      // can't be answered yet. Start empty; push() refuses to write until it has read the server copy
+      // (see push()), so nothing the user does meanwhile can overwrite the account's real data.
+      clearState();
+      msg = 'Signed in as ' + Auth.email + '. Your saved data will appear once you’re back online.';
+    } else if (hadGuestData && !Sync.lastPullFoundDoc) {
+      // pull() found no existing doc for this account (a brand-new account, or a returning one that never
+      // synced from this browser before) - S.* still holds the guest data, unchanged. If the account already
+      // had its own cloud data, pull() has just loaded it - nothing to offer merging in.
       const bring = confirm('Bring your existing saved articles, dismissed items and followed channels into this account?');
-      if (!bring) { S.saved = new Set(); S.dismissed = new Set(); S.myChannels = new Set(); S.hiddenChannels = new Set(); S.reviewed = new Set(); S.myCompanies = new Set(); S.myInvestChannels = new Set(); }
-      else await Sync.push();
-      toast('Signed in as ' + Auth.email + (bring ? '. Your existing data is now saved to this account.' : '.'));
-    } else {
-      toast('Signed in as ' + Auth.email + '.');
+      if (!bring) clearState();
+      else { Sync.cacheWrite(Sync.snapshot()); Sync.markDirty(); await Sync.push(); }   // dirty: retried next launch if this push fails
+      if (bring) msg = 'Signed in as ' + Auth.email + '. Your existing data is now saved to this account.';
     }
+    // Anything set aside by an earlier sign-out that couldn't confirm its last save (see signOut()) comes
+    // back now, merged with whatever the account already had, then saved.
+    const backup = Auth.uid ? Sync.readBackup(Auth.uid) : null;
+    if (backup) {
+      const restored = Sync.mergeInto(backup);
+      Sync.cacheWrite(Sync.snapshot()); Sync.markDirty();
+      await Sync.push();   // clears the backup itself on success; on failure the dirty flag retries next launch
+      if (restored) msg = 'Signed in as ' + Auth.email + '. Restored ' + restored + ' change' + (restored === 1 ? '' : 's') + ' that hadn’t reached your account before you signed out.';
+    }
+    toast(msg);
     renderAccount(); renderAll(); renderChannels(); renderInvestChannels(); renderSyncCode(); renderTicketBox(); renderTicketAdmin(); renderInvestmentBox();
   }
 
-  function signOut() {
+  // BUG FIX: signing out used to clear the device's copy of the account's data immediately, without first
+  // checking the server actually had it. Whenever the last save hadn't landed - still inside the 600ms
+  // debounce, offline, or (for days) refused outright by the missing-investChannels rule - that clear was
+  // the moment the data was destroyed. Now: finish any pending save while still signed in, and if the
+  // server can't confirm it, set the account's state aside on this device for completeAuth() to restore.
+  let signingOut = false;
+  async function signOut() {
+    if (signingOut) return;          // a double tap shouldn't run the flush twice
+    signingOut = true;
+    try {
+      const uid = Auth.uid;
+      Sync.cancelPending();
+      let keptBackup = false;
+      if (uid && Sync.isDirty()) {
+        if (!(await Sync.push())) { Sync.writeBackup(uid, Sync.snapshot()); keptBackup = true; }
+      }
+      signOutNow(keptBackup);
+    } finally { signingOut = false; }
+  }
+  function signOutNow(keptBackup) {
     Auth.signOut();
     S.saved = new Set(); S.dismissed = new Set(); S.myChannels = new Set(); S.hiddenChannels = new Set(); S.reviewed = new Set(); S.myCompanies = new Set(); S.myInvestChannels = new Set();
     // Sync.cacheWrite() now runs for a signed-in account too (see pushSoon()'s bug fix above), so the cache
@@ -2091,7 +2203,9 @@ if (typeof document !== 'undefined') (function () {
     // just-loaded state up as if it were an unsent change of its own.
     Sync.clearDirty();
     renderAccount(); renderAll(); renderChannels(); renderInvestChannels(); renderSyncCode(); renderTicketBox(); renderTicketAdmin(); renderInvestmentBox();
-    toast('Signed out. Back to guest mode on this device.');
+    toast(keptBackup
+      ? 'Signed out. Some changes hadn’t reached your account yet. They’re kept on this device and come back when you sign in again.'
+      : 'Signed out. Back to guest mode on this device.');
     Sync.pull().then(() => { renderAll(); renderChannels(); renderInvestChannels(); });    // fall back to this browser's guest sync code
     Landing.clearGuestSeen();   // a stale guest flag from earlier this tab session shouldn't skip the screen below
     Landing.show();   // "once the user picks something" also unwinds on sign-out: ask again next time

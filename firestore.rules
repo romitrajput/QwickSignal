@@ -35,12 +35,18 @@ service cloud.firestore {
       return request.auth != null && request.auth.token.email == 'rrrajput2101@gmail.com';
     }
 
+    // BUG FIX: app.js has sent an investChannels field (linked company-news channels) on every save since
+    // commit 084ed30, but it was never added to the hasOnly() lists below. Firestore rejects a write
+    // OUTRIGHT when any field isn't allowed, so every save - companies, channels, saved stories, all of it -
+    // was silently refused from that point on, for guests and signed-in accounts alike. The device's own
+    // local copy hid this until sign-out cleared it. Any field app.js's Sync.snapshot() sends MUST be listed
+    // in both blocks, or the whole document stops saving.
     match /qs_sync/{code} {
       allow get: if true;
 
       allow create, update: if
         code.matches('QS-[A-Z2-9]{4}-[A-Z2-9]{4}') &&
-        request.resource.data.keys().hasOnly(['saved', 'dismissed', 'channels', 'reviewed', 'hiddenChannels', 'companies']) &&
+        request.resource.data.keys().hasOnly(['saved', 'dismissed', 'channels', 'reviewed', 'hiddenChannels', 'companies', 'investChannels']) &&
         request.resource.data.saved is list && request.resource.data.saved.size() <= 5000 &&
         request.resource.data.dismissed is list && request.resource.data.dismissed.size() <= 5000 &&
         request.resource.data.channels is list && request.resource.data.channels.size() <= 200 &&
@@ -49,7 +55,9 @@ service cloud.firestore {
         (!('hiddenChannels' in request.resource.data) ||
           (request.resource.data.hiddenChannels is list && request.resource.data.hiddenChannels.size() <= 200)) &&
         (!('companies' in request.resource.data) ||
-          (request.resource.data.companies is list && request.resource.data.companies.size() <= 300));
+          (request.resource.data.companies is list && request.resource.data.companies.size() <= 300)) &&
+        (!('investChannels' in request.resource.data) ||
+          (request.resource.data.investChannels is list && request.resource.data.investChannels.size() <= 200));
 
       allow delete: if false;
     }
@@ -59,7 +67,7 @@ service cloud.firestore {
 
       allow create, update: if
         request.auth != null && request.auth.uid == uid &&
-        request.resource.data.keys().hasOnly(['saved', 'dismissed', 'channels', 'reviewed', 'hiddenChannels', 'companies']) &&
+        request.resource.data.keys().hasOnly(['saved', 'dismissed', 'channels', 'reviewed', 'hiddenChannels', 'companies', 'investChannels']) &&
         request.resource.data.saved is list && request.resource.data.saved.size() <= 5000 &&
         request.resource.data.dismissed is list && request.resource.data.dismissed.size() <= 5000 &&
         request.resource.data.channels is list && request.resource.data.channels.size() <= 200 &&
@@ -68,7 +76,9 @@ service cloud.firestore {
         (!('hiddenChannels' in request.resource.data) ||
           (request.resource.data.hiddenChannels is list && request.resource.data.hiddenChannels.size() <= 200)) &&
         (!('companies' in request.resource.data) ||
-          (request.resource.data.companies is list && request.resource.data.companies.size() <= 300));
+          (request.resource.data.companies is list && request.resource.data.companies.size() <= 300)) &&
+        (!('investChannels' in request.resource.data) ||
+          (request.resource.data.investChannels is list && request.resource.data.investChannels.size() <= 200));
 
       allow delete: if false;
     }
