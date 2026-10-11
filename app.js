@@ -245,10 +245,12 @@ const Engine = (function () {
     // the older industrial/financial/energy names below - each is actually NYSE-listed, confirmed against
     // TradingView's own symbol pages, so each gets an explicit exchange override (field 6) rather than
     // silently guessing a nonexistent NASDAQ:XOM-style symbol the same way "JPMorgan" was before this fix.
-    'Apple|US|Technology', 'Microsoft|US|Technology', 'Alphabet|US|Technology|Google',
-    'Amazon|US|Consumer', 'Meta|US|Technology', 'Nvidia|US|Semiconductors', 'Tesla|US|Automotive', 'Intel|US|Semiconductors',
-    'AMD|US|Semiconductors', 'Micron|US|Semiconductors', 'Qualcomm|US|Semiconductors', 'Broadcom|US|Semiconductors',
-    'Applied Materials|US|Semiconductors', 'Lam Research|US|Semiconductors', 'KLA|US|Semiconductors',
+    // Tickers (field 5) added for these so a watchlist entry typed as a ticker - "NVDA", "GOOGL" - is
+    // recognised as the company (logo, and View Chart's symbol) instead of being guessed from the letters.
+    'Apple|US|Technology||AAPL', 'Microsoft|US|Technology||MSFT', 'Alphabet|US|Technology|Google|GOOGL',
+    'Amazon|US|Consumer||AMZN', 'Meta|US|Technology||META', 'Nvidia|US|Semiconductors||NVDA', 'Tesla|US|Automotive||TSLA', 'Intel|US|Semiconductors||INTC',
+    'AMD|US|Semiconductors||AMD', 'Micron|US|Semiconductors||MU', 'Qualcomm|US|Semiconductors||QCOM', 'Broadcom|US|Semiconductors||AVGO',
+    'Applied Materials|US|Semiconductors||AMAT', 'Lam Research|US|Semiconductors||LRCX', 'KLA|US|Semiconductors||KLAC',
     'Boeing|US|Aerospace||BA|NYSE', 'Ford|US|Automotive||F|NYSE', 'General Motors|US|Automotive||GM|NYSE',
     'ExxonMobil|US|Energy|Exxon|XOM|NYSE', 'Chevron|US|Energy||CVX|NYSE', 'JPMorgan|US|Banking||JPM|NYSE',
     'Goldman Sachs|US|Finance||GS|NYSE', 'Pfizer|US|Pharmaceuticals||PFE|NYSE',
@@ -443,7 +445,7 @@ const Engine = (function () {
     'coal india': 'coalindia.in', 'ongc': 'ongcindia.com', 'sail': 'sail.co.in', 'nmdc': 'nmdc.co.in',
     'vodafone idea': 'myvi.in', 'zee entertainment': 'zee.com', 'ultratech cement': 'ultratechcement.com',
     'grasim industries': 'grasim.com', 'dlf': 'dlf.in', 'godrej properties': 'godrejproperties.com',
-    'ambuja cements': 'ambujacement.com', 'acc': 'acclimited.com', 'alphabet': 'abc.xyz', 'google': 'google.com',
+    'ambuja cements': 'ambujacement.com', 'acc': 'acclimited.com', 'alphabet': 'google.com', 'google': 'google.com',   // abc.xyz is Alphabet's holding-company site; GOOGL holders know the G
     'meta': 'meta.com', 'exxonmobil': 'exxonmobil.com', 'jpmorgan': 'jpmorganchase.com',
     'goldman sachs': 'goldmansachs.com', 'general motors': 'gm.com', 'tsmc': 'tsmc.com', 'sk hynix': 'skhynix.com',
     'tokyo electron': 'tel.com', 'softbank': 'group.softbank', 'byd': 'byd.com', 'huawei': 'huawei.com',
@@ -462,16 +464,25 @@ const Engine = (function () {
   //    apple.com), and for ".in"-flavored Indian names tends to need the curated table above instead, which
   //    is exactly why that table exists. Returns null (no logo attempted at all) only for a name that
   //    produces zero letters once stripped - genuinely nothing to guess from.
+  // Second share classes and old tickers that point at a company already in COMPANIES.
+  const EXTRA_TICKERS = { goog: 'Alphabet', fb: 'Meta' };
   function guessLogoDomain(name) {
     const n = name.toLowerCase().trim();
-    const known = COMPANIES.find(c => c.name.toLowerCase() === n || c.aliases.some(a => a.toLowerCase() === n));
+    // Tickers count as well as names: a watchlist entry typed "Nvda" used to miss every name and alias,
+    // fall through to the letters-plus-".com" guess below, and show whichever unrelated company happens to
+    // own nvda.com. Exact matches only, so a short ticker like "F" (Ford) can't hit by accident.
+    const viaExtra = EXTRA_TICKERS[n] ? EXTRA_TICKERS[n].toLowerCase() : null;
+    const known = COMPANIES.find(c => c.name.toLowerCase() === n || c.aliases.some(a => a.toLowerCase() === n)
+      || (c.ticker && c.ticker.toLowerCase() === n) || (viaExtra && c.name.toLowerCase() === viaExtra));
     if (known) {
       const key = known.name.toLowerCase();
       if (COMPANY_DOMAIN[key]) return COMPANY_DOMAIN[key];
       for (const a of known.aliases) { if (COMPANY_DOMAIN[a.toLowerCase()]) return COMPANY_DOMAIN[a.toLowerCase()]; }
     }
     if (COMPANY_DOMAIN[n]) return COMPANY_DOMAIN[n];
-    const stripped = n.replace(/[^a-z0-9]/g, '');
+    // Guess from the RECOGNISED company's name when there is one, not from what was typed: "Nvda" is known
+    // to be Nvidia, so the guess is nvidia.com - building it from the typed letters gave nvda.com.
+    const stripped = (known ? known.name.toLowerCase() : n).replace(/[^a-z0-9]/g, '');
     if (!stripped) return null;
     return stripped + '.com';
   }
@@ -990,6 +1001,10 @@ if (typeof document !== 'undefined') (function () {
       notifQuietLabel: 'Quiet hours (10pm - 7am)', notifQuietHint: 'Only Critical stories come through overnight.',
       notifDigestLabel: 'Summary', notifDigestOff: 'Off', notifDigestDaily: 'Daily', notifDigestWeekly: 'Weekly',
       notifDigestHint: 'One morning notification rounding up recent stories, instead of each one as it lands.',
+      notifInvestLabel: 'Stories from my Investment watchlist', notifInvestHint: 'News about your tracked companies and posts from your linked Investment channels, combined into the same alerts as your news. They come through even below your priority setting.',
+      investFromChannels: 'From your linked channels', investChannelsEmpty: 'Nothing from your linked channels in the last 24 hours. A newly linked channel starts showing up within about 30 minutes.',
+      notifInvestNeedCompanies: 'Track companies or link channels in the Investment tab to turn this on.',
+      notifPacingNote: 'Alerts are grouped: at most one every 20–40 minutes, bundling whatever arrived in between. Critical stories come straight away.',
       getAppHeading: 'Get the app', getAppAndroidTab: 'Android', getAppIosTab: 'iPhone',
       getAppSub: 'Download the installable app (one file, zipped). Unzip it, then tap the .apk to install - you may need to allow "install unknown apps" for your browser once.', getAppBtn: 'Download QwickSignal.zip',
       getAppIosStep1: 'Open qwicksignal.netlify.app in Safari (it has to be Safari, not Chrome).', getAppIosStep2: 'Tap the Share icon, then "Add to Home Screen".', getAppIosStep3: 'Tap "Add" - QwickSignal now opens like a regular app, no browser bar.',
@@ -1012,7 +1027,7 @@ if (typeof document !== 'undefined') (function () {
       ticketAdminAttachment: 'Attachment',
       modeNews: 'Signal', modeInvestment: 'Investment',
       telegramNewsSub: 'Link Telegram channels to follow for your Signal/News feed.',
-      telegramInvestHeading: 'Telegram channels for Investment', telegramInvestSub: "Link Telegram channels you follow specifically for investment/market news - kept separate from your News channels above.",
+      telegramInvestHeading: 'Telegram channels for Investment', telegramInvestSub: "Link Telegram channels you follow specifically for investment/market news - kept separate from your News channels above. Their posts appear in your Investment tab within about 30 minutes.",
       investHeading: 'Investment watchlist', investSub: "Track companies you've invested in, or are watching, to see their news grouped separately in the Investment tab.",
       investPlaceholder: 'Company name', loginToTrackCompanies: 'Log in to track companies.',
       agTrackCompanyTitle: 'Log in to track companies', agTrackCompanyBody: 'Creating a free account keeps your investment watchlist with you across devices.',
@@ -1084,6 +1099,10 @@ if (typeof document !== 'undefined') (function () {
       notifQuietLabel: 'शांत समय (रात 10 - सुबह 7)', notifQuietHint: 'रात में केवल अति-महत्वपूर्ण खबरें आएंगी।',
       notifDigestLabel: 'सारांश', notifDigestOff: 'बंद', notifDigestDaily: 'रोज़', notifDigestWeekly: 'साप्ताहिक',
       notifDigestHint: 'हर खबर अलग-अलग आने के बजाय सुबह एक सूचना में हाल की खबरों का सारांश।',
+      notifInvestLabel: 'मेरी Investment वॉचलिस्ट की खबरें', notifInvestHint: 'आपकी ट्रैक की गई कंपनियों की खबरें और आपके जोड़े गए Investment चैनलों की पोस्ट, आपकी खबरों वाली सूचनाओं में ही जुड़कर। ये आपकी प्राथमिकता सेटिंग से नीचे होने पर भी आती हैं।',
+      investFromChannels: 'आपके जोड़े गए चैनलों से', investChannelsEmpty: 'पिछले 24 घंटों में आपके जोड़े गए चैनलों से कुछ नहीं। नया जोड़ा गया चैनल लगभग 30 मिनट में दिखने लगता है।',
+      notifInvestNeedCompanies: 'इसे चालू करने के लिए Investment टैब में कंपनियां ट्रैक करें या चैनल जोड़ें।',
+      notifPacingNote: 'सूचनाएं समूह में आती हैं: हर 20–40 मिनट में ज़्यादा से ज़्यादा एक, बीच में आई खबरों के साथ। अति-महत्वपूर्ण खबरें तुरंत आती हैं।',
       getAppHeading: 'ऐप पाएं', getAppAndroidTab: 'Android', getAppIosTab: 'iPhone',
       getAppSub: 'इंस्टॉल करने योग्य ऐप डाउनलोड करें (एक फ़ाइल, ज़िप की हुई)। इसे अनज़िप करें, फिर इंस्टॉल करने के लिए .apk पर टैप करें - आपको अपने ब्राउज़र के लिए एक बार "अज्ञात ऐप्स इंस्टॉल करें" की अनुमति देनी पड़ सकती है।', getAppBtn: 'QwickSignal.zip डाउनलोड करें',
       getAppIosStep1: 'Safari में qwicksignal.netlify.app खोलें (Chrome में नहीं, Safari में ही)।', getAppIosStep2: 'शेयर आइकन टैप करें, फिर "Add to Home Screen" चुनें।', getAppIosStep3: '"Add" टैप करें - अब QwickSignal एक सामान्य ऐप की तरह खुलेगा, बिना ब्राउज़र बार के।',
@@ -1166,6 +1185,10 @@ if (typeof document !== 'undefined') (function () {
       notifQuietLabel: 'शांत वेळ (रात्री 10 - सकाळी 7)', notifQuietHint: 'रात्री फक्त अति-महत्त्वाच्या बातम्या येतील.',
       notifDigestLabel: 'सारांश', notifDigestOff: 'बंद', notifDigestDaily: 'रोज', notifDigestWeekly: 'साप्ताहिक',
       notifDigestHint: 'प्रत्येक बातमी वेगळी येण्याऐवजी सकाळी एका सूचनेत अलीकडच्या बातम्यांचा सारांश.',
+      notifInvestLabel: 'माझ्या Investment वॉचलिस्टमधील बातम्या', notifInvestHint: 'तुम्ही ट्रॅक केलेल्या कंपन्यांच्या बातम्या आणि जोडलेल्या Investment चॅनेलच्या पोस्ट, तुमच्या बातम्यांच्या सूचनांमध्येच एकत्र. तुमच्या प्राधान्य सेटिंगपेक्षा खाली असल्या तरी येतात.',
+      investFromChannels: 'तुम्ही जोडलेल्या चॅनेलवरून', investChannelsEmpty: 'गेल्या 24 तासांत तुम्ही जोडलेल्या चॅनेलवरून काहीही नाही. नवीन जोडलेले चॅनेल सुमारे 30 मिनिटांत दिसू लागते.',
+      notifInvestNeedCompanies: 'हे चालू करण्यासाठी Investment टॅबमध्ये कंपन्या ट्रॅक करा किंवा चॅनेल जोडा.',
+      notifPacingNote: 'सूचना गटाने येतात: दर 20–40 मिनिटांत जास्तीत जास्त एक, मधल्या काळातील बातम्यांसह. अति-महत्त्वाच्या बातम्या लगेच येतात.',
       getAppHeading: 'अ‍ॅप मिळवा', getAppAndroidTab: 'Android', getAppIosTab: 'iPhone',
       getAppSub: 'इंस्टॉल करण्यायोग्य अ‍ॅप डाउनलोड करा (एक फाईल, झिप केलेली). अनझिप करा, मग इंस्टॉल करण्यासाठी .apk वर टॅप करा - तुम्हाला तुमच्या ब्राउझरसाठी एकदा "अज्ञात अ‍ॅप्स इंस्टॉल करा" ला परवानगी द्यावी लागू शकते.', getAppBtn: 'QwickSignal.zip डाउनलोड करा',
       getAppIosStep1: 'Safari मध्ये qwicksignal.netlify.app उघडा (Chrome नाही, Safari हवे).', getAppIosStep2: 'शेअर आयकॉन टॅप करा, मग "Add to Home Screen" निवडा.', getAppIosStep3: '"Add" टॅप करा - आता QwickSignal सामान्य अ‍ॅपसारखे उघडेल, ब्राउझर बारशिवाय.',
@@ -1248,6 +1271,10 @@ if (typeof document !== 'undefined') (function () {
       notifQuietLabel: 'શાંત સમય (રાત્રે 10 - સવારે 7)', notifQuietHint: 'રાત્રે ફક્ત અતિ-મહત્વની સ્ટોરી આવશે.',
       notifDigestLabel: 'સારાંશ', notifDigestOff: 'બંધ', notifDigestDaily: 'રોજ', notifDigestWeekly: 'સાપ્તાહિક',
       notifDigestHint: 'દરેક સ્ટોરી અલગ આવવાને બદલે સવારે એક નોટિફિકેશનમાં તાજેતરની સ્ટોરીનો સારાંશ.',
+      notifInvestLabel: 'મારી Investment વૉચલિસ્ટના સમાચાર', notifInvestHint: 'તમે ટ્રૅક કરેલી કંપનીઓના સમાચાર અને જોડેલી Investment ચેનલોની પોસ્ટ, તમારા સમાચારના નોટિફિકેશનમાં જ ભેગા. તમારી પ્રાથમિકતા સેટિંગથી નીચે હોય તો પણ આવે છે.',
+      investFromChannels: 'તમે જોડેલી ચેનલોમાંથી', investChannelsEmpty: 'છેલ્લા 24 કલાકમાં તમે જોડેલી ચેનલોમાંથી કંઈ નથી. નવી જોડેલી ચેનલ લગભગ 30 મિનિટમાં દેખાવા લાગે છે.',
+      notifInvestNeedCompanies: 'આ ચાલુ કરવા Investment ટૅબમાં કંપનીઓ ટ્રૅક કરો અથવા ચેનલ જોડો.',
+      notifPacingNote: 'નોટિફિકેશન જૂથમાં આવે છે: દર 20–40 મિનિટે વધુમાં વધુ એક, વચ્ચે આવેલા સમાચાર સાથે. અતિ-મહત્વની સ્ટોરી તરત આવે છે.',
       getAppHeading: 'ઍપ મેળવો', getAppAndroidTab: 'Android', getAppIosTab: 'iPhone',
       getAppSub: 'ઇન્સ્ટોલ કરી શકાય તેવી ઍપ ડાઉનલોડ કરો (એક ફાઇલ, ઝિપ કરેલી). તેને અનઝિપ કરો, પછી ઇન્સ્ટોલ કરવા માટે .apk પર ટૅપ કરો - તમારે તમારા બ્રાઉઝર માટે એકવાર "અજાણી ઍપ્સ ઇન્સ્ટોલ કરો"ની મંજૂરી આપવી પડી શકે.', getAppBtn: 'QwickSignal.zip ડાઉનલોડ કરો',
       getAppIosStep1: 'Safari માં qwicksignal.netlify.app ખોલો (Chrome નહીં, Safari જ જોઈએ).', getAppIosStep2: 'શેર આઇકન ટૅપ કરો, પછી "Add to Home Screen" પસંદ કરો.', getAppIosStep3: '"Add" ટૅપ કરો - હવે QwickSignal સામાન્ય ઍપની જેમ ખુલશે, બ્રાઉઝર બાર વગર.',
@@ -2168,6 +2195,7 @@ if (typeof document !== 'undefined') (function () {
       if (restored) msg = 'Signed in as ' + Auth.email + '. Restored ' + restored + ' change' + (restored === 1 ? '' : 's') + ' that hadn’t reached your account before you signed out.';
     }
     toast(msg);
+    Push.syncAccount();   // notifications now personalised from THIS account's portfolio
     renderAccount(); renderAll(); renderChannels(); renderInvestChannels(); renderSyncCode(); renderTicketBox(); renderTicketAdmin(); renderInvestmentBox();
   }
 
@@ -2197,6 +2225,7 @@ if (typeof document !== 'undefined') (function () {
     // left behind by the account that's signing out has to be cleared here - otherwise a DIFFERENT account
     // signing in next on this same browser could briefly see the previous account's cached watchlist/saves
     // for the moment before Sync.init()'s pull() overwrites it with their own.
+    Push.syncAccount();   // detach the account that left: no more alerts about its portfolio here
     Sync.cacheWrite(null);
     // The dirty flag belonged to the account that's leaving - clearing it here (rather than leaving it set)
     // stops the NEXT account that signs in on this browser from having isDirty() misfire and push ITS
@@ -2582,6 +2611,8 @@ if (typeof document !== 'undefined') (function () {
       return;
     }
     const p = Push.prefs();
+    // Investment alerts come from the account's portfolio, so they need an account with something in it.
+    const canInvest = !!(Auth.uid && (S.myCompanies.size || S.myInvestChannels.size));
     const impLabels = { Critical: t('notifImpCritical'), High: t('notifImpHigh'), Medium: t('notifImpMedium'), Low: t('notifImpLow') };
     const prefsUI = !on ? '' : `
       <div class="notif-prefs">
@@ -2598,6 +2629,11 @@ if (typeof document !== 'undefined') (function () {
         </div>
         <p class="np-hint">${t('notifQuietHint')}</p>
         <div class="np-row">
+          <label class="np-label" for="npInvest">${t('notifInvestLabel')}</label>
+          <input type="checkbox" id="npInvest" class="np-check"${p.invest && canInvest ? ' checked' : ''}${canInvest ? '' : ' disabled'}>
+        </div>
+        <p class="np-hint">${canInvest ? t('notifInvestHint') : t('notifInvestNeedCompanies')}</p>
+        <div class="np-row">
           <label class="np-label" for="npDigest">${t('notifDigestLabel')}</label>
           <select id="npDigest" class="np-select">
             <option value="off"${p.digest === 'off' ? ' selected' : ''}>${esc(t('notifDigestOff'))}</option>
@@ -2606,6 +2642,7 @@ if (typeof document !== 'undefined') (function () {
           </select>
         </div>
         <p class="np-hint">${t('notifDigestHint')}</p>
+        <p class="np-hint np-pacing">${t('notifPacingNote')}</p>
       </div>`;
     box.innerHTML = (on
       ? `<p class="lp-syncnote">${t('notifOn')}</p><button id="notifBtn" class="btn small">${t('notifDisable')}</button>`
@@ -2629,6 +2666,144 @@ if (typeof document !== 'undefined') (function () {
     });
     if (quiet) quiet.addEventListener('change', () => Push.savePrefs({ quiet: quiet.checked }));
     if (digest) digest.addEventListener('change', () => Push.savePrefs({ digest: digest.value }));
+    const invest = $('#npInvest');
+    if (invest) invest.addEventListener('change', () => {
+      Push.savePrefs({ invest: invest.checked });
+      track('push_invest_toggle', { on: invest.checked });
+    });
+  }
+
+  /* ---------- Owner: how people respond to notifications ----------
+     Two sources, both readable only by the owner (firestore.rules):
+       qs_push_stats/<UTC date>  how many the pipeline SENT that day, by kind (record_push_stats() in pipeline.py)
+       qs_push_events            what each device then did - shown / opened / dismissed (sw.js)
+     Each notification ends up in exactly one outcome: opened, swiped away, or ignored (shown, then neither
+     within 24 hours). Notifications younger than 24 hours with no response yet are "still waiting" and kept
+     out of the percentages, which would otherwise read low for a few hours after every send. */
+  const PUSH_KIND_LABEL = { news: 'News', invest: 'Watchlist', mixed: 'News + watchlist', digest: 'Daily/weekly digest' };
+  const PushStats = {
+    days: 7,
+    async load(days) {
+      const token = await Auth.bearerToken();
+      if (!token) throw new Error('not signed in');
+      const headers = { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token };
+      const since = new Date(Date.now() - days * 864e5).toISOString();
+      const query = { structuredQuery: {
+        from: [{ collectionId: 'qs_push_events' }],
+        where: { fieldFilter: { field: { fieldPath: 'at' }, op: 'GREATER_THAN_OR_EQUAL', value: { stringValue: since } } },
+        limit: 20000 } };
+      const r = await fetch(`${FS_BASE}:runQuery`, { method: 'POST', headers, body: JSON.stringify(query) });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const events = (await r.json()).filter(row => row.document).map(row => fsFieldsToObject(row.document.fields));
+      const dates = [];
+      for (let i = 0; i < days; i++) dates.push(new Date(Date.now() - i * 864e5).toISOString().slice(0, 10));
+      const docs = await Promise.all(dates.map(d => fetch(`${FS_BASE}/qs_push_stats/${d}`, { headers })
+        .then(res => (res.ok ? res.json() : null)).catch(() => null)));
+      const sent = {};
+      docs.forEach(doc => {
+        if (!doc || !doc.fields) return;
+        const o = fsFieldsToObject(doc.fields);
+        for (const k in o) sent[k] = (sent[k] || 0) + (Number(o[k]) || 0);
+      });
+      return { events, sent };
+    },
+    // Folds raw events into one record per notification, then counts outcomes overall, by kind, and by the
+    // device's local time of day (3-hour blocks). An 'opened' whose 'shown' report was lost (offline at the
+    // time) still counts as delivered - it plainly arrived.
+    summarise(events, now = Date.now()) {
+      const recs = new Map();
+      events.forEach(ev => {
+        if (!ev || !ev.nid) return;
+        const r = recs.get(ev.nid) || { kind: ev.kind || 'news', hour: null, shownAt: null, firstAt: null, opened: false, dismissed: false };
+        const at = Date.parse(ev.at) || 0;
+        if (r.firstAt === null || at < r.firstAt) r.firstAt = at;
+        if (ev.action === 'shown') { r.shownAt = at; r.hour = ev.hour; }
+        else if (ev.action === 'opened') r.opened = true;
+        else if (ev.action === 'dismissed') r.dismissed = true;
+        if (r.hour === null && typeof ev.hour === 'number') r.hour = ev.hour;
+        recs.set(ev.nid, r);
+      });
+      const blank = () => ({ delivered: 0, opened: 0, dismissed: 0, ignored: 0, waiting: 0 });
+      const total = blank(), byKind = {}, byHour = Array.from({ length: 8 }, blank);
+      recs.forEach(r => {
+        const since = r.shownAt !== null ? r.shownAt : r.firstAt;
+        const outcome = r.opened ? 'opened' : r.dismissed ? 'dismissed' : (now - since > 864e5 ? 'ignored' : 'waiting');
+        const buckets = [total, byKind[r.kind] || (byKind[r.kind] = blank())];
+        if (typeof r.hour === 'number' && r.hour >= 0 && r.hour <= 23) buckets.push(byHour[Math.floor(r.hour / 3)]);
+        buckets.forEach(b => { b.delivered++; b[outcome]++; });
+      });
+      return { total, byKind, byHour };
+    }
+  };
+  const settled = b => b.opened + b.dismissed + b.ignored;
+  const pct = (n, d) => (d ? Math.round((n / d) * 100) + '%' : '–');
+
+  async function renderPushStats() {
+    const box = $('#pushStatsBox');
+    if (!box) return;
+    if (!isOwner()) { box.innerHTML = ''; return; }
+    const days = PushStats.days;
+    const seg = `<div class="seg ps-range" role="group" aria-label="Period">
+        ${[7, 30].map(d => `<button type="button" data-ps-days="${d}" aria-pressed="${d === days}">${d} days</button>`).join('')}
+      </div>`;
+    box.innerHTML = seg + '<p class="lp-syncnote">Loading…</p>';
+    let data;
+    try { data = await PushStats.load(days); }
+    catch (e) {
+      box.innerHTML = seg + `<p class="lp-syncnote">Couldn’t load the stats (${esc(e.message)}). If this persists, check that the latest firestore.rules are published.</p>`;
+      return;
+    }
+    const s = PushStats.summarise(data.events);
+    const t = s.total, n = settled(t), sentTotal = data.sent.sent || 0;
+    const bar = b => {
+      const d = settled(b);
+      if (!d) return '<div class="ps-bar ps-bar-empty"></div>';
+      return `<div class="ps-bar" role="img" aria-label="Opened ${pct(b.opened, d)}, swiped away ${pct(b.dismissed, d)}, ignored ${pct(b.ignored, d)}">
+          <i class="ps-o" style="width:${(b.opened / d) * 100}%"></i><i class="ps-d" style="width:${(b.dismissed / d) * 100}%"></i><i class="ps-i" style="width:${(b.ignored / d) * 100}%"></i></div>`;
+    };
+    const kinds = ['news', 'invest', 'mixed', 'digest'].filter(k => s.byKind[k]);
+    const hours = s.byHour.map((b, i) => ({ b, label: String(i * 3).padStart(2, '0') + '–' + String(i * 3 + 3).padStart(2, '0') }));
+    const maxHour = Math.max(1, ...s.byHour.map(settled));
+    box.innerHTML = seg + (t.delivered === 0
+      ? `<p class="lp-syncnote">No responses recorded in the last ${days} days. Responses are counted from the first notification sent after this update.</p>`
+      : `<div class="ps-tiles">
+          <div class="ps-tile"><b>${sentTotal || '–'}</b><span>sent</span></div>
+          <div class="ps-tile"><b>${t.delivered}</b><span>delivered${sentTotal ? ' (' + pct(t.delivered, sentTotal) + ')' : ''}</span></div>
+          <div class="ps-tile ps-good"><b>${pct(t.opened, n)}</b><span>opened</span></div>
+          <div class="ps-tile"><b>${pct(t.ignored, n)}</b><span>ignored</span></div>
+        </div>
+        <div class="ps-section">
+          ${bar(t)}
+          <div class="ps-legend"><span><em class="ps-o"></em>Opened ${t.opened}</span><span><em class="ps-d"></em>Swiped away ${t.dismissed}</span><span><em class="ps-i"></em>Ignored ${t.ignored}</span></div>
+          ${t.waiting ? `<p class="ps-note">${t.waiting} sent in the last 24 hours ${t.waiting === 1 ? 'has' : 'have'} no response yet and ${t.waiting === 1 ? 'isn’t' : 'aren’t'} counted above.</p>` : ''}
+        </div>
+        <div class="ps-section">
+          <h3 class="ps-h">By type</h3>
+          <div class="ps-table">
+            ${kinds.map(k => { const b = s.byKind[k]; return `<div class="ps-row">
+                <span class="ps-name">${esc(PUSH_KIND_LABEL[k] || k)}</span>
+                <span class="ps-num">${pct(b.opened, settled(b))} opened</span>
+                <span class="ps-sub">${settled(b)} settled</span>
+                ${bar(b)}
+              </div>`; }).join('')}
+          </div>
+        </div>
+        <div class="ps-section">
+          <h3 class="ps-h">By time of day</h3>
+          <p class="ps-note">On the reader’s own clock. Bar length is how many arrived then; the number is how many were opened.</p>
+          <div class="ps-hours">
+            ${hours.map(({ b, label }) => `<div class="ps-hour">
+                <span class="ps-hl">${label}</span>
+                <span class="ps-ht"><i style="width:${(settled(b) / maxHour) * 100}%"></i></span>
+                <span class="ps-hv">${settled(b) ? pct(b.opened, settled(b)) + ' of ' + settled(b) : '–'}</span>
+              </div>`).join('')}
+          </div>
+        </div>
+        <p class="ps-note">Ignored means shown, then neither opened nor swiped away within 24 hours. iPhones don’t report a swipe-away, so on iPhones those count as ignored.</p>`);
+    $$('[data-ps-days]', box).forEach(btn => btn.addEventListener('click', () => {
+      PushStats.days = Number(btn.dataset.psDays);
+      renderPushStats();
+    }));
   }
 
   // Feedback/bug submission card. Requires an account (per the owner's request: tickets are now tied to a
@@ -3007,7 +3182,7 @@ if (typeof document !== 'undefined') (function () {
      localStorage too, purely so Settings can render the current choice instantly without a read back.
      Device-scoped on purpose, like Theme: "quiet hours on my phone" shouldn't mute a desktop. */
   const PUSH_PREFS_KEY = 'qs-push-prefs-v1';
-  const PUSH_PREFS_DEFAULT = { minImp: 'Low', quiet: false, digest: 'off' };
+  const PUSH_PREFS_DEFAULT = { minImp: 'Low', quiet: false, digest: 'off', invest: false };
   const PUSH_IMP_TIERS = ['Critical', 'High', 'Medium', 'Low'];
   const Push = {
     supported() { return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window; },
@@ -3023,7 +3198,8 @@ if (typeof document !== 'undefined') (function () {
         return {
           minImp: PUSH_IMP_TIERS.includes(raw.minImp) ? raw.minImp : PUSH_PREFS_DEFAULT.minImp,
           quiet: !!raw.quiet,
-          digest: ['off', 'daily', 'weekly'].includes(raw.digest) ? raw.digest : 'off'
+          digest: ['off', 'daily', 'weekly'].includes(raw.digest) ? raw.digest : 'off',
+          invest: !!raw.invest
         };
       } catch (e) { return Object.assign({}, PUSH_PREFS_DEFAULT); }
     },
@@ -3036,9 +3212,13 @@ if (typeof document !== 'undefined') (function () {
       if (!this.isOn()) return next;    // nothing subscribed yet: the choice ships with the next subscribe()
       try {
         const fields = this.prefFields(next);
+        if (Auth.uid) fields.uid = toFsValue(Auth.uid);
+        // uid is always in the mask: present in the body when signed in, absent when signed out - and a
+        // masked field missing from the body is deleted, which is exactly what signing out should do.
+        const mask = Object.keys(fields).concat(Auth.uid ? [] : ['uid']);
         await fetch(`${FS_BASE}/qs_push_subs/${pushId()}?key=${FIREBASE.apiKey}&` +
-          Object.keys(fields).map(k => 'updateMask.fieldPaths=' + k).join('&'), {
-          method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fields })
+          mask.map(k => 'updateMask.fieldPaths=' + k).join('&'), {
+          method: 'PATCH', headers: await this.pushHeaders(), body: JSON.stringify({ fields })
         });
       } catch (e) { /* local copy stands; resync() will carry it up later */ }
       return next;
@@ -3051,8 +3231,27 @@ if (typeof document !== 'undefined') (function () {
         digest: toFsValue(pr.digest),
         // The pipeline needs this device's UTC offset to work out ITS local quiet hours / digest time.
         // Negated because getTimezoneOffset() reports minutes to ADD to local to reach UTC, the opposite sign.
-        tz_min: toFsValue(-new Date().getTimezoneOffset())
+        tz_min: toFsValue(-new Date().getTimezoneOffset()),
+        // Investment notifications. The pipeline personalises them from the signed-in account's own
+        // portfolio (its tracked companies and linked channels), read directly - see run_push() in
+        // pipeline.py - so this only says yes/no. watch is sent empty on purpose: older versions put a copy
+        // of the watchlist here, and this clears it out.
+        invest: toFsValue(!!pr.invest),
+        watch: toFsValue([])
       };
+    },
+    // Which account this device's notifications belong to. firestore.rules only accept a uid that matches
+    // the signed-in user making the write (hence pushHeaders() sending the login token), so nobody can
+    // attach someone else's account and receive alerts about their portfolio.
+    async pushHeaders() {
+      const h = { 'Content-Type': 'application/json' };
+      if (Auth.uid) { const tok = await Auth.bearerToken(); if (tok) h.Authorization = 'Bearer ' + tok; }
+      return h;
+    },
+    // Re-saves this device's preferences when the account on it changes (sign-in, sign-out, first load),
+    // so the account link always matches who is signed in. A no-op while notifications are off.
+    syncAccount() {
+      if (this.isOn()) this.savePrefs({});
     },
 
     async subscribe() {
@@ -3071,8 +3270,9 @@ if (typeof document !== 'undefined') (function () {
           auth: toFsValue((j.keys || {}).auth || ''),
           created_at: toFsValue(new Date().toISOString())
         }, this.prefFields());   // carries this device's alert preferences on every (re)subscribe
+        if (Auth.uid) fields.uid = toFsValue(Auth.uid);
         const r = await fetch(`${FS_BASE}/qs_push_subs/${id}?key=${FIREBASE.apiKey}`, {
-          method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fields })
+          method: 'PATCH', headers: await this.pushHeaders(), body: JSON.stringify({ fields })
         });
         if (!r.ok) throw new Error('HTTP ' + r.status);
         this.setOn(true);
@@ -4597,35 +4797,129 @@ Give a concise, event-specific analysis - decide for yourself which structure be
   // globe placeholder (a real, loadable image) for a domain with no icon on file, rather than failing in a
   // way onerror can catch - so an occasional generic globe for an obscure/freehand company, if the direct
   // favicon.ico attempt also fails to resolve, is the accepted trade-off of a free, no-key source.
+  /* ---------- Company logos: the sharpest available source wins ----------
+     BUG FIX (blurry logos): the previous version took the first source that loaded at all, and tried the
+     company's own /favicon.ico first. A favicon is usually 16-32px; the company ring draws it at ~38 CSS px,
+     which on a 3x phone screen is ~115 real pixels - a 4-7x stretch, hence the blur. Nothing ever checked
+     how big the image actually was.
+
+     Now every candidate is loaded off-screen first and MEASURED (naturalWidth needs no CORS), and the
+     largest wins. The first one at LOGO_HQ_PX or more ends the search early. All sources are free with no
+     key or account:
+       1. /apple-touch-icon.png - first-party, conventionally 180x180, made for exactly this use
+       2. Google's favicon service at sz=256 - returns the largest icon Google has for the site
+       3. DuckDuckGo's icon service - a second independent index
+       4. /favicon.ico - smallest, last resort
+     The ring shows the company's initial (crisp) while this runs, then swaps in the winner. The result is
+     cached on the device for two weeks, so it is measured once per company rather than on every render;
+     re-renders happen every couple of minutes and would otherwise re-probe and flicker. */
+  const LOGO_CACHE_KEY = 'qs-logo-v1';
+  const LOGO_TTL_MS = 14 * 864e5;
+  const LOGO_MISS_TTL_MS = 6 * 3600e3;   // "no logo found" is re-checked sooner: it may have been a bad connection
+  const LOGO_HQ_PX = 96;                 // sharp at the largest ring on a 2x screen, and close to it on 3x
+  const LOGO_MIN_PX = 32;                // smaller than this can't be shown without obvious blur - use the initial
+  const Logos = {
+    mem: null,
+    pending: new Map(),
+    all() {
+      if (this.mem) return this.mem;
+      try { this.mem = JSON.parse(localStorage.getItem(LOGO_CACHE_KEY) || '{}') || {}; } catch (e) { this.mem = {}; }
+      return this.mem;
+    },
+    save() { try { localStorage.setItem(LOGO_CACHE_KEY, JSON.stringify(this.all())); } catch (e) { /* storage full */ } },
+    // {u, w, t} for a usable logo, {u: null, t} for "none worth showing", undefined if unknown or expired.
+    get(domain) {
+      const e = this.all()[domain];
+      if (!e) return undefined;
+      const ttl = e.u ? LOGO_TTL_MS : LOGO_MISS_TTL_MS;
+      return (Date.now() - (e.t || 0) > ttl) ? undefined : e;
+    },
+    forget(domain) { delete this.all()[domain]; this.save(); },
+    candidates(d) {
+      const e = encodeURIComponent(d);
+      return [
+        'https://' + d + '/apple-touch-icon.png',
+        'https://www.google.com/s2/favicons?sz=256&domain=' + e,
+        'https://icons.duckduckgo.com/ip3/' + e + '.ico',
+        'https://' + d + '/favicon.ico'
+      ];
+    },
+    // Loads one candidate off-screen and reports its real size; null for a failure, a non-image, or a
+    // source that hangs (6s cap, so one slow host can't stall the rest).
+    probe(url) {
+      return new Promise(resolve => {
+        const im = new Image();
+        let done = false;
+        const finish = v => { if (!done) { done = true; resolve(v); } };
+        im.referrerPolicy = 'no-referrer';
+        im.decoding = 'async';
+        im.onload = () => finish(im.naturalWidth ? { u: url, w: Math.min(im.naturalWidth, im.naturalHeight) } : null);
+        im.onerror = () => finish(null);
+        setTimeout(() => finish(null), 6000);
+        im.src = url;
+      });
+    },
+    resolve(domain) {
+      if (this.pending.has(domain)) return this.pending.get(domain);
+      const job = (async () => {
+        let best = null;
+        for (const u of this.candidates(domain)) {
+          const r = await this.probe(u);
+          if (!r) continue;
+          if (!best || r.w > best.w) best = r;
+          if (r.w >= LOGO_HQ_PX) break;
+        }
+        const entry = best && best.w >= LOGO_MIN_PX ? { u: best.u, w: best.w, t: Date.now() } : { u: null, t: Date.now() };
+        // Don't record "no logo" while offline - every probe failing then says nothing about the company.
+        if (entry.u || navigator.onLine !== false) { this.all()[domain] = entry; this.save(); }
+        this.pending.delete(domain);
+        this.upgrade(domain, entry);
+        return entry;
+      })();
+      this.pending.set(domain, job);
+      return job;
+    },
+    // Swaps every ring still showing this company's initial for the logo just found. Queried at completion
+    // time, not captured up front, so rings re-rendered while the probe was running are upgraded too.
+    upgrade(domain, entry) {
+      document.querySelectorAll('[data-logo-pending]').forEach(el => {
+        if (el.dataset.logoPending !== domain) return;
+        el.removeAttribute('data-logo-pending');
+        if (entry.u) el.outerHTML = logoImgHTML(el.dataset.logoCls, entry, el.dataset.logoInitial, domain);
+      });
+    }
+  };
+  function logoImgHTML(cls, entry, initial, domain) {
+    // A logo that cleared LOGO_MIN_PX but not LOGO_HQ_PX is drawn smaller inside its plate (the -lq class),
+    // so it is stretched less and stays reasonably sharp instead of being blown up to full size.
+    const lq = entry.w < LOGO_HQ_PX ? ` ${cls}-lq` : '';
+    return `<span class="${cls} ${cls}-logo${lq}"><img src="${esc(entry.u)}" alt="" decoding="async" referrerpolicy="no-referrer"
+      data-logo-domain="${esc(domain)}" data-logo-cls="${esc(cls)}" data-logo-initial="${esc(initial)}"
+      onerror="window.__qsLogoFail&&window.__qsLogoFail(this)"></span>`;
+  }
+  // A cached logo URL that has since stopped working (the site moved its icon): drop the cache entry and
+  // fall back to the initial. The next render probes again. Global because inline onerror="" runs outside
+  // this closure; it only reads values back from data-* attributes, never from interpolated strings.
+  window.__qsLogoFail = img => {
+    img.onerror = null;
+    Logos.forget(img.dataset.logoDomain);
+    const s = document.createElement('span');
+    s.className = img.dataset.logoCls;
+    s.textContent = img.dataset.logoInitial;
+    (img.parentElement || img).replaceWith(s);
+  };
+
   function companyLogoHTML(company, innerClass) {
     const initial = (company || '?').trim().charAt(0).toUpperCase() || '?';
     const domain = E.guessLogoDomain(company || '');
-    if (!domain) return `<span class="${innerClass}">${esc(initial)}</span>`;
-    const encDomain = encodeURIComponent(domain);
-    // Ordered candidates: the company's own favicon.ico first (first-party, no third-party dependency),
-    // then Google's favicon service as a second attempt. '\u0001'-joined into one data attribute (';' or
-    // ',' could plausibly appear inside a URL) and consumed one at a time by the onerror handler below.
-    const candidates = [
-      'https://' + domain + '/favicon.ico',
-      'https://www.google.com/s2/favicons?sz=128&domain=' + encDomain
-    ];
-    const first = candidates[0];
-    const rest = candidates.slice(1).join('\u0001');
-    // The fallback letter/class/remaining-candidates go through data-* attributes rather than being
-    // interpolated straight into the onerror="" JS string - esc() HTML-escapes quotes (' -> &#39;) for safe
-    // use as attribute TEXT, but the browser decodes that back to a literal ' before handing onerror's
-    // string to the JS parser, which would break out of a hand-built JS string literal for any company name
-    // starting with a quote. Reading the values back out of dataset inside a fixed, argument-free handler
-    // avoids that whole class of bug. Each failure pops the next candidate off data-fallback-queue and
-    // retries the same <img>; only once the queue is empty does it give up and swap in the letter span.
-    return `<span class="${innerClass} ${innerClass}-logo">
-      <img src="${esc(first)}" alt="" loading="lazy" referrerpolicy="no-referrer"
-        data-fallback-queue="${esc(rest)}"
-        data-fallback-class="${esc(innerClass)}" data-fallback-text="${esc(initial)}"
-        onerror="var q=(this.dataset.fallbackQueue||'').split('\u0001').filter(Boolean);
-                 if(q.length){ this.src=q.shift(); this.dataset.fallbackQueue=q.join('\u0001'); }
-                 else { this.onerror=null; var s=document.createElement('span'); s.className=this.dataset.fallbackClass; s.textContent=this.dataset.fallbackText; this.replaceWith(s); }">
-    </span>`;
+    const plain = `<span class="${innerClass}">${esc(initial)}</span>`;
+    if (!domain) return plain;
+    const hit = Logos.get(domain);
+    if (hit) return hit.u ? logoImgHTML(innerClass, hit, initial, domain) : plain;
+    // Unknown yet: show the initial now and measure the candidates in the background. Deferred a tick so
+    // the caller has inserted this markup before upgrade() goes looking for it.
+    setTimeout(() => Logos.resolve(domain), 0);
+    return `<span class="${innerClass}" data-logo-pending="${esc(domain)}" data-logo-cls="${esc(innerClass)}" data-logo-initial="${esc(initial)}">${esc(initial)}</span>`;
   }
 
   // Thread timeline block: stories from Archive.forStory() that share a company with `it`. Synchronous -
@@ -4742,15 +5036,47 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     sel.value = S.f.investSector;
   }
 
+  // Every Telegram channel that carried a story - all its sources, not just the first, because a post from a
+  // linked channel that duplicated a story already running is merged into it rather than listed on its own.
+  function itemChannels(it) {
+    const out = new Set();
+    (it.sources || []).forEach(src => {
+      const m = src && /^Telegram:\s*(.+)$/i.exec(src.name || '');
+      if (m) out.add(m[1].trim().toLowerCase());
+    });
+    return out;
+  }
+  /* Posts from the channels linked under Settings > Telegram channels for Investment. Those channels used to
+     be saved and then never read by anything; the pipeline now fetches them, and this is where their posts
+     land - in Investment only, never News (channelVisible() only follows News channels). A post that names a
+     tracked company already appears under that company above, so it isn't repeated here. Hidden while a
+     sector filter is on, since channel posts don't belong to a sector. */
+  function investChannelSectionHTML(groups) {
+    if (!S.myInvestChannels.size || S.f.investSector) return '';
+    const listed = new Set();
+    groups.forEach(g => g.companies.forEach(c => c.stories.forEach(st => listed.add(st.id))));
+    const stories = all().filter(it => {
+      if (!it.live || listed.has(it.id)) return false;
+      const st = itemStatus(it);
+      if (st === 'dismissed' || st === 'expired') return false;
+      for (const ch of itemChannels(it)) if (S.myInvestChannels.has(ch)) return true;
+      return false;
+    }).sort(byPriority);
+    return groupHead(esc(t('investFromChannels')), stories.length) + (stories.length
+      ? stories.map(entryWrapHTML).join('')
+      : `<p class="empty-note">${esc(t('investChannelsEmpty'))}</p>`);
+  }
+
   function renderInvestmentList() {
     // Same guard as renderList(): don't yank #list's DOM out from under an in-progress swipe gesture.
     if (SWIPE.active) { SWIPE.renderPending = true; return; }
     const box = $('#list');
     const allGroups = investmentGroups();
     const empty = $('#investEmpty');
+    const channelHTML = investChannelSectionHTML(allGroups);
     if (!S.myCompanies.size) {
       if (empty) empty.hidden = false;
-      box.innerHTML = '';
+      box.innerHTML = channelHTML;     // linked channels still show, under the "track companies" prompt
       seenObserveVisible(box);
       return;
     }
@@ -4778,7 +5104,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       const sectorTotal = g.companies.reduce((n, c) => n + c.stories.length, 0);
       html += groupHead(esc(g.sector), sectorTotal) + companyBlocks;
     }
-    box.innerHTML = html || `<div class="empty"><p>${esc(t('investNoNews'))}</p></div>`;
+    box.innerHTML = (html || `<div class="empty"><p>${esc(t('investNoNews'))}</p></div>`) + channelHTML;
     seenObserveVisible(box);
     // Sentiment pulse no longer renders inline here - per the user's explicit "Dedicated Pulse screen"
     // choice, it moved to its own Community tab (see renderCommunity()), which lists every tracked company
@@ -5231,7 +5557,10 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     { id: 'notifications', mode: null, icon: 'bell', title: 'Notifications', subKey: () => 'New story alerts', count: null },
     { id: 'export', mode: null, icon: 'export', title: 'Export', subKey: () => 'Save a report or the raw table', count: null },
     { id: 'getapp', mode: null, icon: 'plus', title: 'Get the app', subKey: () => 'Install on this device', count: null },
-    { id: 'feedback', mode: null, icon: 'help', title: 'Feedback & support', subKey: () => isOwner() ? 'Send feedback · view tickets' : 'Send feedback', count: null }
+    { id: 'feedback', mode: null, icon: 'help', title: 'Feedback & support', subKey: () => isOwner() ? 'Send feedback · view tickets' : 'Send feedback', count: null },
+    // owner: true - listed only for the owner account (renderSettingsNav) and refused for anyone else
+    // (openSettingsPage). The data behind it is owner-only in firestore.rules too; this just hides the door.
+    { id: 'pushstats', mode: null, owner: true, icon: 'chart', title: 'Notification stats', subKey: () => 'Opened, swiped away, ignored', count: null }
   ];
   const SN_ICON = {
     theme: '<circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor" stroke="none"/>',
@@ -5241,7 +5570,8 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     gauge: '<path d="M3.5 18a8.5 8.5 0 1 1 17 0"/><path d="M12 18l4.2-4.8"/><circle cx="12" cy="18" r="1.3" fill="currentColor" stroke="none"/>',
     plus: '<path d="M12 4v16M4 12h16"/>',
     help: '<circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/>',
-    export: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>'
+    export: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>',
+    chart: '<path d="M3 21h18"/><path d="M6 17v-5M11 17V6M16 17v-8M21 17V3"/>'
   };
   function renderSettingsNav() {
     const avatar = $('#snAcctAvatar'), title = $('#snAcctTitle'), sub = $('#snAcctSub');
@@ -5265,6 +5595,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     // arrived from. The `mode` field on each section is kept only for subKey()/count() styling elsewhere,
     // not as a filter here any more.
     const html = SETTINGS_SECTIONS
+      .filter(s => !s.owner || isOwner())
       .map(s => {
         const n = s.count ? s.count() : null;
         return `<button type="button" class="settingsnav-item" data-act="spopen" data-v="${s.id}">
@@ -5279,6 +5610,8 @@ Give a concise, event-specific analysis - decide for yourself which structure be
   function openSettingsPage(id) {
     const page = $('#sp-' + id);
     if (!page) return;
+    const section = SETTINGS_SECTIONS.find(x => x.id === id);
+    if (section && section.owner && !isOwner()) return;
     $('#settingsHome').classList.add('sp-hidden');
     $$('.settingspage').forEach(p => p.classList.add('sp-hidden'));
     page.classList.remove('sp-hidden');
@@ -5287,6 +5620,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     track('settings_section_open', { section: id });
     if (id === 'export') renderExport();
     if (id === 'appetite') renderAppetiteBox();
+    if (id === 'pushstats') renderPushStats();
   }
   function closeSettingsPage() {
     $$('.settingspage').forEach(p => p.classList.add('sp-hidden'));
@@ -5973,6 +6307,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       // Once per launch, not on every 2-minute poll: the resolved floor moves with the day's volume, and
       // re-pushing it to Firestore each time the feed ticks would churn for no benefit.
       Appetite.syncPush();
+      Push.syncAccount();   // tie this device's notifications to whoever is signed in
     });
     if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
       window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').then(reg => {

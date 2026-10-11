@@ -201,6 +201,40 @@ input[type=search]:focus-visible{border-color:var(--accent);box-shadow:0 0 0 4px
 .appetite-rest .ar-sub{margin:6px 0 0;font-size:13.5px;color:var(--ink2);line-height:1.5}
 .appetite-rest .btn{margin-top:12px}
 
+/* Owner-only notification stats (renderPushStats() in app.js). Opened / swiped away / ignored are told
+   apart by position in the bar and by the legend's words as well as colour. */
+.ps-range{margin-bottom:16px}
+.ps-tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line)}
+@media (max-width:420px){.ps-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.ps-tile{background:var(--surface);padding:12px 12px 11px;min-width:0}
+.ps-tile b{display:block;font-size:22px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}
+.ps-tile span{display:block;font-size:12px;color:var(--ink2);margin-top:3px}
+.ps-tile.ps-good b{color:var(--save)}
+.ps-section{margin-top:20px}
+.ps-h{margin:0 0 9px;font-size:13px;font-weight:800}
+.ps-bar{display:flex;height:12px;background:var(--line);overflow:hidden;border-radius:2px}
+.ps-bar i{display:block;height:100%}
+.ps-bar-empty{opacity:.5}
+.ps-o{background:var(--save)}
+.ps-d{background:var(--high)}
+.ps-i{background:var(--low)}
+.ps-legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:9px;font-size:12.5px;color:var(--ink2)}
+.ps-legend span{display:flex;align-items:center;gap:6px}
+.ps-legend em{display:inline-block;width:10px;height:10px;border-radius:2px}
+.ps-note{margin:9px 0 0;font-size:12.5px;color:var(--ink2);line-height:1.45;max-width:56ch}
+.ps-table{display:flex;flex-direction:column;gap:12px}
+.ps-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 12px;align-items:baseline}
+.ps-row .ps-bar{grid-column:1 / -1;height:8px}
+.ps-name{font-size:13.5px;font-weight:700;min-width:0}
+.ps-num{font-size:13px;font-weight:800;font-variant-numeric:tabular-nums}
+.ps-sub{grid-column:1 / -1;font-size:11.5px;color:var(--ink2);margin-top:-2px}
+.ps-hours{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.ps-hour{display:grid;grid-template-columns:3.6em minmax(0,1fr) 6.8em;gap:10px;align-items:center;font-size:12.5px}
+.ps-hl{color:var(--ink2);font-variant-numeric:tabular-nums}
+.ps-ht{height:8px;background:var(--line);border-radius:2px;overflow:hidden}
+.ps-ht i{display:block;height:100%;background:var(--ink2)}
+.ps-hv{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+
 /* Per-device alert preferences inside Settings -> Notifications (rendered by renderNotifBox() in app.js).
    Only shown once notifications are actually on, so these never appear as dead controls. */
 .notif-prefs{margin-top:18px;padding-top:4px;border-top:1px solid var(--line);display:flex;flex-direction:column}
@@ -210,6 +244,7 @@ input[type=search]:focus-visible{border-color:var(--accent);box-shadow:0 0 0 4px
 .np-select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .np-check{width:22px;height:22px;flex:none;accent-color:var(--accent)}
 .np-hint{margin:2px 0 0;font-size:12.5px;color:var(--ink2);line-height:1.45;max-width:52ch}
+.np-hint.np-pacing{margin-top:18px;padding-top:12px;border-top:1px solid var(--line)}
 .lp-list{display:flex;flex-direction:column;gap:8px;margin-top:12px}
 .lp-row{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:var(--radius-ctrl);border:1px solid var(--line);background:var(--surface);
   box-shadow:var(--card-shadow);transition:box-shadow .2s var(--ease),transform .2s var(--ease)}
@@ -347,9 +382,15 @@ input[type=search]:focus-visible{border-color:var(--accent);box-shadow:0 0 0 4px
    version above, just padded a touch so a square/wide logo doesn't touch the circular edge, and padding
    collapses back to 0 for the plain-initial fallback (a <span> with no nested <img>) via :has(), so neither
    version needs its own separate ring markup. */
-.gc-ring-inner-logo{padding:5px}
-.gc-ring-inner-logo:not(:has(img)){padding:0}
-.gc-ring-inner-logo img{width:100%;height:100%;object-fit:contain}
+/* Company logos sit on a white plate in BOTH themes. Brand marks are drawn for white backgrounds, and many
+   arrive as white-backed squares - on the dark surface those read as pasted-on tiles (the HDFC/NVIDIA look
+   in dark mode). On a white disc the square's own white disappears and every logo reads the same way.
+   -lq is a logo that's usable but under LOGO_HQ_PX (see Logos in app.js): drawn smaller, so it's stretched
+   less and stays sharper. */
+.gc-ring-inner-logo{padding:6px;background:#fff}
+.gc-ring-inner-logo.gc-ring-inner-lq{padding:9px}
+.gc-ring-inner-logo:not(:has(img)){padding:0;background:var(--surface)}
+.gc-ring-inner-logo img{width:100%;height:100%;object-fit:contain;border-radius:4px}
 .gc-name{font-size:15px;font-weight:700;color:var(--ink);line-height:1.3}
 .gc-top .n{margin-left:auto;flex:none;min-width:20px;padding:2px 7px;border-radius:999px;background:var(--paper);color:var(--ink2);font-weight:700;font-size:11.5px;text-align:center;font-variant-numeric:tabular-nums}
 .gc-actions{display:flex;align-items:center;gap:8px}
@@ -688,10 +729,11 @@ body.cv-lock{overflow:hidden}
 .cstop:active .qs-ring{transform:scale(.94)}
 @media (hover:hover){.cstop:hover .qs-ring{transform:scale(1.05)}}
 .qs-ring-inner{width:100%;height:100%;border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:26px;box-shadow:0 0 0 1px var(--line) inset,var(--card-shadow)}
-/* Real company logo variant, same idea as .gc-ring-inner-logo above (see companyLogoHTML() in app.js). */
-.qs-ring-inner-logo{padding:8px}
-.qs-ring-inner-logo:not(:has(img)){padding:0}
-.qs-ring-inner-logo img{width:100%;height:100%;object-fit:contain}
+/* Real company logo variant, same white plate and -lq rule as .gc-ring-inner-logo above. */
+.qs-ring-inner-logo{padding:9px;background:#fff}
+.qs-ring-inner-logo.qs-ring-inner-lq{padding:14px}
+.qs-ring-inner-logo:not(:has(img)){padding:0;background:var(--surface)}
+.qs-ring-inner-logo img{width:100%;height:100%;object-fit:contain;border-radius:6px}
 .cstop-name{font-size:11.5px;font-weight:600;color:var(--ink2);max-width:66px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* Country story viewer - a full-screen "status" reader: dashes at top, one story centered, tap zones either side */
@@ -724,6 +766,8 @@ body.cv-lock{overflow:hidden}
    on the Investment company cards (.gc-ring-inner) at a size matching the 56px flag footprint above it. */
 .cv-companyglyph{width:64px;height:64px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center}
 .cv-companyglyph .gc-ring-inner{width:56px;height:56px;font-size:24px;box-shadow:none;background:var(--surface);color:var(--accent)}
+.cv-companyglyph .gc-ring-inner-logo{background:#fff;padding:9px}
+.cv-companyglyph .gc-ring-inner-logo.gc-ring-inner-lq{padding:14px}
 .cv-country{font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink2)}
 .cv-headline{margin:2px 0 0;font-size:22px;line-height:1.25;font-weight:800;letter-spacing:-.01em}
 .cv-time{margin-top:6px;font-size:12.5px;font-weight:600;color:var(--ink2)}
@@ -995,7 +1039,7 @@ body.pre-app .top, body.pre-app main, body.pre-app .tabs{display:none}
 
       <div class="lp-block">
         <h2 class="lp-h" data-i18n="telegramInvestHeading">Telegram channels for Investment</h2>
-        <p class="lp-sub" data-i18n="telegramInvestSub">Link Telegram channels you follow specifically for investment/market news - kept separate from your News channels above.</p>
+        <p class="lp-sub" data-i18n="telegramInvestSub">Link Telegram channels you follow specifically for investment/market news - kept separate from your News channels above. Their posts appear in your Investment tab within about 30 minutes.</p>
         <div class="lp-add">
           <input id="tgInvInput" type="text" inputmode="text" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="t/channelname" data-i18n-placeholder="tgPlaceholder">
           <button id="tgInvAdd" class="btn primary" data-i18n="addBtn">+ Add</button>
@@ -1033,6 +1077,17 @@ body.pre-app .top, body.pre-app main, body.pre-app .tabs{display:none}
         <h2 class="lp-h" data-i18n="appetiteHeading">Daily appetite</h2>
         <p class="lp-sub" data-i18n="appetiteSub">Say how much news you want in a day. QwickSignal works out which priorities to lead with, and adjusts as the volume changes.</p>
         <div id="appetiteBox"></div>
+      </div>
+    </div>
+
+    <!-- Owner only: notification response stats (renderPushStats() in app.js). Hidden from the Settings list
+         for everyone else, and the data it reads is owner-only in firestore.rules. -->
+    <div class="settingspage sp-hidden" id="sp-pushstats">
+      <button type="button" class="settingspage-back" data-act="spback"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>Settings</button>
+      <div class="lp-block">
+        <h2 class="lp-h">Notification stats</h2>
+        <p class="lp-sub">How people respond to the notifications QwickSignal sends. Only you can see this.</p>
+        <div id="pushStatsBox"></div>
       </div>
     </div>
 

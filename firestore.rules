@@ -8,8 +8,10 @@
 //   qs_channels/{name}  Linked Telegram channels. Anyone can create as "approved" (no review step).
 //                       No client update. Delete is owner-only.
 //   qs_config/defaults  Owner-curated default-channel list. Public read, owner-only write.
-//   qs_push_subs/{id}   Web Push subscriptions, one per device. No login needed. Public get/list so
-//                       the pipeline can send pushes; a device can delete its own subscription.
+//   qs_push_subs/{id}   Web Push subscriptions and alert preferences, one per device. No login needed to
+//                       create; PRIVATE to read - only the pipeline's service account can list it.
+//   qs_push_events/{id} What devices did with a notification (shown/opened/dismissed). Create-only, owner reads.
+//   qs_push_stats/{day} Notifications sent per day. Pipeline-written, owner reads.
 //   qs_tickets/{id}     Signed-in bug/feedback reports. Write-only for a normal visitor (create only,
 //                       never read back). Owner-only get/list/update(status)/delete.
 //   qs_archive/{id}     Permanent story record once feed.json's 24h window drops it. Public read,
@@ -108,15 +110,20 @@ service cloud.firestore {
     }
 
     match /qs_push_subs/{id} {
-      allow get, list: if true;
+      // PRIVATE. This used to be publicly listable so the pipeline could read it with no login. It now
+      // holds each device's tracked companies (watch), so the owner chose to close it: nobody can read or
+      // list it from outside. The pipeline signs in as a Firebase service account, which Firestore trusts
+      // and which bypasses these rules - see firestore_admin_token() in pipeline.py.
+      allow get, list: if false;
 
-      // min_imp/countries/quiet/tz_min/digest are this device's own alert preferences (Settings ->
-      // Notifications; see parse_push_prefs()/sub_wants() in pipeline.py). All optional - a subscription
-      // written before they existed stays valid and keeps the old "every story" behaviour.
+      // min_imp/countries/quiet/tz_min/digest/invest/watch are this device's own alert preferences (Settings
+      // -> Notifications; see parse_push_prefs() in pipeline.py). All optional - a subscription written
+      // before they existed stays valid and keeps the old "every story" behaviour.
       allow create, update: if
         id.matches('[A-Za-z0-9_-]{16,64}') &&
         request.resource.data.keys().hasOnly(['endpoint', 'p256dh', 'auth', 'created_at',
-                                              'min_imp', 'countries', 'quiet', 'tz_min', 'digest']) &&
+                                              'min_imp', 'countries', 'quiet', 'tz_min', 'digest',
+                                              'invest', 'watch', 'uid']) &&
         request.resource.data.endpoint is string && request.resource.data.endpoint.size() <= 1024 &&
         request.resource.data.p256dh is string && request.resource.data.p256dh.size() <= 256 &&
         request.resource.data.auth is string && request.resource.data.auth.size() <= 64 &&
@@ -130,9 +137,48 @@ service cloud.firestore {
           (request.resource.data.tz_min is int &&
            request.resource.data.tz_min >= -840 && request.resource.data.tz_min <= 840)) &&
         (!('digest' in request.resource.data) ||
-          request.resource.data.digest in ['off', 'daily', 'weekly']);
+          request.resource.data.digest in ['off', 'daily', 'weekly']) &&
+        (!('invest' in request.resource.data) || request.resource.data.invest is bool) &&
+        (!('watch' in request.resource.data) ||
+          (request.resource.data.watch is list && request.resource.data.watch.size() <= 200)) &&
+        // uid links this device's notifications to an account, so the pipeline can personalise them from
+        // that account's own portfolio. Only the signed-in owner of that account may set it - otherwise
+        // anyone could attach someone else's account and receive alerts revealing their watchlist.
+        (!('uid' in request.resource.data) ||
+          (request.auth != null && request.resource.data.uid == request.auth.uid));
 
+      // A device removes its own subscription when notifications are turned off. Safe to leave open now
+      // that the collection can't be listed: a document id is a random string nobody else can find.
       allow delete: if true;
+    }
+
+    // qs_push_events: what each device did with a notification, written by sw.js - one document per
+    // (notification, action), id "<nid>_<action>", so a duplicate report can't count twice (create only).
+    // Anyone may create one of the exact shape below (the service worker has no login); only the owner can
+    // read them, for the dashboard in Settings. Contains no personal data: a random notification id, a
+    // hashed device key, the kind, and the device's local hour.
+    match /qs_push_events/{id} {
+      allow get, list: if isOwner();
+      allow create: if
+        request.resource.data.keys().hasOnly(['nid', 'd', 'kind', 'n', 'action', 'at', 'hour', 'crit']) &&
+        request.resource.data.nid is string && request.resource.data.nid.matches('n[0-9a-f]{16}') &&
+        request.resource.data.action in ['shown', 'opened', 'dismissed'] &&
+        id == request.resource.data.nid + '_' + request.resource.data.action &&
+        request.resource.data.kind in ['news', 'invest', 'mixed', 'digest'] &&
+        request.resource.data.d is string && request.resource.data.d.size() <= 32 &&
+        request.resource.data.n is int && request.resource.data.n >= 0 && request.resource.data.n <= 100 &&
+        request.resource.data.at is string && request.resource.data.at.size() <= 40 &&
+        request.resource.data.hour is int && request.resource.data.hour >= 0 && request.resource.data.hour <= 23 &&
+        request.resource.data.crit is bool;
+      allow update: if false;
+      allow delete: if isOwner();
+    }
+
+    // qs_push_stats/{YYYY-MM-DD}: how many notifications the pipeline SENT each day, by kind. Written only
+    // by the pipeline's service account (which bypasses rules), read only by the owner.
+    match /qs_push_stats/{day} {
+      allow get, list: if isOwner();
+      allow write: if false;
     }
 
     match /qs_tickets/{id} {

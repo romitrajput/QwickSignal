@@ -1,7 +1,42 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-64-v1';  // This round: data-loss fix. Tracked companies, linked company channels
+const VERSION = 'gni-phase3-67-v1';  // This round: Investment channels and account-driven alerts. Channels
+                                      // linked under Investment were saved and never read by anything; the
+                                      // pipeline now fetches them and the Investment tab shows their posts
+                                      // ("From your linked channels"), never News. Investment alerts are now
+                                      // personalised from the signed-in account's own portfolio (companies +
+                                      // linked channels), read by the pipeline directly - the signup carries
+                                      // only the account link (uid), verified by firestore.rules, and no
+                                      // longer a copy of the watchlist.
+                                      //
+                                      // Previous round (gni-phase3-66-v1): notifications. (1) Paced and bundled: at most one per
+                                      // device per random 20-40 min gap, bundling everything in between;
+                                      // Critical goes at once; quiet hours hold stories for the morning
+                                      // instead of dropping them. Replaces up to 25 per run, 10s apart.
+                                      // (2) Investment alerts: stories mentioning tracked companies, merged
+                                      // into the same bundles. (3) Response tracking: this file records
+                                      // shown / opened / dismissed per notification to qs_push_events, for
+                                      // an owner-only dashboard in Settings. (4) qs_push_subs is now private;
+                                      // the pipeline reads it as a Firebase service account.
+                                      //
+                                      // Previous round (gni-phase3-65-v1): sharp company logos. The ring logos were blurry because
+                                      // companyLogoHTML() took the FIRST source that loaded - the company's
+                                      // own 16-32px favicon.ico - and drew it at ~115 real pixels on a 3x
+                                      // phone, a 4-7x stretch. Every candidate (apple-touch-icon, Google at
+                                      // sz=256, DuckDuckGo, favicon.ico) is now loaded off-screen and
+                                      // measured, the largest wins, and the search stops at the first one
+                                      // >= 96px. Anything under 32px shows the initial instead; 32-95px is
+                                      // drawn smaller so it's stretched less. Winners are cached on the
+                                      // device for 14 days. Logos also sit on a white plate in both themes,
+                                      // so white-backed square logos no longer look like pasted tiles in
+                                      // dark mode. Separately, a watchlist entry typed as a ticker ("Nvda")
+                                      // showed an unrelated company's logo from nvda.com: company lookup now
+                                      // matches tickers, US entries gained theirs (which also fixes View
+                                      // Chart's symbol for them), and a recognised company's domain is
+                                      // guessed from its real name rather than the typed text.
+                                      //
+                                      // Previous round (gni-phase3-64-v1): data-loss fix. Tracked companies, linked company channels
                                       // and saved stories all vanished after signing out and back in.
                                       // ROOT CAUSE: since 084ed30 every save has carried an investChannels
                                       // field that firestore.rules' hasOnly() list never allowed, so
@@ -519,45 +554,92 @@ self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== VERSION).map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
 /* Real OS-level push notifications ("Waveform Arrival"), separate from the in-app toast in app.js (that one
-   only shows while a tab is open). The pipeline (pipeline.py's send_push_notifications()) posts a Web Push
-   message carrying one new story's id/flag/country/sector/headline after every publish; this is what actually
-   turns that message into a notification the OS shows, even if no tab is open at all. */
+   only shows while a tab is open). The pipeline (pipeline.py's run_push()) sends at most one notification per
+   device per 20-40 minute gap, BUNDLING whatever arrived in between ("4 new stories · 1 on your watchlist"),
+   and supplies the finished title/body. Older payloads (no title/body) are still rendered the old way, so a
+   device whose service worker hasn't updated yet - or a notification queued just before the update - works.
+
+   Response tracking: every notification carries a random id (nid). This records what happened to it -
+   'shown' when it arrives, 'opened' when it's tapped, 'dismissed' when it's swiped away - as one document per
+   (nid, action) in qs_push_events, which only the owner can read (see firestore.rules). "Ignored" isn't an
+   event: it's a notification shown and then neither opened nor dismissed within 24 hours, worked out in the
+   owner's dashboard. Note iPhones don't report a swipe-away to the page, so there a dismissal counts as
+   ignored. Recording never blocks or breaks the notification itself. */
+const FS_EVENTS = 'https://firestore.googleapis.com/v1/projects/qwicksignal/databases/(default)/documents/qs_push_events';
+const FS_KEY = 'AIzaSyBTix4TmUn9oVQrX0ByPra4FissOfAHefY';   // the public web config key, same as app.js's FIREBASE.apiKey
+const PUSH_KINDS = ['news', 'invest', 'mixed', 'digest'];
+
+function recordPushEvent(meta, action) {
+  // A notification from before this version carries no id - nothing to tie a reaction to, so nothing to record.
+  if (!meta || !/^n[0-9a-f]{16}$/.test(meta.nid || '')) return Promise.resolve();
+  const fields = {
+    nid: { stringValue: meta.nid },
+    d: { stringValue: String(meta.d || '').slice(0, 32) },
+    kind: { stringValue: PUSH_KINDS.includes(meta.kind) ? meta.kind : 'news' },
+    n: { integerValue: String(Math.max(0, Math.min(100, parseInt(meta.n, 10) || 0))) },
+    action: { stringValue: action },
+    at: { stringValue: new Date().toISOString() },
+    hour: { integerValue: String(new Date().getHours()) },    // the device's own local hour
+    crit: { booleanValue: !!meta.crit }
+  };
+  // documentId makes this a create: a second report of the same (nid, action) is refused rather than counted.
+  return fetch(`${FS_EVENTS}?documentId=${meta.nid}_${action}&key=${FS_KEY}`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fields })
+  }).catch(() => { /* offline or refused: tracking is best-effort, the notification already did its job */ });
+}
+
 self.addEventListener('push', e => {
   let data = {};
   try { data = e.data ? e.data.json() : {}; } catch (err) { /* malformed payload: fall through to defaults below */ }
-  const title = (data.flag ? data.flag + ' ' : '') + (data.country || 'QwickSignal');
-  const body = data.headline || 'A new story just came in.';
+  const title = data.title || ((data.flag ? data.flag + ' ' : '') + (data.country || 'QwickSignal'));
+  const body = data.body || data.headline || 'A new story just came in.';
   const id = data.id || '';
-  // A digest (pipeline.py's send_digests(), one morning round-up per device) must NOT share the per-story
-  // tag space: tagging it by story id would let a later push about that same story silently replace the
-  // digest, and vice versa. Its own fixed tag also means a second digest replaces the first, which is
-  // right - yesterday's round-up is never worth keeping on screen.
-  e.waitUntil(self.registration.showNotification(title, {
-    body,
-    icon: 'icon-192.png',
-    badge: 'icon-192.png',
-    tag: data.digest ? 'qs-digest' : (id || 'qs-story'),
-    renotify: !!id,
-    data: { id, kicker: data.sector ? (data.country || '') + ' · ' + data.sector : (data.country || '') }
-  }));
+  const meta = data.nid ? { nid: data.nid, d: data.d, kind: data.kind, n: data.n, crit: data.crit } : null;
+  // Tags decide what replaces what on screen. A digest keeps one fixed tag (yesterday's round-up is never
+  // worth keeping). A bundle gets its own nid as the tag, so each one stands on its own instead of a new
+  // bundle silently wiping out an unread earlier one with different stories in it. Legacy payloads keep
+  // the old per-story tag.
+  const tag = data.digest || data.kind === 'digest' ? 'qs-digest' : (data.nid || id || 'qs-story');
+  e.waitUntil(Promise.all([
+    self.registration.showNotification(title, {
+      body,
+      icon: 'icon-192.png',
+      badge: 'icon-192.png',
+      tag,
+      renotify: !!id,
+      data: { id, meta, kicker: data.sector ? (data.country || '') + ' · ' + data.sector : (data.country || '') }
+    }),
+    recordPushEvent(meta, 'shown')
+  ]));
 });
 
-// Tapping the notification: focus an already-open tab and hand it the story id to jump to, or open a fresh
-// tab at #<id> which app.js reads on load (see the hashchange/DOMContentLoaded handling added there).
+// Tapping the notification: record it, then focus an already-open tab and hand it the story id to jump to,
+// or open a fresh tab at #<id> which app.js reads on load. For a bundle that's its most important story.
 self.addEventListener('notificationclick', e => {
   e.notification.close();
-  const id = (e.notification.data && e.notification.data.id) || '';
-  e.waitUntil((async () => {
-    const clientsList = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-    for (const c of clientsList) {
-      if ('focus' in c) {
-        await c.focus();
-        if (id) c.postMessage({ type: 'qs-goto', id });
-        return;
+  const nd = e.notification.data || {};
+  const id = nd.id || '';
+  e.waitUntil(Promise.all([
+    recordPushEvent(nd.meta, 'opened'),
+    (async () => {
+      const clientsList = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      for (const c of clientsList) {
+        if ('focus' in c) {
+          await c.focus();
+          if (id) c.postMessage({ type: 'qs-goto', id });
+          return;
+        }
       }
-    }
-    if (self.clients.openWindow) await self.clients.openWindow(id ? './#' + encodeURIComponent(id) : './');
-  })());
+      if (self.clients.openWindow) await self.clients.openWindow(id ? './#' + encodeURIComponent(id) : './');
+    })()
+  ]));
+});
+
+// Swiped away without opening. Fires only for a dismissal by the person (not for close() above, and not on
+// iPhones at all - see the note at the top of this section).
+self.addEventListener('notificationclose', e => {
+  const nd = e.notification.data || {};
+  e.waitUntil(recordPushEvent(nd.meta, 'dismissed'));
 });
 
 self.addEventListener('fetch', e => {

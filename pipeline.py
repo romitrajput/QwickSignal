@@ -19,6 +19,7 @@ import html
 import io
 import json
 import os
+import random
 import re
 import sys
 import time
@@ -363,27 +364,25 @@ def fetch_approved_channels() -> list[str]:
 VAPID_PUBLIC_KEY = os.environ.get("VAPID_PUBLIC_KEY", "")
 VAPID_PRIVATE_KEY = os.environ.get("VAPID_PRIVATE_KEY", "")
 VAPID_SUBJECT = os.environ.get("VAPID_SUBJECT", "mailto:rrrajput2101@gmail.com")
-# Importance floor for a push - the user asked for every priority (Critical/High/Medium/Low) to push, so
-# this now includes all four. Every new story still gets the in-app toast too (app.js's notifyNewStory,
-# independent of this). Change here (not in app.js) if that bar should move again - this is the only place
-# that decides it.
-PUSH_MIN_IMPORTANCE = {"Critical", "High", "Medium", "Low"}
-# One push PER new story (not one per run) - the user's explicit choice after being told the consequence: a
-# single run can publish dozens of new stories (84 in one observed run), which at one-push-per-story means
-# that many OS notifications firing back to back, to every subscribed device, in the same run. This cap is
-# a safety net, not a design choice the user asked for - it limits how bad a single unusually heavy run can
-# get, without silently reinstating a "one push per run" behaviour they explicitly didn't want. Raise it,
-# lower it, or remove the slice below entirely if the cap itself gets in the way.
-PUSH_MAX_PER_RUN = 25
-# Seconds to wait between each story's round of notifications. Without this, every story in a run's burst
-# fired in the same instant - fine for one story, but a run with several new stories meant 5-6+ OS
-# notifications landing on a device all at once, which reads as spam rather than "a story just broke."
-# This can't make notifications arrive the true instant a story is detected (that would need a
-# persistently-running backend instead of this scheduled batch pipeline - see max_age_hours/the 5-minute
-# schedule for how "live" detection already is), but spacing out a single run's own stories gets close to
-# that feel instead of dumping them all in one breath. 25 stories * 10s = ~4 minutes, which still comfortably
-# fits inside the 8-minute step timeout in .github/workflows/pipeline.yml.
-PUSH_SPACING_SECONDS = 10
+# PACING. A run used to send one notification per new story - up to 25, ten seconds apart - and back-to-back
+# runs repeated that, so a busy news hour landed as bursts of 25 on every phone. The owner asked for them to
+# be spread out at random instead. Now each device gets AT MOST one notification per gap, the gap is drawn at
+# random between PUSH_GAP_MIN_S and PUSH_GAP_MAX_S, and everything that arrived in between is BUNDLED into
+# that one notification ("4 new stories - 1 on your watchlist"). A Critical story doesn't wait: it goes out at
+# once, carrying whatever was already queued with it, and starts a fresh gap. See run_push().
+PUSH_GAP_MIN_S, PUSH_GAP_MAX_S = 20 * 60, 40 * 60
+# How often the device list is read and the queues checked. Listing qs_push_subs costs one Firestore read PER
+# DEVICE, and the free plan allows 50,000 reads a day - shared with everything the app itself reads. A
+# notification can only go out on a run that checks, so the check interval is also the resolution of the
+# random gap: checking every 5-minute run gives gaps of 20/25/30/35/40 min, every 10 min only 20/30/40.
+# So it checks every run while that's affordable (up to PUSH_EVAL_FAST_MAX_DEVICES: ~17k reads/day at most),
+# then every 10 minutes (~145 reads per device per day). A Critical story always triggers a check at once.
+# Previously alerts and digests each read the list separately on every run - about 85 devices before the
+# free plan ran out.
+PUSH_EVAL_FAST_S, PUSH_EVAL_SLOW_S = 5 * 60, 10 * 60
+PUSH_EVAL_FAST_MAX_DEVICES = 60
+PUSH_QUEUE_MAX = 60          # per device; if a device is held for a long time the oldest stories drop off
+PUSH_ITEM_MAX_AGE_H = 12     # a queued story older than this isn't news any more - dropped rather than sent
 
 
 def _b64u(data: bytes) -> str:
@@ -476,58 +475,175 @@ def send_one_push(sub: dict, payload: dict) -> int:
 #   quiet      quiet hours, 22:00-07:00 in the device's own time zone: only Critical stories get through
 #   tz_min     the device's UTC offset in minutes (for quiet hours and the digest's local send time)
 #   digest     "off" / "daily" / "weekly" - a once-a-day/once-a-week summary push (send_digests() below)
+#   invest     also notify about stories mentioning this device's tracked companies
+#   watch      the match terms for those companies (names and aliases, lowercased), computed on the device
+#              from the app's own company table - so this file never needs its own copy of that table
 # A subscription written before these existed has none of the fields, and gets exactly the old behaviour
-# (every story, no quiet hours, no digest) - nobody's notifications change until they choose otherwise.
+# (every story, no quiet hours, no digest, no watchlist) - nobody's notifications change until they choose.
 QUIET_START_HOUR, QUIET_END_HOUR = 22, 7
 DIGEST_HOUR_FROM, DIGEST_HOUR_TO = 8, 12     # local-time window the digest goes out in (see send_digests)
+
+
+def _fs_strings(f: dict, key: str) -> list[str]:
+    return [v.get("stringValue", "") for v in ((f.get(key) or {}).get("arrayValue") or {}).get("values", [])]
 
 
 def parse_push_prefs(f: dict) -> dict:
     min_imp = (f.get("min_imp") or {}).get("stringValue") or "Low"
     if min_imp not in RANK:
         min_imp = "Low"
-    countries = [v.get("stringValue", "") for v in ((f.get("countries") or {}).get("arrayValue") or {}).get("values", [])]
     digest = (f.get("digest") or {}).get("stringValue") or "off"
     try:
         tz_min = int((f.get("tz_min") or {}).get("integerValue") or 0)
     except (TypeError, ValueError):
         tz_min = 0
-    return {"min_imp": min_imp, "countries": [c for c in countries if c],
+    # watch: the list older app versions sent from the phone. Still honoured for a signup with no account
+    # attached; for a signed-in one the account's own portfolio replaces it (see run_push()).
+    watch = [w.strip().lower() for w in _fs_strings(f, "watch") if 3 <= len(w.strip()) <= 60][:200]
+    uid = (f.get("uid") or {}).get("stringValue") or ""
+    return {"min_imp": min_imp, "countries": [c for c in _fs_strings(f, "countries") if c],
             "quiet": bool((f.get("quiet") or {}).get("booleanValue")),
             "digest": digest if digest in ("off", "daily", "weekly") else "off",
-            "tz_min": max(-14 * 60, min(14 * 60, tz_min))}
+            "tz_min": max(-14 * 60, min(14 * 60, tz_min)),
+            "invest": bool((f.get("invest") or {}).get("booleanValue")),
+            "watch": watch, "uid": uid if re.fullmatch(r"[A-Za-z0-9]{6,128}", uid) else "",
+            "inv_channels": set()}
 
 
 def sub_local_time(sub: dict, now: dt.datetime) -> dt.datetime:
     return now + dt.timedelta(minutes=sub.get("tz_min", 0))
 
 
-def sub_wants(sub: dict, item: dict, now: dt.datetime) -> bool:
-    """Whether this one device asked to be pushed this one story, by its own saved preferences."""
-    imp = item.get("importance") or "Low"
-    if RANK.get(imp, 0) < RANK.get(sub.get("min_imp", "Low"), 0):
+def in_quiet_hours(sub: dict, now: dt.datetime) -> bool:
+    if not sub.get("quiet"):
+        return False
+    hour = sub_local_time(sub, now).hour
+    return hour >= QUIET_START_HOUR or hour < QUIET_END_HOUR
+
+
+def news_wanted(sub: dict, item: dict) -> bool:
+    """The device's news filters: its priority floor and its country list."""
+    if RANK.get(item.get("importance") or "Low", 0) < RANK.get(sub.get("min_imp", "Low"), 0):
         return False
     countries = sub.get("countries") or []
-    if countries and (item.get("country") or "Global") not in countries:
+    return not countries or (item.get("country") or "Global") in countries
+
+
+def sub_wants(sub: dict, item: dict, now: dt.datetime) -> bool:
+    """News filters plus quiet hours, as one yes/no. Kept for the digest and existing callers; run_push()
+    uses the pieces separately, because quiet hours now HOLD a story for the morning instead of dropping it."""
+    if not news_wanted(sub, item):
         return False
-    if sub.get("quiet") and imp != "Critical":
-        hour = sub_local_time(sub, now).hour
-        if hour >= QUIET_START_HOUR or hour < QUIET_END_HOUR:
-            return False
-    return True
+    return not (in_quiet_hours(sub, now) and (item.get("importance") or "Low") != "Critical")
 
 
-def fetch_push_subscriptions() -> list[dict]:
-    """Every device currently subscribed for notifications (see app.js's Push.subscribe(), qs_push_subs in
-    firestore.rules). Same unauthenticated list pattern as fetch_approved_channels() above. Never raises."""
+def _watch_regex(sub: dict):
+    # Whole words only, so a company called "Ola" doesn't match "Motorola". Built once per device per run.
+    if "_watch_rx" not in sub:
+        terms = sorted({t for t in sub.get("watch") or [] if t}, key=len, reverse=True)
+        sub["_watch_rx"] = re.compile(r"(?<![\w])(?:" + "|".join(re.escape(t) for t in terms) + r")(?![\w])",
+                                      re.IGNORECASE) if terms else None
+    return sub["_watch_rx"]
+
+
+def push_kind_for(sub: dict, item: dict) -> str | None:
+    """'invest' if the story mentions one of this device's tracked companies (when it opted in), 'news' if it
+    passes the device's news filters, otherwise None. A watchlist story deliberately skips the priority floor
+    and the country list: someone tracking a company wants its news even when it's rated Low."""
+    if sub.get("invest"):
+        if sub.get("inv_channels") and sub["inv_channels"] & item_channels(item):
+            return "invest"                      # posted in one of the channels they linked under Investment
+        rx = _watch_regex(sub)
+        text = " ".join(str(item.get(k) or "") for k in ("headline", "excerpt", "summary"))
+        if rx and rx.search(text):
+            return "invest"
+    return "news" if news_wanted(sub, item) else None
+
+
+# ----------------------------------------------------------------- Firestore, as the pipeline itself
+# qs_push_subs used to be publicly listable - that's how this file read it, with no login. It now holds each
+# device's tracked companies as well, so the owner chose to lock it: firestore.rules refuses all public reads,
+# and this pipeline signs in as a Firebase service account instead. Service-account requests are trusted by
+# Firestore and bypass the rules, which is exactly why the key is a GitHub secret and never in the repo.
+# Signed here with `cryptography` (already a dependency): an RS256 JWT exchanged for a one-hour OAuth token.
+FIREBASE_SERVICE_ACCOUNT = os.environ.get("FIREBASE_SERVICE_ACCOUNT", "").strip()
+_ADMIN_TOKEN = {"value": None, "expires": 0.0, "failed": False}
+
+
+def _service_account() -> dict | None:
+    raw = FIREBASE_SERVICE_ACCOUNT
+    if not raw:
+        return None
+    try:
+        if not raw.startswith("{"):            # also accept the JSON pasted base64-encoded
+            raw = base64.b64decode(raw).decode()
+        sa = json.loads(raw)
+        return sa if sa.get("client_email") and sa.get("private_key") else None
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def firestore_admin_token() -> str | None:
+    """A cached OAuth token for the service account, or None if no key is configured or sign-in failed."""
+    if _ADMIN_TOKEN["value"] and time.time() < _ADMIN_TOKEN["expires"] - 120:
+        return _ADMIN_TOKEN["value"]
+    if _ADMIN_TOKEN["failed"]:
+        return None
+    sa = _service_account()
+    if not sa:
+        return None
+    try:
+        from cryptography.hazmat.primitives.asymmetric import padding
+        now = int(time.time())
+        token_uri = sa.get("token_uri") or "https://oauth2.googleapis.com/token"
+        header = {"alg": "RS256", "typ": "JWT", "kid": sa.get("private_key_id", "")}
+        claims = {"iss": sa["client_email"], "sub": sa["client_email"], "aud": token_uri, "iat": now,
+                  "exp": now + 3600, "scope": "https://www.googleapis.com/auth/datastore"}
+        signing_input = _b64u(json.dumps(header, separators=(",", ":")).encode()) + "." + \
+            _b64u(json.dumps(claims, separators=(",", ":")).encode())
+        key = serialization.load_pem_private_key(sa["private_key"].encode(), password=None)
+        sig = key.sign(signing_input.encode(), padding.PKCS1v15(), hashes.SHA256())
+        r = requests.post(token_uri, data={"grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
+                                           "assertion": signing_input + "." + _b64u(sig)}, timeout=15)
+        if not r.ok:
+            raise RuntimeError(f"HTTP {r.status_code}: {r.text[:200]}")
+        d = r.json()
+        _ADMIN_TOKEN.update(value=d["access_token"], expires=time.time() + int(d.get("expires_in", 3600)))
+        return _ADMIN_TOKEN["value"]
+    except Exception as exc:  # noqa: BLE001
+        _ADMIN_TOKEN["failed"] = True          # one clear log line per run, not one per request
+        log(f"  ! FIREBASE_SERVICE_ACCOUNT is set but sign-in failed: {exc}")
+        return None
+
+
+def fs_admin_headers() -> dict:
+    t = firestore_admin_token()
+    return {"Authorization": "Bearer " + t} if t else {}
+
+
+def device_key(doc_name: str) -> str:
+    """A stable, non-reversible id for a device. state.json is committed to the repository, so the real
+    subscription ids must never appear in it - now that the collection is private, knowing one would be
+    the only way to address a device's document."""
+    return hashlib.sha256((doc_name or "").encode()).hexdigest()[:16]
+
+
+def fetch_push_subscriptions() -> list[dict] | None:
+    """Every device subscribed for notifications, or None if the list couldn't be read (so a caller can
+    tell "nobody subscribed" apart from "couldn't look"). Never raises."""
     url = (f"https://firestore.googleapis.com/v1/projects/{FIREBASE_PROJECT}/databases/(default)/documents:runQuery"
            f"?key={FIREBASE_API_KEY}")
     body = {"structuredQuery": {"from": [{"collectionId": "qs_push_subs"}]}}
+    headers = fs_admin_headers()
     try:
-        r = requests.post(url, json=body, timeout=15)
+        r = requests.post(url, json=body, headers=headers, timeout=15)
         if not r.ok:
-            log(f"  push subs: HTTP {r.status_code}, skipping this run's notifications")
-            return []
+            if r.status_code in (401, 403) and not headers:
+                log("  push: notification signups are private now and FIREBASE_SERVICE_ACCOUNT isn't set - "
+                    "no notifications can be sent until it is (see the setup note in pipeline.yml)")
+            else:
+                log(f"  push subs: HTTP {r.status_code}, skipping this run's notifications")
+            return None
         subs = []
         for row in r.json():
             doc = row.get("document")
@@ -543,7 +659,7 @@ def fetch_push_subscriptions() -> list[dict]:
         return subs
     except Exception as exc:  # noqa: BLE001
         log(f"  push subs unavailable ({exc}), skipping this run's notifications")
-        return []
+        return None
 
 
 def delete_push_subscription(doc_name: str) -> None:
@@ -551,9 +667,167 @@ def delete_push_subscription(doc_name: str) -> None:
     if not doc_name:
         return
     try:
-        requests.delete(f"https://firestore.googleapis.com/v1/{doc_name}?key={FIREBASE_API_KEY}", timeout=15)
+        requests.delete(f"https://firestore.googleapis.com/v1/{doc_name}?key={FIREBASE_API_KEY}",
+                        headers=fs_admin_headers(), timeout=15)
     except Exception:  # noqa: BLE001
         pass  # best-effort cleanup only; a dead subscription left behind just fails silently next time too
+
+
+def record_push_stats(counts: dict, now: dt.datetime) -> None:
+    """Adds this run's SENT counts to qs_push_stats/<UTC date>, the half of the response stats only the
+    pipeline knows (sw.js records what devices did with them - see qs_push_events). One write per run, as
+    atomic increments, so overlapping runs can't lose counts. Needs the service account; skipped without."""
+    counts = {k: v for k, v in counts.items() if v}
+    if not counts or not firestore_admin_token():
+        return
+    base = f"projects/{FIREBASE_PROJECT}/databases/(default)/documents"
+    body = {"writes": [{
+        "update": {"name": f"{base}/qs_push_stats/{now.strftime('%Y-%m-%d')}", "fields": {}},
+        "updateMask": {"fieldPaths": []},
+        "updateTransforms": [{"fieldPath": k, "increment": {"integerValue": str(v)}} for k, v in counts.items()],
+    }]}
+    try:
+        r = requests.post(f"https://firestore.googleapis.com/v1/{base}:commit", json=body,
+                          headers=fs_admin_headers(), timeout=15)
+        if not r.ok:
+            log(f"  push stats: HTTP {r.status_code}, this run's counts not recorded")
+    except Exception as exc:  # noqa: BLE001
+        log(f"  push stats unavailable ({exc})")
+
+
+# ----------------------------------------------------------------- accounts: portfolios, read directly
+# Personalisation comes from each signed-in person's own account (qs_users/<uid>: the companies and Telegram
+# channels they keep under Investment), read here with the service account. Earlier the phone sent a copy of
+# its watchlist along with its notification signup; reading the account instead means the alerts always
+# follow the portfolio exactly - on every device, straight after any change - with no copy to fall out of date.
+
+# The app's company table (COMPANY_ROWS in app.js) is read from app.js itself rather than copied in here, so
+# there is exactly one list of companies and aliases to maintain. Rows look like
+#   'Name|CC|Sector|alias1;alias2|TICKER|EXCHANGE'
+_COMPANY_INDEX: dict | None = None
+
+
+def company_index() -> dict:
+    """lowercased name / alias / ticker -> that company's match terms (its name plus every alias)."""
+    global _COMPANY_INDEX
+    if _COMPANY_INDEX is not None:
+        return _COMPANY_INDEX
+    index: dict[str, list[str]] = {}
+    try:
+        src = (ROOT / "app.js").read_text(encoding="utf-8")
+        start = src.index("const COMPANY_ROWS = [")
+        block = src[start:src.index("];", start)]
+        block = re.sub(r"//[^\n]*", "", block)                       # comments contain quotes of their own
+        for single, double in re.findall(r"'((?:[^'\\]|\\.)*)'|\"((?:[^\"\\]|\\.)*)\"", block):
+            row = (single or double).replace("\\'", "'").replace('\\"', '"')
+            p = row.split("|")
+            if len(p) < 3 or not p[0].strip():
+                continue
+            terms = [p[0].strip()] + [a.strip() for a in (p[3].split(";") if len(p) > 3 and p[3] else []) if a.strip()]
+            for key in terms + ([p[4].strip()] if len(p) > 4 and p[4].strip() else []):
+                index.setdefault(key.lower(), terms)
+    except (OSError, ValueError) as exc:
+        log(f"  ! couldn't read the company table from app.js ({exc}); matching tracked names as typed")
+    _COMPANY_INDEX = index
+    return index
+
+
+def terms_for(companies: list[str]) -> list[str]:
+    """The words that identify each tracked company in a headline - the same rule as the app: the company's
+    name and aliases when the table knows it (a ticker such as "NVDA" resolves to Nvidia first), otherwise
+    the name as typed. Terms under 3 letters are left out; on their own they match unrelated words."""
+    index, out = company_index(), []
+    for raw in companies or []:
+        name = str(raw or "").strip()
+        if not name:
+            continue
+        for t in index.get(name.lower(), [name]):
+            v = t.strip().lower()
+            if 3 <= len(v) <= 60 and v not in out:
+                out.append(v)
+    return out[:200]
+
+
+def item_channels(item: dict) -> set[str]:
+    """Every Telegram channel that carried a story, lowercased. All of them, not just the first: a post from
+    someone's linked channel that duplicated a story already running is merged into it (add_sources()), and
+    only checking the first source would miss it."""
+    out = set()
+    for src in item.get("sources") or []:
+        m = re.match(r"^Telegram:\s*(.+)$", (src or {}).get("name") or "", re.IGNORECASE)
+        if m:
+            out.add(m.group(1).strip().lower())
+    return out
+
+
+def fetch_account_profiles(uids: list[str]) -> dict[str, dict] | None:
+    """{uid: {"terms": [...], "channels": {...}}} for the given accounts, read in batches with only the two
+    fields needed. None if it couldn't be done (no service account, or Firestore unreachable)."""
+    if not uids:
+        return {}
+    if not firestore_admin_token():
+        return None
+    base = f"projects/{FIREBASE_PROJECT}/databases/(default)/documents"
+    out: dict[str, dict] = {}
+    try:
+        for i in range(0, len(uids), 100):
+            chunk = uids[i:i + 100]
+            r = requests.post(f"https://firestore.googleapis.com/v1/{base}:batchGet",
+                              json={"documents": [f"{base}/qs_users/{u}" for u in chunk],
+                                    "mask": {"fieldPaths": ["companies", "investChannels"]}},
+                              headers=fs_admin_headers(), timeout=20)
+            if not r.ok:
+                log(f"  push: couldn't read accounts (HTTP {r.status_code}); watchlist alerts skipped this run")
+                return None
+            for row in r.json():
+                doc = row.get("found")
+                if not doc:
+                    continue
+                f = doc.get("fields") or {}
+                out[doc["name"].rsplit("/", 1)[-1]] = {
+                    "terms": terms_for(_fs_strings(f, "companies")),
+                    "channels": {c.strip().lower() for c in _fs_strings(f, "investChannels") if c.strip()},
+                }
+        return out
+    except Exception as exc:  # noqa: BLE001
+        log(f"  push: accounts unavailable ({exc}); watchlist alerts skipped this run")
+        return None
+
+
+# Which Telegram channels people have linked under Investment. Until now nothing read these at all - they were
+# saved to accounts and never fetched. The pipeline now fetches them like any other channel. The list is the
+# union across all accounts (never who linked what), refreshed every INVEST_CHANNELS_EVERY_S: reading every
+# account costs one Firestore read each, too much to repeat every 5 minutes. Kept in state.json between runs;
+# that file is public, but so is this list in effect - posts from these channels appear in feed.json by name.
+INVEST_CHANNELS_EVERY_S = 30 * 60
+
+
+def fetch_investment_channels(state: dict, now: dt.datetime) -> list[str]:
+    cache = state.setdefault("invest_channels", {"at": 0, "names": []})
+    if now.timestamp() - cache.get("at", 0) < INVEST_CHANNELS_EVERY_S:
+        return list(cache.get("names") or [])
+    if not firestore_admin_token():
+        return list(cache.get("names") or [])     # without the key, keep using the last list known
+    base = f"projects/{FIREBASE_PROJECT}/databases/(default)/documents"
+    body = {"structuredQuery": {"from": [{"collectionId": "qs_users"}],
+                                "select": {"fields": [{"fieldPath": "investChannels"}]}}}
+    try:
+        r = requests.post(f"https://firestore.googleapis.com/v1/{base}:runQuery", json=body,
+                          headers=fs_admin_headers(), timeout=20)
+        if not r.ok:
+            log(f"  investment channels: HTTP {r.status_code}, keeping the last list")
+            return list(cache.get("names") or [])
+        names = set()
+        for row in r.json():
+            for c in _fs_strings(((row.get("document") or {}).get("fields") or {}), "investChannels"):
+                c = c.strip().lower()
+                if re.fullmatch(r"[a-z0-9_]{5,32}", c):
+                    names.add(c)
+        cache.update(at=now.timestamp(), names=sorted(names))
+        return sorted(names)
+    except Exception as exc:  # noqa: BLE001
+        log(f"  investment channels unavailable ({exc}), keeping the last list")
+        return list(cache.get("names") or [])
 
 
 # ----------------------------------------------------------------- qs_archive (permanent story history)
@@ -607,71 +881,167 @@ def write_archive(item: dict, now: dt.datetime) -> None:
         log(f"  ! archive write failed for {item.get('id', '?')}: {exc}")
 
 
-def send_push_notifications(new_items: list[dict]) -> None:
-    """Sends one real push PER newly-published story (see PUSH_MIN_IMPORTANCE - currently every priority),
-    to every device subscribed in qs_push_subs - the user's explicit choice, after being told a single run
-    can mean many notifications in a burst (see PUSH_MAX_PER_RUN, a safety cap on that, not a filter on
-    importance). Never raises - a push failure must never fail the pipeline run itself (see the try/except
-    around this call in cmd_fetch)."""
-    worthy = [it for it in new_items if it.get("importance") in PUSH_MIN_IMPORTANCE]
-    if not worthy:
-        # Not a bug: logged at this level of detail (not louder) so a quiet run doesn't spam the Actions
-        # log, but a "why didn't it push" question can still be answered from the log alone.
-        log(f"  push: {len(new_items)} new stor{'y' if len(new_items) == 1 else 'ies'} this run, none matched PUSH_MIN_IMPORTANCE - no push sent")
-        return
+def _arrival_ts(item: dict) -> float:
+    for key in ("published", "updated"):
+        try:
+            return dt.datetime.fromisoformat((item.get(key) or "").replace("Z", "+00:00")).timestamp()
+        except ValueError:
+            continue
+    return 0.0
+
+
+def new_notification_id() -> str:
+    """Unique per notification sent. sw.js stamps it on every response it records (shown / opened /
+    dismissed), which is what lets the owner's stats tie a reaction back to one specific notification."""
+    return "n" + os.urandom(8).hex()
+
+
+def bundle_payload(batch: list, index: dict, devkey: str) -> dict:
+    """One notification for everything in `batch` ([item_id, kind, queued_at] entries). The most important
+    story leads (a watchlist story first among equals) and is where tapping the notification opens."""
+    ranked = sorted(batch, key=lambda q: (-RANK.get(index[q[0]].get("importance"), 0), 0 if q[1] == "invest" else 1,
+                                          -_arrival_ts(index[q[0]])))
+    top = index[ranked[0][0]]
+    n, inv = len(ranked), sum(1 for q in ranked if q[1] == "invest")
+    country = top.get("country") or "Global"
+    flag, headline = push_flag(country), top.get("headline") or ""
+    if n == 1:
+        title = ("Your watchlist · " if inv else "") + f"{flag} {country}".strip()
+        body = headline
+    else:
+        title = f"{n} new stories" + (f" · {inv} on your watchlist" if inv else "")
+        body = f"{flag} {headline}".strip()
+    return {
+        "id": "L" + top["id"], "title": title, "body": body, "n": n,
+        "kind": "invest" if inv == n else ("news" if inv == 0 else "mixed"),
+        "crit": any(index[q[0]].get("importance") == "Critical" for q in ranked),
+        "nid": new_notification_id(), "d": devkey,
+        # What an older sw.js reads, for devices that haven't picked up the new one yet.
+        "flag": flag, "country": country, "sector": top.get("sector") or "", "headline": headline,
+    }
+
+
+def push_eval_interval(n_devices: int) -> int:
+    return PUSH_EVAL_FAST_S if n_devices <= PUSH_EVAL_FAST_MAX_DEVICES else PUSH_EVAL_SLOW_S
+
+
+def next_gap_seconds(interval: int) -> float:
+    """A random gap between PUSH_GAP_MIN_S and PUSH_GAP_MAX_S, drawn from the values the check interval can
+    actually hit. Drawing from a continuous range instead made every gap round up to the next check, which
+    left only two possible gaps (30 or 40 min) - a regular beat, the opposite of what was asked for."""
+    steps = list(range(PUSH_GAP_MIN_S, PUSH_GAP_MAX_S + 1, interval)) or [PUSH_GAP_MIN_S]
+    return random.choice(steps) - 60      # a minute's slack: the run landing on that boundary should send
+
+
+def run_push(new_items: list[dict], feed: dict, state: dict, now: dt.datetime) -> None:
+    """Paced, bundled notifications. Called on EVERY run, not only runs with new stories, because a queued
+    bundle falls due on a later run. Per device, kept in state["push"]["devices"][device_key]:
+      q     stories waiting for this device: [item_id, "news" | "invest", queued_at]
+      next  when its next non-Critical notification may go out (a random 20-40 min after the last)
+    Rules: a story joins a device's queue if push_kind_for() says the device wants it. A device whose gap has
+    passed gets ONE notification bundling its whole queue. A queued Critical story sends at once, taking the
+    rest of the queue with it. In quiet hours only Critical stories go; the rest are held for the morning,
+    where they used to be dropped. Never raises past the caller's try/except."""
+    ps = state.setdefault("push", {})
+    ps.setdefault("pending", [])
+    ps.setdefault("devices", {})
+    ps.setdefault("last_eval", 0)
+    for it in new_items:
+        if it["id"] not in ps["pending"]:
+            ps["pending"].append(it["id"])
+    ps["pending"] = ps["pending"][-500:]
+
+    now_ts = now.timestamp()
+    interval = push_eval_interval(ps.get("devices_n", 0))
+    has_critical = any(it.get("importance") == "Critical" for it in new_items)
+    # 60s of slack: runs are "every 5 minutes" only roughly, and one arriving at 4:58 should still count.
+    if not has_critical and now_ts - ps["last_eval"] < interval - 60:
+        return                                   # stories stay pending; the next evaluation picks them up
     if not VAPID_PRIVATE_KEY or not VAPID_PUBLIC_KEY:
         log("  push: VAPID_PRIVATE_KEY/VAPID_PUBLIC_KEY not set, skipping (set them as GitHub Actions secrets to enable)")
         return
     subs = fetch_push_subscriptions()
-    if not subs:
-        log("  push: no devices subscribed (qs_push_subs is empty) - nothing to send")
-        return
-    # Most important first, so if PUSH_MAX_PER_RUN has to cut the list short, what gets dropped is the
-    # least important story, not an arbitrary one.
-    worthy.sort(key=lambda it: (-RANK.get(it.get("importance"), 0), it.get("published") or ""))
-    capped = worthy[:PUSH_MAX_PER_RUN]
-    if len(worthy) > len(capped):
-        log(f"  push: {len(worthy)} new storie(s) this run, capped to the top {len(capped)} (PUSH_MAX_PER_RUN) to avoid flooding devices, {len(subs)} device(s) subscribed")
-    else:
-        log(f"  push: {len(worthy)} new storie(s) this run, {len(subs)} device(s) subscribed")
-    now = utcnow()
-    total_sent = total_dead = total_filtered = 0
-    dead_names: set[str] = set()
-    for i, item in enumerate(capped):
-        # Which devices actually asked for THIS story (priority tier, country filter, quiet hours - see
-        # sub_wants()). Worked out before the spacing sleep below, so a story nobody wants costs no delay.
-        alive = [s for s in subs if s.get("name", "") not in dead_names]
-        targets = [s for s in alive if sub_wants(s, item, now)]
-        total_filtered += len(alive) - len(targets)
-        if not targets:
+    if subs is None:
+        return                                   # couldn't read the list: keep everything, retry next run
+    # Watchlist alerts come from each signed-in person's own account. Read once per check, only for signups
+    # that asked for them, one read per account (a phone and a laptop on the same account share it).
+    uids = sorted({s["uid"] for s in subs if s.get("invest") and s.get("uid")})
+    profiles = fetch_account_profiles(uids) if uids else {}
+    for s in subs:
+        prof = (profiles or {}).get(s.get("uid") or "")
+        if prof is not None:
+            s["watch"], s["inv_channels"] = prof["terms"], prof["channels"]
+            s.pop("_watch_rx", None)
+        elif s.get("uid"):
+            # Signed in, but the account couldn't be read this time: no watchlist alerts rather than alerts
+            # from a stale copy the phone may have sent long ago.
+            s["watch"], s["inv_channels"] = [], set()
+    ps["last_eval"] = now_ts
+    ps["devices_n"] = len(subs) + len(uids)      # reads per check - a count only; sets the next interval
+    interval = push_eval_interval(ps["devices_n"])
+
+    index = {it["id"]: it for it in feed.get("items", [])}
+    pending = [index[i] for i in ps["pending"] if i in index]
+    ps["pending"] = []
+    cutoff = now_ts - PUSH_ITEM_MAX_AGE_H * 3600
+    stats: dict[str, int] = {}
+    live, held_quiet, waiting, dead = set(), 0, 0, 0
+
+    for sub in subs:
+        key = device_key(sub["name"])
+        live.add(key)
+        dv = ps["devices"].setdefault(key, {"next": 0, "q": []})
+        queued = {q[0] for q in dv["q"]}
+        for it in pending:
+            if it["id"] in queued:
+                continue
+            kind = push_kind_for(sub, it)
+            if kind:
+                dv["q"].append([it["id"], kind, now_ts])
+                queued.add(it["id"])
+        dv["q"] = [q for q in dv["q"] if q[0] in index and (q[2] if len(q) > 2 else now_ts) >= cutoff][-PUSH_QUEUE_MAX:]
+        if not dv["q"]:
             continue
-        if i > 0 and total_sent:
-            # Spread this run's own stories out instead of firing every notification in the same instant -
-            # see PUSH_SPACING_SECONDS above. No wait before the first one actually sent, so a run with just
-            # one new story (the common case) is unaffected.
-            time.sleep(PUSH_SPACING_SECONDS)
-        country = item.get("country") or "Global"
-        payload = {
-            "id": "L" + item["id"], "flag": push_flag(country), "country": country,
-            "sector": item.get("sector") or "", "headline": item.get("headline") or "",
-        }
-        for sub in targets:
-            status = send_one_push(sub, payload)
-            if status in (201, 200, 204):
-                total_sent += 1
-            elif status in (404, 410):
-                delete_push_subscription(sub.get("name", ""))
-                dead_names.add(sub.get("name", ""))
-                total_dead += 1
-    log(f"  push: sent {total_sent} notification(s) across {len(capped)} stor{'y' if len(capped) == 1 else 'ies'}"
-        + (f", {total_filtered} skipped by device alert preferences" if total_filtered > 0 else "")
-        + (f", removed {total_dead} dead subscription(s)" if total_dead else ""))
+        crit = [q for q in dv["q"] if index[q[0]].get("importance") == "Critical"]
+        if in_quiet_hours(sub, now):
+            if not crit:
+                held_quiet += 1
+                continue
+            batch = crit
+        elif crit or now_ts >= dv.get("next", 0):
+            batch = dv["q"]
+        else:
+            waiting += 1
+            continue
+        payload = bundle_payload(batch, index, key)
+        status = send_one_push(sub, payload)
+        if status in (200, 201, 204):
+            sent_ids = {q[0] for q in batch}
+            dv["q"] = [q for q in dv["q"] if q[0] not in sent_ids]
+            dv["next"] = now_ts + next_gap_seconds(interval)
+            for k in ("sent", "sent_" + payload["kind"]) + (("sent_critical",) if payload["crit"] else ()):
+                stats[k] = stats.get(k, 0) + 1
+        elif status in (404, 410):
+            delete_push_subscription(sub["name"])
+            ps["devices"].pop(key, None)
+            live.discard(key)
+            dead += 1
+
+    for k in list(ps["devices"]):                # devices that unsubscribed since last time
+        if k not in live:
+            del ps["devices"][k]
+
+    send_digests([s for s in subs if device_key(s["name"]) in live], feed, state, now, stats)
+    record_push_stats(stats, now)
+    log(f"  push: {len(subs)} device(s), {len(pending)} new stor{'y' if len(pending) == 1 else 'ies'} to place, "
+        f"{stats.get('sent', 0) - stats.get('sent_digest', 0)} bundle(s) sent, {waiting} waiting out their gap, "
+        f"{held_quiet} held for quiet hours" + (f", removed {dead} dead subscription(s)" if dead else ""))
 
 
 def digest_window_items(feed: dict, since: dt.datetime, sub: dict) -> list[dict]:
-    """The stories a given device would want summarised: published inside the window, at or above its
-    priority floor, and in its country filter (quiet hours deliberately don't apply - a digest is sent in
-    the morning on purpose, see send_digests)."""
+    """The stories a given device would want summarised: published inside the window, and wanted by its own
+    preferences - news filters, plus its watchlist when it opted in (push_kind_for). Quiet hours deliberately
+    don't apply: a digest goes out in the morning on purpose (see send_digests)."""
     out = []
     for it in feed.get("items", []):
         try:
@@ -680,63 +1050,49 @@ def digest_window_items(feed: dict, since: dt.datetime, sub: dict) -> list[dict]
             continue
         if pub.tzinfo is None:
             pub = pub.replace(tzinfo=dt.timezone.utc)
-        if pub < since:
-            continue
-        imp = it.get("importance") or "Low"
-        if RANK.get(imp, 0) < RANK.get(sub.get("min_imp", "Low"), 0):
-            continue
-        countries = sub.get("countries") or []
-        if countries and (it.get("country") or "Global") not in countries:
+        if pub < since or not push_kind_for(sub, it):
             continue
         out.append(it)
     out.sort(key=lambda i: (-RANK.get(i.get("importance"), 0), i.get("published") or ""))
     return out
 
 
-def send_digests() -> None:
+def send_digests(subs: list[dict], feed: dict, state: dict, now: dt.datetime, stats: dict) -> None:
     """One summary push per device that asked for a daily/weekly digest (Settings -> Notifications).
 
     Deliberately NOT email: email needs a paid or rate-limited sending service, while Web Push is already
-    set up here, costs nothing, and reaches a phone the same way. Runs off the SAME 5-minute pipeline cron
-    rather than its own schedule - each device's digest goes out on the first run inside its own local
-    DIGEST_HOUR_FROM..DIGEST_HOUR_TO window (so a person in Mumbai and one in New York each get a morning
-    digest, not one fired at the pipeline's UTC convenience), and state["digest_sent"] stops it repeating
-    for the rest of that day/week. Never raises - same contract as send_push_notifications()."""
-    if not VAPID_PRIVATE_KEY or not VAPID_PUBLIC_KEY:
+    set up here, costs nothing, and reaches a phone the same way. Uses the device list run_push() already
+    read rather than reading it again. Each device's digest goes out on the first evaluation inside its own
+    local DIGEST_HOUR_FROM..DIGEST_HOUR_TO window, and state["digest_sent"] stops it repeating that day/week."""
+    subs = [s for s in subs if s.get("digest") in ("daily", "weekly")]
+    if not subs or not feed.get("items"):
         return
-    subs = [s for s in fetch_push_subscriptions() if s.get("digest") in ("daily", "weekly")]
-    if not subs:
-        return
-    feed = read_json(PATHS["feed"], {})
-    if not feed.get("items"):
-        return
-    state = load_state()
-    sent_map = state.get("digest_sent") or {}
-    now = utcnow()
-    sent_any = 0
+    sent_map = state.setdefault("digest_sent", {})
+    # Earlier runs keyed this by the raw subscription path. state.json is committed, so those are moved to
+    # the hashed device key - a private collection's document ids must not sit in a published file.
+    for k in [k for k in sent_map if "/" in k]:
+        sent_map[device_key(k)] = sent_map.pop(k)
     for sub in subs:
-        name = sub.get("name", "")
-        local = sub_local_time(sub, now)
-        if not (DIGEST_HOUR_FROM <= local.hour < DIGEST_HOUR_TO):
+        key = device_key(sub["name"])
+        if not (DIGEST_HOUR_FROM <= sub_local_time(sub, now).hour < DIGEST_HOUR_TO):
             continue
         period_hours = 24 if sub["digest"] == "daily" else 24 * 7
-        last_raw = sent_map.get(name)
+        last_raw = sent_map.get(key)
         if last_raw:
             try:
                 last = dt.datetime.fromisoformat(last_raw.replace("Z", "+00:00"))
                 if last.tzinfo is None:
                     last = last.replace(tzinfo=dt.timezone.utc)
-                # A day's/week's worth minus a couple of hours, so a run that lands slightly earlier in
-                # tomorrow's window than today's did still counts as a new day rather than being skipped.
+                # A day's/week's worth minus a few hours, so a run landing slightly earlier in tomorrow's
+                # window than today's still counts as a new day rather than being skipped.
                 if (now - last) < dt.timedelta(hours=period_hours - 3):
                     continue
             except ValueError:
                 pass
-        # feed.json only holds 24h (prune()), so a weekly digest necessarily summarises the last 24h of it
-        # rather than a true 7 days - said plainly in the notification text below instead of pretending.
+        # feed.json only holds 24h (prune()), so a weekly digest necessarily summarises the last 24h of it.
         items = digest_window_items(feed, now - dt.timedelta(hours=24), sub)
         if not items:
-            sent_map[name] = iso(now)   # nothing to say today; still counts as "done", don't retry all morning
+            sent_map[key] = iso(now)   # nothing to say today; still counts as done, don't retry all morning
             continue
         crit = sum(1 for i in items if i.get("importance") == "Critical")
         high = sum(1 for i in items if i.get("importance") == "High")
@@ -746,24 +1102,21 @@ def send_digests() -> None:
         if high:
             bits.append(f"{high} high")
         top = items[0]
+        summary = ", ".join(bits)
         payload = {
-            "id": "L" + top["id"], "flag": push_flag(top.get("country") or "Global"),
-            "country": "Your digest", "sector": ", ".join(bits),
-            "headline": f"{', '.join(bits)}. Top: {top.get('headline') or ''}",
-            "digest": True,
+            "id": "L" + top["id"], "title": "Your digest", "body": f"{summary}. Top: {top.get('headline') or ''}",
+            "n": len(items), "kind": "digest", "crit": bool(crit), "nid": new_notification_id(), "d": key,
+            "digest": True, "flag": push_flag(top.get("country") or "Global"), "country": "Your digest",
+            "sector": summary, "headline": f"{summary}. Top: {top.get('headline') or ''}",
         }
         status = send_one_push(sub, payload)
         if status in (201, 200, 204):
-            sent_map[name] = iso(now)
-            sent_any += 1
+            sent_map[key] = iso(now)
+            stats["sent"] = stats.get("sent", 0) + 1
+            stats["sent_digest"] = stats.get("sent_digest", 0) + 1
         elif status in (404, 410):
-            delete_push_subscription(name)
-            sent_map.pop(name, None)
-    if sent_any or sent_map != (state.get("digest_sent") or {}):
-        state["digest_sent"] = {k: v for k, v in sent_map.items()}
-        write_json(PATHS["state"], state)
-    if sent_any:
-        log(f"  digest: sent {sent_any} summary push(es)")
+            delete_push_subscription(sub["name"])
+            sent_map.pop(key, None)
 
 
 def load_config() -> dict:
@@ -1440,7 +1793,7 @@ def link_related(item: dict, rec: dict, index: dict) -> None:
 def process_batch(results, feed_items, index, now, stats, new_items: list[dict] | None = None) -> list[dict]:
     """Merge one batch of AI records into the feed. Returns the posts that were handled.
     If new_items is given, every item created as a genuinely NEW story this run (not merged into an
-    existing one) is appended to it - used by send_push_notifications() below so a push only ever
+    existing one) is appended to it - used by run_push() below so a push only ever
     goes out for a brand-new story, never for an update folded into something already published."""
     pids = {rec["pid"] for _, rec in results if rec}
     handled, deferred, created = [], [], []
@@ -1519,9 +1872,9 @@ def first_headline(text: str, channel: str = "") -> str:
 # Free mode's real importance is computed client-side, fresh, every time the app renders a free-mode item
 # (app.js's mapRules() -> E.analyze() -> classifyImportance(), keyed off excerpt text) - it never reads
 # back anything from feed.json, so nothing here can affect what a person actually sees in the app. This is
-# a faithful port of that same classifyImportance() purely so send_push_notifications() below has
+# a faithful port of that same classifyImportance() purely so run_push() below has
 # SOMETHING to filter on: without it, a free-mode item's item.get("importance") is always None, which
-# never matches PUSH_MIN_IMPORTANCE, so push silently never fires in free mode at all (the bug this was
+# never passes a device's priority floor, so push silently never fires in free mode at all (the bug this was
 # added to fix - see the "importance" key stored on the item below). One known, accepted difference from
 # the client: app.js's version also adds +2 when a story spans 3+ countries (it knows the countries
 # involved; a free-mode item here doesn't carry that without running the client's full country classifier
@@ -1606,7 +1959,7 @@ def classify_importance_rules(headline: str, excerpt: str) -> str:
 def rules_item(post: dict, headline: str, now: dt.datetime) -> dict:
     """Free mode: keep a short excerpt. The app sorts it with its keyword rules (recomputed fresh client
     side every render - see mapRules() in app.js). The "importance"/"country" fields stored here are a
-    second, independent server-side classification used only by send_push_notifications() (to decide
+    second, independent server-side classification used only by run_push() (to decide
     whether to push, and which flag to show); the app itself never reads them back."""
     group = [post] + post.get("dupes", [])
     channel = post.get("author") if post.get("type") == "telegram" else ""
@@ -1712,6 +2065,14 @@ def cmd_fetch(client=None) -> int:
     cfg, state = load_config(), load_state()
     existing = {(e["channel"] if isinstance(e, dict) else str(e)).lower() for e in cfg["telegram_public"]}
     added = [ch for ch in fetch_approved_channels() if ch.lower() not in existing]
+    # Channels people linked under Investment - never fetched before this, so their posts never reached
+    # anyone. Added alongside the shared pool; the app keeps them out of News (see itemChannel()/
+    # channelVisible() in app.js) and shows them in the Investment tab of the people who linked them.
+    invest = [ch for ch in fetch_investment_channels(state, utcnow())
+              if ch.lower() not in existing and ch.lower() not in {a.lower() for a in added}]
+    if invest:
+        log(f"  investment channels: fetching {len(invest)} linked from portfolios")
+        added += invest
     if added:
         log(f"  channel sync: {len(added)} user-approved channel(s) added this run: {', '.join(added)}")
         cfg["telegram_public"] += added
@@ -1728,7 +2089,7 @@ def cmd_fetch(client=None) -> int:
     feed = read_json(PATHS["feed"], {"items": []})
     feed.setdefault("items", [])
     stats = {"new": 0, "merged": 0, "not_news": 0, "failed_batches": 0}
-    new_items: list[dict] = []   # every item genuinely newly published this run - see send_push_notifications()
+    new_items: list[dict] = []   # every item genuinely newly published this run - see run_push()
     if candidates:
         candidates = candidates[-int(s["max_new_per_run"]):]  # newest first if there is a backlog
         primaries = collapse_duplicates(candidates)
@@ -1777,18 +2138,14 @@ def cmd_fetch(client=None) -> int:
     cutoff = int(now.timestamp()) - 30 * 86400
     state["seen"] = {k: v for k, v in state["seen"].items() if v >= cutoff}
     write_json(PATHS["state"], state)
-    if new_items:
-        try:
-            send_push_notifications(new_items)
-        except Exception as exc:  # noqa: BLE001
-            log(f"  ! push notifications failed, not fatal to the run: {exc}")
-    # Runs every fetch (not only when there's new news): a device's digest is due based on ITS local clock,
-    # which has nothing to do with whether this particular run happened to find a story. Reads state.json
-    # back fresh, so the write above is never clobbered. Same never-fatal contract as the push block.
+    # Every run, not only runs that found news: a bundle queued earlier can fall due now (see run_push()).
+    # state is written again afterwards because run_push() keeps each device's queue and gap in it; the write
+    # above already saved this run's "seen" bookkeeping, so a push failure here can't lose that.
     try:
-        send_digests()
+        run_push(new_items, feed, state, now)
     except Exception as exc:  # noqa: BLE001
-        log(f"  ! digest send failed, not fatal to the run: {exc}")
+        log(f"  ! push notifications failed, not fatal to the run: {exc}")
+    write_json(PATHS["state"], state)
     if candidates and stats["failed_batches"] and not (stats["new"] + stats["merged"] + stats["not_news"]):
         return 1  # every AI call failed: make the run go red
     return 0
