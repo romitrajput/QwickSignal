@@ -227,6 +227,31 @@ service cloud.firestore {
       allow delete: if isOwner();
     }
 
+    // qs_sent_votes: the Sentiment board. One document per (stock, person, day): a Bullish/Bearish vote plus an
+    // optional reason, which is what the board shows as comments. Public to read - it IS the public board.
+    // Writing needs sign-in, and the rules pin every vote to its author: the uid inside must be the writer's,
+    // the id must be "<stock>_<uid>_<day>" (so re-voting the same day replaces the earlier vote rather than
+    // adding one), and "at" must be the server's own clock (set with REQUEST_TIME), so nobody can backdate a
+    // vote into or out of the 24-hour window. The author or the owner can delete; nobody can edit someone else's.
+    match /qs_sent_votes/{id} {
+      allow get, list: if true;
+      allow create, update: if
+        request.auth != null &&
+        request.resource.data.keys().hasOnly(['slug', 'company', 'uid', 'day', 'choice', 'reason', 'name', 'at']) &&
+        request.resource.data.uid == request.auth.uid &&
+        request.resource.data.slug is string && request.resource.data.slug.matches('[a-z0-9-]{1,80}') &&
+        request.resource.data.day is string && request.resource.data.day.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}') &&
+        id == request.resource.data.slug + '_' + request.auth.uid + '_' + request.resource.data.day &&
+        request.resource.data.company is string && request.resource.data.company.size() > 0 &&
+          request.resource.data.company.size() <= 80 &&
+        request.resource.data.choice in ['bull', 'bear'] &&
+        request.resource.data.reason is string && request.resource.data.reason.size() <= 2000 &&
+        request.resource.data.name is string && request.resource.data.name.size() <= 16 &&
+        request.resource.data.at == request.time &&
+        (resource == null || resource.data.uid == request.auth.uid);
+      allow delete: if request.auth != null && (resource.data.uid == request.auth.uid || isOwner());
+    }
+
     // qs_pulse: public bull/bear aggregate, now PER COMPANY (not per story - the per-story design made
     // one stock look "mixed" whenever its several, unrelated news items each drew a different crowd
     // reaction, which wasn't a real signal about the company at all, just noise from the news being

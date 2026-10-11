@@ -44,6 +44,7 @@ PATHS = {
     "feed": ROOT / "feed.json",
     "briefing": ROOT / "briefing.json",
     "state": ROOT / "state.json",
+    "board": ROOT / "board.json",     # the Sentiment board's stock list - see refresh_portfolio_union()
     "sources": ROOT / "sources.yml",
 }
 IST = dt.timezone(dt.timedelta(hours=5, minutes=30))
@@ -794,40 +795,65 @@ def fetch_account_profiles(uids: list[str]) -> dict[str, dict] | None:
         return None
 
 
-# Which Telegram channels people have linked under Investment. Until now nothing read these at all - they were
-# saved to accounts and never fetched. The pipeline now fetches them like any other channel. The list is the
-# union across all accounts (never who linked what), refreshed every INVEST_CHANNELS_EVERY_S: reading every
-# account costs one Firestore read each, too much to repeat every 5 minutes. Kept in state.json between runs;
-# that file is public, but so is this list in effect - posts from these channels appear in feed.json by name.
-INVEST_CHANNELS_EVERY_S = 30 * 60
+# What everyone keeps under Investment, combined. Read from all accounts with the service account every
+# PORTFOLIO_SCAN_EVERY_S - reading every account costs one Firestore read each, too much to repeat every
+# 5 minutes. Two things come out of one scan, and neither says who has what:
+#   - linked Telegram channels: never fetched before; now fetched with the rest (kept in state.json - public,
+#     but so is this list in effect, since posts from these channels appear in feed.json by name)
+#   - tracked companies: published as board.json, the list of stocks the Sentiment board shows - every stock
+#     anyone tracks, each with how many people track it, so anyone can see and vote on all of them.
+PORTFOLIO_SCAN_EVERY_S = 30 * 60
+INVEST_CHANNELS_EVERY_S = PORTFOLIO_SCAN_EVERY_S     # older name, kept for anything still referring to it
 
 
-def fetch_investment_channels(state: dict, now: dt.datetime) -> list[str]:
+def canonical_company(name: str) -> str:
+    """The table's own spelling for a company typed as a ticker, alias or in other capitals ("Nvda" ->
+    "Nvidia"), so the board lists each company once however people typed it."""
+    terms = company_index().get(name.strip().lower())
+    return terms[0] if terms else name.strip()
+
+
+def refresh_portfolio_union(state: dict, now: dt.datetime) -> list[str]:
+    """Returns the linked-channel list (cached between scans) and, on a scan, rewrites board.json."""
     cache = state.setdefault("invest_channels", {"at": 0, "names": []})
-    if now.timestamp() - cache.get("at", 0) < INVEST_CHANNELS_EVERY_S:
+    if now.timestamp() - cache.get("at", 0) < PORTFOLIO_SCAN_EVERY_S:
         return list(cache.get("names") or [])
     if not firestore_admin_token():
         return list(cache.get("names") or [])     # without the key, keep using the last list known
     base = f"projects/{FIREBASE_PROJECT}/databases/(default)/documents"
     body = {"structuredQuery": {"from": [{"collectionId": "qs_users"}],
-                                "select": {"fields": [{"fieldPath": "investChannels"}]}}}
+                                "select": {"fields": [{"fieldPath": "investChannels"}, {"fieldPath": "companies"}]}}}
     try:
         r = requests.post(f"https://firestore.googleapis.com/v1/{base}:runQuery", json=body,
                           headers=fs_admin_headers(), timeout=20)
         if not r.ok:
-            log(f"  investment channels: HTTP {r.status_code}, keeping the last list")
+            log(f"  portfolio scan: HTTP {r.status_code}, keeping the last lists")
             return list(cache.get("names") or [])
-        names = set()
+        names, trackers = set(), {}
         for row in r.json():
-            for c in _fs_strings(((row.get("document") or {}).get("fields") or {}), "investChannels"):
+            f = (row.get("document") or {}).get("fields") or {}
+            for c in _fs_strings(f, "investChannels"):
                 c = c.strip().lower()
                 if re.fullmatch(r"[a-z0-9_]{5,32}", c):
                     names.add(c)
+            for co in {canonical_company(x) for x in _fs_strings(f, "companies") if x.strip()}:
+                if 2 <= len(co) <= 60:
+                    trackers[co] = trackers.get(co, 0) + 1     # once per account, however many devices
         cache.update(at=now.timestamp(), names=sorted(names))
+        board = {"updated_at": iso(now),
+                 "companies": [{"name": n, "trackers": k} for n, k in
+                               sorted(trackers.items(), key=lambda kv: (-kv[1], kv[0].lower()))]}
+        if read_json(PATHS["board"], {}).get("companies") != board["companies"]:
+            write_json(PATHS["board"], board)                    # only rewritten when the list changed
+            log(f"  sentiment board: {len(board['companies'])} stocks across all watchlists")
         return sorted(names)
     except Exception as exc:  # noqa: BLE001
-        log(f"  investment channels unavailable ({exc}), keeping the last list")
+        log(f"  portfolio scan unavailable ({exc}), keeping the last lists")
         return list(cache.get("names") or [])
+
+
+def fetch_investment_channels(state: dict, now: dt.datetime) -> list[str]:
+    return refresh_portfolio_union(state, now)
 
 
 # ----------------------------------------------------------------- qs_archive (permanent story history)

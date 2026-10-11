@@ -1,7 +1,14 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-68-v1';  // This round: owner's UI requests. Appearance taps were ignored (the
+const VERSION = 'gni-phase3-69-v1';  // This round: Sentiment board (was Community). Lists every stock any
+                                      // user keeps in their watchlist (board.json from the pipeline), today's
+                                      // mood from the last 24h (one vote per person per stock per day,
+                                      // changeable), optional reasons up to 2000 characters shown as comments,
+                                      // search. Tutorial rewritten for current features, replayable from
+                                      // Settings.
+                                      //
+                                      // Previous round (gni-phase3-68-v1): owner's UI requests. Appearance taps were ignored (the
                                       // buttons' data-theme-choice never matched the click lookup) - fixed.
                                       // "System" renamed "Default". Black page title hidden inside settings
                                       // pages (red back link kept). Footer "Made with love in India". Get the

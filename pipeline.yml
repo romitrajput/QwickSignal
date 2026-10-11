@@ -93,7 +93,7 @@ jobs:
         run: |
           git config user.name "gni-bot"
           git config user.email "gni-bot@users.noreply.github.com"
-          for f in feed.json briefing.json state.json; do [ -f "$f" ] && git add "$f"; done
+          for f in feed.json briefing.json state.json board.json; do [ -f "$f" ] && git add "$f"; done
           if git diff --cached --quiet; then
             echo "Nothing to save"
           else

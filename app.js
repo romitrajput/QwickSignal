@@ -953,7 +953,7 @@ if (typeof document !== 'undefined') (function () {
 
   const I18N = {
     en: {
-      linkPages: 'Link Pages', settings: 'Settings', signals: 'Signals', saved: 'Saved', export: 'Export', community: 'Community',
+      linkPages: 'Link Pages', settings: 'Settings', signals: 'Signals', saved: 'Saved', export: 'Export', community: 'Sentiment board',
       landingTitle: 'QwickSignal', landingTag: 'Sort news, messages and reports by country, sector and importance.',
       landingOr: 'or', continueAsGuest: 'Continue as guest',
       landingGuestNote: "You can look around and follow the default channels without an account. Sign in any time later from Settings to keep your own saved articles and channels.",
@@ -1042,16 +1042,44 @@ if (typeof document !== 'undefined') (function () {
       obStep2Title: 'Search', obStep2Body: 'Search across every story in your feed - headlines, summaries, and company names.',
       obStep3Title: 'Country, sector & priority', obStep3Body: 'Narrow the feed to one country or sector, or show only Critical/High priority stories.',
       obStep4Title: 'A news card', obStep4Body: 'Tap a story to read more, swipe right to save it, or swipe left to dismiss it.',
-      obStep5Title: 'Saved', obStep5Body: 'Swipe a story right, or tap Save, to keep it here past the usual 24-hour window.',
-      obStep6Title: 'Investment', obStep6Body: 'News grouped by the companies you track, instead of by country.',
-      obStep7Title: 'Settings', obStep7Body: 'Channels, your investment watchlist, notifications, account, export, and feedback - all in one place.',
-      obStep8Title: 'Community', obStep8Body: 'See the crowd’s bullish/bearish read on every company you track, and cast your own vote.',
+      obStep5Title: 'Saved', obStep5Body: 'Swipe a story right, or tap Save, to keep it here. Saved stories stay with your account until you remove them, even after signing out.',
+      obStep6Title: 'Investment', obStep6Body: 'News for the companies in your watchlist, with their logos. Link a company’s Telegram channels in Settings to pull in more.',
+      obStep7Title: 'Settings', obStep7Body: 'Appearance, channels, your watchlist, Daily appetite (how many stories a day), Notifications (news and investment alerts, bundled every 20-40 min, with quiet hours), Export and Feedback.',
+      obStep8Title: 'Sentiment board', obStep8Body: 'Every stock users track, with today’s bullish/bearish mood. Vote once a day per stock, add your reason, and search any stock.',
       pulseLabel: 'Sentiment of the Users:', pulseBull: 'Bullish', pulseBear: 'Bearish',
       communityPending: 'Votes will appear here shortly.',
-      agPulseTitle: 'Log in to vote', agPulseBody: 'A free account keeps one vote per person honest - no limit on reading, just on voting.'
+      agPulseTitle: 'Log in to vote', agPulseBody: 'A free account keeps one vote per person honest - no limit on reading, just on voting.',
+      sbNoVotes: 'No votes in the last 24 hours yet. Be the first.',
+      sbVote: 'vote today',
+      sbVotes: 'votes today',
+      sbYourList: 'Your list',
+      sbYourView: 'Your view today:',
+      sbChangeHint: 'You can change it any time today.',
+      sbWhy: 'Why? (optional)',
+      sbWhyPh: 'Share your reason - results, valuation, news, chart… (up to 2000 characters)',
+      sbCancel: 'Cancel',
+      sbPost: 'Post vote',
+      sbReasons: 'Reasons',
+      sbDelete: 'Delete',
+      sbNoReasons: 'No reasons posted yet.',
+      sbShowAll: 'Show all',
+      sbOffline: 'Can’t reach the board right now - showing what this device last saw.',
+      sbNoMatch: 'No stock matches that search.',
+      sbEmpty: 'No stocks yet. Add companies to your watchlist in Settings and they appear here for everyone to vote on.',
+      sbMore: 'Show more',
+      sbSearchPh: 'Search a stock',
+      sbNote: 'Today’s mood: votes from the last 24 hours, one per person per stock. Opinions of users, not investment advice.',
+      sbPosted: 'Vote posted',
+      sbFailed: 'Couldn’t post - check your connection and try again.',
+      sbDeleteConfirm: 'Delete this reason? Your vote is removed with it.',
+      agBoardTitle: 'Log in to vote',
+      agBoardBody: 'A free account keeps it to one vote per person per stock each day. Reading the board needs no account.',
+      obStep0Title: 'While you were away',
+      obStep0Body: 'When you come back, this card sums up what changed since your last visit - tap a line to jump to it.',
+      obReplay: 'Replay the tour'
     },
     hi: {
-      linkPages: 'लिंक पेज', settings: 'सेटिंग्स', signals: 'सिग्नल्स', saved: 'सेव किए गए', export: 'एक्सपोर्ट', community: 'कम्युनिटी',
+      linkPages: 'लिंक पेज', settings: 'सेटिंग्स', signals: 'सिग्नल्स', saved: 'सेव किए गए', export: 'एक्सपोर्ट', community: 'सेंटिमेंट बोर्ड',
       landingTitle: 'QwickSignal', landingTag: 'खबरों, संदेशों और रिपोर्ट को देश, क्षेत्र और महत्व के अनुसार छाँटें।',
       landingOr: 'या', continueAsGuest: 'गेस्ट के रूप में जारी रखें',
       landingGuestNote: 'आप बिना खाते के भी देख सकते हैं और डिफ़ॉल्ट चैनल फॉलो कर सकते हैं। बाद में कभी भी सेटिंग्स से साइन इन करके अपने सेव किए गए लेख और चैनल रख सकते हैं।',
@@ -1128,16 +1156,44 @@ if (typeof document !== 'undefined') (function () {
       obStep2Title: 'खोजें', obStep2Body: 'अपने फ़ीड की हर खबर में खोजें - हेडलाइन, सारांश, और कंपनी के नाम।',
       obStep3Title: 'देश, क्षेत्र और महत्व', obStep3Body: 'फ़ीड को किसी एक देश या क्षेत्र तक सीमित करें, या केवल क्रिटिकल/हाई प्राथमिकता वाली खबरें दिखाएं।',
       obStep4Title: 'एक न्यूज़ कार्ड', obStep4Body: 'अधिक पढ़ने के लिए किसी खबर पर टैप करें, सेव करने के लिए दाईं ओर स्वाइप करें, या हटाने के लिए बाईं ओर स्वाइप करें।',
-      obStep5Title: 'सेव किए गए', obStep5Body: 'किसी खबर को दाईं ओर स्वाइप करें, या सेव पर टैप करें, ताकि वह सामान्य 24 घंटे के बाद भी यहां रहे।',
-      obStep6Title: 'इन्वेस्टमेंट', obStep6Body: 'आपकी ट्रैक की गई कंपनियों के अनुसार समूहित खबरें, देश के बजाय।',
-      obStep7Title: 'सेटिंग्स', obStep7Body: 'चैनल, आपकी इन्वेस्टमेंट वॉचलिस्ट, नोटिफिकेशन, खाता, एक्सपोर्ट, और फ़ीडबैक - सब एक ही जगह।',
-      obStep8Title: 'कम्युनिटी', obStep8Body: 'अपनी हर ट्रैक की गई कंपनी पर जनता की तेज़ी/मंदी राय देखें, और अपना वोट डालें।',
+      obStep5Title: 'सेव किए गए', obStep5Body: 'किसी खबर को दाईं ओर स्वाइप करें या सेव पर टैप करें। सेव की गई खबरें आपके खाते में तब तक रहती हैं जब तक आप उन्हें न हटाएं, साइन आउट के बाद भी।',
+      obStep6Title: 'इन्वेस्टमेंट', obStep6Body: 'आपकी वॉचलिस्ट की कंपनियों की खबरें, उनके लोगो के साथ। ज़्यादा खबरों के लिए सेटिंग्स में कंपनी के टेलीग्राम चैनल जोड़ें।',
+      obStep7Title: 'सेटिंग्स', obStep7Body: 'रूप, चैनल, आपकी वॉचलिस्ट, डेली अपेटाइट (दिन में कितनी खबरें), नोटिफिकेशन (खबर और इन्वेस्टमेंट अलर्ट, हर 20-40 मिनट में एक साथ, शांत समय के साथ), एक्सपोर्ट और फ़ीडबैक।',
+      obStep8Title: 'सेंटिमेंट बोर्ड', obStep8Body: 'उपयोगकर्ताओं द्वारा ट्रैक किया हर स्टॉक, आज के तेज़ी/मंदी मूड के साथ। हर स्टॉक पर दिन में एक वोट दें, कारण लिखें, और कोई भी स्टॉक खोजें।',
       pulseLabel: 'उपयोगकर्ताओं की राय:', pulseBull: 'तेज़ी', pulseBear: 'मंदी',
       communityPending: 'वोट जल्द ही यहां दिखेंगे।',
-      agPulseTitle: 'वोट करने के लिए साइन इन करें', agPulseBody: 'मुफ़्त खाता यह सुनिश्चित करता है कि हर व्यक्ति सिर्फ़ एक बार वोट करे - पढ़ने की कोई सीमा नहीं, सिर्फ़ वोट करने की।'
+      agPulseTitle: 'वोट करने के लिए साइन इन करें', agPulseBody: 'मुफ़्त खाता यह सुनिश्चित करता है कि हर व्यक्ति सिर्फ़ एक बार वोट करे - पढ़ने की कोई सीमा नहीं, सिर्फ़ वोट करने की।',
+      sbNoVotes: 'पिछले 24 घंटों में अभी कोई वोट नहीं। पहले आप वोट करें।',
+      sbVote: 'वोट आज',
+      sbVotes: 'वोट आज',
+      sbYourList: 'आपकी सूची',
+      sbYourView: 'आज आपकी राय:',
+      sbChangeHint: 'आप इसे आज कभी भी बदल सकते हैं।',
+      sbWhy: 'क्यों? (वैकल्पिक)',
+      sbWhyPh: 'अपना कारण बताएं - नतीजे, वैल्यूएशन, खबर, चार्ट… (2000 अक्षरों तक)',
+      sbCancel: 'रद्द करें',
+      sbPost: 'वोट पोस्ट करें',
+      sbReasons: 'कारण',
+      sbDelete: 'हटाएं',
+      sbNoReasons: 'अभी तक कोई कारण पोस्ट नहीं हुआ।',
+      sbShowAll: 'सभी दिखाएं',
+      sbOffline: 'बोर्ड अभी उपलब्ध नहीं है - इस डिवाइस पर पिछली बार देखा गया दिखा रहे हैं।',
+      sbNoMatch: 'इस खोज से कोई स्टॉक नहीं मिला।',
+      sbEmpty: 'अभी कोई स्टॉक नहीं। सेटिंग्स में अपनी वॉचलिस्ट में कंपनियां जोड़ें, वे यहां सबके वोट के लिए दिखेंगी।',
+      sbMore: 'और दिखाएं',
+      sbSearchPh: 'स्टॉक खोजें',
+      sbNote: 'आज का मूड: पिछले 24 घंटों के वोट, हर व्यक्ति का हर स्टॉक पर एक। यह उपयोगकर्ताओं की राय है, निवेश सलाह नहीं।',
+      sbPosted: 'वोट पोस्ट हुआ',
+      sbFailed: 'पोस्ट नहीं हो सका - कनेक्शन जांचें और फिर कोशिश करें।',
+      sbDeleteConfirm: 'यह कारण हटाएं? इसके साथ आपका वोट भी हट जाएगा।',
+      agBoardTitle: 'वोट करने के लिए साइन इन करें',
+      agBoardBody: 'मुफ़्त खाता हर व्यक्ति को हर स्टॉक पर दिन में एक वोट तक सीमित रखता है। बोर्ड पढ़ने के लिए खाता ज़रूरी नहीं।',
+      obStep0Title: 'आपकी गैरमौजूदगी में',
+      obStep0Body: 'लौटने पर यह कार्ड बताता है कि पिछली बार के बाद क्या बदला - किसी लाइन पर टैप करके सीधे वहां जाएं।',
+      obReplay: 'टूर फिर से देखें'
     },
     mr: {
-      linkPages: 'लिंक पेजेस', settings: 'सेटिंग्ज', signals: 'सिग्नल्स', saved: 'सेव्ह केलेले', export: 'एक्सपोर्ट', community: 'कम्युनिटी',
+      linkPages: 'लिंक पेजेस', settings: 'सेटिंग्ज', signals: 'सिग्नल्स', saved: 'सेव्ह केलेले', export: 'एक्सपोर्ट', community: 'सेंटिमेंट बोर्ड',
       landingTitle: 'QwickSignal', landingTag: 'बातम्या, मेसेज आणि रिपोर्ट्स देश, क्षेत्र आणि महत्त्वानुसार क्रमवारी लावा.',
       landingOr: 'किंवा', continueAsGuest: 'गेस्ट म्हणून सुरू ठेवा',
       landingGuestNote: 'तुम्ही खात्याशिवायही पाहू शकता आणि डीफॉल्ट चॅनेल्स फॉलो करू शकता. नंतर कधीही सेटिंग्जमधून साइन इन करून तुमचे सेव्ह केलेले लेख आणि चॅनेल्स ठेवू शकता.',
@@ -1214,16 +1270,44 @@ if (typeof document !== 'undefined') (function () {
       obStep2Title: 'शोधा', obStep2Body: 'तुमच्या फीडमधील प्रत्येक बातमीत शोधा - मथळे, सारांश, आणि कंपनीची नावे.',
       obStep3Title: 'देश, क्षेत्र आणि महत्त्व', obStep3Body: 'फीड एका देशापुरते किंवा क्षेत्रापुरते मर्यादित करा, किंवा फक्त क्रिटिकल/हाय प्राधान्याच्या बातम्या दाखवा.',
       obStep4Title: 'एक न्यूज कार्ड', obStep4Body: 'अधिक वाचण्यासाठी बातमीवर टॅप करा, सेव्ह करण्यासाठी उजवीकडे स्वाइप करा, किंवा काढण्यासाठी डावीकडे स्वाइप करा.',
-      obStep5Title: 'सेव्ह केलेले', obStep5Body: 'एखादी बातमी उजवीकडे स्वाइप करा, किंवा सेव्हवर टॅप करा, जेणेकरून ती नेहमीच्या 24 तासांनंतरही इथे राहील.',
-      obStep6Title: 'इन्व्हेस्टमेंट', obStep6Body: 'देशाऐवजी, तुम्ही ट्रॅक करत असलेल्या कंपन्यांनुसार गटबद्ध बातम्या.',
-      obStep7Title: 'सेटिंग्ज', obStep7Body: 'चॅनेल्स, तुमची इन्व्हेस्टमेंट वॉचलिस्ट, नोटिफिकेशन्स, खाते, एक्सपोर्ट, आणि फीडबॅक - सर्व एकाच ठिकाणी.',
-      obStep8Title: 'कम्युनिटी', obStep8Body: 'तुम्ही ट्रॅक करत असलेल्या प्रत्येक कंपनीवरील जनमताचा तेजी/मंदी कल पहा, आणि तुमचे मत द्या.',
+      obStep5Title: 'सेव्ह केलेले', obStep5Body: 'बातमी उजवीकडे स्वाइप करा किंवा सेव्हवर टॅप करा. सेव्ह केलेल्या बातम्या तुम्ही काढेपर्यंत तुमच्या खात्यात राहतात, साइन आउट केल्यानंतरही.',
+      obStep6Title: 'इन्व्हेस्टमेंट', obStep6Body: 'तुमच्या वॉचलिस्टमधील कंपन्यांच्या बातम्या, त्यांच्या लोगोसह. अधिक बातम्यांसाठी सेटिंग्जमध्ये कंपनीचे टेलिग्राम चॅनेल जोडा.',
+      obStep7Title: 'सेटिंग्ज', obStep7Body: 'रूप, चॅनेल्स, तुमची वॉचलिस्ट, डेली अपेटाइट (दिवसाला किती बातम्या), नोटिफिकेशन्स (बातम्या आणि इन्व्हेस्टमेंट अलर्ट, दर 20-40 मिनिटांनी एकत्र, शांत वेळेसह), एक्सपोर्ट आणि फीडबॅक.',
+      obStep8Title: 'सेंटिमेंट बोर्ड', obStep8Body: 'वापरकर्त्यांनी ट्रॅक केलेला प्रत्येक स्टॉक, आजच्या तेजी/मंदी मूडसह. प्रत्येक स्टॉकवर दिवसाला एक मत द्या, कारण लिहा, आणि कोणताही स्टॉक शोधा.',
       pulseLabel: 'वापरकर्त्यांचे मत:', pulseBull: 'तेजी', pulseBear: 'मंदी',
       communityPending: 'मते लवकरच इथे दिसतील.',
-      agPulseTitle: 'मतदानासाठी साइन इन करा', agPulseBody: 'मोफत खाते खात्री करते की प्रत्येक व्यक्ती फक्त एकदाच मत देईल - वाचण्यावर मर्यादा नाही, फक्त मतदानावर.'
+      agPulseTitle: 'मतदानासाठी साइन इन करा', agPulseBody: 'मोफत खाते खात्री करते की प्रत्येक व्यक्ती फक्त एकदाच मत देईल - वाचण्यावर मर्यादा नाही, फक्त मतदानावर.',
+      sbNoVotes: 'गेल्या 24 तासांत अजून मत नाही. पहिले मत तुमचे द्या.',
+      sbVote: 'मत आज',
+      sbVotes: 'मते आज',
+      sbYourList: 'तुमची यादी',
+      sbYourView: 'आज तुमचे मत:',
+      sbChangeHint: 'तुम्ही ते आज कधीही बदलू शकता.',
+      sbWhy: 'का? (ऐच्छिक)',
+      sbWhyPh: 'तुमचे कारण सांगा - निकाल, मूल्यांकन, बातमी, चार्ट… (2000 अक्षरांपर्यंत)',
+      sbCancel: 'रद्द करा',
+      sbPost: 'मत पोस्ट करा',
+      sbReasons: 'कारणे',
+      sbDelete: 'हटवा',
+      sbNoReasons: 'अजून कोणतेही कारण पोस्ट झालेले नाही.',
+      sbShowAll: 'सर्व दाखवा',
+      sbOffline: 'बोर्ड आत्ता उपलब्ध नाही - या डिव्हाइसवर शेवटचे पाहिलेले दाखवत आहोत.',
+      sbNoMatch: 'या शोधाशी जुळणारा स्टॉक नाही.',
+      sbEmpty: 'अजून स्टॉक नाहीत. सेटिंग्जमध्ये तुमच्या वॉचलिस्टमध्ये कंपन्या जोडा, त्या इथे सर्वांच्या मतासाठी दिसतील.',
+      sbMore: 'आणखी दाखवा',
+      sbSearchPh: 'स्टॉक शोधा',
+      sbNote: 'आजचा मूड: गेल्या 24 तासांतील मते, प्रत्येक व्यक्तीचे प्रत्येक स्टॉकवर एक. ही वापरकर्त्यांची मते आहेत, गुंतवणूक सल्ला नाही.',
+      sbPosted: 'मत पोस्ट झाले',
+      sbFailed: 'पोस्ट होऊ शकले नाही - कनेक्शन तपासा आणि पुन्हा प्रयत्न करा.',
+      sbDeleteConfirm: 'हे कारण हटवायचे? त्यासोबत तुमचे मतही हटेल.',
+      agBoardTitle: 'मतदानासाठी साइन इन करा',
+      agBoardBody: 'मोफत खाते प्रत्येक व्यक्तीला प्रत्येक स्टॉकवर दिवसाला एक मत इतके मर्यादित ठेवते. बोर्ड वाचण्यासाठी खाते लागत नाही.',
+      obStep0Title: 'तुम्ही नसताना',
+      obStep0Body: 'परत आल्यावर हे कार्ड मागच्या भेटीनंतर काय बदलले ते सांगते - थेट तिथे जाण्यासाठी ओळीवर टॅप करा.',
+      obReplay: 'टूर पुन्हा पहा'
     },
     gu: {
-      linkPages: 'લિંક પેજીસ', settings: 'સેટિંગ્સ', signals: 'સિગ્નલ્સ', saved: 'સેવ કરેલ', export: 'એક્સપોર્ટ', community: 'કમ્યુનિટી',
+      linkPages: 'લિંક પેજીસ', settings: 'સેટિંગ્સ', signals: 'સિગ્નલ્સ', saved: 'સેવ કરેલ', export: 'એક્સપોર્ટ', community: 'સેન્ટિમેન્ટ બોર્ડ',
       landingTitle: 'QwickSignal', landingTag: 'સમાચાર, સંદેશા અને અહેવાલોને દેશ, ક્ષેત્ર અને મહત્વ પ્રમાણે ગોઠવો.',
       landingOr: 'અથવા', continueAsGuest: 'ગેસ્ટ તરીકે ચાલુ રાખો',
       landingGuestNote: 'તમે ખાતા વગર પણ જોઈ શકો છો અને ડિફોલ્ટ ચેનલ્સ ફોલો કરી શકો છો. પછી ગમે ત્યારે સેટિંગ્સમાંથી સાઇન ઇન કરીને તમારા સેવ કરેલા લેખો અને ચેનલ્સ રાખી શકો છો.',
@@ -1300,13 +1384,41 @@ if (typeof document !== 'undefined') (function () {
       obStep2Title: 'શોધો', obStep2Body: 'તમારા ફીડની દરેક વાર્તામાં શોધો - હેડલાઇન, સારાંશ, અને કંપનીના નામ.',
       obStep3Title: 'દેશ, ક્ષેત્ર અને મહત્વ', obStep3Body: 'ફીડને એક દેશ કે ક્ષેત્ર પૂરતું મર્યાદિત કરો, અથવા ફક્ત ક્રિટિકલ/હાઈ પ્રાથમિકતાના સમાચાર બતાવો.',
       obStep4Title: 'એક ન્યૂઝ કાર્ડ', obStep4Body: 'વધુ વાંચવા સમાચાર પર ટેપ કરો, સેવ કરવા જમણી બાજુ સ્વાઇપ કરો, અથવા હટાવવા ડાબી બાજુ સ્વાઇપ કરો.',
-      obStep5Title: 'સેવ કરેલ', obStep5Body: 'કોઈ સમાચારને જમણી બાજુ સ્વાઇપ કરો, અથવા સેવ પર ટેપ કરો, જેથી તે સામાન્ય 24 કલાક પછી પણ અહીં રહે.',
-      obStep6Title: 'ઇન્વેસ્ટમેન્ટ', obStep6Body: 'દેશને બદલે, તમે ટ્રેક કરો છો તે કંપનીઓ પ્રમાણે જૂથબદ્ધ સમાચાર.',
-      obStep7Title: 'સેટિંગ્સ', obStep7Body: 'ચેનલો, તમારી ઇન્વેસ્ટમેન્ટ વોચલિસ્ટ, નોટિફિકેશન, ખાતું, એક્સપોર્ટ, અને પ્રતિસાદ - બધું એક જ જગ્યાએ.',
-      obStep8Title: 'કમ્યુનિટી', obStep8Body: 'તમે ટ્રેક કરો છો તે દરેક કંપની પર જનમતનો તેજી/મંદી વલણ જુઓ, અને તમારો મત આપો.',
+      obStep5Title: 'સેવ કરેલ', obStep5Body: 'સમાચારને જમણી બાજુ સ્વાઇપ કરો અથવા સેવ પર ટેપ કરો. સેવ કરેલા સમાચાર તમે દૂર ન કરો ત્યાં સુધી તમારા ખાતામાં રહે છે, સાઇન આઉટ પછી પણ.',
+      obStep6Title: 'ઇન્વેસ્ટમેન્ટ', obStep6Body: 'તમારી વોચલિસ્ટની કંપનીઓના સમાચાર, તેમના લોગો સાથે. વધુ સમાચાર માટે સેટિંગ્સમાં કંપનીની ટેલિગ્રામ ચેનલ જોડો.',
+      obStep7Title: 'સેટિંગ્સ', obStep7Body: 'દેખાવ, ચેનલો, તમારી વોચલિસ્ટ, ડેઇલી અપેટાઇટ (દિવસમાં કેટલા સમાચાર), નોટિફિકેશન (સમાચાર અને ઇન્વેસ્ટમેન્ટ એલર્ટ, દર 20-40 મિનિટે એકસાથે, શાંત સમય સાથે), એક્સપોર્ટ અને પ્રતિસાદ.',
+      obStep8Title: 'સેન્ટિમેન્ટ બોર્ડ', obStep8Body: 'વપરાશકર્તાઓએ ટ્રેક કરેલો દરેક સ્ટોક, આજના તેજી/મંદી મૂડ સાથે. દરેક સ્ટોક પર દિવસમાં એક વોટ આપો, કારણ લખો, અને કોઈ પણ સ્ટોક શોધો.',
       pulseLabel: 'વપરાશકર્તાઓનો મત:', pulseBull: 'તેજી', pulseBear: 'મંદી',
       communityPending: 'મત ટૂંક સમયમાં અહીં દેખાશે.',
-      agPulseTitle: 'વોટ કરવા સાઇન ઇન કરો', agPulseBody: 'મફત ખાતું ખાતરી કરે છે કે દરેક વ્યક્તિ ફક્ત એક જ વાર વોટ કરે - વાંચવા પર કોઈ મર્યાદા નથી, ફક્ત વોટિંગ પર.'
+      agPulseTitle: 'વોટ કરવા સાઇન ઇન કરો', agPulseBody: 'મફત ખાતું ખાતરી કરે છે કે દરેક વ્યક્તિ ફક્ત એક જ વાર વોટ કરે - વાંચવા પર કોઈ મર્યાદા નથી, ફક્ત વોટિંગ પર.',
+      sbNoVotes: 'છેલ્લા 24 કલાકમાં હજી કોઈ વોટ નથી. પહેલો વોટ તમારો આપો.',
+      sbVote: 'વોટ આજે',
+      sbVotes: 'વોટ આજે',
+      sbYourList: 'તમારી યાદી',
+      sbYourView: 'આજે તમારો મત:',
+      sbChangeHint: 'તમે તેને આજે ગમે ત્યારે બદલી શકો છો.',
+      sbWhy: 'કેમ? (વૈકલ્પિક)',
+      sbWhyPh: 'તમારું કારણ જણાવો - પરિણામ, મૂલ્યાંકન, સમાચાર, ચાર્ટ… (2000 અક્ષરો સુધી)',
+      sbCancel: 'રદ કરો',
+      sbPost: 'વોટ પોસ્ટ કરો',
+      sbReasons: 'કારણો',
+      sbDelete: 'કાઢી નાખો',
+      sbNoReasons: 'હજી કોઈ કારણ પોસ્ટ થયું નથી.',
+      sbShowAll: 'બધું બતાવો',
+      sbOffline: 'બોર્ડ અત્યારે ઉપલબ્ધ નથી - આ ડિવાઇસ પર છેલ્લે જોયેલું બતાવીએ છીએ.',
+      sbNoMatch: 'આ શોધ સાથે કોઈ સ્ટોક મળ્યો નથી.',
+      sbEmpty: 'હજી કોઈ સ્ટોક નથી. સેટિંગ્સમાં તમારી વોચલિસ્ટમાં કંપનીઓ ઉમેરો, તે અહીં બધાના વોટ માટે દેખાશે.',
+      sbMore: 'વધુ બતાવો',
+      sbSearchPh: 'સ્ટોક શોધો',
+      sbNote: 'આજનો મૂડ: છેલ્લા 24 કલાકના વોટ, દરેક વ્યક્તિનો દરેક સ્ટોક પર એક. આ વપરાશકર્તાઓના મત છે, રોકાણ સલાહ નથી.',
+      sbPosted: 'વોટ પોસ્ટ થયો',
+      sbFailed: 'પોસ્ટ ન થઈ શક્યું - કનેક્શન તપાસો અને ફરી પ્રયાસ કરો.',
+      sbDeleteConfirm: 'આ કારણ કાઢી નાખવું? તેની સાથે તમારો વોટ પણ દૂર થશે.',
+      agBoardTitle: 'વોટ કરવા સાઇન ઇન કરો',
+      agBoardBody: 'મફત ખાતું દરેક વ્યક્તિને દરેક સ્ટોક પર દિવસમાં એક વોટ સુધી મર્યાદિત રાખે છે. બોર્ડ વાંચવા ખાતાની જરૂર નથી.',
+      obStep0Title: 'તમારી ગેરહાજરીમાં',
+      obStep0Body: 'પાછા આવો ત્યારે આ કાર્ડ છેલ્લી મુલાકાત પછી શું બદલાયું તે જણાવે છે - સીધા ત્યાં જવા લાઇન પર ટેપ કરો.',
+      obReplay: 'ટૂર ફરી જુઓ'
     }
   };
   let currentLang = 'en';
@@ -2288,7 +2400,9 @@ if (typeof document !== 'undefined') (function () {
     // unconditionally so a returning, already-decided visitor never pays for the Google button init or
     // seeing the screen flash up first.
     init() {
-      if (this.seen()) return;
+      // Returning visitors skip the landing screen, but still get a tour they haven't seen - this is how
+      // people already using the app meet the rewritten tour (ONBOARD_KEY v2) once.
+      if (this.seen()) { setTimeout(() => Onboarding.maybeStart(), 800); return; }
       this.show();
       const form = $('#landingAuthForm');
       if (form) form.addEventListener('submit', async ev => {
@@ -2323,11 +2437,15 @@ if (typeof document !== 'undefined') (function () {
      show - and the first #list entry - is empty until the live feed has actually loaded, which can take
      longer than maybeStart()'s initial delay on a slow connection) is skipped rather than shown pointing at
      nothing, via _firstVisibleStep()/_nextVisibleIdx() below. */
-  const ONBOARD_KEY = 'qs-onboard-seen-v1';
+  // v2: the tour was rewritten for the current app (since-you-left card, Sentiment board, Daily appetite,
+  // bundled notifications), so everyone sees the new version once - including people who saw v1.
+  // Settings -> "Replay the tour" shows it again any time (Onboarding.replay()).
+  const ONBOARD_KEY = 'qs-onboard-seen-v2';
   const Onboarding = {
     seen() { try { return localStorage.getItem(ONBOARD_KEY) === '1'; } catch (e) { return false; } },
     markSeen() { try { localStorage.setItem(ONBOARD_KEY, '1'); } catch (e) { /* private browsing etc. */ } },
     steps: [
+      { anchor: '#digestCard', titleKey: 'obStep0Title', bodyKey: 'obStep0Body' },
       { anchor: '#countryStatus', titleKey: 'obStep1Title', bodyKey: 'obStep1Body' },
       { anchor: '#q', titleKey: 'obStep2Title', bodyKey: 'obStep2Body' },
       { anchor: '#countryFilter', titleKey: 'obStep3Title', bodyKey: 'obStep3Body' },
@@ -2372,6 +2490,19 @@ if (typeof document !== 'undefined') (function () {
       track('onboarding_start');
       this._renderStep();
     },
+    // From Settings: back to the Signals page (where the first steps point), then run the tour from the top.
+    replay() {
+      try { closeSettingsPage(); } catch (e) { /* not open */ }
+      setTab('brief');
+      window.scrollTo(0, 0);
+      track('onboarding_replay');
+      setTimeout(() => {
+        const start = this._nextVisibleIdx(0);
+        if (start < 0) return;
+        this._idx = start;
+        this._renderStep();
+      }, 250);
+    },
     _renderStep() {
       const step = this.steps[this._idx];
       const anchorEl = step ? this._visibleAnchor(step.anchor) : null;
@@ -2393,7 +2524,7 @@ if (typeof document !== 'undefined') (function () {
       const card = $('#obCard', overlay);
       const isLast = this._nextVisibleIdx(this._idx + 1) < 0;
       card.innerHTML = `
-        <div class="ob-dots">${this.steps.map((s, i) => `<span class="ob-dot${i === this._idx ? ' on' : ''}"></span>`).join('')}</div>
+        <div class="ob-dots">${this.steps.map((s, i) => i === this._idx || this._visibleAnchor(s.anchor) ? `<span class="ob-dot${i === this._idx ? ' on' : ''}"></span>` : '').join('')}</div>
         <h3 class="ob-title">${esc(t(step.titleKey))}</h3>
         <p class="ob-body">${esc(t(step.bodyKey))}</p>
         <div class="ob-actions">
@@ -5119,38 +5250,257 @@ Give a concise, event-specific analysis - decide for yourself which structure be
   // report today still keeps its place and its crowd read here (per the user's confirmed "list of all your
   // tracked companies with their sentiment bars in one place" answer). Companies are listed alphabetically,
   // same convention as the Investment watchlist's own list in Settings.
+  /* ---------- Sentiment board ----------
+     Replaces the old Community tab's all-time bull/bear counter. Owner's design:
+       - lists EVERY stock anyone keeps in their watchlist (board.json, published by the pipeline from all
+         accounts - names and how many track each, never who), plus this person's own list and anything
+         voted on; anyone can vote on any of them
+       - shows TODAY'S MOOD: votes from the last 24 hours, one per person per stock (the newest counts),
+         updating the moment someone votes
+       - a vote can carry a reason (optional, up to 2000 characters); reasons are the comments under each stock
+       - search narrows the list, and finds any known company even if nobody tracks it yet
+     Votes live in qs_sent_votes, one document per (stock, person, day) - see firestore.rules.
+
+     Free-plan care: Firestore charges a read per document returned. Reloading every comment on every visit
+     would eat the 50,000-a-day allowance quickly, so loaded votes are kept on the device and later visits
+     ask only for votes newer than the newest one already held. A full reload happens every 6 hours to
+     catch deletions (a deleted comment can linger on other phones until then). */
+  const BOARD_WINDOW_MS = 24 * 3600e3;      // today's mood
+  const BOARD_KEEP_MS = 7 * 864e5;          // comments shown from the last 7 days
+  const BOARD_FULL_EVERY_MS = 6 * 3600e3;
+  const BOARD_REASON_MAX = 2000;
+  const BOARD_PAGE = 30;                    // rows drawn at a time; "Show more" reveals the next 30
+  const BOARD_STORE = 'qs-board-v1';
+  const Board = {
+    list: [], votes: new Map(), maxAt: 0, fullAt: 0, loading: null, error: false,
+    q: '', open: null, pick: null, draft: '', shown: BOARD_PAGE, allComments: new Set(), busy: false,
+
+    restore() {
+      try {
+        const d = JSON.parse(localStorage.getItem(BOARD_STORE) || 'null');
+        if (!d) return;
+        this.list = d.list || [];
+        this.votes = new Map((d.votes || []).map(v => [v.id, v]));
+        this.maxAt = d.maxAt || 0;
+        this.fullAt = d.fullAt || 0;
+      } catch (e) { /* start fresh */ }
+    },
+    persist() {
+      try {
+        localStorage.setItem(BOARD_STORE, JSON.stringify({ list: this.list, votes: [...this.votes.values()],
+          maxAt: this.maxAt, fullAt: this.fullAt }));
+      } catch (e) { /* storage full: still works, just reloads more next time */ }
+    },
+    known(name) {
+      const n = String(name || '').trim().toLowerCase();
+      if (!n) return null;
+      return E.COMPANIES.find(c => c.name.toLowerCase() === n || c.aliases.some(a => a.toLowerCase() === n)
+        || (c.ticker && c.ticker.toLowerCase() === n)) || null;
+    },
+    // One spelling per company however it was typed ("Nvda", "NVIDIA" -> "Nvidia"), so each stock is listed
+    // and voted on in exactly one place.
+    canon(name) { const k = this.known(name); return k ? k.name : String(name || '').trim(); },
+    slug(name) { return Pulse.companySlug(this.canon(name)); },
+    // The day a vote belongs to, in Indian time - the "one vote per stock per day" bucket.
+    istDay() { return new Date(Date.now() + 330 * 60e3).toISOString().slice(0, 10); },
+    maskedName() {
+      const local = String(Auth.email || '').split('@')[0].replace(/[^A-Za-z0-9]/g, '');
+      return (local.slice(0, 4) || 'user') + '•••';
+    },
+
+    async loadList() {
+      const b = await getJSON('board.json');
+      if (b && Array.isArray(b.companies)) this.list = b.companies.filter(c => c && c.name);
+    },
+    async loadVotes() {
+      const full = !this.fullAt || Date.now() - this.fullAt > BOARD_FULL_EVERY_MS;
+      const since = full ? Date.now() - BOARD_KEEP_MS : this.maxAt - 5000;
+      const query = { structuredQuery: {
+        from: [{ collectionId: 'qs_sent_votes' }],
+        where: { fieldFilter: { field: { fieldPath: 'at' }, op: 'GREATER_THAN_OR_EQUAL',
+          value: { timestampValue: new Date(since).toISOString() } } },
+        orderBy: [{ field: { fieldPath: 'at' }, direction: 'DESCENDING' }],
+        limit: 3000 } };
+      const r = await fetch(`${FS_BASE}:runQuery?key=${FIREBASE.apiKey}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(query) });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const rows = (await r.json()).filter(x => x.document);
+      if (full) this.votes = new Map();
+      rows.forEach(x => {
+        const f = x.document.fields || {}, s = k => (f[k] && f[k].stringValue) || '';
+        const v = { id: x.document.name.split('/').pop(), slug: s('slug'), company: s('company'), uid: s('uid'),
+          choice: s('choice'), reason: s('reason'), name: s('name'), at: Date.parse((f.at || {}).timestampValue) || 0 };
+        if (v.slug && (v.choice === 'bull' || v.choice === 'bear')) this.votes.set(v.id, v);
+      });
+      const cutoff = Date.now() - BOARD_KEEP_MS;
+      for (const [id, v] of this.votes) if (v.at < cutoff) this.votes.delete(id);
+      this.maxAt = Math.max(this.maxAt, ...[...this.votes.values()].map(v => v.at), 0);
+      if (full) this.fullAt = Date.now();
+    },
+    async refresh() {
+      if (this.loading) return this.loading;
+      this.loading = (async () => {
+        try { await Promise.all([this.loadList(), this.loadVotes()]); this.error = false; this.persist(); }
+        catch (e) { this.error = true; }
+        finally { this.loading = null; }
+      })();
+      return this.loading;
+    },
+
+    // Today's mood: the newest vote per person in the last 24 hours.
+    stats(slug) {
+      const now = Date.now(), latest = new Map();
+      this.votes.forEach(v => {
+        if (v.slug !== slug || now - v.at > BOARD_WINDOW_MS) return;
+        const p = latest.get(v.uid);
+        if (!p || v.at > p.at) latest.set(v.uid, v);
+      });
+      let bull = 0, bear = 0;
+      latest.forEach(v => { if (v.choice === 'bull') bull++; else bear++; });
+      return { bull, bear, total: bull + bear };
+    },
+    comments(slug) { return [...this.votes.values()].filter(v => v.slug === slug && v.reason).sort((a, b) => b.at - a.at); },
+    mine(slug) { return Auth.uid ? this.votes.get(`${slug}_${Auth.uid}_${this.istDay()}`) || null : null; },
+
+    // Every stock to show: everyone's watchlists, this person's own (so a stock they just added appears
+    // before the next pipeline scan), and anything voted on recently.
+    entries() {
+      const by = new Map();
+      const add = (name, trackers) => {
+        const n = this.canon(name), slug = Pulse.companySlug(n);
+        if (!n) return;
+        const e = by.get(slug) || { name: n, slug, trackers: 0, mine: false };
+        e.trackers = Math.max(e.trackers, trackers || 0);
+        by.set(slug, e);
+      };
+      this.list.forEach(c => add(c.name, c.trackers));
+      S.myCompanies.forEach(n => add(n, 1));
+      this.votes.forEach(v => add(v.company, 0));
+      const mineSlugs = new Set([...S.myCompanies].map(n => this.slug(n)));
+      const out = [...by.values()].map(e => Object.assign(e, { mine: mineSlugs.has(e.slug), stats: this.stats(e.slug) }));
+      return out.sort((a, b) => (b.mine - a.mine) || (b.stats.total - a.stats.total) || (b.trackers - a.trackers)
+        || a.name.localeCompare(b.name));
+    },
+
+    async post(company, choice, reason) {
+      const name = this.canon(company), slug = Pulse.companySlug(name), day = this.istDay();
+      const id = `${slug}_${Auth.uid}_${day}`;
+      const docName = `projects/${FIREBASE.projectId}/databases/(default)/documents/qs_sent_votes/${id}`;
+      const fields = { slug, company: name, uid: Auth.uid, day, choice, reason: reason.slice(0, BOARD_REASON_MAX), name: this.maskedName() };
+      const tok = await Auth.bearerToken();
+      const r = await fetch(`${FS_BASE}:commit`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + tok },
+        body: JSON.stringify({ writes: [{
+          update: { name: docName, fields: Object.fromEntries(Object.entries(fields).map(([k, v]) => [k, toFsValue(v)])) },
+          // the server's own clock - firestore.rules refuse any other value, so votes can't be backdated
+          updateTransforms: [{ fieldPath: 'at', setToServerValue: 'REQUEST_TIME' }] }] }) });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      // Show it straight away; the next refresh brings the server's exact timestamp.
+      this.votes.set(id, Object.assign({ id, at: Date.now() }, fields));
+      this.maxAt = Math.max(this.maxAt, Date.now() - 60e3);
+      this.persist();
+      track('board_vote', { choice, with_reason: !!reason });
+    },
+    async remove(id) {
+      const tok = await Auth.bearerToken();
+      const r = await fetch(`${FS_BASE}/qs_sent_votes/${encodeURIComponent(id)}`, {
+        method: 'DELETE', headers: { Authorization: 'Bearer ' + tok } });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      this.votes.delete(id);
+      this.persist();
+    }
+  };
+  Board.restore();
+
+  function boardBarHTML(st) {
+    if (!st.total) return `<p class="sb-none">${esc(t('sbNoVotes'))}</p>`;
+    const bull = Math.round((st.bull / st.total) * 100);
+    return `<div class="pulse-pct"><span class="pct-bull">▲ ${bull}% ${esc(t('pulseBull'))}</span><span class="pct-bear">▼ ${100 - bull}% ${esc(t('pulseBear'))}</span></div>
+      <div class="pulse-bar"><span class="fill-bull" style="width:${bull}%"></span><span class="fill-bear" style="width:${100 - bull}%"></span></div>
+      <p class="sb-count">${st.total} ${esc(t(st.total === 1 ? 'sbVote' : 'sbVotes'))}</p>`;
+  }
+
+  function boardCardHTML(e) {
+    const st = e.stats, mine = Board.mine(e.slug), isOpen = Board.open === e.slug;
+    const head = `<button type="button" class="sb-row" data-act="sbOpen" data-v="${esc(e.slug)}" aria-expanded="${isOpen}">
+        <span class="gc-ring">${isOpen || e.mine ? companyLogoHTML(e.name, 'gc-ring-inner') : `<span class="gc-ring-inner">${esc(e.name.charAt(0).toUpperCase())}</span>`}</span>
+        <span class="sb-name">${esc(e.name)}${e.mine ? ` <span class="sb-mine">${esc(t('sbYourList'))}</span>` : ''}</span>
+        <span class="sb-mini">${st.total ? `<b class="pct-bull">▲${Math.round(st.bull / st.total * 100)}%</b> <span>${st.total}</span>` : '–'}</span>
+        <span class="sb-chev" aria-hidden="true">${isOpen ? '−' : '+'}</span>
+      </button>`;
+    if (!isOpen) return `<article class="sb-card">${head}</article>`;
+    const pick = Board.pick || (mine && mine.choice) || '';
+    const vote = `<div class="sb-vote">
+        ${mine ? `<p class="sb-yours">${esc(t('sbYourView'))} <b class="${mine.choice === 'bull' ? 'pct-bull' : 'pct-bear'}">${mine.choice === 'bull' ? '▲ ' + esc(t('pulseBull')) : '▼ ' + esc(t('pulseBear'))}</b>. ${esc(t('sbChangeHint'))}</p>` : ''}
+        <div class="pulse-btns">
+          <button class="pulse-btn bull${pick === 'bull' ? ' active' : ''}" data-act="sbPick" data-v="bull">▲ ${esc(t('pulseBull'))}</button>
+          <button class="pulse-btn bear${pick === 'bear' ? ' active' : ''}" data-act="sbPick" data-v="bear">▼ ${esc(t('pulseBear'))}</button>
+        </div>
+        ${Board.pick ? `<label class="sb-why" for="sbReason">${esc(t('sbWhy'))}</label>
+          <textarea id="sbReason" class="sb-text" maxlength="${BOARD_REASON_MAX}" rows="4" placeholder="${esc(t('sbWhyPh'))}">${esc(Board.draft)}</textarea>
+          <div class="sb-post"><span class="sb-left" id="sbLeft">${BOARD_REASON_MAX - Board.draft.length}</span>
+            <button class="btn small" data-act="sbCancel">${esc(t('sbCancel'))}</button>
+            <button class="btn primary small" data-act="sbPost" ${Board.busy ? 'disabled' : ''}>${esc(t('sbPost'))}</button></div>` : ''}
+      </div>`;
+    const all = Board.comments(e.slug), showAll = Board.allComments.has(e.slug), list = showAll ? all : all.slice(0, 3);
+    const comments = `<div class="sb-comments">
+        <h3 class="sb-ch">${esc(t('sbReasons'))} <span>${all.length}</span></h3>
+        ${list.length ? list.map(c => `<div class="sb-c">
+            <div class="sb-cmeta"><b class="${c.choice === 'bull' ? 'pct-bull' : 'pct-bear'}">${c.choice === 'bull' ? '▲ ' + esc(t('pulseBull')) : '▼ ' + esc(t('pulseBear'))}</b>
+              <span>${esc(c.name || 'user')}</span><span>${esc(ago(c.at))}</span>
+              ${Auth.uid && (c.uid === Auth.uid || isOwner()) ? `<button class="sb-del" data-act="sbDel" data-v="${esc(c.id)}">${esc(t('sbDelete'))}</button>` : ''}</div>
+            <p class="sb-ctext">${esc(c.reason)}</p></div>`).join('')
+          : `<p class="sb-none">${esc(t('sbNoReasons'))}</p>`}
+        ${all.length > 3 && !showAll ? `<button class="link" data-act="sbAll" data-v="${esc(e.slug)}">${esc(t('sbShowAll'))} (${all.length})</button>` : ''}
+      </div>`;
+    return `<article class="sb-card open">${head}<div class="sb-body">${boardBarHTML(st)}${vote}${comments}</div></article>`;
+  }
+
+  function renderBoardBody() {
+    const box = $('#sbBody');
+    if (!box) return;
+    let entries = Board.entries();
+    const q = Board.q.trim().toLowerCase();
+    if (q) {
+      entries = entries.filter(e => e.name.toLowerCase().includes(q)
+        || (Board.known(e.name) || { aliases: [] }).aliases.some(a => a.toLowerCase().includes(q)));
+      // Not on anyone's list yet: still let them find a known company and be the first to vote.
+      const k = Board.known(Board.q) || E.COMPANIES.find(c => c.name.toLowerCase().startsWith(q));
+      if (k && !entries.some(e => e.slug === Pulse.companySlug(k.name)))
+        entries.push({ name: k.name, slug: Pulse.companySlug(k.name), trackers: 0, mine: false, stats: Board.stats(Pulse.companySlug(k.name)) });
+    }
+    const shown = q ? entries : entries.slice(0, Board.shown);
+    box.innerHTML = (Board.error && !Board.votes.size ? `<p class="lp-syncnote">${esc(t('sbOffline'))}</p>` : '')
+      + (shown.length ? shown.map(boardCardHTML).join('')
+        : `<p class="sb-none">${esc(q ? t('sbNoMatch') : t('sbEmpty'))}</p>`)
+      + (!q && entries.length > shown.length ? `<button class="btn block" data-act="sbMore">${esc(t('sbMore'))} (${entries.length - shown.length})</button>` : '');
+    const ta = $('#sbReason');
+    if (ta) ta.addEventListener('input', () => { Board.draft = ta.value; const l = $('#sbLeft'); if (l) l.textContent = BOARD_REASON_MAX - ta.value.length; });
+  }
+
   function renderCommunity() {
     const box = $('#communityList');
-    const empty = $('#communityEmpty');
     if (!box) return;
-    if (!S.myCompanies.size) {
-      if (empty) empty.hidden = false;
-      box.innerHTML = '';
-      return;
+    const empty = $('#communityEmpty');
+    if (empty) empty.hidden = true;           // the board is never empty: everyone's stocks are on it
+    if (!$('#sbSearch')) {
+      box.innerHTML = `<div class="sb-top">
+          <input id="sbSearch" class="sb-search" type="search" autocomplete="off" placeholder="${esc(t('sbSearchPh'))}" aria-label="${esc(t('sbSearchPh'))}">
+          <p class="sb-note">${esc(t('sbNote'))}</p>
+        </div><div id="sbBody"></div>`;
+      $('#sbSearch').addEventListener('input', ev => { Board.q = ev.target.value; renderBoardBody(); });
     }
-    if (empty) empty.hidden = true;
-    const names = [...S.myCompanies].sort((a, b) => a.localeCompare(b));
-    box.innerHTML = names.map(name => {
-      return `<div class="community-row">
-        <div class="gc-top">
-          <span class="gc-ring">${companyLogoHTML(name, 'gc-ring-inner')}</span>
-          <span class="gc-name">${esc(name)}</span>
-        </div>
-        ${pulseHTML(name) || `<p class="empty-note community-pending">${esc(t('communityPending'))}</p>`}
-      </div>`;
-    }).join('');
-    seenObserveVisible(box);
-    // Same "only fetch/re-render for companies still uncached" guard as the old Investment-inline version
-    // had (see the infinite-render-loop fix in that history) - Pulse.forCompany() resolving instantly for
-    // an already-cached company must never trigger another unconditional re-render, or this becomes the
-    // same same-tick infinite loop that was caught by simulation before anything shipped.
-    const uncached = names.filter(name => !Pulse._cache.has(Pulse.companySlug(name)));
-    if (uncached.length) {
-      Promise.all(uncached.map(name => Pulse.forCompany(name))).then(() => {
-        if (S.tab === 'community') renderCommunity();
-      });
+    renderBoardBody();
+    if (!Board.loading && Date.now() - (Board.lastTry || 0) > 60e3) {
+      Board.lastTry = Date.now();
+      Board.refresh().then(() => { if (S.tab === 'community') renderBoardBody(); });
     }
   }
+  // While the board is open, pick up other people's votes every minute (only new ones are fetched).
+  setInterval(() => {
+    if (S.tab !== 'community' || document.hidden || Board.pick) return;
+    Board.refresh().then(() => { if (S.tab === 'community' && !Board.pick) renderBoardBody(); });
+  }, 60e3);
 
   function renderList() {
     if (S.mode === 'investment') { renderInvestmentList(); return; }
@@ -5825,6 +6175,35 @@ Give a concise, event-specific analysis - decide for yourself which structure be
         await Pulse.vote(el.dataset.company, v);
         if (S.tab === 'community') renderCommunity();
       }
+      else if (act === 'sbOpen') {
+        Board.open = Board.open === v ? null : v; Board.pick = null; Board.draft = ''; renderBoardBody();
+      }
+      else if (act === 'sbPick') {
+        if (!Auth.uid) { openAuthGate('agBoardTitle', 'agBoardBody'); return; }
+        Board.pick = v; renderBoardBody();
+        const ta = $('#sbReason'); if (ta) ta.focus();
+      }
+      else if (act === 'sbCancel') { Board.pick = null; Board.draft = ''; renderBoardBody(); }
+      else if (act === 'sbPost') {
+        const entry = Board.entries().find(x => x.slug === Board.open)
+          || E.COMPANIES.find(c => Pulse.companySlug(c.name) === Board.open) || null;
+        if (!entry || !Board.pick || Board.busy) return;
+        Board.busy = true; renderBoardBody();
+        try {
+          await Board.post(entry.name, Board.pick, (Board.draft || '').trim());
+          Board.pick = null; Board.draft = ''; toast(t('sbPosted'));
+        } catch (e) { toast(t('sbFailed')); }
+        Board.busy = false; renderBoardBody();
+        Board.refresh().then(() => { if (S.tab === 'community' && !Board.pick) renderBoardBody(); });
+      }
+      else if (act === 'sbDel') {
+        if (!confirm(t('sbDeleteConfirm'))) return;
+        try { await Board.remove(v); } catch (e) { toast(t('sbFailed')); }
+        renderBoardBody();
+      }
+      else if (act === 'sbAll') { Board.allComments.add(v); renderBoardBody(); }
+      else if (act === 'sbMore') { Board.shown += BOARD_PAGE; renderBoardBody(); }
+      else if (act === 'obReplay') { Onboarding.replay(); }
       else if (act === 'agclose') { closeAuthGate(); }
       else if (act === 'agGoto') { closeAuthGate(); setTab('settings'); const eb = $('#authEmail'); if (eb) eb.focus(); }
       else if (act === 'fi') { S.f.imp = v; if (S.mode === 'investment') renderInvestmentList(); else { renderControls(); renderList(); } }
