@@ -168,6 +168,7 @@ input[type=search]:focus-visible{border-color:var(--accent);box-shadow:0 0 0 4px
 .lp-block{margin:0 0 26px;padding-bottom:22px;border-bottom:1px solid var(--line)}
 .lp-block:last-child{border-bottom:0}
 .lp-h{margin:0 0 4px;font-size:17px}
+#view-settings.sp-open > h1{display:none}   /* inside a settings page only the red back link shows */
 .lp-sub{margin:0 0 12px;color:var(--ink2);font-size:13.5px;max-width:58ch;line-height:1.5}
 .lp-add{display:flex;gap:8px}
 .lp-add input{flex:1;min-width:0;min-height:44px;padding:0 12px;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font:inherit}
@@ -976,7 +977,7 @@ body.pre-app .top, body.pre-app main, body.pre-app .tabs{display:none}
       </button>
 
       <div class="settingsnav" id="settingsNavList" aria-label="Settings sections"></div>
-      <p class="settingsnav-foot">QwickSignal</p>
+      <p class="settingsnav-foot">QwickSignal - Made with ❤️ in India</p>
     </div>
 
     <!-- Account -->
@@ -1061,7 +1062,7 @@ body.pre-app .top, body.pre-app main, body.pre-app .tabs{display:none}
         <h2 class="lp-h" data-i18n="appearanceHeading">Appearance</h2>
         <p class="lp-sub" data-i18n="appearanceSub">Choose how QwickSignal looks on this device.</p>
         <div class="seg" id="themeSeg" role="group" aria-label="Theme">
-          <button type="button" data-theme-choice="system" data-i18n="themeSystem">System</button>
+          <button type="button" data-theme-choice="system" data-i18n="themeSystem">Default</button>
           <button type="button" data-theme-choice="light" data-i18n="themeLight">Light</button>
           <button type="button" data-theme-choice="dark" data-i18n="themeDark">Dark</button>
         </div>
@@ -1262,10 +1263,12 @@ body.pre-app .top, body.pre-app main, body.pre-app .tabs{display:none}
     <svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-6-4-6 4V3z"/></svg>
   </button>
   <button role="tab" data-tab="investment" aria-selected="false" aria-label="Investment" data-i18n-aria="modeInvestment" title="Investment" data-i18n-title="modeInvestment">
-    <svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor" stroke="none">
-      <rect x="4" y="9" width="3.4" height="9" rx="1"/><rect x="5.2" y="5" width="1" height="17"/>
-      <rect x="10.3" y="4" width="3.4" height="12" rx="1"/><rect x="11.5" y="2" width="1" height="17"/>
-      <rect x="16.6" y="11" width="3.4" height="7" rx="1"/><rect x="17.8" y="7" width="1" height="14"/>
+    <!-- Magnifier over a rising chart (replaces the candlestick icon) - drawn in the same line style as the
+         other tab icons, so it sharpens at any size and takes the active-tab red like they do. -->
+    <svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="10.5" cy="10.5" r="7.25"/><path d="M15.8 15.8 21 21" stroke-width="2.6"/>
+      <path d="M7 14v-1.6M9.5 14v-3.1M12 14v-2.2M14.5 14v-4.6" stroke-width="1.5"/>
+      <path d="M6.6 9.6l2.6-2.4 2.1 1.7 3.4-3.1M13.3 5.6h2.1v2.1" stroke-width="1.4"/>
     </svg>
   </button>
   <button role="tab" data-tab="community" aria-selected="false" aria-label="Community" data-i18n-aria="community" title="Community" data-i18n-title="community">

@@ -1,7 +1,14 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-67-v1';  // This round: Investment channels and account-driven alerts. Channels
+const VERSION = 'gni-phase3-68-v1';  // This round: owner's UI requests. Appearance taps were ignored (the
+                                      // buttons' data-theme-choice never matched the click lookup) - fixed.
+                                      // "System" renamed "Default". Black page title hidden inside settings
+                                      // pages (red back link kept). Footer "Made with love in India". Get the
+                                      // app hidden. "Crowd read" -> "Sentiment of the Users". Investment icon
+                                      // is now a magnifier over a rising chart.
+                                      //
+                                      // Previous round (gni-phase3-67-v1): Investment channels and account-driven alerts. Channels
                                       // linked under Investment were saved and never read by anything; the
                                       // pipeline now fetches them and the Investment tab shows their posts
                                       // ("From your linked channels"), never News. Investment alerts are now

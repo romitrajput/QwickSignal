@@ -975,7 +975,7 @@ if (typeof document !== 'undefined') (function () {
       refresh: 'Refresh',
       loginToLinkChannels: 'Log in to link Telegram channels.',
       appearanceHeading: 'Appearance', appearanceSub: 'Choose how QwickSignal looks on this device.',
-      themeSystem: 'System', themeLight: 'Light', themeDark: 'Dark',
+      themeSystem: 'Default', themeLight: 'Light', themeDark: 'Dark',
       appetiteHeading: 'Daily appetite', appetiteSub: 'Say how much news you want in a day. QwickSignal works out which priorities to lead with, and adjusts as the volume changes.',
       appetiteAll: 'Everything', appetitePerDay: 'stories a day',
       appetiteResolved: 'To land near that, QwickSignal is holding the bar at',
@@ -1046,7 +1046,7 @@ if (typeof document !== 'undefined') (function () {
       obStep6Title: 'Investment', obStep6Body: 'News grouped by the companies you track, instead of by country.',
       obStep7Title: 'Settings', obStep7Body: 'Channels, your investment watchlist, notifications, account, export, and feedback - all in one place.',
       obStep8Title: 'Community', obStep8Body: 'See the crowd’s bullish/bearish read on every company you track, and cast your own vote.',
-      pulseLabel: 'Crowd read:', pulseBull: 'Bullish', pulseBear: 'Bearish',
+      pulseLabel: 'Sentiment of the Users:', pulseBull: 'Bullish', pulseBear: 'Bearish',
       communityPending: 'Votes will appear here shortly.',
       agPulseTitle: 'Log in to vote', agPulseBody: 'A free account keeps one vote per person honest - no limit on reading, just on voting.'
     },
@@ -1073,7 +1073,7 @@ if (typeof document !== 'undefined') (function () {
       refresh: 'रिफ्रेश करें',
       loginToLinkChannels: 'टेलीग्राम चैनल लिंक करने के लिए साइन इन करें।',
       appearanceHeading: 'दिखावट', appearanceSub: 'इस डिवाइस पर क्विकसिग्नल कैसा दिखे, यह चुनें।',
-      themeSystem: 'सिस्टम', themeLight: 'लाइट', themeDark: 'डार्क',
+      themeSystem: 'डिफ़ॉल्ट', themeLight: 'लाइट', themeDark: 'डार्क',
       appetiteHeading: 'रोज़ कितनी खबरें', appetiteSub: 'बताएं कि आपको दिन में कितनी खबरें चाहिए। QwickSignal तय करेगा कि कौन-सी प्राथमिकताएं सबसे पहले दिखें, और खबरों की संख्या बदलने पर खुद बदलता रहेगा।',
       appetiteAll: 'सब कुछ', appetitePerDay: 'खबरें रोज़',
       appetiteResolved: 'इसके आसपास रहने के लिए QwickSignal ने स्तर रखा है',
@@ -1132,7 +1132,7 @@ if (typeof document !== 'undefined') (function () {
       obStep6Title: 'इन्वेस्टमेंट', obStep6Body: 'आपकी ट्रैक की गई कंपनियों के अनुसार समूहित खबरें, देश के बजाय।',
       obStep7Title: 'सेटिंग्स', obStep7Body: 'चैनल, आपकी इन्वेस्टमेंट वॉचलिस्ट, नोटिफिकेशन, खाता, एक्सपोर्ट, और फ़ीडबैक - सब एक ही जगह।',
       obStep8Title: 'कम्युनिटी', obStep8Body: 'अपनी हर ट्रैक की गई कंपनी पर जनता की तेज़ी/मंदी राय देखें, और अपना वोट डालें।',
-      pulseLabel: 'जनता की राय:', pulseBull: 'तेज़ी', pulseBear: 'मंदी',
+      pulseLabel: 'उपयोगकर्ताओं की राय:', pulseBull: 'तेज़ी', pulseBear: 'मंदी',
       communityPending: 'वोट जल्द ही यहां दिखेंगे।',
       agPulseTitle: 'वोट करने के लिए साइन इन करें', agPulseBody: 'मुफ़्त खाता यह सुनिश्चित करता है कि हर व्यक्ति सिर्फ़ एक बार वोट करे - पढ़ने की कोई सीमा नहीं, सिर्फ़ वोट करने की।'
     },
@@ -1159,7 +1159,7 @@ if (typeof document !== 'undefined') (function () {
       refresh: 'रिफ्रेश करा',
       loginToLinkChannels: 'टेलिग्राम चॅनेल लिंक करण्यासाठी साइन इन करा.',
       appearanceHeading: 'दिसावा', appearanceSub: 'या डिव्हाइसवर क्विकसिग्नल कसे दिसावे ते निवडा.',
-      themeSystem: 'सिस्टम', themeLight: 'लाइट', themeDark: 'डार्क',
+      themeSystem: 'डीफॉल्ट', themeLight: 'लाइट', themeDark: 'डार्क',
       appetiteHeading: 'रोज किती बातम्या', appetiteSub: 'तुम्हाला दिवसातून किती बातम्या हव्यात ते सांगा. QwickSignal कोणत्या प्राधान्याच्या बातम्या आधी दाखवायच्या हे ठरवेल आणि संख्या बदलल्यावर स्वतः जुळवून घेईल.',
       appetiteAll: 'सर्व काही', appetitePerDay: 'बातम्या रोज',
       appetiteResolved: 'त्याच्या जवळ राहण्यासाठी QwickSignal ने पातळी ठेवली आहे',
@@ -1218,7 +1218,7 @@ if (typeof document !== 'undefined') (function () {
       obStep6Title: 'इन्व्हेस्टमेंट', obStep6Body: 'देशाऐवजी, तुम्ही ट्रॅक करत असलेल्या कंपन्यांनुसार गटबद्ध बातम्या.',
       obStep7Title: 'सेटिंग्ज', obStep7Body: 'चॅनेल्स, तुमची इन्व्हेस्टमेंट वॉचलिस्ट, नोटिफिकेशन्स, खाते, एक्सपोर्ट, आणि फीडबॅक - सर्व एकाच ठिकाणी.',
       obStep8Title: 'कम्युनिटी', obStep8Body: 'तुम्ही ट्रॅक करत असलेल्या प्रत्येक कंपनीवरील जनमताचा तेजी/मंदी कल पहा, आणि तुमचे मत द्या.',
-      pulseLabel: 'जनमत:', pulseBull: 'तेजी', pulseBear: 'मंदी',
+      pulseLabel: 'वापरकर्त्यांचे मत:', pulseBull: 'तेजी', pulseBear: 'मंदी',
       communityPending: 'मते लवकरच इथे दिसतील.',
       agPulseTitle: 'मतदानासाठी साइन इन करा', agPulseBody: 'मोफत खाते खात्री करते की प्रत्येक व्यक्ती फक्त एकदाच मत देईल - वाचण्यावर मर्यादा नाही, फक्त मतदानावर.'
     },
@@ -1245,7 +1245,7 @@ if (typeof document !== 'undefined') (function () {
       refresh: 'રિફ્રેશ કરો',
       loginToLinkChannels: 'ટેલિગ્રામ ચેનલ લિંક કરવા સાઇન ઇન કરો.',
       appearanceHeading: 'દેખાવ', appearanceSub: 'આ ડિવાઇસ પર ક્વિકસિગ્નલ કેવું દેખાય તે પસંદ કરો.',
-      themeSystem: 'સિસ્ટમ', themeLight: 'લાઇટ', themeDark: 'ડાર્ક',
+      themeSystem: 'ડિફૉલ્ટ', themeLight: 'લાઇટ', themeDark: 'ડાર્ક',
       appetiteHeading: 'રોજ કેટલા સમાચાર', appetiteSub: 'તમને દિવસમાં કેટલા સમાચાર જોઈએ તે જણાવો. QwickSignal નક્કી કરશે કે કઈ પ્રાથમિકતા પહેલાં બતાવવી, અને સંખ્યા બદલાતાં જાતે ગોઠવાશે.',
       appetiteAll: 'બધું', appetitePerDay: 'સ્ટોરી રોજ',
       appetiteResolved: 'તેની નજીક રહેવા માટે QwickSignal એ સ્તર રાખ્યું છે',
@@ -1304,7 +1304,7 @@ if (typeof document !== 'undefined') (function () {
       obStep6Title: 'ઇન્વેસ્ટમેન્ટ', obStep6Body: 'દેશને બદલે, તમે ટ્રેક કરો છો તે કંપનીઓ પ્રમાણે જૂથબદ્ધ સમાચાર.',
       obStep7Title: 'સેટિંગ્સ', obStep7Body: 'ચેનલો, તમારી ઇન્વેસ્ટમેન્ટ વોચલિસ્ટ, નોટિફિકેશન, ખાતું, એક્સપોર્ટ, અને પ્રતિસાદ - બધું એક જ જગ્યાએ.',
       obStep8Title: 'કમ્યુનિટી', obStep8Body: 'તમે ટ્રેક કરો છો તે દરેક કંપની પર જનમતનો તેજી/મંદી વલણ જુઓ, અને તમારો મત આપો.',
-      pulseLabel: 'જનમત:', pulseBull: 'તેજી', pulseBear: 'મંદી',
+      pulseLabel: 'વપરાશકર્તાઓનો મત:', pulseBull: 'તેજી', pulseBear: 'મંદી',
       communityPending: 'મત ટૂંક સમયમાં અહીં દેખાશે.',
       agPulseTitle: 'વોટ કરવા સાઇન ઇન કરો', agPulseBody: 'મફત ખાતું ખાતરી કરે છે કે દરેક વ્યક્તિ ફક્ત એક જ વાર વોટ કરે - વાંચવા પર કોઈ મર્યાદા નથી, ફક્ત વોટિંગ પર.'
     }
@@ -1345,7 +1345,7 @@ if (typeof document !== 'undefined') (function () {
      is exactly how the app behaved before this setting existed - approving dark mode never changes what
      a visitor who's never touched this setting sees. */
   const THEME_KEY = 'qs-theme-v1';
-  const THEME_LABEL = { system: 'System', light: 'Light', dark: 'Dark' };
+  const THEME_LABEL = { system: 'Default', light: 'Light', dark: 'Dark' };   // "Default" = follow the phone's own setting
   const Theme = {
     pref() { try { const v = localStorage.getItem(THEME_KEY); return (v === 'light' || v === 'dark') ? v : 'system'; } catch (e) { return 'system'; } },
     set(pref) {
@@ -5556,7 +5556,9 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     { id: 'appetite', mode: null, icon: 'gauge', title: 'Daily appetite', subKey: () => Appetite.on() ? Appetite.target() + ' stories a day' : 'Everything', count: null },
     { id: 'notifications', mode: null, icon: 'bell', title: 'Notifications', subKey: () => 'New story alerts', count: null },
     { id: 'export', mode: null, icon: 'export', title: 'Export', subKey: () => 'Save a report or the raw table', count: null },
-    { id: 'getapp', mode: null, icon: 'plus', title: 'Get the app', subKey: () => 'Install on this device', count: null },
+    // Hidden for now at the owner's request (not yet confirmed working). The page and its code are kept, so
+    // restoring this one line brings it back.
+    // { id: 'getapp', mode: null, icon: 'plus', title: 'Get the app', subKey: () => 'Install on this device', count: null },
     { id: 'feedback', mode: null, icon: 'help', title: 'Feedback & support', subKey: () => isOwner() ? 'Send feedback · view tickets' : 'Send feedback', count: null },
     // owner: true - listed only for the owner account (renderSettingsNav) and refused for anyone else
     // (openSettingsPage). The data behind it is owner-only in firestore.rules too; this just hides the door.
@@ -5565,7 +5567,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
   const SN_ICON = {
     theme: '<circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor" stroke="none"/>',
     wifi: '<path d="M2 8.5a19 19 0 0 1 20 0M5.5 12.5a13.5 13.5 0 0 1 13 0M9 16.5a7.5 7.5 0 0 1 6 0"/><circle cx="12" cy="20" r="1.2" fill="currentColor" stroke="none"/>',
-    candle: '<rect x="4" y="9" width="3.4" height="9" rx="1"/><rect x="10.3" y="4" width="3.4" height="12" rx="1"/><rect x="16.6" y="11" width="3.4" height="7" rx="1"/>',
+    candle: '<circle cx="10.5" cy="10.5" r="7.25"/><path d="M15.8 15.8 21 21" stroke-width="2.6"/><path d="M7 14v-1.6M9.5 14v-3.1M12 14v-2.2M14.5 14v-4.6" stroke-width="1.5"/><path d="M6.6 9.6l2.6-2.4 2.1 1.7 3.4-3.1M13.3 5.6h2.1v2.1" stroke-width="1.4"/>',
     bell: '<path d="M12 2a7 7 0 0 1 7 7c0 5 2 7 2 7H3s2-2 2-7a7 7 0 0 1 7-7z"/><path d="M9.5 19a2.5 2.5 0 0 0 5 0"/>',
     gauge: '<path d="M3.5 18a8.5 8.5 0 1 1 17 0"/><path d="M12 18l4.2-4.8"/><circle cx="12" cy="18" r="1.3" fill="currentColor" stroke="none"/>',
     plus: '<path d="M12 4v16M4 12h16"/>',
@@ -5615,6 +5617,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     $('#settingsHome').classList.add('sp-hidden');
     $$('.settingspage').forEach(p => p.classList.add('sp-hidden'));
     page.classList.remove('sp-hidden');
+    $('#view-settings').classList.add('sp-open');   // hides the big black "Settings" title; the red back link stays
     S.settingsPage = id;
     window.scrollTo(0, 0);
     track('settings_section_open', { section: id });
@@ -5626,6 +5629,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     $$('.settingspage').forEach(p => p.classList.add('sp-hidden'));
     const home = $('#settingsHome');
     if (home) home.classList.remove('sp-hidden');
+    $('#view-settings').classList.remove('sp-open');
     S.settingsPage = null;
     window.scrollTo(0, 0);
   }
@@ -5780,12 +5784,15 @@ Give a concise, event-specific analysis - decide for yourself which structure be
   /* ---------- events ---------- */
   document.addEventListener('click', async ev => {
     if (SWIPE.justSwiped) { ev.preventDefault(); ev.stopPropagation(); return; }
+    // BUG FIX: the Appearance buttons carry data-theme-choice, which the lookup below never matched - so
+    // el came back null and every tap on Default/Light/Dark was silently ignored. Handled first, directly.
+    const themeBtn = ev.target.closest('#themeSeg button[data-theme-choice]');
+    if (themeBtn) { Theme.set(themeBtn.dataset.themeChoice); renderSettingsNav(); return; }
     const el = ev.target.closest('[data-act],[data-tab],[data-v]');
     if (el && el.dataset.tab) { setTab(el.dataset.tab); return; }
     if (el && el.closest('#rangeSeg')) { S.f.range = el.dataset.v; renderControls(); renderList(); return; }
     if (el && el.closest('#viewSeg')) { S.f.view = el.dataset.v; renderControls(); renderList(); return; }
     if (el && el.closest('#exportSeg')) { S.exportRange = el.dataset.v; renderExport(); return; }
-    if (el && el.closest('#themeSeg')) { Theme.set(el.dataset.themeChoice); renderSettingsNav(); return; }
     const act = el && el.dataset.act;
     if (act) {
      try {
