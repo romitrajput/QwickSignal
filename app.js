@@ -2697,18 +2697,23 @@ if (typeof document !== 'undefined') (function () {
     if (page) $$('#sp-' + page + ' .lp-add input').forEach(i => { if (i.id && i.value.trim()) inputs[i.id] = i.value; });
     gateResume = page ? { page, inputs, tab: 'settings' } : (S.tab && S.tab !== 'settings' ? { tab: S.tab } : null);
   }
+  // After ANY sign-in (sign-in screen, Settings -> Account, Google), the person lands on the News tab
+  // (owner, 13 Oct: "New user -> logged in -> news tab"). If they were signing in to add a Telegram channel
+  // or a company, that add is finished quietly on the way (its own message confirms it), so nothing typed
+  // is lost - they just aren't left sitting in Settings.
   function resumeAfterSignIn() {
     const r = gateResume; gateResume = null;
-    if (!r) return;
-    if (r.page) {
-      setTab('settings'); openSettingsPage(r.page);
+    if (r && r.page) {
       Object.entries(r.inputs).forEach(([id, v]) => {
         const i = $('#' + id); if (!i) return;
         i.value = v;
         const b = i.closest('.lp-add') && i.closest('.lp-add').querySelector('button');
         if (b) b.click();            // finish the add they started
       });
-    } else if (r.tab) setTab(r.tab);
+    }
+    if (S.settingsPage) closeSettingsPage();
+    setTab('brief');
+    window.scrollTo(0, 0);
   }
 
   let googleReady = false;
