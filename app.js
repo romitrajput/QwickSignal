@@ -958,7 +958,7 @@ if (typeof document !== 'undefined') (function () {
       landingOr: 'or', continueAsGuest: 'Continue as guest',
       landingGuestNote: "You can look around and follow the default channels without an account. Sign in any time later from Settings to keep your own saved articles and channels.",
       account: 'Account', accountSub: "Optional. Sign in to keep your own saved articles, dismissed items and followed channels tied to your account instead of a code - and separate from anyone else's.",
-      signInEmail: 'Email', signInPassword: 'Password', signIn: 'Sign in', createAccount: 'Create account',
+      signInEmail: 'Email', signInPassword: 'Password', signIn: 'Sign in', createAccount: 'Create account', forgotPw: 'Forgot password?',
       signOut: 'Sign out', signedInAs: 'Signed in as',
       telegram: 'Telegram', tgPlaceholder: 't/channelname or t.me link', addBtn: '+ Add',
       following: 'Following', follow: 'Follow', remove: 'Remove', removeShared: 'Remove for everyone', setDefault: 'Set default', removeDefault: 'Remove default', defaultBadge: 'Default',
@@ -1011,7 +1011,7 @@ if (typeof document !== 'undefined') (function () {
       getAppIosNote: 'Notifications work the same way after this - iOS supports real push notifications for home-screen apps on iOS 16.4 and later.',
       feedbackHeading: 'Feedback & support', feedbackSub: 'Found a bug, or have a suggestion? Send it here - it goes straight to the app owner.',
       agGoToAccount: 'Go to Account', agMaybeLater: 'Maybe later',
-      agAddChannelsTitle: 'Log in to add channels', agAddChannelsBody: 'Creating a free account keeps your followed channels and saved stories with you, and lets you add new ones.',
+      agAddChannelsTitle: 'Customize your news and investment feed by signing in', agAddChannelsBody: 'Sign in to link your own Telegram channels for News and Investment. It\'s free, and your channels, companies and saved stories stay with you on every device.',
       agSyncTitle: 'Log in to sync your devices', agSyncBody: 'Syncing across devices now needs a free account - it keeps everything a little safer and tied to you, not a shareable code.',
       feedbackLoginTitle: 'Log in to send feedback', feedbackLoginBody: 'Creating a free account lets the app owner follow up with you if needed.',
       ticketKindBug: 'Bug', ticketKindFeedback: 'Feedback',
@@ -1084,7 +1084,7 @@ if (typeof document !== 'undefined') (function () {
       landingOr: 'या', continueAsGuest: 'गेस्ट के रूप में जारी रखें',
       landingGuestNote: 'आप बिना खाते के भी देख सकते हैं और डिफ़ॉल्ट चैनल फॉलो कर सकते हैं। बाद में कभी भी सेटिंग्स से साइन इन करके अपने सेव किए गए लेख और चैनल रख सकते हैं।',
       account: 'खाता', accountSub: 'वैकल्पिक। अपने सेव किए गए लेख, हटाए गए आइटम और फॉलो किए गए चैनल किसी कोड की बजाय अपने खाते से जोड़ने के लिए साइन इन करें - और बाकी सभी से अलग रखें।',
-      signInEmail: 'ईमेल', signInPassword: 'पासवर्ड', signIn: 'साइन इन करें', createAccount: 'खाता बनाएं',
+      signInEmail: 'ईमेल', signInPassword: 'पासवर्ड', signIn: 'साइन इन करें', createAccount: 'खाता बनाएं', forgotPw: 'पासवर्ड भूल गए?',
       signOut: 'साइन आउट', signedInAs: 'इस रूप में साइन इन है',
       telegram: 'टेलीग्राम', tgPlaceholder: 't/channelname या t.me लिंक', addBtn: '+ जोड़ें',
       following: 'फॉलो कर रहे हैं', follow: 'फॉलो करें', remove: 'हटाएं', removeShared: 'सभी के लिए हटाएं', setDefault: 'डिफ़ॉल्ट बनाएं', removeDefault: 'डिफ़ॉल्ट हटाएं', defaultBadge: 'डिफ़ॉल्ट',
@@ -1137,7 +1137,7 @@ if (typeof document !== 'undefined') (function () {
       getAppIosNote: 'इसके बाद नोटिफिकेशन वैसे ही काम करते हैं - iOS 16.4 और उसके बाद होम-स्क्रीन ऐप्स के लिए असली पुश नोटिफिकेशन देता है।',
       feedbackHeading: 'फ़ीडबैक और सहायता', feedbackSub: 'कोई बग मिला, या कोई सुझाव है? यहाँ भेजें - यह सीधे ऐप के मालिक तक जाता है।',
       agGoToAccount: 'खाते पर जाएं', agMaybeLater: 'बाद में',
-      agAddChannelsTitle: 'चैनल जोड़ने के लिए साइन इन करें', agAddChannelsBody: 'मुफ़्त खाता बनाने से आपके फॉलो किए चैनल और सेव की गई स्टोरी आपके साथ रहती हैं, और आप नए चैनल जोड़ पाते हैं।',
+      agAddChannelsTitle: 'साइन इन करके अपनी न्यूज़ और इन्वेस्टमेंट फ़ीड को अपने हिसाब से बनाएं', agAddChannelsBody: 'न्यूज़ और इन्वेस्टमेंट के लिए अपने टेलीग्राम चैनल जोड़ने के लिए साइन इन करें। यह मुफ़्त है, और आपके चैनल, कंपनियां और सेव की गई खबरें हर डिवाइस पर आपके साथ रहती हैं।',
       agSyncTitle: 'डिवाइस सिंक करने के लिए साइन इन करें', agSyncBody: 'डिवाइस के बीच सिंक करने के लिए अब मुफ़्त खाता चाहिए - यह सब कुछ थोड़ा ज़्यादा सुरक्षित और आपसे जुड़ा रखता है, शेयर किए जा सकने वाले कोड के बजाय।',
       feedbackLoginTitle: 'फ़ीडबैक भेजने के लिए साइन इन करें', feedbackLoginBody: 'मुफ़्त खाता बनाने से ऐप के मालिक ज़रूरत पड़ने पर आपसे संपर्क कर सकते हैं।',
       ticketKindBug: 'बग', ticketKindSupport: 'सहायता', ticketKindFeedback: 'फ़ीडबैक',
@@ -1198,7 +1198,7 @@ if (typeof document !== 'undefined') (function () {
       landingOr: 'किंवा', continueAsGuest: 'गेस्ट म्हणून सुरू ठेवा',
       landingGuestNote: 'तुम्ही खात्याशिवायही पाहू शकता आणि डीफॉल्ट चॅनेल्स फॉलो करू शकता. नंतर कधीही सेटिंग्जमधून साइन इन करून तुमचे सेव्ह केलेले लेख आणि चॅनेल्स ठेवू शकता.',
       account: 'खाते', accountSub: 'ऐच्छिक. तुमचे सेव्ह केलेले लेख, हटवलेल्या गोष्टी आणि फॉलो केलेले चॅनेल्स कोडऐवजी तुमच्या खात्याशी जोडण्यासाठी साइन इन करा - आणि इतरांपासून वेगळे ठेवा.',
-      signInEmail: 'ईमेल', signInPassword: 'पासवर्ड', signIn: 'साइन इन करा', createAccount: 'खाते तयार करा',
+      signInEmail: 'ईमेल', signInPassword: 'पासवर्ड', signIn: 'साइन इन करा', createAccount: 'खाते तयार करा', forgotPw: 'पासवर्ड विसरलात?',
       signOut: 'साइन आउट', signedInAs: 'साइन इन केले आहे',
       telegram: 'टेलिग्राम', tgPlaceholder: 't/channelname किंवा t.me लिंक', addBtn: '+ जोडा',
       following: 'फॉलो करत आहात', follow: 'फॉलो करा', remove: 'काढा', removeShared: 'सर्वांसाठी काढा', setDefault: 'डीफॉल्ट करा', removeDefault: 'डीफॉल्ट काढा', defaultBadge: 'डीफॉल्ट',
@@ -1251,7 +1251,7 @@ if (typeof document !== 'undefined') (function () {
       getAppIosNote: 'यानंतर नोटिफिकेशन्स तशीच काम करतात - iOS 16.4 आणि त्यानंतरच्या आवृत्त्यांमध्ये होम-स्क्रीन अ‍ॅप्ससाठी खऱ्या पुश नोटिफिकेशन्स मिळतात.',
       feedbackHeading: 'फीडबॅक आणि सहाय्य', feedbackSub: 'बग सापडला, किंवा सुचवायचे आहे? इथे पाठवा - ते थेट अ‍ॅपच्या मालकाकडे जाते.',
       agGoToAccount: 'खात्याकडे जा', agMaybeLater: 'नंतर',
-      agAddChannelsTitle: 'चॅनेल जोडण्यासाठी साइन इन करा', agAddChannelsBody: 'मोफत खाते तयार केल्याने तुमचे फॉलो केलेले चॅनेल आणि सेव्ह केलेल्या स्टोरीज तुमच्याजवळ राहतात, आणि तुम्हाला नवीन जोडता येतात.',
+      agAddChannelsTitle: 'साइन इन करून तुमची न्यूज आणि इन्व्हेस्टमेंट फीड तुमच्या पद्धतीने बनवा', agAddChannelsBody: 'न्यूज आणि इन्व्हेस्टमेंटसाठी तुमचे स्वतःचे टेलिग्राम चॅनेल जोडण्यासाठी साइन इन करा. हे मोफत आहे, आणि तुमचे चॅनेल, कंपन्या आणि सेव्ह केलेल्या बातम्या प्रत्येक डिव्हाइसवर तुमच्यासोबत राहतात.',
       agSyncTitle: 'डिव्हाइस सिंक करण्यासाठी साइन इन करा', agSyncBody: 'डिव्हाइसमध्ये सिंक करण्यासाठी आता मोफत खाते आवश्यक आहे - यामुळे सर्व काही थोडे अधिक सुरक्षित आणि तुमच्याशी जोडलेले राहते, शेअर करता येणाऱ्या कोडऐवजी.',
       feedbackLoginTitle: 'फीडबॅक पाठवण्यासाठी साइन इन करा', feedbackLoginBody: 'मोफत खाते तयार केल्याने अ‍ॅपचे मालक गरज पडल्यास तुमच्याशी संपर्क साधू शकतात.',
       ticketKindBug: 'बग', ticketKindSupport: 'सहाय्य', ticketKindFeedback: 'फीडबॅक',
@@ -1312,7 +1312,7 @@ if (typeof document !== 'undefined') (function () {
       landingOr: 'અથવા', continueAsGuest: 'ગેસ્ટ તરીકે ચાલુ રાખો',
       landingGuestNote: 'તમે ખાતા વગર પણ જોઈ શકો છો અને ડિફોલ્ટ ચેનલ્સ ફોલો કરી શકો છો. પછી ગમે ત્યારે સેટિંગ્સમાંથી સાઇન ઇન કરીને તમારા સેવ કરેલા લેખો અને ચેનલ્સ રાખી શકો છો.',
       account: 'ખાતું', accountSub: 'વૈકલ્પિક. તમારા સેવ કરેલા લેખો, કાઢી નાખેલી વસ્તુઓ અને ફોલો કરેલા ચેનલ્સ કોડને બદલે તમારા ખાતા સાથે જોડવા માટે સાઇન ઇન કરો - અને બીજા બધાથી અલગ રાખો.',
-      signInEmail: 'ઇમેઇલ', signInPassword: 'પાસવર્ડ', signIn: 'સાઇન ઇન કરો', createAccount: 'ખાતું બનાવો',
+      signInEmail: 'ઇમેઇલ', signInPassword: 'પાસવર્ડ', signIn: 'સાઇન ઇન કરો', createAccount: 'ખાતું બનાવો', forgotPw: 'પાસવર્ડ ભૂલી ગયા?',
       signOut: 'સાઇન આઉટ', signedInAs: 'આ રીતે સાઇન ઇન છે',
       telegram: 'ટેલિગ્રામ', tgPlaceholder: 't/channelname અથવા t.me લિંક', addBtn: '+ ઉમેરો',
       following: 'ફોલો કરો છો', follow: 'ફોલો કરો', remove: 'કાઢી નાખો', removeShared: 'બધા માટે કાઢી નાખો', setDefault: 'ડિફોલ્ટ બનાવો', removeDefault: 'ડિફોલ્ટ કાઢો', defaultBadge: 'ડિફોલ્ટ',
@@ -1365,7 +1365,7 @@ if (typeof document !== 'undefined') (function () {
       getAppIosNote: 'આ પછી નોટિફિકેશન એ જ રીતે કામ કરે છે - iOS 16.4 અને પછીની આવૃત્તિઓમાં હોમ-સ્ક્રીન ઍપ્સ માટે ખરા પુશ નોટિફિકેશન મળે છે.',
       feedbackHeading: 'પ્રતિસાદ અને સહાય', feedbackSub: 'બગ મળ્યો, કે સૂચન છે? અહીં મોકલો - તે સીધું ઍપના માલિક સુધી જાય છે.',
       agGoToAccount: 'ખાતા પર જાઓ', agMaybeLater: 'પછી',
-      agAddChannelsTitle: 'ચેનલ ઉમેરવા સાઇન ઇન કરો', agAddChannelsBody: 'મફત ખાતું બનાવવાથી તમારી ફોલો કરેલી ચેનલો અને સેવ કરેલી સ્ટોરીઝ તમારી સાથે રહે છે, અને તમે નવી ઉમેરી શકો છો.',
+      agAddChannelsTitle: 'સાઇન ઇન કરીને તમારી ન્યૂઝ અને ઇન્વેસ્ટમેન્ટ ફીડ તમારી રીતે બનાવો', agAddChannelsBody: 'ન્યૂઝ અને ઇન્વેસ્ટમેન્ટ માટે તમારી પોતાની ટેલિગ્રામ ચેનલો જોડવા સાઇન ઇન કરો. તે મફત છે, અને તમારી ચેનલો, કંપનીઓ અને સેવ કરેલા સમાચાર દરેક ડિવાઇસ પર તમારી સાથે રહે છે.',
       agSyncTitle: 'ડિવાઇસ સિંક કરવા સાઇન ઇન કરો', agSyncBody: 'ડિવાઇસ વચ્ચે સિંક કરવા હવે મફત ખાતું જરૂરી છે - આ બધું થોડું વધુ સુરક્ષિત અને તમારી સાથે જોડાયેલું રાખે છે, શેર કરી શકાય તેવા કોડને બદલે.',
       feedbackLoginTitle: 'ફીડબેક મોકલવા સાઇન ઇન કરો', feedbackLoginBody: 'મફત ખાતું બનાવવાથી ઍપના માલિક જરૂર પડ્યે તમારો સંપર્ક કરી શકે છે.',
       ticketKindBug: 'બગ', ticketKindSupport: 'સહાય', ticketKindFeedback: 'પ્રતિસાદ',
@@ -1922,8 +1922,9 @@ if (typeof document !== 'undefined') (function () {
     const MAP = {
       EMAIL_EXISTS: 'An account with that email already exists – try signing in instead.',
       EMAIL_NOT_FOUND: 'No account found with that email.',
-      INVALID_PASSWORD: 'Incorrect email or password.',
-      INVALID_LOGIN_CREDENTIALS: 'Incorrect email or password.',
+      INVALID_PASSWORD: 'Incorrect email or password. Forgot it? Tap “Forgot password?”.',
+      INVALID_LOGIN_CREDENTIALS: 'Incorrect email or password. Forgot it? Tap “Forgot password?”.',
+      RESET_PASSWORD_EXCEED_LIMIT: 'Too many reset emails – wait a while and try again.',
       WEAK_PASSWORD: 'Use a password of at least 6 characters.',
       INVALID_EMAIL: 'That doesn’t look like a valid email address.',
       TOO_MANY_ATTEMPTS_TRY_LATER: 'Too many attempts – wait a bit and try again.',
@@ -2022,6 +2023,18 @@ if (typeof document !== 'undefined') (function () {
         if (!r.ok) return { ok: false, error: authErrorMessage(d) };
         this.applySession(d.localId, d.email, d.idToken, d.refreshToken, d.expiresIn);
         return { ok: true };
+      } catch (e) { return { ok: false, error: 'Network error – check your connection.' }; }
+    },
+    // Forgot password: Firebase emails a link to choose a new password (free on the Spark plan). Separate
+    // from _call() because it signs nobody in - there is no session in the reply to apply.
+    async sendPasswordReset(email) {
+      try {
+        const r = await fetch(`${IDTOOLKIT}/accounts:sendOobCode?key=${FIREBASE.apiKey}`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ requestType: 'PASSWORD_RESET', email }) });
+        if (r.ok) return { ok: true };
+        const d = await r.json().catch(() => ({}));
+        return { ok: false, error: authErrorMessage(d) };
       } catch (e) { return { ok: false, error: 'Network error – check your connection.' }; }
     },
     signUp(email, password) { return this._call('signUp', { email, password, returnSecureToken: true }); },
@@ -2127,6 +2140,7 @@ if (typeof document !== 'undefined') (function () {
         const doc = await r.json();
         const rec = fsFieldsToObject(doc.fields);
         this.applyRecord(rec);
+        setTimeout(() => SavedCloud.reconcile(), 0);   // contents of stories saved on other devices
         if (!Auth.uid) this.cacheWrite(rec);    // the local cache is a guest-mode-only convenience
         this.ready = true;
         this.lastPullFoundDoc = true;
@@ -2307,8 +2321,11 @@ if (typeof document !== 'undefined') (function () {
       if (restored) msg = 'Signed in as ' + Auth.email + '. Restored ' + restored + ' change' + (restored === 1 ? '' : 's') + ' that hadn’t reached your account before you signed out.';
     }
     toast(msg);
+    SavedCloud.tried.clear();
+    setTimeout(() => SavedCloud.reconcile(), 0);   // stories saved on the account's other devices
     Push.syncAccount();   // notifications now personalised from THIS account's portfolio
     renderAccount(); renderAll(); renderChannels(); renderInvestChannels(); renderSyncCode(); renderTicketBox(); renderTicketAdmin(); renderInvestmentBox();
+    resumeAfterSignIn();
   }
 
   // BUG FIX: signing out used to clear the device's copy of the account's data immediately, without first
@@ -2410,11 +2427,28 @@ if (typeof document !== 'undefined') (function () {
         const mode = (ev.submitter && ev.submitter.dataset.mode) || 'signin';
         const email = $('#landingEmail').value.trim(), pass = $('#landingPass').value;
         if (!email || pass.length < 6) { toast('Enter an email and a password of at least 6 characters.'); return; }
-        const r = mode === 'signup' ? await Auth.signUp(email, pass) : await Auth.signIn(email, pass);
-        if (!r.ok) { toast(r.error); return; }
-        track(mode === 'signup' ? 'sign_up' : 'sign_in', { method: 'email' });
-        await completeAuth();
-        this.dismiss(false);
+        // Signing in and loading the account's saved data can take a few seconds on a phone connection.
+        // Without feedback people tapped Create account or Google meanwhile (seen in the owner's recording),
+        // so every door is locked and the tapped button says what is happening until it finishes.
+        if (this.busy) return;
+        const btns = [...form.querySelectorAll('button'), ...$$('#landingGuestBtn, #landingGoogleBtn')];
+        const tapped = ev.submitter || form.querySelector('[data-mode="signin"]');
+        const label = tapped.textContent;
+        const setBusy = on => {
+          this.busy = on;
+          btns.forEach(b => { if (b.tagName === 'BUTTON') b.disabled = on; else b.classList.toggle('is-busy', on); });
+          tapped.textContent = on ? (mode === 'signup' ? 'Creating account…' : 'Signing in…') : label;
+          tapped.setAttribute('aria-busy', on ? 'true' : 'false');
+        };
+        setBusy(true);
+        try {
+          const r = mode === 'signup' ? await Auth.signUp(email, pass) : await Auth.signIn(email, pass);
+          if (!r.ok) { toast(r.error); return; }
+          track(mode === 'signup' ? 'sign_up' : 'sign_in', { method: 'email' });
+          tapped.textContent = 'Loading your data…';
+          await completeAuth();
+          this.dismiss(false);
+        } finally { setBusy(false); }
       });
       const guestBtn = $('#landingGuestBtn');
       if (guestBtn) guestBtn.addEventListener('click', () => { track('continue_as_guest'); this.dismiss(true); });
@@ -2567,6 +2601,64 @@ if (typeof document !== 'undefined') (function () {
     }
   };
 
+  // "Forgot password?" on the landing screen and in Settings -> Account. Uses whatever is typed in that
+  // form's email box, so there is no extra screen to fill in.
+  let resetBusy = false;
+  async function forgotPassword(btn) {
+    const input = $('#' + (btn.dataset.email || 'landingEmail'));
+    const status = $('#' + (btn.dataset.status || 'landingFpStatus'));
+    // The answer is written right under the link as well as in a toast - a toast alone is easy to miss,
+    // and on the sign-in screen it used to be hidden behind the screen itself.
+    const say = (msg, kind) => {
+      if (status) { status.textContent = msg; status.className = 'fp-status' + (kind ? ' ' + kind : ''); status.hidden = false; }
+      else toast(msg);
+    };
+    const email = input ? input.value.trim() : '';
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      say('Type the email you signed up with in the box above, then tap “Forgot password?” again.', 'warn');
+      if (input) input.focus();
+      return;
+    }
+    if (resetBusy) return;
+    resetBusy = true;
+    const label = btn.querySelector('span') || btn;
+    const text = label.textContent;
+    btn.disabled = true; label.textContent = 'Sending…';
+    try {
+      const r = await Auth.sendPasswordReset(email);
+      if (r.ok) {
+        say('Reset link sent to ' + email + '. Open the email (check Spam/Promotions too), choose a new password, then sign in here.', 'ok');
+        track('password_reset_sent');
+      } else say(r.error, 'warn');
+    } finally { resetBusy = false; btn.disabled = false; label.textContent = text; }
+  }
+
+  // When a signed-out person hits a sign-in gate (adding a Telegram channel or a company, voting...), the
+  // gate's "Go to Account" now really opens the sign-in form, and once they are signed in the app takes them
+  // back to the page they were on and finishes what they were doing - e.g. the channel they typed gets added.
+  // Before, "Go to Account" only switched to the Settings tab (still showing the channel page, no sign-in
+  // form in sight), so people could not work out how to add channels after logging in.
+  let gateResume = null;
+  function rememberGateResume() {
+    const page = S.tab === 'settings' && S.settingsPage && S.settingsPage !== 'account' ? S.settingsPage : null;
+    const inputs = {};
+    if (page) $$('#sp-' + page + ' .lp-add input').forEach(i => { if (i.id && i.value.trim()) inputs[i.id] = i.value; });
+    gateResume = page ? { page, inputs, tab: 'settings' } : (S.tab && S.tab !== 'settings' ? { tab: S.tab } : null);
+  }
+  function resumeAfterSignIn() {
+    const r = gateResume; gateResume = null;
+    if (!r) return;
+    if (r.page) {
+      setTab('settings'); openSettingsPage(r.page);
+      Object.entries(r.inputs).forEach(([id, v]) => {
+        const i = $('#' + id); if (!i) return;
+        i.value = v;
+        const b = i.closest('.lp-add') && i.closest('.lp-add').querySelector('button');
+        if (b) b.click();            // finish the add they started
+      });
+    } else if (r.tab) setTab(r.tab);
+  }
+
   let googleReady = false;
   // Takes a container id so both the Settings account box (#googleBtn) and the landing page
   // (#landingGoogleBtn) can share the same Google Identity Services init/render logic instead of
@@ -2610,6 +2702,8 @@ if (typeof document !== 'undefined') (function () {
           <input id="authEmail" type="email" autocomplete="email" placeholder="Enter your Gmail" required>
           <label class="vh" for="authPass">${t('signInPassword')}</label>
           <input id="authPass" type="password" autocomplete="current-password" placeholder="${esc(t('signInPassword'))}" minlength="6" required>
+          <button type="button" class="forgot-pw" data-act="forgotPw" data-email="authEmail" data-status="authFpStatus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7.5" cy="15.5" r="4"/><path d="M10.5 12.5 20 3M16 7l3 3M14 9l2 2"/></svg><span>${esc(t('forgotPw'))}</span></button>
+          <p class="fp-status" id="authFpStatus" role="status" aria-live="polite" hidden></p>
           <div class="acct-buttons">
             <button type="submit" data-mode="signin" class="btn primary small">${t('signIn')}</button>
             <button type="submit" data-mode="signup" class="btn small">${t('createAccount')}</button>
@@ -4376,41 +4470,80 @@ if (typeof document !== 'undefined') (function () {
     markCurrentReviewed();
   }
 
+  // Story photo / cover on the story card: switched off for now at the owner's request (13 Oct) - no story
+  // has a photo yet. Set to true to bring back the photo (or the flag cover when there is none).
+  const CV_SHOW_MEDIA = false;
   function renderCountryViewer() {
     if (!S.cv) return;
     const name = cvName(), idx = S.cv.idx, stories = cvStories();
     const it = stories[idx];
     ensureTranslated(collectTranslatable([it]));   // just the current story - no need to translate every story in every country up front
     const dashes = stories.map((s, i) => {
-      const cls = i < idx || (i === idx && S.reviewed.has(s.id)) ? 'seen' : (i === idx ? 'current' : '');
+      const cls = i < idx ? 'seen' : (i === idx ? 'current' : '');
       return `<span class="cv-dash ${cls}"></span>`;
     }).join('');
-    // Headlines only, per explicit feedback: no sector subtext, no Sources line, and no why-it-matters/
-    // facts body copy - just the flag/initial, country/company, headline, date/time and (if found) an
-    // image. A date+time stamp was added back per later feedback asking for it against every headline,
-    // feed included.
+    // Story-card layout the owner asked for (12 Oct, from a reference screenshot): badge + name + share +
+    // close on top, then a large headline, a short summary, and the story's photo in a rounded frame.
     $('#cvDashes').innerHTML = dashes;
+    const isCo = S.cv.kind === 'company';
+    const glyph = isCo ? companyLogoHTML(name, 'gc-ring-inner') : esc(flagOf(name));
+    $('#cvBadge').innerHTML = glyph;
+    $('#cvTitle').textContent = name;
+    $('#cvPos').textContent = `${idx + 1} / ${stories.length}`;
+    const headline = trOf(it.headline);
+    const hlCls = headline.length > 130 ? ' cv-hl-l' : headline.length > 70 ? ' cv-hl-m' : '';
+    const summary = cvSummary(it, headline);
+    const imp = (it.importance || '').toLowerCase();
+    // A broken or expired photo link falls back to the cover instead of an empty frame.
+    const cover = `<div class="cv-media cv-cover"><span class="cv-cover-glyph">${glyph}</span>
+        <span class="cv-cover-name">${esc(name)}</span>${it.sector && it.sector !== 'Other' ? `<span class="cv-cover-sect">${esc(it.sector)}</span>` : ''}</div>`;
+    const media = it.image
+      ? `<div class="cv-media"><img src="${esc(it.image.url)}" alt="" loading="lazy" onerror="this.parentNode.outerHTML=this.parentNode.dataset.fallback" ></div>`
+      : cover;
     const body = $('#cvBody');
-    // onerror hides a broken/expired image link instead of leaving a broken-image icon - a missing photo
-    // should never look like an app bug, the story still reads fine as headline-only.
-    const img = it.image ? `<div class="cv-img"><img src="${esc(it.image.url)}" alt="" loading="lazy" onerror="this.closest('.cv-img').hidden=true"></div>` : '';
-    // Company mode has no flag, so the same slot shows a round initial badge instead, styled from the
-    // existing .gc-ring/.gc-ring-inner tokens (same look as the Investment company cards) rather than the
-    // raw 56px flag glyph, which would look like a stray oversized letter without a frame around it.
-    const glyph = S.cv.kind === 'company'
-      ? `<div class="cv-flag cv-companyglyph">${companyLogoHTML(name, 'gc-ring-inner')}</div>`
-      : `<div class="cv-flag">${flagOf(name)}</div>`;
     body.innerHTML = `
-      ${img}
-      ${glyph}
-      <div class="cv-country">${esc(name)}</div>
-      <h2 class="cv-headline">${esc(trOf(it.headline))}</h2>
-      <div class="cv-time">${esc(fmtDateTime(it.addedAt))}</div>
-      <div class="cv-pos">${idx + 1} / ${stories.length}</div>
+      <h1 class="cv-headline${hlCls}">${esc(headline)}</h1>
+      ${summary ? `<p class="cv-summary">${esc(summary)}</p>` : ''}
+      <div class="cv-meta">${it.importance ? `<span class="cv-imp ${esc(imp)}">${esc(it.importance)}</span>` : ''}${it.sector && it.sector !== 'Other' ? `<span>${esc(it.sector)}</span>` : ''}<span>${esc(fmtDateTime(it.addedAt))}</span></div>
+      ${CV_SHOW_MEDIA ? media : ''}
     `;
+    const m = body.querySelector('.cv-media');
+    if (m && it.image) m.dataset.fallback = cover;
     // A quick crossfade so moving between stories - and especially between countries/companies - reads as
     // a smooth transition rather than a hard cut.
     body.classList.remove('cv-fade'); void body.offsetWidth; body.classList.add('cv-fade');
+  }
+
+  // A short summary for the story card: the story's own summary, minus any repeat of the headline and the
+  // flag/dash prefix some sources put in front, cut at a word near 240 characters.
+  function cvSummary(it, headline) {
+    const clean = x => String(x || '').replace(/^[^\p{L}\p{N}"“'‘(]+/u, '').replace(/\s+/g, ' ').trim();
+    const norm = x => clean(x).toLowerCase().replace(/[^\p{L}\p{N} ]/gu, '');
+    let s = clean(trOf(it.summary || ''));
+    const h = norm(headline);
+    if (s && h && norm(s).startsWith(h.slice(0, Math.min(h.length, 60)))) {
+      // the summary repeats the headline: keep only what comes after it
+      const words = clean(headline).split(' ').length;
+      s = s.split(' ').slice(words).join(' ').replace(/^[^\p{L}\p{N}"“'‘(]+/u, '');
+    }
+    if (s.length < 30) s = clean(it.why || '');
+    if (s.length < 30) return '';
+    if (s.length > 240) s = s.slice(0, 240).replace(/\s+\S*$/, '') + '…';
+    return s;
+  }
+  // Share the story on view: the phone's share sheet where there is one, otherwise copy a link.
+  async function cvShare() {
+    if (!S.cv) return;
+    const it = cvStories()[S.cv.idx];
+    if (!it) return;
+    const url = location.origin + location.pathname + '#' + encodeURIComponent(it.id);
+    const text = trOf(it.headline);
+    track('story_share', { id: it.id });
+    try {
+      if (navigator.share) { await navigator.share({ title: 'QwickSignal', text, url }); return; }
+    } catch (e) { if (e && e.name === 'AbortError') return; }
+    try { await navigator.clipboard.writeText(text + '\n' + url); toast('Link copied. Paste it anywhere to share.'); }
+    catch (e) { toast(url); }
   }
 
   function cvTap(ev) {
@@ -4440,24 +4573,43 @@ if (typeof document !== 'undefined') (function () {
   function saveItem(id) {
     if (S.saved.has(id)) return;
     S.saved.add(id); S.dismissed.delete(id);
+    SavedStore.save();
+    SavedCloud.put(all().find(it => it.id === id));
     Sync.pushSoon();
     renderAll();
     toast('Saved. Find it any time under Saved.');
     track('save_story', { id });
   }
+  // Only "Remove from Saved" takes a story out of Saved, and it can be undone like a dismiss.
   function unsaveItem(id) {
     S.saved.delete(id);
+    SavedCloud.remove(id);
     Sync.pushSoon();
     renderAll();
+    toastAction('Removed from Saved. <button class="link inline" data-act="undo-unsave" data-id="' + esc(id) + '">Undo</button>', 5000);
     track('unsave_story', { id });
   }
+  function undoUnsave(id) {
+    S.saved.add(id);
+    SavedStore.save();
+    SavedCloud.put(all().find(it => it.id === id));
+    Sync.pushSoon();
+    renderAll();
+    clearTimeout(toastTimer);
+    $('#toast').classList.remove('show');
+    track('undo_unsave', { id });
+  }
+  // Swiping a story away clears it from the feed. It used to also delete it from Saved, so saving a story
+  // and then swiping it out of Signals silently lost it (owner's recording, 12 Oct). A saved story now
+  // stays in Saved until "Remove from Saved" is tapped there.
   function dismissItem(id) {
-    S.saved.delete(id);
+    const wasSaved = S.saved.has(id);
     S.dismissed.add(id);
     Sync.pushSoon();
     renderAll();
-    toastAction('Dismissed. <button class="link inline" data-act="undo-dismiss" data-id="' + esc(id) + '">Undo</button>', 5000);
-    track('dismiss_story', { id });
+    toastAction((wasSaved ? 'Hidden from the feed. Still in Saved. ' : 'Dismissed. ')
+      + '<button class="link inline" data-act="undo-dismiss" data-id="' + esc(id) + '">Undo</button>', 5000);
+    track('dismiss_story', { id, saved: wasSaved });
   }
   function undoDismiss(id) {
     S.dismissed.delete(id);
@@ -4539,6 +4691,7 @@ if (typeof document !== 'undefined') (function () {
     $('#agTitle').textContent = t(titleKey);
     $('#agBody').textContent = t(bodyKey);
     agOpener = document.activeElement;
+    rememberGateResume();
     box.hidden = false;
     document.body.classList.add('noscroll');
     track('auth_gate_shown', { reason: titleKey });
@@ -6204,8 +6357,12 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       else if (act === 'sbAll') { Board.allComments.add(v); renderBoardBody(); }
       else if (act === 'sbMore') { Board.shown += BOARD_PAGE; renderBoardBody(); }
       else if (act === 'obReplay') { Onboarding.replay(); }
+      else if (act === 'forgotPw') { forgotPassword(el); }
       else if (act === 'agclose') { closeAuthGate(); }
-      else if (act === 'agGoto') { closeAuthGate(); setTab('settings'); const eb = $('#authEmail'); if (eb) eb.focus(); }
+      else if (act === 'agGoto') {
+        closeAuthGate(); setTab('settings');
+        if (Auth.uid) { /* already signed in */ } else { openSettingsPage('account'); const eb = $('#authEmail'); if (eb) setTimeout(() => eb.focus(), 50); }
+      }
       else if (act === 'fi') { S.f.imp = v; if (S.mode === 'investment') renderInvestmentList(); else { renderControls(); renderList(); } }
       else if (act === 'fc') { S.f.country = S.f.country === v ? '' : v; renderControls(); renderList(); }
       else if (act === 'fs') { S.f.sector = S.f.sector === v ? '' : v; renderControls(); renderList(); }
@@ -6267,12 +6424,14 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       else if (act === 'opencountry') { track('open_country_viewer', { country: el.dataset.c }); openCountry(el.dataset.c); }
       else if (act === 'opencompany') { track('open_company_viewer', { company: el.dataset.c }); openCompany(el.dataset.c); }
       else if (act === 'cvclose') { closeCountryViewer(); }
+      else if (act === 'cvshare') { cvShare(); }
       else if (act === 'cvprev') { cvGo(-1); }
       else if (act === 'cvnext') { cvGo(1); }
       else if (act === 'save') { saveItem(el.dataset.id); }
       else if (act === 'unsave') { unsaveItem(el.dataset.id); }
       else if (act === 'dismiss') { dismissItem(el.dataset.id); }
       else if (act === 'undo-dismiss') { undoDismiss(el.dataset.id); }
+      else if (act === 'undo-unsave') { undoUnsave(el.dataset.id); }
       else if (act === 'goto') {
         gotoItem(el.dataset.id);
       }
@@ -6434,7 +6593,10 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       also: r.also, signals: r.signals, importance: r.importance, companies: r.companies, facts: r.facts,
       date: (x.published || '').slice(0, 10), text: x.excerpt || '', addedAt: t,
       sources: (x.sources || []).map(s => ({ name: s.name, url: s.url, at: Date.parse(s.at) || t })), related: [],
-      video: x.video || null
+      video: x.video || null,
+      // Every story in today's feed takes this path (ai:false), and it never carried the headline photo
+      // over - so a photo found by the image step could not show anywhere. Same rule as mapLive().
+      image: (x.image && x.image.status === 'found' && x.image.url) ? { url: x.image.url, source: x.image.source || '' } : null
     };
   }
   function mapLive(x) {
@@ -6459,6 +6621,106 @@ Give a concise, event-specific analysis - decide for yourself which structure be
   }
   const readCache = k => { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } };
   const writeCache = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage full */ } };
+
+  function dedupeById(list) {
+    const seen = new Set();
+    return list.filter(it => it && !seen.has(it.id) && seen.add(it.id));
+  }
+  // Saved stories' contents, kept on the device. The feed only holds the last 24 hours, so a saved story
+  // that aged out of it used to survive only until the app was closed - after a reload its id was still
+  // "saved" but there was nothing left to show. Now a copy of each saved story is kept here and put back.
+  const SAVED_STORE = 'qs-saved-items-v1';
+  const SavedStore = {
+    load() {
+      try { const d = JSON.parse(localStorage.getItem(SAVED_STORE) || '[]'); return Array.isArray(d) ? d : []; }
+      catch (e) { return []; }
+    },
+    save() {
+      const byId = new Map(this.load().map(it => [it.id, it]));
+      all().forEach(it => { if (S.saved.has(it.id)) byId.set(it.id, it); });
+      const keep = [...byId.values()].filter(it => S.saved.has(it.id));
+      try { localStorage.setItem(SAVED_STORE, JSON.stringify(keep)); } catch (e) { /* storage full: still works this session */ }
+    }
+  };
+
+  /* Saved stories' contents in the ACCOUNT, not just on one phone. The account always synced which stories
+     were saved (their ids), but not the stories themselves - and the news feed only holds the last 24 hours.
+     So a story saved on a phone and opened on a laptop two days later had nothing to show. Each saved story
+     is now also stored under the account (qs_users/<uid>/saved_items/<id>, readable only by that account -
+     see firestore.rules). A device fetches only the ones it is missing, so it costs a handful of reads.
+     Free plan: one small write per save, one read per missing story. */
+  const SavedCloud = {
+    tried: new Set(),        // ids already looked up this session (found or not) - never asked twice
+    busy: false,
+    base() { return `${FS_BASE}/qs_users/${Auth.uid}/saved_items`; },
+    docId(id) { return String(id).replace(/[^A-Za-z0-9_-]/g, '_').slice(0, 120); },
+    uploadedKey() { return 'qs-saved-cloud-v1-' + Auth.uid; },
+    uploaded() { try { return new Set(JSON.parse(localStorage.getItem(this.uploadedKey()) || '[]')); } catch (e) { return new Set(); } },
+    markUploaded(ids, on) {
+      const u = this.uploaded(); ids.forEach(id => on ? u.add(id) : u.delete(id));
+      try { localStorage.setItem(this.uploadedKey(), JSON.stringify([...u])); } catch (e) { /* storage full */ }
+    },
+    async headers() { const t = await Auth.bearerToken(); return t ? { 'Content-Type': 'application/json', Authorization: 'Bearer ' + t } : null; },
+    async put(it) {
+      if (!Auth.uid || !it) return false;
+      const h = await this.headers(); if (!h) return false;
+      const json = JSON.stringify(it);
+      if (json.length > 20000) return false;
+      try {
+        const r = await fetch(`${this.base()}/${this.docId(it.id)}`, { method: 'PATCH', headers: h,
+          body: JSON.stringify({ fields: { item: { stringValue: json }, at: { timestampValue: new Date().toISOString() } } }) });
+        if (r.ok) { this.markUploaded([it.id], true); return true; }
+      } catch (e) { /* offline: reconcile() uploads it next time */ }
+      return false;
+    },
+    async remove(id) {
+      if (!Auth.uid) return;
+      const h = await this.headers(); if (!h) return;
+      try {
+        const r = await fetch(`${this.base()}/${this.docId(id)}`, { method: 'DELETE', headers: h });
+        if (r.ok || r.status === 404) this.markUploaded([id], false);
+      } catch (e) { /* the copy just lingers; it is ignored unless the story is saved again */ }
+    },
+    // Fill in saved stories this device has no copy of, and upload any this device has that the account lacks.
+    async reconcile() {
+      if (!Auth.uid || this.busy) return;
+      this.busy = true;
+      try {
+        const have = new Map(all().map(it => [it.id, it]));
+        const missing = [...S.saved].filter(id => !have.has(id) && !this.tried.has(id));
+        if (missing.length) {
+          const h = await this.headers();
+          if (h) {
+            const prefix = `projects/${FIREBASE.projectId}/databases/(default)/documents/qs_users/${Auth.uid}/saved_items/`;
+            const got = [];
+            for (let i = 0; i < missing.length; i += 100) {
+              const chunk = missing.slice(i, i + 100);
+              const r = await fetch(`${FS_BASE}:batchGet`, { method: 'POST', headers: h,
+                body: JSON.stringify({ documents: chunk.map(id => prefix + this.docId(id)) }) });
+              if (!r.ok) break;
+              chunk.forEach(id => this.tried.add(id));
+              (await r.json()).forEach(x => {
+                const f = x.found && x.found.fields;
+                if (!f || !f.item) return;
+                try { const it = JSON.parse(f.item.stringValue); if (it && it.id && S.saved.has(it.id)) got.push(it); } catch (e) { /* skip a damaged copy */ }
+              });
+            }
+            if (got.length) {
+              const ids = new Set(all().map(it => it.id));
+              got.forEach(it => { if (!ids.has(it.id)) { S.live.push(it); ids.add(it.id); } });
+              this.markUploaded(got.map(it => it.id), true);
+              SavedStore.save();
+              renderAll();
+            }
+          }
+        }
+        // Backfill: stories saved before this existed, or saved while offline.
+        const up = this.uploaded();
+        const toUpload = [...S.saved].filter(id => !up.has(id) && have.has(id)).slice(0, 50);
+        for (const id of toUpload) await this.put(have.get(id));
+      } finally { this.busy = false; }
+    }
+  };
 
   let liveBusy = false;
   async function loadLive(manual) {
@@ -6490,9 +6752,21 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       // dropped - carried over as-is, fully preserving its headline/summary/etc. Only applies to S.saved;
       // a dismissed or already-expired-when-live-and-unsaved item still ages out normally, matching the
       // saved-items-are-the-one-exception intent the rest of the app already has (itemStatus(), savedItems()).
-      const freshIds = new Set(items.map(i => i.id));
-      const keptSaved = S.live.filter(it => S.saved.has(it.id) && !freshIds.has(it.id));
-      S.live = items.map(mapLive).concat(keptSaved);
+      // CLONE BUG FIX (owner, 12 Oct: "news are getting cloned up" after saving and refreshing): app ids are
+      // 'L' + the pipeline's id, but this set held the bare pipeline ids, so it never matched and EVERY saved
+      // story was carried over again next to its fresh copy - one more duplicate on each refresh (manual, or
+      // the automatic one every couple of minutes). Duplicates shared an id, so swiping one away also took
+      // its copies with it, which is the "skipping one skips several" report. Compare like with like, and
+      // never let one id appear twice whatever the source.
+      const freshList = dedupeById(items.map(mapLive));
+      const freshIds = new Set(freshList.map(it => it.id));
+      const kept = new Map();
+      S.live.concat(SavedStore.load()).forEach(it => {
+        if (it && S.saved.has(it.id) && !freshIds.has(it.id) && !kept.has(it.id)) kept.set(it.id, it);
+      });
+      S.live = freshList.concat([...kept.values()]);
+      SavedStore.save();
+      SavedCloud.reconcile();
       S.liveSig = sig;
       S.videoMeta = feed && feed.video_meta ? feed.video_meta : null;
       S.liveMeta = feed ? { at: Date.parse(feed.generated_at) || 0, cached } : null;

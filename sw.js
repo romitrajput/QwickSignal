@@ -1,7 +1,19 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-72-v1';  // This round: saved stories' contents are stored in the account
+const VERSION = 'gni-phase3-74-v1';  // This round: story card photo switched off for now (CV_SHOW_MEDIA in
+                                      // app.js); the add-channel sign-in prompt now reads "Customize your
+                                      // news and investment feed by signing in".
+                                      //
+                                      // Previous round (gni-phase3-73-v1): country/company story viewer redesigned as a story card
+                                      // (dark stage, badge + name + share + close, big headline, summary,
+                                      // photo). Photos were never mapped for rules-path stories - fixed.
+                                      // Forgot password: key icon, inline answer; the toast sat BEHIND the
+                                      // sign-in screen so nothing seemed to happen - fixed. "Go to Account"
+                                      // now opens the sign-in form, and after signing in the app returns to
+                                      // the channel page and finishes adding the channel.
+                                      //
+                                      // Previous round (gni-phase3-72-v1): saved stories' contents are stored in the account
                                       // (qs_users/<uid>/saved_items), so another device can show a saved
                                       // story that has already left the 24-hour feed.
                                       //
