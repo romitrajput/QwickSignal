@@ -383,7 +383,18 @@ PUSH_GAP_MIN_S, PUSH_GAP_MAX_S = 20 * 60, 40 * 60
 PUSH_EVAL_FAST_S, PUSH_EVAL_SLOW_S = 5 * 60, 10 * 60
 PUSH_EVAL_FAST_MAX_DEVICES = 60
 PUSH_QUEUE_MAX = 60          # per device; if a device is held for a long time the oldest stories drop off
-PUSH_ITEM_MAX_AGE_H = 12     # a queued story older than this isn't news any more - dropped rather than sent
+# 14h, not 12: stories that arrive after the evening slot wait overnight for the morning one (21:00 -> 08:00+).
+PUSH_ITEM_MAX_AGE_H = 14     # a queued story older than this isn't news any more - dropped rather than sent
+# TIME SLOTS (owner, 13 Oct): notifications only go out in three daytime windows, in each device's own local
+# time - morning, afternoon, evening - and at most 1 or 2 in each (the person's choice, per_slot). Each one
+# bundles everything queued since the last, most important first; news and stock stories share the same
+# count, and Critical stories do NOT jump the limit (they lead the next notification instead). This replaces
+# the 20-40 minute gaps, quiet hours (the slots are all daytime) and the daily/weekly digest (the slots are
+# the roundups). The first notification of a slot goes out at a random moment in its first 45 minutes, so
+# phones don't all buzz at 8:00 sharp; a second one waits 75-105 minutes after the first.
+PUSH_SLOTS = (("morning", 8, 11), ("afternoon", 13, 16), ("evening", 18, 21))
+PUSH_FIRST_DELAY_MAX_S = 45 * 60
+PUSH_SECOND_GAP_MIN_S, PUSH_SECOND_GAP_MAX_S = 75 * 60, 105 * 60
 
 
 def _b64u(data: bytes) -> str:
@@ -502,7 +513,15 @@ def parse_push_prefs(f: dict) -> dict:
     # attached; for a signed-in one the account's own portfolio replaces it (see run_push()).
     watch = [w.strip().lower() for w in _fs_strings(f, "watch") if 3 <= len(w.strip()) <= 60][:200]
     uid = (f.get("uid") or {}).get("stringValue") or ""
-    return {"min_imp": min_imp, "countries": [c for c in _fs_strings(f, "countries") if c],
+    try:
+        per_slot = int((f.get("per_slot") or {}).get("integerValue") or 2)
+    except (TypeError, ValueError):
+        per_slot = 2
+    news_f = f.get("news")
+    return {"min_imp": min_imp,
+            # A signup saved before the News switch existed had news on; absent means on.
+            "news": True if news_f is None else bool(news_f.get("booleanValue")),
+            "per_slot": 1 if per_slot == 1 else 2, "countries": [c for c in _fs_strings(f, "countries") if c],
             "quiet": bool((f.get("quiet") or {}).get("booleanValue")),
             "digest": digest if digest in ("off", "daily", "weekly") else "off",
             "tz_min": max(-14 * 60, min(14 * 60, tz_min)),
@@ -558,7 +577,7 @@ def push_kind_for(sub: dict, item: dict) -> str | None:
         text = " ".join(str(item.get(k) or "") for k in ("headline", "excerpt", "summary"))
         if rx and rx.search(text):
             return "invest"
-    return "news" if news_wanted(sub, item) else None
+    return "news" if sub.get("news", True) and news_wanted(sub, item) else None
 
 
 # ----------------------------------------------------------------- Firestore, as the pipeline itself
@@ -947,6 +966,24 @@ def bundle_payload(batch: list, index: dict, devkey: str) -> dict:
     }
 
 
+def current_slot(sub: dict, now: dt.datetime):
+    """(slot_key, start_ts, end_ts) for the device's local time slot happening now, or None between slots."""
+    local = sub_local_time(sub, now)
+    for name, h1, h2 in PUSH_SLOTS:
+        if h1 <= local.hour < h2:
+            start_local = local.replace(hour=h1, minute=0, second=0, microsecond=0)
+            offset = dt.timedelta(minutes=sub.get("tz_min", 0))
+            start = start_local - offset
+            return f"{local.date().isoformat()}:{name}", start.timestamp(), (start + dt.timedelta(hours=h2 - h1)).timestamp()
+    return None
+
+
+def _random_step(lo: int, hi: int, interval: int) -> int:
+    """A random number of seconds in [lo, hi] that a check every `interval` seconds can actually land on."""
+    steps = list(range(lo, hi + 1, max(60, interval))) or [lo]
+    return random.choice(steps)
+
+
 def push_eval_interval(n_devices: int) -> int:
     return PUSH_EVAL_FAST_S if n_devices <= PUSH_EVAL_FAST_MAX_DEVICES else PUSH_EVAL_SLOW_S
 
@@ -960,14 +997,14 @@ def next_gap_seconds(interval: int) -> float:
 
 
 def run_push(new_items: list[dict], feed: dict, state: dict, now: dt.datetime) -> None:
-    """Paced, bundled notifications. Called on EVERY run, not only runs with new stories, because a queued
-    bundle falls due on a later run. Per device, kept in state["push"]["devices"][device_key]:
+    """Bundled notifications in three daily time slots. Called on EVERY run, not only runs with new stories,
+    because a queued bundle falls due on a later run. Per device, kept in state["push"]["devices"][device_key]:
       q     stories waiting for this device: [item_id, "news" | "invest", queued_at]
-      next  when its next non-Critical notification may go out (a random 20-40 min after the last)
-    Rules: a story joins a device's queue if push_kind_for() says the device wants it. A device whose gap has
-    passed gets ONE notification bundling its whole queue. A queued Critical story sends at once, taking the
-    rest of the queue with it. In quiet hours only Critical stories go; the rest are held for the morning,
-    where they used to be dropped. Never raises past the caller's try/except."""
+      slot  the local slot last seen ("2026-10-13:morning"), sent = notifications sent in it
+      next  the earliest moment the next notification in this slot may go out
+    A story joins a device's queue if push_kind_for() says the device wants it (its News / Stock switches).
+    Inside a slot, while fewer than per_slot (1 or 2) have gone out and `next` has passed, ONE notification
+    bundles the whole queue. Between slots everything waits. Never raises past the caller's try/except."""
     ps = state.setdefault("push", {})
     ps.setdefault("pending", [])
     ps.setdefault("devices", {})
@@ -979,9 +1016,9 @@ def run_push(new_items: list[dict], feed: dict, state: dict, now: dt.datetime) -
 
     now_ts = now.timestamp()
     interval = push_eval_interval(ps.get("devices_n", 0))
-    has_critical = any(it.get("importance") == "Critical" for it in new_items)
     # 60s of slack: runs are "every 5 minutes" only roughly, and one arriving at 4:58 should still count.
-    if not has_critical and now_ts - ps["last_eval"] < interval - 60:
+    # (A Critical story used to force an immediate check; it no longer jumps the slot limit, so it doesn't.)
+    if now_ts - ps["last_eval"] < interval - 60:
         return                                   # stories stay pending; the next evaluation picks them up
     if not VAPID_PRIVATE_KEY or not VAPID_PUBLIC_KEY:
         log("  push: VAPID_PRIVATE_KEY/VAPID_PUBLIC_KEY not set, skipping (set them as GitHub Actions secrets to enable)")
@@ -1011,7 +1048,7 @@ def run_push(new_items: list[dict], feed: dict, state: dict, now: dt.datetime) -
     ps["pending"] = []
     cutoff = now_ts - PUSH_ITEM_MAX_AGE_H * 3600
     stats: dict[str, int] = {}
-    live, held_quiet, waiting, dead = set(), 0, 0, 0
+    live, outside, waiting, dead = set(), 0, 0, 0
 
     for sub in subs:
         key = device_key(sub["name"])
@@ -1028,23 +1065,25 @@ def run_push(new_items: list[dict], feed: dict, state: dict, now: dt.datetime) -
         dv["q"] = [q for q in dv["q"] if q[0] in index and (q[2] if len(q) > 2 else now_ts) >= cutoff][-PUSH_QUEUE_MAX:]
         if not dv["q"]:
             continue
-        crit = [q for q in dv["q"] if index[q[0]].get("importance") == "Critical"]
-        if in_quiet_hours(sub, now):
-            if not crit:
-                held_quiet += 1
-                continue
-            batch = crit
-        elif crit or now_ts >= dv.get("next", 0):
-            batch = dv["q"]
-        else:
+        slot = current_slot(sub, now)
+        if slot is None:
+            outside += 1                         # between slots: stories wait for the next one
+            continue
+        slot_key, slot_start, slot_end = slot
+        if dv.get("slot") != slot_key:           # first look at this device in a new slot
+            dv["slot"], dv["sent"] = slot_key, 0
+            dv["next"] = slot_start + _random_step(0, PUSH_FIRST_DELAY_MAX_S, interval) - 60
+        if dv.get("sent", 0) >= sub.get("per_slot", 2) or now_ts < dv.get("next", 0) or now_ts >= slot_end:
             waiting += 1
             continue
+        batch = dv["q"]
         payload = bundle_payload(batch, index, key)
         status = send_one_push(sub, payload)
         if status in (200, 201, 204):
             sent_ids = {q[0] for q in batch}
             dv["q"] = [q for q in dv["q"] if q[0] not in sent_ids]
-            dv["next"] = now_ts + next_gap_seconds(interval)
+            dv["sent"] = dv.get("sent", 0) + 1
+            dv["next"] = now_ts + _random_step(PUSH_SECOND_GAP_MIN_S, PUSH_SECOND_GAP_MAX_S, interval) - 60
             for k in ("sent", "sent_" + payload["kind"]) + (("sent_critical",) if payload["crit"] else ()):
                 stats[k] = stats.get(k, 0) + 1
         elif status in (404, 410):
@@ -1057,11 +1096,12 @@ def run_push(new_items: list[dict], feed: dict, state: dict, now: dt.datetime) -
         if k not in live:
             del ps["devices"][k]
 
-    send_digests([s for s in subs if device_key(s["name"]) in live], feed, state, now, stats)
+    # The daily/weekly digest is no longer sent: the morning/afternoon/evening roundups replaced it, and a
+    # separate digest would break the "never more than I chose" limit. send_digests() is kept for reference.
     record_push_stats(stats, now)
     log(f"  push: {len(subs)} device(s), {len(pending)} new stor{'y' if len(pending) == 1 else 'ies'} to place, "
-        f"{stats.get('sent', 0) - stats.get('sent_digest', 0)} bundle(s) sent, {waiting} waiting out their gap, "
-        f"{held_quiet} held for quiet hours" + (f", removed {dead} dead subscription(s)" if dead else ""))
+        f"{stats.get('sent', 0)} sent, {waiting} waiting in their slot, "
+        f"{outside} between slots" + (f", removed {dead} dead subscription(s)" if dead else ""))
 
 
 def digest_window_items(feed: dict, since: dt.datetime, sub: dict) -> list[dict]:

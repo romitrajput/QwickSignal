@@ -1049,6 +1049,14 @@ if (typeof document !== 'undefined') (function () {
       pulseLabel: 'Sentiment of the Users:', pulseBull: 'Bullish', pulseBear: 'Bearish',
       communityPending: 'Votes will appear here shortly.',
       agPulseTitle: 'Log in to vote', agPulseBody: 'A free account keeps one vote per person honest - no limit on reading, just on voting.',
+      notifNewsLabel: 'News notifications',
+      notifNewsHint: 'Important stories from your News feed.',
+      notifStockLabel: 'Stock notifications',
+      notifStockHint: 'News about the companies you track and posts from your Investment channels. These come through even below your priority setting.',
+      notifSlotsLabel: 'Notifications each morning, afternoon and evening',
+      notifSlotsHint: 'Morning 8–11 am, afternoon 1–4 pm, evening 6–9 pm (your time). Each one rounds up what came in since the last, most important first.',
+      notifPerDay: 'Up to {n} notifications a day. Critical stories lead the next one.',
+      notifBothOff: 'Both are off, so no notifications will be sent. Turn one on to get them.',
       sbNoVotes: 'No votes in the last 24 hours yet. Be the first.',
       sbVote: 'vote today',
       sbVotes: 'votes today',
@@ -1061,6 +1069,11 @@ if (typeof document !== 'undefined') (function () {
       sbPost: 'Post vote',
       sbReasons: 'Reasons',
       sbDelete: 'Delete',
+      sbGuestNote: 'Sign in to vote and share your reason. Anyone can read the board.',
+      sbGuestBtn: 'Sign in to vote',
+      sbHoldHint: 'Your reason. Press and hold for options.',
+      sbDeleted: 'Reason deleted.',
+      undo: 'Undo',
       sbNoReasons: 'No reasons posted yet.',
       sbShowAll: 'Show all',
       sbOffline: 'Can’t reach the board right now - showing what this device last saw.',
@@ -1163,6 +1176,14 @@ if (typeof document !== 'undefined') (function () {
       pulseLabel: 'उपयोगकर्ताओं की राय:', pulseBull: 'तेज़ी', pulseBear: 'मंदी',
       communityPending: 'वोट जल्द ही यहां दिखेंगे।',
       agPulseTitle: 'वोट करने के लिए साइन इन करें', agPulseBody: 'मुफ़्त खाता यह सुनिश्चित करता है कि हर व्यक्ति सिर्फ़ एक बार वोट करे - पढ़ने की कोई सीमा नहीं, सिर्फ़ वोट करने की।',
+      notifNewsLabel: 'न्यूज़ नोटिफिकेशन',
+      notifNewsHint: 'आपकी न्यूज़ फ़ीड की महत्वपूर्ण खबरें।',
+      notifStockLabel: 'स्टॉक नोटिफिकेशन',
+      notifStockHint: 'आपकी ट्रैक की गई कंपनियों की खबरें और आपके Investment चैनलों की पोस्ट। ये आपकी प्राथमिकता सेटिंग से नीचे होने पर भी आती हैं।',
+      notifSlotsLabel: 'हर सुबह, दोपहर और शाम नोटिफिकेशन',
+      notifSlotsHint: 'सुबह 8–11, दोपहर 1–4, शाम 6–9 (आपके समय के अनुसार)। हर नोटिफिकेशन पिछली बार के बाद आई खबरों को एक साथ लाता है, सबसे महत्वपूर्ण पहले।',
+      notifPerDay: 'दिन में अधिकतम {n} नोटिफिकेशन। क्रिटिकल खबरें अगले नोटिफिकेशन में सबसे ऊपर रहेंगी।',
+      notifBothOff: 'दोनों बंद हैं, इसलिए कोई नोटिफिकेशन नहीं भेजा जाएगा। पाने के लिए एक चालू करें।',
       sbNoVotes: 'पिछले 24 घंटों में अभी कोई वोट नहीं। पहले आप वोट करें।',
       sbVote: 'वोट आज',
       sbVotes: 'वोट आज',
@@ -1175,6 +1196,11 @@ if (typeof document !== 'undefined') (function () {
       sbPost: 'वोट पोस्ट करें',
       sbReasons: 'कारण',
       sbDelete: 'हटाएं',
+      sbGuestNote: 'वोट करने और अपना कारण लिखने के लिए साइन इन करें। बोर्ड कोई भी पढ़ सकता है।',
+      sbGuestBtn: 'वोट करने के लिए साइन इन करें',
+      sbHoldHint: 'आपका कारण। विकल्पों के लिए दबाकर रखें।',
+      sbDeleted: 'कारण हटाया गया।',
+      undo: 'वापस लें',
       sbNoReasons: 'अभी तक कोई कारण पोस्ट नहीं हुआ।',
       sbShowAll: 'सभी दिखाएं',
       sbOffline: 'बोर्ड अभी उपलब्ध नहीं है - इस डिवाइस पर पिछली बार देखा गया दिखा रहे हैं।',
@@ -1277,6 +1303,14 @@ if (typeof document !== 'undefined') (function () {
       pulseLabel: 'वापरकर्त्यांचे मत:', pulseBull: 'तेजी', pulseBear: 'मंदी',
       communityPending: 'मते लवकरच इथे दिसतील.',
       agPulseTitle: 'मतदानासाठी साइन इन करा', agPulseBody: 'मोफत खाते खात्री करते की प्रत्येक व्यक्ती फक्त एकदाच मत देईल - वाचण्यावर मर्यादा नाही, फक्त मतदानावर.',
+      notifNewsLabel: 'न्यूज नोटिफिकेशन',
+      notifNewsHint: 'तुमच्या न्यूज फीडमधील महत्त्वाच्या बातम्या.',
+      notifStockLabel: 'स्टॉक नोटिफिकेशन',
+      notifStockHint: 'तुम्ही ट्रॅक करत असलेल्या कंपन्यांच्या बातम्या आणि तुमच्या Investment चॅनेलवरील पोस्ट. या तुमच्या प्राधान्य सेटिंगपेक्षा कमी असल्या तरी येतात.',
+      notifSlotsLabel: 'दररोज सकाळ, दुपार आणि संध्याकाळ नोटिफिकेशन',
+      notifSlotsHint: 'सकाळी 8–11, दुपारी 1–4, संध्याकाळी 6–9 (तुमच्या वेळेनुसार). प्रत्येक नोटिफिकेशन मागच्या वेळेनंतर आलेल्या बातम्या एकत्र आणते, सर्वात महत्त्वाच्या आधी.',
+      notifPerDay: 'दिवसाला जास्तीत जास्त {n} नोटिफिकेशन. क्रिटिकल बातम्या पुढच्या नोटिफिकेशनमध्ये सर्वात वर.',
+      notifBothOff: 'दोन्ही बंद आहेत, त्यामुळे कोणतेही नोटिफिकेशन पाठवले जाणार नाही. मिळवण्यासाठी एक चालू करा.',
       sbNoVotes: 'गेल्या 24 तासांत अजून मत नाही. पहिले मत तुमचे द्या.',
       sbVote: 'मत आज',
       sbVotes: 'मते आज',
@@ -1289,6 +1323,11 @@ if (typeof document !== 'undefined') (function () {
       sbPost: 'मत पोस्ट करा',
       sbReasons: 'कारणे',
       sbDelete: 'हटवा',
+      sbGuestNote: 'मत देण्यासाठी आणि तुमचे कारण लिहिण्यासाठी साइन इन करा. बोर्ड कोणीही वाचू शकतो.',
+      sbGuestBtn: 'मत देण्यासाठी साइन इन करा',
+      sbHoldHint: 'तुमचे कारण. पर्यायांसाठी दाबून धरा.',
+      sbDeleted: 'कारण हटवले.',
+      undo: 'परत घ्या',
       sbNoReasons: 'अजून कोणतेही कारण पोस्ट झालेले नाही.',
       sbShowAll: 'सर्व दाखवा',
       sbOffline: 'बोर्ड आत्ता उपलब्ध नाही - या डिव्हाइसवर शेवटचे पाहिलेले दाखवत आहोत.',
@@ -1391,6 +1430,14 @@ if (typeof document !== 'undefined') (function () {
       pulseLabel: 'વપરાશકર્તાઓનો મત:', pulseBull: 'તેજી', pulseBear: 'મંદી',
       communityPending: 'મત ટૂંક સમયમાં અહીં દેખાશે.',
       agPulseTitle: 'વોટ કરવા સાઇન ઇન કરો', agPulseBody: 'મફત ખાતું ખાતરી કરે છે કે દરેક વ્યક્તિ ફક્ત એક જ વાર વોટ કરે - વાંચવા પર કોઈ મર્યાદા નથી, ફક્ત વોટિંગ પર.',
+      notifNewsLabel: 'ન્યૂઝ નોટિફિકેશન',
+      notifNewsHint: 'તમારી ન્યૂઝ ફીડના મહત્વના સમાચાર.',
+      notifStockLabel: 'સ્ટોક નોટિફિકેશન',
+      notifStockHint: 'તમે ટ્રેક કરો છો તે કંપનીઓના સમાચાર અને તમારી Investment ચેનલોની પોસ્ટ. તે તમારી પ્રાથમિકતા સેટિંગથી નીચે હોય તો પણ આવે છે.',
+      notifSlotsLabel: 'દરરોજ સવાર, બપોર અને સાંજે નોટિફિકેશન',
+      notifSlotsHint: 'સવારે 8–11, બપોરે 1–4, સાંજે 6–9 (તમારા સમય મુજબ). દરેક નોટિફિકેશન છેલ્લા પછી આવેલા સમાચાર એકસાથે લાવે છે, સૌથી મહત્વના પહેલા.',
+      notifPerDay: 'દિવસમાં વધુમાં વધુ {n} નોટિફિકેશન. ક્રિટિકલ સમાચાર આગામી નોટિફિકેશનમાં સૌથી ઉપર.',
+      notifBothOff: 'બંને બંધ છે, તેથી કોઈ નોટિફિકેશન મોકલવામાં આવશે નહીં. મેળવવા માટે એક ચાલુ કરો.',
       sbNoVotes: 'છેલ્લા 24 કલાકમાં હજી કોઈ વોટ નથી. પહેલો વોટ તમારો આપો.',
       sbVote: 'વોટ આજે',
       sbVotes: 'વોટ આજે',
@@ -1403,6 +1450,11 @@ if (typeof document !== 'undefined') (function () {
       sbPost: 'વોટ પોસ્ટ કરો',
       sbReasons: 'કારણો',
       sbDelete: 'કાઢી નાખો',
+      sbGuestNote: 'વોટ કરવા અને તમારું કારણ લખવા સાઇન ઇન કરો. બોર્ડ કોઈ પણ વાંચી શકે છે.',
+      sbGuestBtn: 'વોટ કરવા સાઇન ઇન કરો',
+      sbHoldHint: 'તમારું કારણ. વિકલ્પો માટે દબાવી રાખો.',
+      sbDeleted: 'કારણ કાઢી નાખ્યું.',
+      undo: 'પાછું લો',
       sbNoReasons: 'હજી કોઈ કારણ પોસ્ટ થયું નથી.',
       sbShowAll: 'બધું બતાવો',
       sbOffline: 'બોર્ડ અત્યારે ઉપલબ્ધ નથી - આ ડિવાઇસ પર છેલ્લે જોયેલું બતાવીએ છીએ.',
@@ -2839,35 +2891,32 @@ if (typeof document !== 'undefined') (function () {
     // Investment alerts come from the account's portfolio, so they need an account with something in it.
     const canInvest = !!(Auth.uid && (S.myCompanies.size || S.myInvestChannels.size));
     const impLabels = { Critical: t('notifImpCritical'), High: t('notifImpHigh'), Medium: t('notifImpMedium'), Low: t('notifImpLow') };
+    // Two switches (owner, 13 Oct): News and Stocks. Both on = both kinds, combined into the same
+    // notifications; one on = only that kind; both off = none. Then how many notifications in each of the
+    // day's three times (morning, afternoon, evening): 1 or 2. Quiet hours and the daily/weekly summary were
+    // removed here - the three daytime roundups do both jobs.
+    const sw = (id, checked, disabled) => `<input type="checkbox" role="switch" id="${id}" class="np-switch"${checked ? ' checked' : ''}${disabled ? ' disabled' : ''}>`;
+    const bothOff = !p.news && !(p.invest && canInvest);
     const prefsUI = !on ? '' : `
       <div class="notif-prefs">
         <div class="np-row">
+          <label class="np-label" for="npNews">${t('notifNewsLabel')}</label>
+          ${sw('npNews', p.news)}
+        </div>
+        <p class="np-hint">${t('notifNewsHint')}</p>
+        ${p.news ? `<div class="np-row np-sub">
           <label class="np-label" for="npMinImp">${t('notifTierLabel')}</label>
           <select id="npMinImp" class="np-select">
             ${PUSH_IMP_TIERS.map(k => `<option value="${k}"${p.minImp === k ? ' selected' : ''}>${esc(impLabels[k])}</option>`).join('')}
           </select>
         </div>
-        <p class="np-hint">${Appetite.on() ? esc(t('notifAppetiteManaged')) : t('notifTierHint')}</p>
+        <p class="np-hint np-sub">${Appetite.on() ? esc(t('notifAppetiteManaged')) : t('notifTierHint')}</p>` : ''}
         <div class="np-row">
-          <label class="np-label" for="npQuiet">${t('notifQuietLabel')}</label>
-          <input type="checkbox" id="npQuiet" class="np-check"${p.quiet ? ' checked' : ''}>
+          <label class="np-label" for="npInvest">${t('notifStockLabel')}</label>
+          ${sw('npInvest', p.invest && canInvest, !canInvest)}
         </div>
-        <p class="np-hint">${t('notifQuietHint')}</p>
-        <div class="np-row">
-          <label class="np-label" for="npInvest">${t('notifInvestLabel')}</label>
-          <input type="checkbox" id="npInvest" class="np-check"${p.invest && canInvest ? ' checked' : ''}${canInvest ? '' : ' disabled'}>
-        </div>
-        <p class="np-hint">${canInvest ? t('notifInvestHint') : t('notifInvestNeedCompanies')}</p>
-        <div class="np-row">
-          <label class="np-label" for="npDigest">${t('notifDigestLabel')}</label>
-          <select id="npDigest" class="np-select">
-            <option value="off"${p.digest === 'off' ? ' selected' : ''}>${esc(t('notifDigestOff'))}</option>
-            <option value="daily"${p.digest === 'daily' ? ' selected' : ''}>${esc(t('notifDigestDaily'))}</option>
-            <option value="weekly"${p.digest === 'weekly' ? ' selected' : ''}>${esc(t('notifDigestWeekly'))}</option>
-          </select>
-        </div>
-        <p class="np-hint">${t('notifDigestHint')}</p>
-        <p class="np-hint np-pacing">${t('notifPacingNote')}</p>
+        <p class="np-hint">${canInvest ? t('notifStockHint') : t('notifInvestNeedCompanies')}</p>
+        ${bothOff ? `<p class="np-warn" role="status">${t('notifBothOff')}</p>` : ''}
       </div>`;
     box.innerHTML = (on
       ? `<p class="lp-syncnote">${t('notifOn')}</p><button id="notifBtn" class="btn small">${t('notifDisable')}</button>`
@@ -2880,7 +2929,13 @@ if (typeof document !== 'undefined') (function () {
       }
       renderNotifBox();
     });
-    const minImp = $('#npMinImp'), quiet = $('#npQuiet'), digest = $('#npDigest');
+    const minImp = $('#npMinImp'), news = $('#npNews');
+    if (news) news.addEventListener('change', async () => {
+      await Push.savePrefs({ news: news.checked });
+      track('push_news_toggle', { on: news.checked });
+      renderNotifBox();
+    });
+
     if (minImp) minImp.addEventListener('change', () => {
       // Setting the floor by hand takes it back off the daily appetite. Without this the next feed
       // refresh would quietly overwrite the choice just made here, which is the kind of disagreement
@@ -2889,12 +2944,11 @@ if (typeof document !== 'undefined') (function () {
       Push.savePrefs({ minImp: minImp.value });
       renderNotifBox();
     });
-    if (quiet) quiet.addEventListener('change', () => Push.savePrefs({ quiet: quiet.checked }));
-    if (digest) digest.addEventListener('change', () => Push.savePrefs({ digest: digest.value }));
     const invest = $('#npInvest');
-    if (invest) invest.addEventListener('change', () => {
-      Push.savePrefs({ invest: invest.checked });
+    if (invest) invest.addEventListener('change', async () => {
+      await Push.savePrefs({ invest: invest.checked });
       track('push_invest_toggle', { on: invest.checked });
+      renderNotifBox();
     });
   }
 
@@ -3407,7 +3461,14 @@ if (typeof document !== 'undefined') (function () {
      localStorage too, purely so Settings can render the current choice instantly without a read back.
      Device-scoped on purpose, like Theme: "quiet hours on my phone" shouldn't mute a desktop. */
   const PUSH_PREFS_KEY = 'qs-push-prefs-v1';
-  const PUSH_PREFS_DEFAULT = { minImp: 'Low', quiet: false, digest: 'off', invest: false };
+  // news / invest: the two switches in Settings -> Notifications ("News notifications", "Stock
+  // notifications"). perSlot: how many notifications in each of the day's three times - morning, afternoon,
+  // evening (owner, 13 Oct). quiet/digest are kept only so older saved choices still read; the three daytime
+  // slots replaced both.
+  const PUSH_PREFS_DEFAULT = { minImp: 'Low', quiet: false, digest: 'off', news: true, invest: false, perSlot: 2 };
+  // Fields an older firestore.rules doesn't know yet. If a save is refused because of them, it is retried
+  // without them, so turning notifications on keeps working until the new rules are published.
+  const PUSH_NEW_FIELDS = ['news', 'per_slot'];
   const PUSH_IMP_TIERS = ['Critical', 'High', 'Medium', 'Low'];
   const Push = {
     supported() { return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window; },
@@ -3424,7 +3485,10 @@ if (typeof document !== 'undefined') (function () {
           minImp: PUSH_IMP_TIERS.includes(raw.minImp) ? raw.minImp : PUSH_PREFS_DEFAULT.minImp,
           quiet: !!raw.quiet,
           digest: ['off', 'daily', 'weekly'].includes(raw.digest) ? raw.digest : 'off',
-          invest: !!raw.invest
+          news: raw.news !== false,
+          invest: !!raw.invest,
+          // The 1-or-2 choice was taken off the screen (owner, 13 Oct): everyone gets up to 2 per slot.
+          perSlot: 2
         };
       } catch (e) { return Object.assign({}, PUSH_PREFS_DEFAULT); }
     },
@@ -3441,10 +3505,7 @@ if (typeof document !== 'undefined') (function () {
         // uid is always in the mask: present in the body when signed in, absent when signed out - and a
         // masked field missing from the body is deleted, which is exactly what signing out should do.
         const mask = Object.keys(fields).concat(Auth.uid ? [] : ['uid']);
-        await fetch(`${FS_BASE}/qs_push_subs/${pushId()}?key=${FIREBASE.apiKey}&` +
-          mask.map(k => 'updateMask.fieldPaths=' + k).join('&'), {
-          method: 'PATCH', headers: await this.pushHeaders(), body: JSON.stringify({ fields })
-        });
+        await this.writeSub(fields, mask);
       } catch (e) { /* local copy stands; resync() will carry it up later */ }
       return next;
     },
@@ -3462,8 +3523,24 @@ if (typeof document !== 'undefined') (function () {
         // pipeline.py - so this only says yes/no. watch is sent empty on purpose: older versions put a copy
         // of the watchlist here, and this clears it out.
         invest: toFsValue(!!pr.invest),
-        watch: toFsValue([])
+        watch: toFsValue([]),
+        news: toFsValue(pr.news !== false),
+        per_slot: toFsValue(pr.perSlot === 1 ? 1 : 2)
       };
+    },
+    // PATCH this device's signup. mask = null writes the whole document (subscribe); otherwise only the
+    // listed fields. Retried once without the newest fields if the published rules don't accept them yet.
+    async writeSub(fields, mask) {
+      const send = async (f, m) => fetch(`${FS_BASE}/qs_push_subs/${pushId()}?key=${FIREBASE.apiKey}` +
+        (m ? '&' + m.map(k => 'updateMask.fieldPaths=' + k).join('&') : ''), {
+        method: 'PATCH', headers: await this.pushHeaders(), body: JSON.stringify({ fields: f })
+      });
+      let r = await send(fields, mask);
+      if ((r.status === 400 || r.status === 403) && PUSH_NEW_FIELDS.some(k => k in fields)) {
+        const f = Object.assign({}, fields); PUSH_NEW_FIELDS.forEach(k => delete f[k]);
+        r = await send(f, mask && mask.filter(k => !PUSH_NEW_FIELDS.includes(k)));
+      }
+      return r;
     },
     // Which account this device's notifications belong to. firestore.rules only accept a uid that matches
     // the signed-in user making the write (hence pushHeaders() sending the login token), so nobody can
@@ -3496,9 +3573,7 @@ if (typeof document !== 'undefined') (function () {
           created_at: toFsValue(new Date().toISOString())
         }, this.prefFields());   // carries this device's alert preferences on every (re)subscribe
         if (Auth.uid) fields.uid = toFsValue(Auth.uid);
-        const r = await fetch(`${FS_BASE}/qs_push_subs/${id}?key=${FIREBASE.apiKey}`, {
-          method: 'PATCH', headers: await this.pushHeaders(), body: JSON.stringify({ fields })
-        });
+        const r = await this.writeSub(fields, null);
         if (!r.ok) throw new Error('HTTP ' + r.status);
         this.setOn(true);
         track('push_subscribe', {});
@@ -5424,6 +5499,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
   const BOARD_REASON_MAX = 2000;
   const BOARD_PAGE = 30;                    // rows drawn at a time; "Show more" reveals the next 30
   const BOARD_STORE = 'qs-board-v1';
+  const BOARD_UNDO_MS = 5000;
   const Board = {
     list: [], votes: new Map(), maxAt: 0, fullAt: 0, loading: null, error: false,
     q: '', open: null, pick: null, draft: '', shown: BOARD_PAGE, allComments: new Set(), busy: false,
@@ -5504,7 +5580,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     stats(slug) {
       const now = Date.now(), latest = new Map();
       this.votes.forEach(v => {
-        if (v.slug !== slug || now - v.at > BOARD_WINDOW_MS) return;
+        if (v.slug !== slug || now - v.at > BOARD_WINDOW_MS || this.deleting.has(v.id)) return;
         const p = latest.get(v.uid);
         if (!p || v.at > p.at) latest.set(v.uid, v);
       });
@@ -5512,8 +5588,25 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       latest.forEach(v => { if (v.choice === 'bull') bull++; else bear++; });
       return { bull, bear, total: bull + bear };
     },
-    comments(slug) { return [...this.votes.values()].filter(v => v.slug === slug && v.reason).sort((a, b) => b.at - a.at); },
-    mine(slug) { return Auth.uid ? this.votes.get(`${slug}_${Auth.uid}_${this.istDay()}`) || null : null; },
+    comments(slug) { return [...this.votes.values()].filter(v => v.slug === slug && v.reason && !this.deleting.has(v.id)).sort((a, b) => b.at - a.at); },
+    mine(slug) { const id = `${slug}_${Auth.uid}_${this.istDay()}`; return Auth.uid && !this.deleting.has(id) ? this.votes.get(id) || null : null; },
+    // Delete with Undo (owner, 13 Oct): the reason disappears at once, and is only removed from the server
+    // after the Undo message has gone (BOARD_UNDO_MS) - so Undo works for the owner deleting someone else's
+    // reason too, which could not be re-created afterwards.
+    deleting: new Map(),
+    softDelete(id) {
+      if (this.deleting.has(id)) return;
+      this.deleting.set(id, setTimeout(async () => {
+        try { await this.remove(id); } catch (e) { toast(t('sbFailed')); }
+        this.deleting.delete(id);
+        if (S.tab === 'community') renderBoardBody();
+      }, BOARD_UNDO_MS));
+    },
+    undoDelete(id) {
+      const tm = this.deleting.get(id);
+      if (tm == null) return;
+      clearTimeout(tm); this.deleting.delete(id);
+    },
 
     // Every stock to show: everyone's watchlists, this person's own (so a stock they just added appears
     // before the next pipeline scan), and anything voted on recently.
@@ -5583,7 +5676,10 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       </button>`;
     if (!isOpen) return `<article class="sb-card">${head}</article>`;
     const pick = Board.pick || (mine && mine.choice) || '';
-    const vote = `<div class="sb-vote">
+    // Signed-out visitors can read the board but not vote or comment (owner, 13 Oct). Instead of vote buttons
+    // they see one line and a sign-in button; firestore.rules refuse a vote without an account anyway.
+    const vote = !Auth.uid ? `<div class="sb-vote sb-guest"><p class="sb-yours">${esc(t('sbGuestNote'))}</p>
+        <button class="btn primary small" data-act="sbSignIn">${esc(t('sbGuestBtn'))}</button></div>` : `<div class="sb-vote">
         ${mine ? `<p class="sb-yours">${esc(t('sbYourView'))} <b class="${mine.choice === 'bull' ? 'pct-bull' : 'pct-bear'}">${mine.choice === 'bull' ? '▲ ' + esc(t('pulseBull')) : '▼ ' + esc(t('pulseBear'))}</b>. ${esc(t('sbChangeHint'))}</p>` : ''}
         <div class="pulse-btns">
           <button class="pulse-btn bull${pick === 'bull' ? ' active' : ''}" data-act="sbPick" data-v="bull">▲ ${esc(t('pulseBull'))}</button>
@@ -5598,11 +5694,10 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     const all = Board.comments(e.slug), showAll = Board.allComments.has(e.slug), list = showAll ? all : all.slice(0, 3);
     const comments = `<div class="sb-comments">
         <h3 class="sb-ch">${esc(t('sbReasons'))} <span>${all.length}</span></h3>
-        ${list.length ? list.map(c => `<div class="sb-c">
+        ${list.length ? list.map(c => { const canDel = !!(Auth.uid && (c.uid === Auth.uid || isOwner())); return `<div class="sb-c${canDel ? ' sb-c-del' : ''}"${canDel ? ` data-del="${esc(c.id)}" tabindex="0" aria-label="${esc(t('sbHoldHint'))}"` : ''}>
             <div class="sb-cmeta"><b class="${c.choice === 'bull' ? 'pct-bull' : 'pct-bear'}">${c.choice === 'bull' ? '▲ ' + esc(t('pulseBull')) : '▼ ' + esc(t('pulseBear'))}</b>
-              <span>${esc(c.name || 'user')}</span><span>${esc(ago(c.at))}</span>
-              ${Auth.uid && (c.uid === Auth.uid || isOwner()) ? `<button class="sb-del" data-act="sbDel" data-v="${esc(c.id)}">${esc(t('sbDelete'))}</button>` : ''}</div>
-            <p class="sb-ctext">${esc(c.reason)}</p></div>`).join('')
+              <span>${esc(c.name || 'user')}</span><span>${esc(ago(c.at))}</span></div>
+            <p class="sb-ctext">${esc(c.reason)}</p></div>`; }).join('')
           : `<p class="sb-none">${esc(t('sbNoReasons'))}</p>`}
         ${all.length > 3 && !showAll ? `<button class="link" data-act="sbAll" data-v="${esc(e.slug)}">${esc(t('sbShowAll'))} (${all.length})</button>` : ''}
       </div>`;
@@ -5630,6 +5725,74 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     const ta = $('#sbReason');
     if (ta) ta.addEventListener('input', () => { Board.draft = ta.value; const l = $('#sbLeft'); if (l) l.textContent = BOARD_REASON_MAX - ta.value.length; });
   }
+
+  /* Long press (owner, 13 Oct: "similar to Instagram"): no Delete button is shown on reasons any more.
+     Pressing and holding your own reason (or any reason, for the owner) for half a second slides up a sheet
+     with Delete and Cancel. A right-click / the context-menu key does the same on a computer, and Enter or
+     Delete on a focused reason does it from the keyboard. */
+  const LONG_PRESS_MS = 500;
+  const ActionSheet = {
+    target: null,
+    open(id) {
+      this.target = id;
+      let el = $('#actionSheet');
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'actionSheet'; el.className = 'asheet-wrap'; el.hidden = true;
+        el.innerHTML = `<div class="asheet-back" data-act="sbSheetCancel"></div>
+          <div class="asheet" role="dialog" aria-modal="true" aria-label="${esc(t('sbReasons'))}">
+            <button type="button" class="asheet-btn danger" data-act="sbSheetDel"></button>
+            <button type="button" class="asheet-btn" data-act="sbSheetCancel"></button>
+          </div>`;
+        document.body.appendChild(el);
+      }
+      el.querySelector('.danger').textContent = t('sbDelete');
+      el.querySelector('.asheet-btn:not(.danger)').textContent = t('sbCancel');
+      clearTimeout(toastTimer); $('#toast').classList.remove('show');   // an old message must not cover the sheet
+      el.hidden = false;
+      requestAnimationFrame(() => el.classList.add('show'));
+      el.querySelector('.danger').focus();
+    },
+    close() {
+      const el = $('#actionSheet');
+      this.target = null;
+      if (!el) return;
+      el.classList.remove('show');
+      setTimeout(() => { if (!el.classList.contains('show')) el.hidden = true; }, 200);
+    }
+  };
+  (function wireLongPress() {
+    let timer = null, startX = 0, startY = 0, fired = false;
+    const cancel = () => { clearTimeout(timer); timer = null; };
+    document.addEventListener('pointerdown', ev => {
+      const c = ev.target.closest && ev.target.closest('#sbBody [data-del]');
+      if (!c || (ev.pointerType === 'mouse' && ev.button !== 0)) return;
+      fired = false; startX = ev.clientX; startY = ev.clientY;
+      cancel();
+      timer = setTimeout(() => {
+        timer = null; fired = true;
+        if (navigator.vibrate) try { navigator.vibrate(15); } catch (e) { /* not supported */ }
+        ActionSheet.open(c.dataset.del);
+      }, LONG_PRESS_MS);
+    });
+    document.addEventListener('pointermove', ev => { if (timer && Math.hypot(ev.clientX - startX, ev.clientY - startY) > 10) cancel(); });
+    ['pointerup', 'pointercancel'].forEach(t => document.addEventListener(t, cancel));
+    window.addEventListener('scroll', cancel, { passive: true });
+    // Phones also fire contextmenu on a long press; that and a right-click both open the same sheet.
+    document.addEventListener('contextmenu', ev => {
+      const c = ev.target.closest && ev.target.closest('#sbBody [data-del]');
+      if (!c) return;
+      ev.preventDefault();
+      cancel();
+      if (!fired) ActionSheet.open(c.dataset.del);
+    });
+    document.addEventListener('keydown', ev => {
+      const sheet = $('#actionSheet');
+      if (sheet && !sheet.hidden && ev.key === 'Escape') { ActionSheet.close(); return; }
+      const c = ev.target.closest && ev.target.closest('#sbBody [data-del]');
+      if (c && (ev.key === 'Enter' || ev.key === 'Delete' || ev.key === 'ContextMenu')) { ev.preventDefault(); ActionSheet.open(c.dataset.del); }
+    });
+  })();
 
   function renderCommunity() {
     const box = $('#communityList');
@@ -6349,9 +6512,19 @@ Give a concise, event-specific analysis - decide for yourself which structure be
         Board.busy = false; renderBoardBody();
         Board.refresh().then(() => { if (S.tab === 'community' && !Board.pick) renderBoardBody(); });
       }
-      else if (act === 'sbDel') {
-        if (!confirm(t('sbDeleteConfirm'))) return;
-        try { await Board.remove(v); } catch (e) { toast(t('sbFailed')); }
+      else if (act === 'sbSheetDel') {
+        const id = ActionSheet.target; ActionSheet.close();
+        if (!id) return;
+        Board.softDelete(id);
+        renderBoardBody();
+        toastAction(esc(t('sbDeleted')) + ' <button class="link inline" data-act="sbUndoDel" data-id="' + esc(id) + '">' + esc(t('undo')) + '</button>', BOARD_UNDO_MS);
+        track('board_delete', {});
+      }
+      else if (act === 'sbSheetCancel') { ActionSheet.close(); }
+      else if (act === 'sbSignIn') { openAuthGate('agBoardTitle', 'agBoardBody'); }
+      else if (act === 'sbUndoDel') {
+        Board.undoDelete(el.dataset.id);
+        clearTimeout(toastTimer); $('#toast').classList.remove('show');
         renderBoardBody();
       }
       else if (act === 'sbAll') { Board.allComments.add(v); renderBoardBody(); }

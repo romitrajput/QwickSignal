@@ -134,7 +134,7 @@ service cloud.firestore {
         id.matches('[A-Za-z0-9_-]{16,64}') &&
         request.resource.data.keys().hasOnly(['endpoint', 'p256dh', 'auth', 'created_at',
                                               'min_imp', 'countries', 'quiet', 'tz_min', 'digest',
-                                              'invest', 'watch', 'uid']) &&
+                                              'invest', 'watch', 'uid', 'news', 'per_slot']) &&
         request.resource.data.endpoint is string && request.resource.data.endpoint.size() <= 1024 &&
         request.resource.data.p256dh is string && request.resource.data.p256dh.size() <= 256 &&
         request.resource.data.auth is string && request.resource.data.auth.size() <= 64 &&
@@ -150,6 +150,10 @@ service cloud.firestore {
         (!('digest' in request.resource.data) ||
           request.resource.data.digest in ['off', 'daily', 'weekly']) &&
         (!('invest' in request.resource.data) || request.resource.data.invest is bool) &&
+        // news: the "News notifications" switch; per_slot: 1 or 2 notifications each morning/afternoon/evening.
+        (!('news' in request.resource.data) || request.resource.data.news is bool) &&
+        (!('per_slot' in request.resource.data) ||
+          (request.resource.data.per_slot is int && request.resource.data.per_slot >= 1 && request.resource.data.per_slot <= 2)) &&
         (!('watch' in request.resource.data) ||
           (request.resource.data.watch is list && request.resource.data.watch.size() <= 200)) &&
         // uid links this device's notifications to an account, so the pipeline can personalise them from

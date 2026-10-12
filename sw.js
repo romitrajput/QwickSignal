@@ -1,7 +1,16 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-74-v1';  // This round: story card photo switched off for now (CV_SHOW_MEDIA in
+const VERSION = 'gni-phase3-76-v1';  // This round: Sentiment board - Delete is no longer shown; a long press
+                                      // on your reason opens a sheet (Delete / Cancel) and Delete has Undo.
+                                      // Signed-out visitors see a "Sign in to vote" button instead of vote
+                                      // buttons. Notifications: the 1-or-2 per slot choice removed (2 for all).
+                                      //
+                                      // Previous round (gni-phase3-75-v1): notifications - News and Stock on/off switches, and 1 or 2
+                                      // notifications each morning, afternoon and evening (pipeline.py
+                                      // PUSH_SLOTS). Quiet hours and the daily/weekly summary were removed.
+                                      //
+                                      // Previous round (gni-phase3-74-v1): story card photo switched off for now (CV_SHOW_MEDIA in
                                       // app.js); the add-channel sign-in prompt now reads "Customize your
                                       // news and investment feed by signing in".
                                       //

@@ -244,6 +244,24 @@ input[type=search]:focus-visible{border-color:var(--accent);box-shadow:0 0 0 4px
 .np-select{min-height:38px;padding:0 10px;border-radius:var(--radius-ctrl);border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-size:13.5px;max-width:58%}
 .np-select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .np-check{width:22px;height:22px;flex:none;accent-color:var(--accent)}
+/* On/off switch for the News and Stock notification toggles (a real checkbox underneath, so it stays
+   keyboard- and screen-reader-friendly). */
+.np-switch{appearance:none;-webkit-appearance:none;flex:none;width:46px;height:28px;border-radius:999px;margin:0;cursor:pointer;
+  background:var(--line);position:relative;transition:background-color .18s var(--ease)}
+.np-switch::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;
+  box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .18s var(--ease)}
+.np-switch:checked{background:var(--accent)}
+.np-switch:checked::after{transform:translateX(18px)}
+.np-switch:disabled{opacity:.45;cursor:not-allowed}
+.np-switch:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.np-sub{padding-left:14px;border-left:2px solid var(--line)}
+p.np-sub{margin-left:0}
+.np-slots{flex-wrap:wrap;margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
+.np-seg{display:inline-flex;border:1.5px solid var(--line);border-radius:999px;padding:2px;gap:2px;flex:none}
+.np-segbtn{min-width:46px;min-height:34px;border:0;border-radius:999px;background:transparent;color:var(--ink);font:inherit;font-size:14px;font-weight:700;cursor:pointer}
+.np-segbtn.active{background:var(--accent);color:var(--accent-ink)}
+.np-segbtn:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.np-warn{margin:14px 0 0;padding:10px 12px;border-radius:10px;font-size:13px;line-height:1.45;background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--ink)}
 .np-hint{margin:2px 0 0;font-size:12.5px;color:var(--ink2);line-height:1.45;max-width:52ch}
 .np-hint.np-pacing{margin-top:18px;padding-top:12px;border-top:1px solid var(--line)}
 .lp-list{display:flex;flex-direction:column;gap:8px;margin-top:12px}
@@ -496,13 +514,30 @@ input[type=search]:focus-visible{border-color:var(--accent);box-shadow:0 0 0 4px
 .sb-ch span{color:var(--ink2);font-weight:600;margin-left:4px}
 .sb-c{display:flex;flex-direction:column;gap:3px}
 .sb-cmeta{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;font-size:11.5px;color:var(--ink2)}
-.sb-del{margin-left:auto;background:none;border:0;padding:4px 2px;font:inherit;font-size:11.5px;font-weight:600;color:var(--bear);cursor:pointer}
+.sb-c-del{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;border-radius:8px;cursor:default}
+.sb-c-del:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.sb-c-del:active{background:color-mix(in srgb,var(--ink) 5%,transparent)}
+/* Instagram-style action sheet opened by a long press on your own reason. */
+.asheet-wrap{position:fixed;inset:0;z-index:245;display:flex;align-items:flex-end;justify-content:center}
+.asheet-back{position:absolute;inset:0;background:rgba(0,0,0,.4);opacity:0;transition:opacity .18s var(--ease)}
+.asheet{position:relative;width:min(520px,100%);margin:0 8px max(8px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:8px;
+  transform:translateY(110%);transition:transform .2s var(--ease)}
+.asheet-wrap.show .asheet-back{opacity:1}
+.asheet-wrap.show .asheet{transform:translateY(0)}
+.asheet-btn{min-height:54px;border:0;border-radius:14px;background:var(--surface);color:var(--ink);font:inherit;font-size:16px;font-weight:700;cursor:pointer}
+.asheet-btn.danger{color:var(--bear)}
+.asheet-btn:focus-visible{outline:2px solid var(--accent);outline-offset:-3px}
+@media (prefers-reduced-motion:reduce){.asheet,.asheet-back{transition:none}}
 .sb-ctext{margin:0;font-size:13.5px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
 #sbBody > .btn.block{margin-top:4px}
 .landing-google.is-busy,#landingGuestBtn.is-busy{opacity:.45;pointer-events:none}
 #landingAuthForm .btn[aria-busy="true"]{opacity:1;cursor:progress}
-.forgot-pw{align-self:flex-end;background:none;border:0;padding:4px 2px;margin:-2px 0 2px;font:inherit;font-size:13px;font-weight:600;color:var(--accent);cursor:pointer}
-.forgot-pw:disabled{opacity:.6}
+.forgot-pw{align-self:flex-end;display:inline-flex;align-items:center;gap:6px;background:none;border:0;padding:6px 2px;margin:-2px 0 0;font:inherit;font-size:13.5px;font-weight:700;color:var(--accent);cursor:pointer;min-height:36px}
+.forgot-pw svg{width:16px;height:16px;flex:none}
+.forgot-pw:disabled{opacity:.6;cursor:progress}
+.fp-status{margin:-2px 0 4px;padding:9px 12px;border-radius:10px;font-size:13px;line-height:1.45;background:color-mix(in srgb,var(--ink) 6%,transparent);color:var(--ink)}
+.fp-status.ok{background:color-mix(in srgb,var(--bull) 14%,transparent)}
+.fp-status.warn{background:color-mix(in srgb,var(--accent) 12%,transparent)}
 .sn-replay{display:block;margin:14px auto 0;background:none;border:0;padding:8px 12px;font:inherit;font-size:13px;font-weight:600;color:var(--accent);cursor:pointer}
 /* Community tab: one card per tracked company (see renderCommunity() in app.js), same visual language as
    an Investment .grp-company card (ring+initial, name) so the two screens read as part of the same app,
@@ -715,7 +750,7 @@ body.noscroll{overflow:hidden}
 .tabs button:active::after{opacity:.16;transform:scale(1.08)}
 .tabs button:active .tab-icon{transform:scale(.88)}
 
-#toast{position:fixed;left:16px;right:16px;bottom:calc(76px + env(safe-area-inset-bottom));z-index:40;max-width:520px;margin:0 auto;background:var(--ink);color:var(--paper);padding:12px 16px;border-radius:var(--radius-ctrl);font-size:14px;font-weight:600;opacity:0;transform:translateY(8px);pointer-events:none;transition:opacity .2s var(--ease),transform .2s var(--ease);box-shadow:0 12px 32px -8px rgba(0,0,0,.35)}
+#toast{position:fixed;left:16px;right:16px;bottom:calc(76px + env(safe-area-inset-bottom));z-index:240;max-width:520px;margin:0 auto;background:var(--ink);color:var(--paper);padding:12px 16px;border-radius:var(--radius-ctrl);font-size:14px;font-weight:600;opacity:0;transform:translateY(8px);pointer-events:none;transition:opacity .2s var(--ease),transform .2s var(--ease);box-shadow:0 12px 32px -8px rgba(0,0,0,.35)}
 
 /* Story-arrival notification ("Waveform Arrival" design) */
 #storyToast{position:fixed;left:0;right:0;top:max(14px,env(safe-area-inset-top));z-index:250;display:flex;justify-content:center;padding:0 14px;pointer-events:none}
@@ -778,44 +813,52 @@ body.cv-lock{overflow:hidden}
 .qs-ring-inner-logo img{width:100%;height:100%;object-fit:contain;border-radius:6px}
 .cstop-name{font-size:11.5px;font-weight:600;color:var(--ink2);max-width:66px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
-/* Country story viewer - a full-screen "status" reader: dashes at top, one story centered, tap zones either side */
-.cviewer{position:fixed;inset:0;z-index:110;background:var(--head);color:var(--head-ink);display:flex;flex-direction:column;
-  padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(14px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))}
-.cv-dashes{display:flex;gap:5px;padding:4px 44px 0}
-.cv-dash{flex:1;height:3px;border-radius:3px;background:rgba(255,255,255,.25)}
-.cv-dash.seen{background:rgba(255,255,255,.55)}
-.cv-dash.current{background:var(--accent)}
-.cv-close{position:absolute;top:max(10px,env(safe-area-inset-top));right:max(10px,env(safe-area-inset-right));z-index:2;
-  width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;border:0;background:rgba(0,0,0,.25);color:var(--head-ink);cursor:pointer}
-.cv-close svg{width:18px;height:18px}
-/* Always visible (not just on hover-capable/desktop devices) - on a touch phone this is the only obvious,
-   discoverable way to move between stories and, at the end of one country, straight into the next. */
-.cv-nav{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:40px;height:40px;border-radius:50%;border:0;
-  background:rgba(0,0,0,.35);color:var(--head-ink);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+/* Country / company story viewer - a full-screen story card in the style the owner asked for (12 Oct):
+   a dark stage, brand badge + country name + share + close across the top, a large headline, a short
+   summary, then the story's photo in a rounded frame. The stage is dark in both app themes on purpose,
+   like a photo viewer, so the picture and headline carry the screen. */
+.cviewer{--cv-bg:#21243A;--cv-ink:#ECEDF3;--cv-ink2:#B9BCCB;--cv-line:rgba(255,255,255,.14);--cv-btn:rgba(255,255,255,.08);
+  position:fixed;inset:0;z-index:110;background:var(--cv-bg);color:var(--cv-ink);display:flex;flex-direction:column;color-scheme:dark;
+  padding:max(8px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))}
+.cv-dashes{display:flex;gap:4px;padding:4px 4px 0;max-width:640px;width:100%;margin:0 auto}
+.cv-dash{flex:1;height:3px;border-radius:3px;background:rgba(255,255,255,.2)}
+.cv-dash.seen{background:rgba(255,255,255,.6)}
+.cv-dash.current{background:#fff}
+.cv-top{display:flex;align-items:center;gap:10px;padding:12px 4px 6px;max-width:640px;width:100%;margin:0 auto}
+.cv-badge{flex:none;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,#3B6CF6 0%,#21D4B4 100%);font-size:22px;line-height:1;overflow:hidden}
+.cv-badge .gc-ring-inner{width:100%;height:100%;font-size:17px;box-shadow:none}
+.cv-badge .gc-ring-inner-logo{background:#fff;padding:6px}
+.cv-title{flex:1;min-width:0;margin:0;text-align:center;font-size:19px;font-weight:700;letter-spacing:-.005em;color:var(--cv-ink);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cv-iconbtn{flex:none;width:42px;height:42px;border-radius:50%;border:0;background:transparent;color:var(--cv-ink);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.cv-iconbtn:hover{background:var(--cv-btn)}
+.cv-iconbtn svg{width:24px;height:24px}
+.cv-iconbtn:focus-visible,.cv-nav:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.cv-body{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:16px;max-width:640px;width:100%;margin:0 auto;padding:6vh 10px 16px;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.cv-headline{margin:0;font-size:32px;line-height:1.16;font-weight:800;letter-spacing:-.02em;color:var(--cv-ink);text-wrap:balance}
+.cv-headline.cv-hl-m{font-size:26px;line-height:1.2}
+.cv-headline.cv-hl-l{font-size:21px;line-height:1.28;letter-spacing:-.01em}
+.cv-summary{margin:0;font-size:18px;line-height:1.55;color:var(--cv-ink2)}
+.cv-meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:13px;font-weight:600;color:var(--cv-ink2);font-variant-numeric:tabular-nums}
+.cv-imp{font-weight:800}
+.cv-imp.critical{color:#FF7A7A}.cv-imp.high{color:#FFB54D}.cv-imp.medium{color:#8FB8FF}.cv-imp.low{color:#9AA0B4}
+.cv-media{width:100%;aspect-ratio:10/9;max-height:52vh;border-radius:18px;overflow:hidden;flex:none;background:#2C3048}
+.cv-media img{width:100%;height:100%;object-fit:cover;display:block}
+/* No photo for this story: a quiet cover built from the story's own country/company and sector, so the
+   layout stays the same and nothing looks missing. */
+.cv-cover{display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;gap:6px;padding:22px;
+  background:radial-gradient(120% 90% at 85% 10%,rgba(59,108,246,.55),transparent 60%),radial-gradient(90% 80% at 10% 100%,rgba(33,212,180,.35),transparent 60%),#2C3048}
+.cv-cover-glyph{font-size:72px;line-height:1}
+.cv-cover-glyph .gc-ring-inner{width:84px;height:84px;font-size:34px;border-radius:50%;box-shadow:none}
+.cv-cover-glyph .gc-ring-inner-logo{background:#fff;padding:12px}
+.cv-cover-name{font-size:22px;font-weight:800;color:#fff}
+.cv-cover-sect{font-size:14px;font-weight:600;color:rgba(255,255,255,.75)}
+.cv-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;max-width:640px;width:100%;margin:0 auto;padding:6px 4px 0}
+.cv-nav{width:44px;height:44px;border-radius:50%;border:1px solid var(--cv-line);background:var(--cv-btn);color:var(--cv-ink);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 .cv-nav svg{width:20px;height:20px}
-.cv-prev{left:8px}
-.cv-next{right:8px}
-/* justify-content:center is what actually centers a short story vertically in the available space -
-   flex-direction:column alone always packs content to the top. .cv-pos (the "n / total" counter, always the
-   last child) keeps its own margin-top:auto below so it still pins to the bottom rather than floating up
-   into the centered group. A story whose content is taller than the viewer still scrolls normally via
-   overflow-y:auto; centering only affects the common case of a short headline with little else. */
-.cv-body{flex:1;overflow-y:auto;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px;max-width:560px;margin:0 auto;padding:36px 20px 20px;width:100%}
-.cv-img{width:100%;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:var(--surface2,#00000010);margin-bottom:2px}
-.cv-img img{width:100%;height:100%;object-fit:cover;display:block}
-.cv-flag{font-size:56px;line-height:1}
-/* Company Status viewer: no flag glyph for a company, so this swaps in the same round initial badge used
-   on the Investment company cards (.gc-ring-inner) at a size matching the 56px flag footprint above it. */
-.cv-companyglyph{width:64px;height:64px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center}
-.cv-companyglyph .gc-ring-inner{width:56px;height:56px;font-size:24px;box-shadow:none;background:var(--surface);color:var(--accent)}
-.cv-companyglyph .gc-ring-inner-logo{background:#fff;padding:9px}
-.cv-companyglyph .gc-ring-inner-logo.gc-ring-inner-lq{padding:14px}
-.cv-country{font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink2)}
-.cv-headline{margin:2px 0 0;font-size:22px;line-height:1.25;font-weight:800;letter-spacing:-.01em}
-.cv-time{margin-top:6px;font-size:12.5px;font-weight:600;color:var(--ink2)}
-.cv-body .why{margin:10px 0 0;font-size:15px;line-height:1.5;text-align:left}
-.cv-body .facts{margin:6px 0 0;padding-left:20px;text-align:left;font-size:14.5px;line-height:1.6}
-.cv-pos{margin-top:auto;padding-top:16px;font-size:12.5px;font-weight:700;color:var(--ink2)}
+.cv-pos{font-size:13px;font-weight:700;color:var(--cv-ink2);font-variant-numeric:tabular-nums}
+@media (min-width:700px){.cv-headline{font-size:40px}.cv-headline.cv-hl-m{font-size:32px}.cv-headline.cv-hl-l{font-size:25px}.cv-summary{font-size:19px}}
 .cv-fade{animation:cvFadeIn .22s ease}
 @keyframes cvFadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}.cv-fade{animation:none}}
@@ -954,7 +997,8 @@ body.pre-app .top, body.pre-app main, body.pre-app .tabs{display:none}
         <input id="landingEmail" type="email" autocomplete="email" placeholder="Enter your Gmail" required>
         <label class="vh" for="landingPass" data-i18n="signInPassword">Password</label>
         <input id="landingPass" type="password" autocomplete="current-password" placeholder="Password" data-i18n-placeholder="signInPassword" minlength="6" required>
-        <button type="button" class="forgot-pw" data-act="forgotPw" data-email="landingEmail" data-i18n="forgotPw">Forgot password?</button>
+        <button type="button" class="forgot-pw" data-act="forgotPw" data-email="landingEmail" data-status="landingFpStatus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7.5" cy="15.5" r="4"/><path d="M10.5 12.5 20 3M16 7l3 3M14 9l2 2"/></svg><span data-i18n="forgotPw">Forgot password?</span></button>
+        <p class="fp-status" id="landingFpStatus" role="status" aria-live="polite" hidden></p>
         <div class="acct-buttons">
           <button type="submit" data-mode="signin" class="btn primary block" data-i18n="signIn">Sign in</button>
           <button type="submit" data-mode="signup" class="btn block" data-i18n="createAccount">Create account</button>
@@ -1368,10 +1412,18 @@ body.pre-app .top, body.pre-app main, body.pre-app .tabs{display:none}
 
 <div class="cviewer" id="countryViewer" role="dialog" aria-modal="true" aria-label="Country stories" hidden>
   <div class="cv-dashes" id="cvDashes"></div>
-  <button class="cv-close" data-act="cvclose" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
-  <button class="cv-nav cv-prev" data-act="cvprev" aria-label="Previous story"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
-  <button class="cv-nav cv-next" data-act="cvnext" aria-label="Next story"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
+  <div class="cv-top">
+    <span class="cv-badge" id="cvBadge" aria-hidden="true"></span>
+    <h2 class="cv-title" id="cvTitle"></h2>
+    <button class="cv-iconbtn" data-act="cvshare" aria-label="Share this story"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 10.7l7.4-4.3M8.3 13.3l7.4 4.3"/></svg></button>
+    <button class="cv-iconbtn" data-act="cvclose" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg></button>
+  </div>
   <div class="cv-body" id="cvBody"></div>
+  <div class="cv-foot">
+    <button class="cv-nav" data-act="cvprev" aria-label="Previous story"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
+    <span class="cv-pos" id="cvPos"></span>
+    <button class="cv-nav" data-act="cvnext" aria-label="Next story"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
+  </div>
 </div>
 
 <script src="app.js" defer></script>
