@@ -1,7 +1,9 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-76-v1';  // This round: Sentiment board - Delete is no longer shown; a long press
+const VERSION = 'gni-phase3-77-v1';  // This round: stop Chrome's "Translate page?" bar (notranslate).
+                                      //
+                                      // Previous round (gni-phase3-76-v1): Sentiment board - Delete is no longer shown; a long press
                                       // on your reason opens a sheet (Delete / Cancel) and Delete has Undo.
                                       // Signed-out visitors see a "Sign in to vote" button instead of vote
                                       // buttons. Notifications: the 1-or-2 per slot choice removed (2 for all).
