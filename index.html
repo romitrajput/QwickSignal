@@ -499,6 +499,10 @@ input[type=search]:focus-visible{border-color:var(--accent);box-shadow:0 0 0 4px
 .sb-del{margin-left:auto;background:none;border:0;padding:4px 2px;font:inherit;font-size:11.5px;font-weight:600;color:var(--bear);cursor:pointer}
 .sb-ctext{margin:0;font-size:13.5px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
 #sbBody > .btn.block{margin-top:4px}
+.landing-google.is-busy,#landingGuestBtn.is-busy{opacity:.45;pointer-events:none}
+#landingAuthForm .btn[aria-busy="true"]{opacity:1;cursor:progress}
+.forgot-pw{align-self:flex-end;background:none;border:0;padding:4px 2px;margin:-2px 0 2px;font:inherit;font-size:13px;font-weight:600;color:var(--accent);cursor:pointer}
+.forgot-pw:disabled{opacity:.6}
 .sn-replay{display:block;margin:14px auto 0;background:none;border:0;padding:8px 12px;font:inherit;font-size:13px;font-weight:600;color:var(--accent);cursor:pointer}
 /* Community tab: one card per tracked company (see renderCommunity() in app.js), same visual language as
    an Investment .grp-company card (ring+initial, name) so the two screens read as part of the same app,
@@ -950,6 +954,7 @@ body.pre-app .top, body.pre-app main, body.pre-app .tabs{display:none}
         <input id="landingEmail" type="email" autocomplete="email" placeholder="Enter your Gmail" required>
         <label class="vh" for="landingPass" data-i18n="signInPassword">Password</label>
         <input id="landingPass" type="password" autocomplete="current-password" placeholder="Password" data-i18n-placeholder="signInPassword" minlength="6" required>
+        <button type="button" class="forgot-pw" data-act="forgotPw" data-email="landingEmail" data-i18n="forgotPw">Forgot password?</button>
         <div class="acct-buttons">
           <button type="submit" data-mode="signin" class="btn primary block" data-i18n="signIn">Sign in</button>
           <button type="submit" data-mode="signup" class="btn block" data-i18n="createAccount">Create account</button>

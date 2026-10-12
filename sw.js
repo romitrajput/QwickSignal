@@ -1,7 +1,23 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-69-v1';  // This round: Sentiment board (was Community). Lists every stock any
+const VERSION = 'gni-phase3-72-v1';  // This round: saved stories' contents are stored in the account
+                                      // (qs_users/<uid>/saved_items), so another device can show a saved
+                                      // story that has already left the 24-hour feed.
+                                      //
+                                      // Previous round (gni-phase3-71-v1): "Forgot password?" (landing + Settings -> Account) emails a
+                                      // reset link via Firebase. Saved stories were duplicated on every feed
+                                      // refresh (id prefix mismatch), so one skip removed all the copies -
+                                      // fixed, and saved stories' contents are now kept on the device so
+                                      // they survive leaving the 24-hour feed.
+                                      //
+                                      // Previous round (gni-phase3-70-v1): owner's 12 Oct recordings. Swiping a saved story out of
+                                      // the feed deleted it from Saved - now it only hides it from the feed.
+                                      // "Remove from Saved" has an Undo. Sign-in shows "Signing in…" and
+                                      // locks the other buttons, so a slow sign-in can't be interrupted by
+                                      // a second tap on Create account or Google.
+                                      //
+                                      // Previous round (gni-phase3-69-v1): Sentiment board (was Community). Lists every stock any
                                       // user keeps in their watchlist (board.json from the pipeline), today's
                                       // mood from the last 24h (one vote per person per stock per day,
                                       // changeable), optional reasons up to 2000 characters shown as comments,
