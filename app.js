@@ -1022,8 +1022,8 @@ if (typeof document !== 'undefined') (function () {
       ticketAttachHeading: 'Attachment (optional)', ticketAttachAdd: 'Add a screenshot or file',
       ticketAttachRemove: 'Remove', ticketAttachTooBig: 'That file is too large (max 8 MB).',
       ticketAttachUploading: 'Uploading attachment…', ticketAttachFailed: "Couldn't upload the attachment - sent the ticket without it.",
-      ticketAdminHeading: 'Tickets (owner only)', ticketAdminEmpty: 'No tickets yet.', ticketAdminLoadFailed: "Couldn't load tickets.",
-      ticketStatusOpen: 'Open', ticketStatusDone: 'Done', ticketMarkDone: 'Mark done', ticketMarkOpen: 'Reopen',
+      ticketAdminHeading: 'Tickets', ticketAdminEmpty: 'No tickets yet.', ticketAdminLoadFailed: "Couldn't load tickets.",
+      ticketStatusOpen: 'Open', ticketStatusDone: 'Resolved', ticketMarkDone: 'Mark resolved', ticketMarkOpen: 'Reopen',
       ticketAdminAttachment: 'Attachment',
       modeNews: 'Signal', modeInvestment: 'Investment',
       telegramNewsSub: 'Link Telegram channels to follow for your Signal/News feed.',
@@ -1069,6 +1069,29 @@ if (typeof document !== 'undefined') (function () {
       sbPost: 'Post vote',
       sbReasons: 'Reasons',
       sbDelete: 'Delete',
+      appetiteAllShort: 'All',
+      savedNewsHead: 'News',
+      savedInvestHead: 'Investment',
+      darkMode: 'Dark mode',
+      languageHeading: 'Language',
+      moreOptions: 'More options for',
+      justForMe: 'just for me',
+      ticketStatusProgress: 'In progress',
+      ticketMarkProgress: 'Working on it',
+      ticketReplyLabel: 'Note to the sender (they will see this)',
+      ticketReplyPh: 'e.g. Fixed in today\'s update - thanks for reporting!',
+      ticketNeedReason: 'Add a short note for the sender before marking it resolved.',
+      ticketSavedDone: 'Marked resolved. The sender will see your note.',
+      ticketSavedProgress: 'Marked in progress. The sender will see your note.',
+      ticketSavedOpen: 'Reopened.',
+      ticketDelete: 'Delete ticket',
+      ticketDeleted: 'Ticket deleted.',
+      ticketUpdateToast: 'Update on your ticket',
+      ticketView: 'View',
+      ticketMine: 'Your tickets',
+      ticketNew: 'New',
+      ticketOwnerReply: 'Reply from QwickSignal',
+      ticketUpdatesSub: '{n} update(s) on your tickets',
       sbGuestNote: 'Sign in to vote and share your reason. Anyone can read the board.',
       sbGuestBtn: 'Sign in to vote',
       sbHoldHint: 'Your reason. Press and hold for options.',
@@ -1161,9 +1184,9 @@ if (typeof document !== 'undefined') (function () {
       ticketAttachHeading: 'अटैचमेंट (वैकल्पिक)', ticketAttachAdd: 'स्क्रीनशॉट या फ़ाइल जोड़ें',
       ticketAttachRemove: 'हटाएं', ticketAttachTooBig: 'यह फ़ाइल बहुत बड़ी है (अधिकतम 8 MB)।',
       ticketAttachUploading: 'अटैचमेंट अपलोड हो रहा है…', ticketAttachFailed: 'अटैचमेंट अपलोड नहीं हो सका - टिकट बिना उसके भेज दिया गया।',
-      ticketAdminHeading: 'टिकट (केवल मालिक)', ticketAdminEmpty: 'अभी तक कोई टिकट नहीं।', ticketAdminLoadFailed: 'टिकट लोड नहीं हो सके।',
+      ticketAdminHeading: 'टिकट', ticketAdminEmpty: 'अभी तक कोई टिकट नहीं।', ticketAdminLoadFailed: 'टिकट लोड नहीं हो सके।',
       ticketAdminAttachment: 'अटैचमेंट',
-      ticketStatusOpen: 'खुला', ticketStatusDone: 'पूर्ण', ticketMarkDone: 'पूर्ण के रूप में चिह्नित करें', ticketMarkOpen: 'फिर से खोलें',
+      ticketStatusOpen: 'खुला', ticketStatusDone: 'हल हुआ', ticketMarkDone: 'हल हुआ मार्क करें', ticketMarkOpen: 'फिर से खोलें',
       obSkip: 'छोड़ें', obNext: 'आगे', obDone: 'समझ गया',
       obStep1Title: 'देश के अनुसार समाचार', obStep1Body: 'हर झंडा एक देश है जिसकी खबरें तैयार हैं - सीधे उसकी खबरों पर जाने के लिए टैप करें।',
       obStep2Title: 'खोजें', obStep2Body: 'अपने फ़ीड की हर खबर में खोजें - हेडलाइन, सारांश, और कंपनी के नाम।',
@@ -1196,6 +1219,29 @@ if (typeof document !== 'undefined') (function () {
       sbPost: 'वोट पोस्ट करें',
       sbReasons: 'कारण',
       sbDelete: 'हटाएं',
+      appetiteAllShort: 'सब',
+      savedNewsHead: 'न्यूज़',
+      savedInvestHead: 'इन्वेस्टमेंट',
+      darkMode: 'डार्क मोड',
+      languageHeading: 'भाषा',
+      moreOptions: 'और विकल्प',
+      justForMe: 'सिर्फ़ मेरे लिए',
+      ticketStatusProgress: 'काम जारी',
+      ticketMarkProgress: 'इस पर काम हो रहा है',
+      ticketReplyLabel: 'भेजने वाले के लिए नोट (वे इसे देखेंगे)',
+      ticketReplyPh: 'जैसे: आज के अपडेट में ठीक कर दिया गया - बताने के लिए धन्यवाद!',
+      ticketNeedReason: 'हल हुआ मार्क करने से पहले भेजने वाले के लिए छोटा नोट लिखें।',
+      ticketSavedDone: 'हल हुआ मार्क किया गया। भेजने वाला आपका नोट देखेगा।',
+      ticketSavedProgress: 'काम जारी मार्क किया गया। भेजने वाला आपका नोट देखेगा।',
+      ticketSavedOpen: 'फिर से खोला गया।',
+      ticketDelete: 'टिकट हटाएं',
+      ticketDeleted: 'टिकट हटाया गया।',
+      ticketUpdateToast: 'आपके टिकट पर अपडेट',
+      ticketView: 'देखें',
+      ticketMine: 'आपके टिकट',
+      ticketNew: 'नया',
+      ticketOwnerReply: 'QwickSignal का जवाब',
+      ticketUpdatesSub: 'आपके टिकट पर {n} अपडेट',
       sbGuestNote: 'वोट करने और अपना कारण लिखने के लिए साइन इन करें। बोर्ड कोई भी पढ़ सकता है।',
       sbGuestBtn: 'वोट करने के लिए साइन इन करें',
       sbHoldHint: 'आपका कारण। विकल्पों के लिए दबाकर रखें।',
@@ -1288,9 +1334,9 @@ if (typeof document !== 'undefined') (function () {
       ticketAttachHeading: 'जोडणी (ऐच्छिक)', ticketAttachAdd: 'स्क्रीनशॉट किंवा फाइल जोडा',
       ticketAttachRemove: 'काढा', ticketAttachTooBig: 'ही फाइल खूप मोठी आहे (कमाल 8 MB).',
       ticketAttachUploading: 'जोडणी अपलोड होत आहे…', ticketAttachFailed: 'जोडणी अपलोड होऊ शकली नाही - तिकीट त्याशिवाय पाठवले.',
-      ticketAdminHeading: 'तिकिटे (फक्त मालक)', ticketAdminEmpty: 'अजून तिकिटे नाहीत.', ticketAdminLoadFailed: 'तिकिटे लोड करता आली नाहीत.',
+      ticketAdminHeading: 'टिकट्स', ticketAdminEmpty: 'अजून तिकिटे नाहीत.', ticketAdminLoadFailed: 'तिकिटे लोड करता आली नाहीत.',
       ticketAdminAttachment: 'जोडणी',
-      ticketStatusOpen: 'उघडे', ticketStatusDone: 'पूर्ण', ticketMarkDone: 'पूर्ण म्हणून चिन्हांकित करा', ticketMarkOpen: 'पुन्हा उघडा',
+      ticketStatusOpen: 'उघडे', ticketStatusDone: 'सोडवले', ticketMarkDone: 'सोडवले म्हणून चिन्हांकित करा', ticketMarkOpen: 'पुन्हा उघडा',
       obSkip: 'वगळा', obNext: 'पुढे', obDone: 'समजले',
       obStep1Title: 'देशानुसार बातम्या', obStep1Body: 'प्रत्येक ध्वज म्हणजे एक देश ज्याच्या बातम्या तयार आहेत - थेट त्या बातम्यांवर जाण्यासाठी टॅप करा.',
       obStep2Title: 'शोधा', obStep2Body: 'तुमच्या फीडमधील प्रत्येक बातमीत शोधा - मथळे, सारांश, आणि कंपनीची नावे.',
@@ -1323,6 +1369,29 @@ if (typeof document !== 'undefined') (function () {
       sbPost: 'मत पोस्ट करा',
       sbReasons: 'कारणे',
       sbDelete: 'हटवा',
+      appetiteAllShort: 'सर्व',
+      savedNewsHead: 'न्यूज',
+      savedInvestHead: 'इन्व्हेस्टमेंट',
+      darkMode: 'डार्क मोड',
+      languageHeading: 'भाषा',
+      moreOptions: 'आणखी पर्याय',
+      justForMe: 'फक्त माझ्यासाठी',
+      ticketStatusProgress: 'काम सुरू',
+      ticketMarkProgress: 'यावर काम सुरू आहे',
+      ticketReplyLabel: 'पाठवणाऱ्यासाठी नोंद (त्यांना ही दिसेल)',
+      ticketReplyPh: 'उदा. आजच्या अपडेटमध्ये दुरुस्त केले - कळवल्याबद्दल धन्यवाद!',
+      ticketNeedReason: 'सोडवले म्हणून चिन्हांकित करण्यापूर्वी पाठवणाऱ्यासाठी छोटी नोंद लिहा.',
+      ticketSavedDone: 'सोडवले म्हणून चिन्हांकित. पाठवणाऱ्याला तुमची नोंद दिसेल.',
+      ticketSavedProgress: 'काम सुरू म्हणून चिन्हांकित. पाठवणाऱ्याला तुमची नोंद दिसेल.',
+      ticketSavedOpen: 'पुन्हा उघडले.',
+      ticketDelete: 'टिकट हटवा',
+      ticketDeleted: 'टिकट हटवले.',
+      ticketUpdateToast: 'तुमच्या टिकटवर अपडेट',
+      ticketView: 'पहा',
+      ticketMine: 'तुमची टिकट्स',
+      ticketNew: 'नवीन',
+      ticketOwnerReply: 'QwickSignal चे उत्तर',
+      ticketUpdatesSub: 'तुमच्या टिकटवर {n} अपडेट',
       sbGuestNote: 'मत देण्यासाठी आणि तुमचे कारण लिहिण्यासाठी साइन इन करा. बोर्ड कोणीही वाचू शकतो.',
       sbGuestBtn: 'मत देण्यासाठी साइन इन करा',
       sbHoldHint: 'तुमचे कारण. पर्यायांसाठी दाबून धरा.',
@@ -1415,9 +1484,9 @@ if (typeof document !== 'undefined') (function () {
       ticketAttachHeading: 'જોડાણ (વૈકલ્પિક)', ticketAttachAdd: 'સ્ક્રીનશોટ કે ફાઇલ ઉમેરો',
       ticketAttachRemove: 'દૂર કરો', ticketAttachTooBig: 'આ ફાઇલ ઘણી મોટી છે (મહત્તમ 8 MB).',
       ticketAttachUploading: 'જોડાણ અપલોડ થઈ રહ્યું છે…', ticketAttachFailed: 'જોડાણ અપલોડ ન થઈ શક્યું - ટિકિટ તેના વિના મોકલાયું.',
-      ticketAdminHeading: 'ટિકિટ (ફક્ત માલિક)', ticketAdminEmpty: 'હજુ કોઈ ટિકિટ નથી.', ticketAdminLoadFailed: 'ટિકિટ લોડ કરી શકાયા નહીં.',
+      ticketAdminHeading: 'ટિકિટો', ticketAdminEmpty: 'હજુ કોઈ ટિકિટ નથી.', ticketAdminLoadFailed: 'ટિકિટ લોડ કરી શકાયા નહીં.',
       ticketAdminAttachment: 'જોડાણ',
-      ticketStatusOpen: 'ખુલ્લું', ticketStatusDone: 'પૂર્ણ', ticketMarkDone: 'પૂર્ણ તરીકે ચિહ્નિત કરો', ticketMarkOpen: 'ફરી ખોલો',
+      ticketStatusOpen: 'ખુલ્લું', ticketStatusDone: 'ઉકેલાયું', ticketMarkDone: 'ઉકેલાયું તરીકે ચિહ્નિત કરો', ticketMarkOpen: 'ફરી ખોલો',
       obSkip: 'છોડો', obNext: 'આગળ', obDone: 'સમજાઈ ગયું',
       obStep1Title: 'દેશ પ્રમાણે સમાચાર', obStep1Body: 'દરેક ધ્વજ એક દેશ છે જેના સમાચાર તૈયાર છે - સીધા તેના સમાચાર પર જવા ટેપ કરો.',
       obStep2Title: 'શોધો', obStep2Body: 'તમારા ફીડની દરેક વાર્તામાં શોધો - હેડલાઇન, સારાંશ, અને કંપનીના નામ.',
@@ -1450,6 +1519,29 @@ if (typeof document !== 'undefined') (function () {
       sbPost: 'વોટ પોસ્ટ કરો',
       sbReasons: 'કારણો',
       sbDelete: 'કાઢી નાખો',
+      appetiteAllShort: 'બધું',
+      savedNewsHead: 'ન્યૂઝ',
+      savedInvestHead: 'ઇન્વેસ્ટમેન્ટ',
+      darkMode: 'ડાર્ક મોડ',
+      languageHeading: 'ભાષા',
+      moreOptions: 'વધુ વિકલ્પો',
+      justForMe: 'ફક્ત મારા માટે',
+      ticketStatusProgress: 'કામ ચાલુ',
+      ticketMarkProgress: 'આના પર કામ ચાલુ છે',
+      ticketReplyLabel: 'મોકલનાર માટે નોંધ (તેમને આ દેખાશે)',
+      ticketReplyPh: 'દા.ત. આજના અપડેટમાં સુધાર્યું - જણાવવા બદલ આભાર!',
+      ticketNeedReason: 'ઉકેલાયું તરીકે ચિહ્નિત કરતા પહેલા મોકલનાર માટે ટૂંકી નોંધ લખો.',
+      ticketSavedDone: 'ઉકેલાયું તરીકે ચિહ્નિત. મોકલનારને તમારી નોંધ દેખાશે.',
+      ticketSavedProgress: 'કામ ચાલુ તરીકે ચિહ્નિત. મોકલનારને તમારી નોંધ દેખાશે.',
+      ticketSavedOpen: 'ફરી ખોલ્યું.',
+      ticketDelete: 'ટિકિટ કાઢી નાખો',
+      ticketDeleted: 'ટિકિટ કાઢી નાખી.',
+      ticketUpdateToast: 'તમારી ટિકિટ પર અપડેટ',
+      ticketView: 'જુઓ',
+      ticketMine: 'તમારી ટિકિટો',
+      ticketNew: 'નવું',
+      ticketOwnerReply: 'QwickSignal નો જવાબ',
+      ticketUpdatesSub: 'તમારી ટિકિટ પર {n} અપડેટ',
       sbGuestNote: 'વોટ કરવા અને તમારું કારણ લખવા સાઇન ઇન કરો. બોર્ડ કોઈ પણ વાંચી શકે છે.',
       sbGuestBtn: 'વોટ કરવા સાઇન ઇન કરો',
       sbHoldHint: 'તમારું કારણ. વિકલ્પો માટે દબાવી રાખો.',
@@ -1492,6 +1584,15 @@ if (typeof document !== 'undefined') (function () {
     // re-render is enough - no separate translation pass needed for them).
     renderAccount(); renderChannels(); renderExport();
   }
+  // Language moved from the header into Settings -> Language (owner, 14 Oct).
+  const LANG_NAMES = { en: 'English', hi: 'हिंदी (Hindi)', mr: 'मराठी (Marathi)', gu: 'ગુજરાતી (Gujarati)' };
+  function renderLangChoices() {
+    const box = $('#langChoices');
+    if (!box) return;
+    box.innerHTML = Object.entries(LANG_NAMES).map(([code, name]) =>
+      `<button type="button" class="lang-row${code === currentLang ? ' active' : ''}" role="radio" aria-checked="${code === currentLang}" data-lang="${code}">
+        <span>${esc(name)}</span><span class="lang-tick" aria-hidden="true">${code === currentLang ? '✓' : ''}</span></button>`).join('');
+  }
   function setLang(lang) {
     currentLang = I18N[lang] ? lang : 'en';
     try { localStorage.setItem(LANG_KEY, currentLang); } catch (e) { /* private browsing etc. */ }
@@ -1509,7 +1610,14 @@ if (typeof document !== 'undefined') (function () {
      is exactly how the app behaved before this setting existed - approving dark mode never changes what
      a visitor who's never touched this setting sees. */
   const THEME_KEY = 'qs-theme-v1';
-  const THEME_LABEL = { system: 'Default', light: 'Light', dark: 'Dark' };   // "Default" = follow the phone's own setting
+  const THEME_LABEL = { system: 'Default', light: 'Light', dark: 'Dark' };
+  // Appearance is now a single "Dark mode" switch (owner, 14 Oct). Until it is touched the app follows the
+  // phone's own setting; the switch always shows the look that is actually on screen.
+  function themeActive() {
+    const pref = Theme.pref();
+    if (pref !== 'system') return pref;
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
   const Theme = {
     pref() { try { const v = localStorage.getItem(THEME_KEY); return (v === 'light' || v === 'dark') ? v : 'system'; } catch (e) { return 'system'; } },
     set(pref) {
@@ -1537,8 +1645,8 @@ if (typeof document !== 'undefined') (function () {
       const color = active === 'dark' ? '#18140F' : '#F9ECDC';
       if (light) light.setAttribute('content', color);
       if (dark) dark.setAttribute('content', color);
-      const seg = $('#themeSeg');
-      if (seg) $$('#themeSeg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.themeChoice === pref)));
+      const dm = $('#darkModeSwitch');
+      if (dm) dm.checked = active === 'dark';
     }
   };
 
@@ -1634,7 +1742,8 @@ if (typeof document !== 'undefined') (function () {
      Device-local (like Theme and language), and it drives the push floor it replaces - see syncPush()
      below and the note in renderNotifBox(). */
   const APPETITE_KEY = 'qs-appetite-v1';
-  const APPETITE_CHOICES = [5, 10, 15, 25, 40];   // plus 0, meaning "everything, don't filter"
+  // A slider now (owner, 14 Oct): 20, 40, 60, 80, 100 stories a day, or Everything (0 = don't filter).
+  const APPETITE_CHOICES = [20, 40, 60, 80, 100];
   const Appetite = {
     // Session-only: "Show the rest" reveals everything below the floor until the next launch. Kept out
     // of storage deliberately, so revealing once doesn't quietly undo the setting for good.
@@ -1643,7 +1752,9 @@ if (typeof document !== 'undefined') (function () {
     target() {
       try {
         const n = parseInt(localStorage.getItem(APPETITE_KEY), 10);
-        return APPETITE_CHOICES.includes(n) ? n : 0;
+        if (!(n > 0)) return 0;
+        // A choice saved under the old 5-40 scale moves to the nearest new step.
+        return APPETITE_CHOICES.reduce((best, c) => Math.abs(c - n) < Math.abs(best - n) ? c : best, APPETITE_CHOICES[0]);
       } catch (e) { return 0; }
     },
     set(n) {
@@ -2376,6 +2487,7 @@ if (typeof document !== 'undefined') (function () {
     SavedCloud.tried.clear();
     setTimeout(() => SavedCloud.reconcile(), 0);   // stories saved on the account's other devices
     Push.syncAccount();   // notifications now personalised from THIS account's portfolio
+    TicketNews.rows = null; setTimeout(() => { TicketNews.check(); Board.publishMine(); }, 1500);
     renderAccount(); renderAll(); renderChannels(); renderInvestChannels(); renderSyncCode(); renderTicketBox(); renderTicketAdmin(); renderInvestmentBox();
     resumeAfterSignIn();
   }
@@ -2536,8 +2648,8 @@ if (typeof document !== 'undefined') (function () {
       { anchor: '#q', titleKey: 'obStep2Title', bodyKey: 'obStep2Body' },
       { anchor: '#countryFilter', titleKey: 'obStep3Title', bodyKey: 'obStep3Body' },
       { anchor: '#list .entry', titleKey: 'obStep4Title', bodyKey: 'obStep4Body' },
-      { anchor: '[data-tab="saved"]', titleKey: 'obStep5Title', bodyKey: 'obStep5Body' },
       { anchor: '[data-tab="investment"]', titleKey: 'obStep6Title', bodyKey: 'obStep6Body' },
+      { anchor: '[data-tab="saved"]', titleKey: 'obStep5Title', bodyKey: 'obStep5Body' },
       { anchor: '[data-tab="community"]', titleKey: 'obStep8Title', bodyKey: 'obStep8Body' },
       { anchor: '[data-tab="settings"]', titleKey: 'obStep7Title', bodyKey: 'obStep7Body' }
     ],
@@ -2840,10 +2952,16 @@ if (typeof document !== 'undefined') (function () {
     const total = rungs[rungs.length - 1].count;
     const activeFloor = Appetite.active() ? Appetite.floor() : '';
 
-    const choices = APPETITE_CHOICES
-      .map(n => `<button type="button" class="ap-choice${target === n ? ' active' : ''}" data-act="appetiteSet" data-v="${n}" aria-pressed="${target === n}">${n}</button>`)
-      .join('') +
-      `<button type="button" class="ap-choice wide${target === 0 ? ' active' : ''}" data-act="appetiteSet" data-v="0" aria-pressed="${target === 0}">${esc(t('appetiteAll'))}</button>`;
+    // Slider stops: 20, 40, 60, 80, 100, Everything. Position 5 = Everything (target 0).
+    const stops = APPETITE_CHOICES.concat([0]);
+    const label = n => n ? String(n) : t('appetiteAll');
+    const idx = Math.max(0, stops.indexOf(target));
+    const choices = `<div class="ap-slider" style="--p:${idx / (stops.length - 1)}">
+        <output class="ap-bubble" id="apBubble" for="apRange">${esc(label(target))}</output>
+        <input type="range" id="apRange" class="ap-range" min="0" max="${stops.length - 1}" step="1" value="${idx}"
+          aria-label="${esc(t('appetiteHeading'))}" aria-valuetext="${esc(label(target))}">
+        <div class="ap-ticks" aria-hidden="true">${stops.map((n, i) => `<span style="--i:${i}"${i === idx ? ' class="on"' : ''}>${esc(n ? String(n) : t('appetiteAllShort'))}</span>`).join('')}</div>
+      </div>`;
 
     let readout;
     if (!total) {
@@ -2860,8 +2978,7 @@ if (typeof document !== 'undefined') (function () {
         <p class="ap-note">${esc(t('appetiteResolved'))} <b>${esc(t(APPETITE_IMP_KEY[r.floor]))}</b>.
         ${esc(forced ? t('appetiteFloorNote') : t('appetiteApprox'))}</p>`;
     } else {
-      readout = `<div class="ap-big">${total} <span>${esc(t('appetitePerDay'))}</span></div>
-        <p class="ap-note">${esc(t('appetiteOffNote'))}</p>`;
+      readout = `<div class="ap-big">${total} <span>${esc(t('appetitePerDay'))}</span></div>`;
     }
 
     const ladder = total ? `<div class="ap-ladder">
@@ -2872,11 +2989,27 @@ if (typeof document !== 'undefined') (function () {
           </div>`).join('')}
       </div>` : '';
 
-    box.innerHTML = `<div class="ap-choices" role="group" aria-label="${esc(t('appetiteHeading'))}">${choices}</div>
+    box.innerHTML = `<div class="ap-choices">${choices}</div>
       <div class="ap-readout">${readout}</div>
       ${ladder}
       <p class="ap-foot">${esc(t('appetiteKeptNote'))}</p>
       ${target ? `<p class="ap-foot">${esc(t('appetitePushNote'))}</p>` : ''}`;
+    const range = $('#apRange', box);
+    if (range) {
+      const slider = range.closest('.ap-slider'), bubble = $('#apBubble', box);
+      range.addEventListener('input', () => {        // move the bubble and fill while dragging
+        const i = +range.value;
+        slider.style.setProperty('--p', String(i / (stops.length - 1)));
+        bubble.textContent = label(stops[i]);
+        range.setAttribute('aria-valuetext', label(stops[i]));
+        $$('.ap-ticks span', slider).forEach((sp, k) => sp.classList.toggle('on', k === i));
+      });
+      range.addEventListener('change', () => {       // apply on release
+        Appetite.set(stops[+range.value]);
+        renderAppetiteBox(); renderSettingsNav(); renderControls(); renderList();
+        const r2 = $('#apRange'); if (r2) r2.focus();
+      });
+    }
   }
 
   function renderNotifBox() {
@@ -3139,7 +3272,9 @@ if (typeof document !== 'undefined') (function () {
         </div>
         <button id="ticketSendBtn" class="btn primary small">${esc(t('ticketSend'))}</button>
       </div>
+      <div id="myTickets" class="my-tickets"></div>
     `;
+    renderMyTickets();
     let kind = 'bug';
     const PREFIXES = { bug: t('ticketPrefixBug'), feedback: t('ticketPrefixFeedback') };
     const ta = $('#ticketMsg', box), count = $('#ticketCount', box);
@@ -3210,41 +3345,114 @@ if (typeof document !== 'undefined') (function () {
   // Owner-only ticket list. Block itself stays hidden (removed from layout, not just display:none in spirit
   // - the "hidden" attribute) for anyone whose isOwner() is false, so a non-owner never even sees an empty
   // "Tickets" heading or triggers the owner-gated Firestore query.
-  async function renderTicketAdmin() {
+  const TICKET_STATUS = { open: 'ticketStatusOpen', in_progress: 'ticketStatusProgress', done: 'ticketStatusDone' };
+  // SECURITY (14 Oct review): a ticket's attachment fields are written by whoever sent it. They used to be
+  // dropped straight into the link's href, so a crafted ticket could inject markup into the OWNER's page.
+  // The link is only drawn when the data is plain base64 and the type is one of a few harmless file types.
+  const SAFE_ATTACH_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'application/pdf', 'text/plain'];
+  function safeAttachment(tk) {
+    if (!tk.attachment_data || !/^[A-Za-z0-9+/]+=*$/.test(tk.attachment_data)) return '';
+    const type = String(tk.attachment_type || '').toLowerCase();
+    return SAFE_ATTACH_TYPES.includes(type) ? type : 'application/octet-stream';
+  }
+  /* Telling people what happened to their ticket (owner, 14 Oct). When the owner marks a ticket "In
+     progress" or "Resolved" with a note, the person who raised it sees it: a message the next time they open
+     the app ("Update on your ticket QS-...: Resolved - <note>"), a count on Settings -> Feedback & support,
+     and the status and note under "Your tickets" there. One small read per app open, signed-in users only. */
+  const TicketNews = {
+    rows: null, unseen: 0,
+    key() { return 'qs-ticket-seen-v1-' + Auth.uid; },
+    seen() { try { return JSON.parse(localStorage.getItem(this.key()) || '{}') || {}; } catch (e) { return {}; } },
+    markSeen() {
+      if (!Auth.uid || !this.rows) return;
+      const m = this.seen();
+      this.rows.forEach(r => { if (r.updated_at) m[r.id] = r.updated_at; });
+      try { localStorage.setItem(this.key(), JSON.stringify(m)); } catch (e) { /* ignore */ }
+      this.unseen = 0;
+      renderSettingsNav();
+    },
+    async check() {
+      if (!Auth.uid) { this.rows = null; this.unseen = 0; return; }
+      const rows = await Tickets.mine();
+      if (!rows) return;
+      this.rows = rows;
+      const seen = this.seen();
+      const fresh = rows.filter(r => r.updated_at && seen[r.id] !== r.updated_at);
+      this.unseen = fresh.length;
+      renderSettingsNav();
+      if (S.tab === 'settings' && S.settingsPage === 'feedback') { renderMyTickets(); return; }
+      if (fresh.length) {
+        const tk = fresh[0], st = TICKET_STATUS[tk.status] ? tk.status : 'open';
+        const note = tk.reply ? ' – ' + (tk.reply.length > 90 ? tk.reply.slice(0, 88) + '…' : tk.reply) : '';
+        toastAction(`${esc(t('ticketUpdateToast'))} ${esc(tk.ticket_number || '')}: <b>${esc(t(TICKET_STATUS[st]))}</b>${esc(note)} <button class="link inline" data-act="tkview">${esc(t('ticketView'))}</button>`, 10000);
+      }
+    }
+  };
+  async function renderMyTickets() {
+    const box = $('#myTickets');
+    if (!box || !Auth.uid) return;
+    if (!TicketNews.rows) { box.innerHTML = ''; await TicketNews.check(); }
+    const rows = TicketNews.rows || [];
+    if (!rows.length) { box.innerHTML = ''; return; }
+    const seen = TicketNews.seen();
+    box.innerHTML = `<h3 class="my-tk-head">${esc(t('ticketMine'))}</h3>` + rows.map(tk => {
+      const st = TICKET_STATUS[tk.status] ? tk.status : 'open';
+      const isNew = tk.updated_at && seen[tk.id] !== tk.updated_at;
+      const msg = String(tk.message || '').replace(/^(Bug|Feedback|Support):\s*/i, '');
+      return `<div class="my-tk">
+        <div class="tk-top"><b class="my-tk-num">${esc(tk.ticket_number || '')}</b><span class="tk-status s-${st}">${esc(t(TICKET_STATUS[st]))}</span>${isNew ? `<span class="my-tk-new">${esc(t('ticketNew'))}</span>` : ''}</div>
+        <p class="my-tk-msg">${esc(msg.length > 140 ? msg.slice(0, 138) + '…' : msg)}</p>
+        ${tk.reply ? `<p class="my-tk-reply"><span>${esc(t('ticketOwnerReply'))}</span>${esc(tk.reply)}</p>` : ''}
+      </div>`;
+    }).join('');
+    TicketNews.markSeen();
+  }
+  let ticketFilter = 'open', ticketRows = null;
+  // Owner's ticket desk (owner, 14 Oct): a filter (Open / In progress / Resolved), one card per ticket with
+  // its reference, sender and message, a note box for the reply the sender will see, and two clear actions.
+  // Delete (for junk) sits behind the "..." so it can't be hit by accident.
+  async function renderTicketAdmin(reload = true) {
     const block = $('#ticketAdminBlock');
     const box = $('#ticketAdminBox');
     if (!block || !box) return;
     if (!isOwner()) { block.hidden = true; return; }
     block.hidden = false;
-    box.innerHTML = '<p class="lp-syncnote">…</p>';
-    const rows = await Tickets.listAll();
+    if (reload || !ticketRows) {
+      box.innerHTML = '<p class="lp-syncnote">…</p>';
+      ticketRows = await Tickets.listAll();
+    }
+    const rows = ticketRows;
     if (rows === null) { box.innerHTML = `<p class="lp-syncnote">${t('ticketAdminLoadFailed')}</p>`; return; }
-    if (!rows.length) { box.innerHTML = `<p class="lp-syncnote">${t('ticketAdminEmpty')}</p>`; return; }
-    box.innerHTML = rows.map(tk => {
-      const done = tk.status === 'done';
-      const kindLabel = tk.kind === 'bug' ? t('ticketKindBug') : tk.kind === 'support' ? t('ticketKindSupport') : t('ticketKindFeedback');
-      const when = tk.created_at ? fmtDateTime(new Date(tk.created_at).getTime()) : '';
-      // ticket_number/user_id are only present on tickets submitted after this round's changes - older rows
-      // in qs_tickets (from before sign-in was required, or before ticket numbers existed) simply omit the
-      // reference-number line and fall back to user_email alone, same spirit as hiddenChannels/companies
-      // being optional fields elsewhere in this file for the same reason.
-      const refLine = tk.ticket_number ? `<span style="font-weight:700">${esc(tk.ticket_number)}</span> · ` : '';
-      return `<div class="lp-row" style="align-items:flex-start;flex-direction:column;gap:4px;padding:10px 0;border-top:1px solid var(--line)">
-        <div style="display:flex;gap:8px;align-items:center;width:100%">
-          <span class="chip" style="flex:none">${kindLabel}</span>
-          <span style="flex:1;font-size:12.5px;color:var(--ink2)">${refLine}${when}${tk.user_email ? ' · ' + tk.user_email : ''}</span>
-          <span style="flex:none;font-size:12px;font-weight:700;color:${done ? 'var(--ink2)' : 'var(--accent)'}">${done ? t('ticketStatusDone') : t('ticketStatusOpen')}</span>
-        </div>
-        <div style="font-size:14px;white-space:pre-wrap">${escapeHtml(tk.message || '')}</div>
-        ${tk.attachment_data ? `<a href="data:${esc(tk.attachment_type || 'application/octet-stream')};base64,${tk.attachment_data}" download="${esc(tk.attachment_name || 'attachment')}" class="btn small" style="text-decoration:none">${esc(t('ticketAdminAttachment'))}</a>` : ''}
-        <button class="btn small" data-ticket-toggle="${tk.id}" data-ticket-status="${done ? 'open' : 'done'}">${done ? t('ticketMarkOpen') : t('ticketMarkDone')}</button>
-      </div>`;
-    }).join('');
-    $$('[data-ticket-toggle]', box).forEach(b => b.addEventListener('click', async () => {
-      b.disabled = true;
-      await Tickets.setStatus(b.dataset.ticketToggle, b.dataset.ticketStatus);
-      renderTicketAdmin();
-    }));
+    const st = tk => TICKET_STATUS[tk.status] ? tk.status : 'open';
+    const counts = { open: 0, in_progress: 0, done: 0 };
+    rows.forEach(tk => counts[st(tk)]++);
+    const filters = [['open', 'ticketStatusOpen'], ['in_progress', 'ticketStatusProgress'], ['done', 'ticketStatusDone']];
+    const shown = rows.filter(tk => st(tk) === ticketFilter);
+    box.innerHTML = `<div class="tseg tk-filter" role="tablist">${filters.map(([k, key]) =>
+        `<button role="tab" data-tkfilter="${k}" aria-pressed="${ticketFilter === k}">${esc(t(key))} <span>${counts[k]}</span></button>`).join('')}</div>
+      ${shown.length ? shown.map(tk => {
+        const s1 = st(tk);
+        const kindLabel = tk.kind === 'bug' ? t('ticketKindBug') : tk.kind === 'support' ? t('ticketKindSupport') : t('ticketKindFeedback');
+        const when = tk.created_at ? fmtDateTime(new Date(tk.created_at).getTime()) : '';
+        const msg = String(tk.message || '').replace(/^(Bug|Feedback|Support):\s*/i, '');
+        return `<article class="tk-card" data-id="${esc(tk.id)}">
+          <header class="tk-top">
+            <span class="tk-kind">${esc(kindLabel)}</span>
+            <span class="tk-status s-${s1}">${esc(t(TICKET_STATUS[s1]))}</span>
+            <button class="lp-more" data-act="tkmore" data-v="${esc(tk.id)}" aria-label="${esc(t('moreOptions'))}" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>
+          </header>
+          <div class="tk-meta">${tk.ticket_number ? `<b>${esc(tk.ticket_number)}</b>` : ''}<span>${esc(when)}</span>${tk.user_email ? `<span class="tk-email">${esc(tk.user_email)}</span>` : ''}</div>
+          <p class="tk-msg">${escapeHtml(msg)}</p>
+          ${safeAttachment(tk) ? `<a href="data:${safeAttachment(tk)};base64,${tk.attachment_data}" download="${esc(tk.attachment_name || 'attachment')}" class="tk-attach">📎 ${esc(tk.attachment_name || t('ticketAdminAttachment'))}</a>` : ''}
+          <label class="tk-replylbl" for="tkr-${esc(tk.id)}">${esc(t('ticketReplyLabel'))}</label>
+          <textarea id="tkr-${esc(tk.id)}" class="tk-reply" rows="2" maxlength="1000" placeholder="${esc(t('ticketReplyPh'))}">${esc(tk.reply || '')}</textarea>
+          <div class="tk-btns">${s1 === 'done'
+            ? `<button class="btn small" data-act="tkset" data-v="open">${esc(t('ticketMarkOpen'))}</button>`
+            : `${s1 === 'open' ? `<button class="btn small" data-act="tkset" data-v="in_progress">${esc(t('ticketMarkProgress'))}</button>` : ''}
+               <button class="btn primary small" data-act="tkset" data-v="done">${esc(t('ticketMarkDone'))}</button>`}</div>
+        </article>`;
+      }).join('') : `<p class="lp-syncnote">${esc(t('ticketAdminEmpty'))}</p>`}`;
+    $$('[data-tkfilter]', box).forEach(b => b.addEventListener('click', () => { ticketFilter = b.dataset.tkfilter; renderTicketAdmin(false); }));
   }
 
   /* ---------- Telegram channel linking (Link Pages) ----------
@@ -3310,7 +3518,7 @@ if (typeof document !== 'undefined') (function () {
         // shared, unauthenticated collection - see firestore.rules). Prefers the signed-in account's email
         // so a real identity shows up here once Phase E accounts are in use, falling back to the guest code.
         const fields = { channel: toFsValue(name), status: toFsValue('approved'), added_by: toFsValue((Auth.uid && Auth.email) || Sync.code || ''), added_at: toFsValue(new Date().toISOString()) };
-        const r = await fetch(url, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fields }) });
+        const r = await fetch(url, { method: 'PATCH', headers: Object.assign({ 'Content-Type': 'application/json' }, await Sync.authHeaders()), body: JSON.stringify({ fields }) });
         if (!r.ok) { const why = await describeFailure(r, null); toast('Couldn\u2019t link that channel: ' + why); return false; }
         approvedChannelsCache = null;        // force the next channel-list render to pick up the new one
         S.myChannels.add(name.toLowerCase());
@@ -3397,6 +3605,7 @@ if (typeof document !== 'undefined') (function () {
       if (S.myCompanies.has(canonical)) { toast(canonical + ' is already on your watchlist.'); return false; }
       S.myCompanies.add(canonical);
       Sync.pushSoon();
+      Board.publishMine();                // it appears on everyone's Sentiment board
       track('track_company', { company: canonical, known: !!known });
       toast(canonical + ' added to your investment watchlist.');
       renderInvestmentBox();
@@ -3753,18 +3962,46 @@ if (typeof document !== 'undefined') (function () {
 
     // Owner-only toggle between "open" and "done", so the owner has somewhere to put a ticket once it's
     // handled without deleting the record outright.
-    async setStatus(id, status) {
+    // Owner: set a ticket's status with a note for the person who raised it (owner, 14 Oct). status is
+    // 'open' | 'in_progress' | 'done'; reply is shown to that person in the app.
+    async update(id, status, reply) {
       if (!isOwner()) return false;
       try {
-        const r = await fetch(`${FS_BASE}/qs_tickets/${id}?updateMask.fieldPaths=status&key=${FIREBASE.apiKey}`, {
+        const fields = { status: toFsValue(status), reply: toFsValue((reply || '').slice(0, 1000)), updated_at: toFsValue(new Date().toISOString()) };
+        const r = await fetch(`${FS_BASE}/qs_tickets/${id}?updateMask.fieldPaths=status&updateMask.fieldPaths=reply&updateMask.fieldPaths=updated_at&key=${FIREBASE.apiKey}`, {
           method: 'PATCH',
           headers: Object.assign({ 'Content-Type': 'application/json' }, await Sync.authHeaders()),
-          body: JSON.stringify({ fields: { status: toFsValue(status) } })
+          body: JSON.stringify({ fields })
         });
         return r.ok;
-      } catch (e) {
-        return false;
-      }
+      } catch (e) { return false; }
+    },
+    setStatus(id, status) { return this.update(id, status, ''); },
+    // Owner: delete a ticket outright (spam / garbage).
+    async remove(id) {
+      if (!isOwner()) return false;
+      try {
+        const r = await fetch(`${FS_BASE}/qs_tickets/${id}?key=${FIREBASE.apiKey}`, { method: 'DELETE', headers: await Sync.authHeaders() });
+        return r.ok;
+      } catch (e) { return false; }
+    },
+    // The signed-in person's own tickets (firestore.rules let anyone read tickets they raised, and only
+    // those - the query has to ask for them by user_id for that to be allowed).
+    async mine() {
+      if (!Auth.uid) return null;
+      try {
+        const r = await fetch(`${FS_BASE}:runQuery?key=${FIREBASE.apiKey}`, {
+          method: 'POST',
+          headers: Object.assign({ 'Content-Type': 'application/json' }, await Sync.authHeaders()),
+          body: JSON.stringify({ structuredQuery: { from: [{ collectionId: 'qs_tickets' }],
+            where: { fieldFilter: { field: { fieldPath: 'user_id' }, op: 'EQUAL', value: toFsValue(Auth.uid) } } } })
+        });
+        if (!r.ok) return null;
+        return (await r.json()).filter(x => x.document).map(x => {
+          const o = fsFieldsToObject(x.document.fields); o.id = x.document.name.split('/').pop();
+          delete o.attachment_data; return o;
+        }).sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
+      } catch (e) { return null; }
     }
   };
 
@@ -4584,7 +4821,7 @@ if (typeof document !== 'undefined') (function () {
     body.innerHTML = `
       <h1 class="cv-headline${hlCls}">${esc(headline)}</h1>
       ${summary ? `<p class="cv-summary">${esc(summary)}</p>` : ''}
-      <div class="cv-meta">${it.importance ? `<span class="cv-imp ${esc(imp)}">${esc(it.importance)}</span>` : ''}${it.sector && it.sector !== 'Other' ? `<span>${esc(it.sector)}</span>` : ''}<span>${esc(fmtDateTime(it.addedAt))}</span></div>
+      ${''/* time, priority and sector were removed from the story card (owner, 14 Oct) */}
       ${CV_SHOW_MEDIA ? media : ''}
     `;
     const m = body.querySelector('.cv-media');
@@ -5453,7 +5690,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
         const stories = c.stories;
         const body = stories.length
           ? stories.map(entryWrapHTML).join('')
-          : `<p class="empty-note">${esc(t('investNoNews'))}<br><span class="empty-note-hint">${esc(t('investNoNewsHint'))}</span></p>`;
+          : `<p class="empty-note">${esc(t('investNoNews'))}</p>`;
         return `<h3 class="grp-company">
           <div class="gc-top">
             <span class="gc-ring">${companyLogoHTML(c.company, 'gc-ring-inner')}</span>
@@ -5517,12 +5754,13 @@ Give a concise, event-specific analysis - decide for yourself which structure be
         this.votes = new Map((d.votes || []).map(v => [v.id, v]));
         this.maxAt = d.maxAt || 0;
         this.fullAt = d.fullAt || 0;
+        this.pub = new Map(d.pub || []); this.pubAt = d.pubAt || 0; this.pubFullAt = d.pubFullAt || 0;
       } catch (e) { /* start fresh */ }
     },
     persist() {
       try {
         localStorage.setItem(BOARD_STORE, JSON.stringify({ list: this.list, votes: [...this.votes.values()],
-          maxAt: this.maxAt, fullAt: this.fullAt }));
+          maxAt: this.maxAt, fullAt: this.fullAt, pub: [...this.pub], pubAt: this.pubAt, pubFullAt: this.pubFullAt }));
       } catch (e) { /* storage full: still works, just reloads more next time */ }
     },
     known(name) {
@@ -5571,10 +5809,50 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       this.maxAt = Math.max(this.maxAt, ...[...this.votes.values()].map(v => v.at), 0);
       if (full) this.fullAt = Date.now();
     },
+    /* Every stock anyone tracks, WITHOUT needing the pipeline's service key (owner, 14 Oct: users' stocks
+       weren't showing because board.json was never produced). Each signed-in person's app adds the
+       companies on their own watchlist to qs_board_stocks - one document per stock, holding only its name,
+       so nothing says who tracks it. Read incrementally like the votes; a full re-read once a day. */
+    pub: new Map(), pubAt: 0, pubFullAt: 0,
+    async loadPublic() {
+      const full = !this.pubFullAt || Date.now() - this.pubFullAt > 864e5;
+      const sq = { from: [{ collectionId: 'qs_board_stocks' }], limit: 3000 };
+      if (!full && this.pubAt) sq.where = { fieldFilter: { field: { fieldPath: 'at' }, op: 'GREATER_THAN_OR_EQUAL', value: { timestampValue: new Date(this.pubAt - 5000).toISOString() } } };
+      try {
+        const r = await fetch(`${FS_BASE}:runQuery?key=${FIREBASE.apiKey}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ structuredQuery: sq }) });
+        if (!r.ok) return;                      // e.g. rules not published yet: the board still works without it
+        const rows = (await r.json()).filter(x => x.document);
+        if (full) this.pub = new Map();
+        rows.forEach(x => {
+          const f = x.document.fields || {}, name = (f.name || {}).stringValue, at = Date.parse((f.at || {}).timestampValue) || 0;
+          if (name) this.pub.set(x.document.name.split('/').pop(), name);
+          if (at > this.pubAt) this.pubAt = at;
+        });
+        if (full) this.pubFullAt = Date.now();
+      } catch (e) { /* offline: keep the last list */ }
+    },
+    // Adds this person's watchlist to the shared list (only names not added from this device before).
+    async publishMine() {
+      if (!Auth.uid || !S.myCompanies.size) return;
+      const key = 'qs-board-pub-v1-' + Auth.uid;
+      let done; try { done = new Set(JSON.parse(localStorage.getItem(key) || '[]')); } catch (e) { done = new Set(); }
+      const todo = [...S.myCompanies].map(n => this.canon(n)).filter(n => n && n.length <= 80 && !done.has(Pulse.companySlug(n))).slice(0, 50);
+      if (!todo.length) return;
+      const tok = await Auth.bearerToken(); if (!tok) return;
+      const base = `projects/${FIREBASE.projectId}/databases/(default)/documents/qs_board_stocks/`;
+      try {
+        const r = await fetch(`${FS_BASE}:commit`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + tok },
+          body: JSON.stringify({ writes: todo.map(n => ({ update: { name: base + Pulse.companySlug(n), fields: { name: toFsValue(n), slug: toFsValue(Pulse.companySlug(n)) } },
+            updateTransforms: [{ fieldPath: 'at', setToServerValue: 'REQUEST_TIME' }] })) }) });
+        if (!r.ok) return;
+        todo.forEach(n => { done.add(Pulse.companySlug(n)); this.pub.set(Pulse.companySlug(n), n); });
+        try { localStorage.setItem(key, JSON.stringify([...done])); } catch (e) { /* ignore */ }
+      } catch (e) { /* retried next time */ }
+    },
     async refresh() {
       if (this.loading) return this.loading;
       this.loading = (async () => {
-        try { await Promise.all([this.loadList(), this.loadVotes()]); this.error = false; this.persist(); }
+        try { await Promise.all([this.loadList(), this.loadVotes(), this.loadPublic()]); this.error = false; this.persist(); }
         catch (e) { this.error = true; }
         finally { this.loading = null; }
       })();
@@ -5625,6 +5903,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
         by.set(slug, e);
       };
       this.list.forEach(c => add(c.name, c.trackers));
+      this.pub.forEach(name => add(name, 0));
       S.myCompanies.forEach(n => add(n, 1));
       this.votes.forEach(v => add(v.company, 0));
       const mineSlugs = new Set([...S.myCompanies].map(n => this.slug(n)));
@@ -5736,27 +6015,28 @@ Give a concise, event-specific analysis - decide for yourself which structure be
      with Delete and Cancel. A right-click / the context-menu key does the same on a computer, and Enter or
      Delete on a focused reason does it from the keyboard. */
   const LONG_PRESS_MS = 500;
+  // Bottom sheet of actions. Used by the long press on a board reason and by the "..." on channel rows.
+  // items: [{ label, act, v, danger }] - each becomes a button that runs the normal data-act handler.
   const ActionSheet = {
     target: null,
-    open(id) {
-      this.target = id;
+    open(target, items) {
+      this.target = target;
       let el = $('#actionSheet');
       if (!el) {
         el = document.createElement('div');
         el.id = 'actionSheet'; el.className = 'asheet-wrap'; el.hidden = true;
-        el.innerHTML = `<div class="asheet-back" data-act="sbSheetCancel"></div>
-          <div class="asheet" role="dialog" aria-modal="true" aria-label="${esc(t('sbReasons'))}">
-            <button type="button" class="asheet-btn danger" data-act="sbSheetDel"></button>
-            <button type="button" class="asheet-btn" data-act="sbSheetCancel"></button>
-          </div>`;
         document.body.appendChild(el);
       }
-      el.querySelector('.danger').textContent = t('sbDelete');
-      el.querySelector('.asheet-btn:not(.danger)').textContent = t('sbCancel');
+      const list = items || [{ label: t('sbDelete'), act: 'sbSheetDel', danger: true }];
+      el.innerHTML = `<div class="asheet-back" data-act="sbSheetCancel"></div>
+        <div class="asheet" role="dialog" aria-modal="true" aria-label="${esc(typeof target === 'string' ? target : '')}">
+          <div class="asheet-group">${list.map(it => `<button type="button" class="asheet-btn${it.danger ? ' danger' : ''}" data-act="${esc(it.act)}"${it.v != null ? ` data-v="${esc(it.v)}"` : ''}>${esc(it.label)}</button>`).join('')}</div>
+          <button type="button" class="asheet-btn" data-act="sbSheetCancel">${esc(t('sbCancel'))}</button>
+        </div>`;
       clearTimeout(toastTimer); $('#toast').classList.remove('show');   // an old message must not cover the sheet
       el.hidden = false;
       requestAnimationFrame(() => el.classList.add('show'));
-      el.querySelector('.danger').focus();
+      const first = el.querySelector('.asheet-btn'); if (first) first.focus();
     },
     close() {
       const el = $('#actionSheet');
@@ -5807,7 +6087,6 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     if (!$('#sbSearch')) {
       box.innerHTML = `<div class="sb-top">
           <input id="sbSearch" class="sb-search" type="search" autocomplete="off" placeholder="${esc(t('sbSearchPh'))}" aria-label="${esc(t('sbSearchPh'))}">
-          <p class="sb-note">${esc(t('sbNote'))}</p>
         </div><div id="sbBody"></div>`;
       $('#sbSearch').addEventListener('input', ev => { Board.q = ev.target.value; renderBoardBody(); });
     }
@@ -5905,13 +6184,18 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     const isInvestItem = it => (it.companies || []).some(c => S.myCompanies.has(c));
     const newsItems = items.filter(it => !isInvestItem(it));
     const investItems = items.filter(isInvestItem);
-    if (newsBox) {
-      newsBox.innerHTML = newsItems.length ? newsItems.map(savedCardHTML).join('')
-        : `<div class="empty"><p>Nothing saved yet.</p><p>Swipe a story right, or tap Save, to keep it here past the normal 24-hour window.</p></div>`;
+    const head = (key, n) => `<h2 class="saved-head">${esc(t(key))} <span>${n}</span></h2>`;
+    if (!items.length) {
+      newsBox.hidden = false;
+      newsBox.innerHTML = `<div class="empty"><p>Nothing saved yet.</p><p>Swipe a story right, or tap Save, to keep it here for good.</p></div>`;
+      if (investBox) { investBox.hidden = true; investBox.innerHTML = ''; }
+      return;
     }
+    newsBox.hidden = !newsItems.length;
+    newsBox.innerHTML = newsItems.length ? head('savedNewsHead', newsItems.length) + newsItems.map(savedCardHTML).join('') : '';
     if (investBox) {
-      investBox.innerHTML = investItems.length ? investItems.map(savedCardHTML).join('')
-        : `<div class="empty"><p>${esc(t('investNoNews'))}</p><p>Save a story about one of your tracked companies to keep it here.</p></div>`;
+      investBox.hidden = !investItems.length;
+      investBox.innerHTML = investItems.length ? head('savedInvestHead', investItems.length) + investItems.map(savedCardHTML).join('') : '';
     }
   }
 
@@ -6052,14 +6336,15 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       const mineBtn = following
         ? `<button class="follow on" data-act="tgfollow" data-v="${esc(name)}">${esc(t('following'))}</button>`
         : `<button class="follow" data-act="tgfollow" data-v="${esc(name)}">${esc(t('follow'))}</button>`;
-      const hideBtn = `<button class="follow lp-hide" data-act="tghide" data-v="${esc(name)}" aria-label="${esc(t('remove'))} t/${esc(name)}">${esc(t('remove'))}</button>`;
-      return `<div class="lp-row">
+      // Redesigned (owner, 14 Oct): four buttons per row ran off the screen. Now each row shows the one
+      // everyday action - Follow - and a "..." that opens a sheet with the rest (Remove, and for the owner
+      // Set/Remove default and Remove for everyone).
+      return `<div class="lp-row lp-chanrow">
       <span class="name">t/${esc(name)}${isDefault ? ' <span class="lp-defaultbadge">' + esc(t('defaultBadge')) + '</span>' : ''}</span>
       <div class="lp-rowbtns">
         ${mineBtn}
-        ${hideBtn}
-        ${owner ? `<button class="follow lp-default" data-act="tgdefault" data-v="${esc(name)}">${isDefault ? esc(t('removeDefault')) : esc(t('setDefault'))}</button>` : ''}
-        ${owner ? `<button class="follow lp-remove" data-act="tgremove" data-v="${esc(name)}" aria-label="${esc(t('removeShared'))} t/${esc(name)}">${esc(t('removeShared'))}</button>` : ''}
+        <button class="lp-more" data-act="tgmore" data-v="${esc(name)}" data-default="${isDefault ? 1 : 0}" aria-label="${esc(t('moreOptions'))} t/${esc(name)}" aria-haspopup="dialog">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>
       </div>
     </div>`;
     }).join('');
@@ -6201,9 +6486,8 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       renderSettingsNav();
     }
     // Saved: swap which saved-items list shows, re-render if that tab happens to be open already.
-    const savedNews = $('#savedList'), savedInv = $('#savedInvestList');
-    if (savedNews) savedNews.hidden = mode === 'investment';
-    if (savedInv) savedInv.hidden = mode !== 'investment';
+    // Saved now always shows BOTH groups (News, then Investment). It used to show only the group matching
+    // the last mode, so arriving at Saved from the Investment tab hid every saved news story (owner, 14 Oct).
     if (S.tab === 'saved') renderSaved();
     // Export: the item count shown there (and what Download PDF/CSV will actually pull - see
     // exportItems()) depends on mode, so refresh it if that settings sub-page happens to be open already
@@ -6221,7 +6505,8 @@ Give a concise, event-specific analysis - decide for yourself which structure be
      before (setTab('settings') below, and setMode()'s mode-swap block) - this only changes which wrapper is
      visible, never how a block's content is produced, so none of that existing logic needed to change. */
   const SETTINGS_SECTIONS = [
-    { id: 'appearance', mode: null, icon: 'theme', title: 'Appearance', subKey: () => THEME_LABEL[Theme.pref()] || 'System', count: null },
+    { id: 'appearance', mode: null, icon: 'theme', title: 'Appearance', subKey: () => themeActive() === 'dark' ? 'Dark mode' : 'Light mode', count: null },
+    { id: 'language', mode: null, icon: 'globe', title: 'Language', subKey: () => LANG_NAMES[currentLang] || 'English', count: null },
     { id: 'newschannels', mode: 'news', icon: 'wifi', title: 'Telegram channels for News', subKey: () => S.myChannels.size + ' linked', count: () => S.myChannels.size },
     { id: 'investwatchlist', mode: 'investment', icon: 'candle', title: 'Investment watchlist & channels', subKey: () => S.myCompanies.size + ' tracked · ' + S.myInvestChannels.size + ' channels', count: () => S.myCompanies.size + S.myInvestChannels.size },
     { id: 'appetite', mode: null, icon: 'gauge', title: 'Daily appetite', subKey: () => Appetite.on() ? Appetite.target() + ' stories a day' : 'Everything', count: null },
@@ -6230,13 +6515,14 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     // Hidden for now at the owner's request (not yet confirmed working). The page and its code are kept, so
     // restoring this one line brings it back.
     // { id: 'getapp', mode: null, icon: 'plus', title: 'Get the app', subKey: () => 'Install on this device', count: null },
-    { id: 'feedback', mode: null, icon: 'help', title: 'Feedback & support', subKey: () => isOwner() ? 'Send feedback · view tickets' : 'Send feedback', count: null },
+    { id: 'feedback', mode: null, icon: 'help', title: 'Feedback & support', subKey: () => TicketNews.unseen ? t('ticketUpdatesSub').replace('{n}', TicketNews.unseen) : (isOwner() ? 'Send feedback · view tickets' : 'Send feedback'), count: () => TicketNews.unseen || null },
     // owner: true - listed only for the owner account (renderSettingsNav) and refused for anyone else
     // (openSettingsPage). The data behind it is owner-only in firestore.rules too; this just hides the door.
     { id: 'pushstats', mode: null, owner: true, icon: 'chart', title: 'Notification stats', subKey: () => 'Opened, swiped away, ignored', count: null }
   ];
   const SN_ICON = {
     theme: '<circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor" stroke="none"/>',
+    globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/>',
     wifi: '<path d="M2 8.5a19 19 0 0 1 20 0M5.5 12.5a13.5 13.5 0 0 1 13 0M9 16.5a7.5 7.5 0 0 1 6 0"/><circle cx="12" cy="20" r="1.2" fill="currentColor" stroke="none"/>',
     candle: '<circle cx="10.5" cy="10.5" r="7.25"/><path d="M15.8 15.8 21 21" stroke-width="2.6"/><path d="M7 14v-1.6M9.5 14v-3.1M12 14v-2.2M14.5 14v-4.6" stroke-width="1.5"/><path d="M6.6 9.6l2.6-2.4 2.1 1.7 3.4-3.1M13.3 5.6h2.1v2.1" stroke-width="1.4"/>',
     bell: '<path d="M12 2a7 7 0 0 1 7 7c0 5 2 7 2 7H3s2-2 2-7a7 7 0 0 1 7-7z"/><path d="M9.5 19a2.5 2.5 0 0 0 5 0"/>',
@@ -6293,6 +6579,8 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     window.scrollTo(0, 0);
     track('settings_section_open', { section: id });
     if (id === 'export') renderExport();
+    if (id === 'language') renderLangChoices();
+    if (id === 'appearance') Theme.apply();
     if (id === 'appetite') renderAppetiteBox();
     if (id === 'pushstats') renderPushStats();
   }
@@ -6457,14 +6745,18 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     if (SWIPE.justSwiped) { ev.preventDefault(); ev.stopPropagation(); return; }
     // BUG FIX: the Appearance buttons carry data-theme-choice, which the lookup below never matched - so
     // el came back null and every tap on Default/Light/Dark was silently ignored. Handled first, directly.
-    const themeBtn = ev.target.closest('#themeSeg button[data-theme-choice]');
-    if (themeBtn) { Theme.set(themeBtn.dataset.themeChoice); renderSettingsNav(); return; }
+    const infoBtn = ev.target.closest('.info-i');
+    $$('.info-i[aria-expanded="true"]').forEach(b => { if (b !== infoBtn) b.setAttribute('aria-expanded', 'false'); });
+    if (infoBtn) { infoBtn.setAttribute('aria-expanded', String(infoBtn.getAttribute('aria-expanded') !== 'true')); return; }
+    const langBtn = ev.target.closest('#langChoices [data-lang]');
+    if (langBtn) { setLang(langBtn.dataset.lang); renderLangChoices(); renderSettingsNav(); return; }
     const el = ev.target.closest('[data-act],[data-tab],[data-v]');
     if (el && el.dataset.tab) { setTab(el.dataset.tab); return; }
     if (el && el.closest('#rangeSeg')) { S.f.range = el.dataset.v; renderControls(); renderList(); return; }
     if (el && el.closest('#viewSeg')) { S.f.view = el.dataset.v; renderControls(); renderList(); return; }
     if (el && el.closest('#exportSeg')) { S.exportRange = el.dataset.v; renderExport(); return; }
     const act = el && el.dataset.act;
+    if (act && el.closest('#actionSheet') && act !== 'sbSheetDel' && act !== 'sbSheetCancel') ActionSheet.close();
     if (act) {
      try {
       const v = el.dataset.v;
@@ -6526,6 +6818,32 @@ Give a concise, event-specific analysis - decide for yourself which structure be
         track('board_delete', {});
       }
       else if (act === 'sbSheetCancel') { ActionSheet.close(); }
+      else if (act === 'tkset') {
+        const card = el.closest('.tk-card'), id = card && card.dataset.id;
+        if (!id) return;
+        const reply = ($('.tk-reply', card) || {}).value || '';
+        if (v === 'done' && !reply.trim()) { toast(t('ticketNeedReason')); $('.tk-reply', card).focus(); return; }
+        el.disabled = true;
+        const ok = await Tickets.update(id, v, reply.trim());
+        toast(ok ? t(v === 'done' ? 'ticketSavedDone' : v === 'in_progress' ? 'ticketSavedProgress' : 'ticketSavedOpen') : t('ticketFailed'));
+        renderTicketAdmin();
+      }
+      else if (act === 'tkmore') { ActionSheet.open(t('ticketAdminHeading'), [{ label: t('ticketDelete'), act: 'tkdel', v, danger: true }]); }
+      else if (act === 'tkdel') {
+        const ok = await Tickets.remove(v);
+        toast(ok ? t('ticketDeleted') : t('ticketFailed'));
+        renderTicketAdmin();
+      }
+      else if (act === 'tkview') { clearTimeout(toastTimer); $('#toast').classList.remove('show'); setTab('settings'); openSettingsPage('feedback'); }
+      else if (act === 'tgmore') {
+        const isDef = el.dataset.default === '1';
+        const items = [{ label: t('remove') + ' (' + t('justForMe') + ')', act: 'tghide', v }];
+        if (isOwner()) {
+          items.push({ label: isDef ? t('removeDefault') : t('setDefault'), act: 'tgdefault', v });
+          items.push({ label: t('removeShared'), act: 'tgremove', v, danger: true });
+        }
+        ActionSheet.open('t/' + v, items);
+      }
       else if (act === 'sbSignIn') { openAuthGate('agBoardTitle', 'agBoardBody'); }
       else if (act === 'sbUndoDel') {
         Board.undoDelete(el.dataset.id);
@@ -7094,6 +7412,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
   /* ---------- start ---------- */
   (async function start() {
     setTimeout(dismissSplash, SPLASH_MIN_MS);
+    setTimeout(() => { TicketNews.check(); Board.publishMine(); }, 6000);   // owner's ticket replies; this watchlist onto the board
     Theme.apply();
     // Re-sync the meta-tag color (not the data-theme attribute itself - that's only ever set by an
     // explicit choice) whenever the OS-level light/dark setting changes while on "System", so the
@@ -7105,9 +7424,9 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     }
     currentLang = loadLang();
     applyI18n();
-    const langSel = $('#langSelect');
-    if (langSel) langSel.addEventListener('change', ev => setLang(ev.target.value));
-    $('#today').textContent = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+    const dm = $('#darkModeSwitch');
+    if (dm) dm.addEventListener('change', () => { Theme.set(dm.checked ? 'dark' : 'light'); renderSettingsNav(); track('theme_toggle', { dark: dm.checked }); });
+    $('#today').textContent = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).replace(',', '');
     const ok = await DB.init();
     if (ok) S.items = await DB.all(); else toast('Storage is blocked in this browser. Items will be lost when you close the page.');
     const qs = new URLSearchParams(location.search);

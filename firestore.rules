@@ -99,7 +99,10 @@ service cloud.firestore {
     match /qs_channels/{name} {
       allow get, list: if true;
 
+      // Security review (14 Oct): adding a channel for everyone now needs a signed-in account (it used to be
+      // open to anyone on the internet, which let a script flood the pipeline with junk channels).
       allow create: if
+        request.auth != null &&
         name.matches('[a-z0-9_]{5,32}') &&
         request.resource.data.channel is string &&
         request.resource.data.channel.lower() == name &&
@@ -197,7 +200,9 @@ service cloud.firestore {
     }
 
     match /qs_tickets/{id} {
-      allow get, list: if isOwner();
+      // The owner reads every ticket; anyone signed in can read the tickets THEY raised (so they can see the
+      // owner's status and reply). A list query is only allowed when it asks for their own user_id.
+      allow get, list: if isOwner() || (request.auth != null && resource.data.user_id == request.auth.uid);
 
       allow create: if
         request.auth != null &&
@@ -209,16 +214,23 @@ service cloud.firestore {
         request.resource.data.status == 'open' &&
         request.resource.data.created_at is string &&
         request.resource.data.user_email is string && request.resource.data.user_email.size() <= 256 &&
+        // the sender's address must be their real sign-in address, so a ticket can't pretend to be someone else
+        request.resource.data.user_email == request.auth.token.email &&
         request.resource.data.user_id is string && request.resource.data.user_id == request.auth.uid &&
         request.resource.data.ticket_number is string && request.resource.data.ticket_number.size() <= 32 &&
         (!('attachment_data' in request.resource.data) ||
           (request.resource.data.attachment_data is string && request.resource.data.attachment_data.size() <= 820000 &&
            request.resource.data.attachment_type is string && request.resource.data.attachment_type.size() <= 100 &&
+           request.resource.data.attachment_type.matches('[a-z0-9.+/-]{1,100}') &&
            request.resource.data.attachment_name is string && request.resource.data.attachment_name.size() <= 200));
 
+      // Owner only: status (open / in_progress / done) plus a reply the person who raised it will see.
       allow update: if isOwner() &&
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']) &&
-        request.resource.data.status in ['open', 'done'];
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'reply', 'updated_at']) &&
+        request.resource.data.status in ['open', 'in_progress', 'done'] &&
+        (!('reply' in request.resource.data) ||
+          (request.resource.data.reply is string && request.resource.data.reply.size() <= 1000)) &&
+        (!('updated_at' in request.resource.data) || request.resource.data.updated_at is string);
 
       allow delete: if isOwner();
     }
@@ -248,6 +260,20 @@ service cloud.firestore {
     // the id must be "<stock>_<uid>_<day>" (so re-voting the same day replaces the earlier vote rather than
     // adding one), and "at" must be the server's own clock (set with REQUEST_TIME), so nobody can backdate a
     // vote into or out of the 24-hour window. The author or the owner can delete; nobody can edit someone else's.
+    // qs_board_stocks: the shared list of stocks on the Sentiment board - one document per stock, holding only
+    // its name (nothing about who tracks it). Any signed-in user's app adds the companies on their watchlist;
+    // "at" must be the server clock. Only the owner can delete an entry.
+    match /qs_board_stocks/{slug} {
+      allow get, list: if true;
+      allow create, update: if request.auth != null &&
+        slug.matches('[a-z0-9-]{1,80}') &&
+        request.resource.data.keys().hasOnly(['name', 'slug', 'at']) &&
+        request.resource.data.slug == slug &&
+        request.resource.data.name is string && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 80 &&
+        request.resource.data.at == request.time;
+      allow delete: if isOwner();
+    }
+
     match /qs_sent_votes/{id} {
       allow get, list: if true;
       allow create, update: if
