@@ -1,7 +1,14 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-78-v1';  // This round: after any sign-in the app opens the News tab.
+const VERSION = 'gni-phase3-79-v1';  // This round (owner's 20-point list, 14 Oct): Language moved into
+                                      // Settings, Appearance is one Dark mode switch, tabs reordered (News,
+                                      // Investment, Saved, Sentiment, Settings), Saved shows News and
+                                      // Investment groups, "i" info tips, appetite slider, channel rows with a
+                                      // "..." menu, centred story card, ticket desk with replies the sender
+                                      // sees, shared Sentiment board stock list (qs_board_stocks).
+                                      //
+                                      // Previous round: gni-phase3-78-v1
                                       //
                                       // Previous round (gni-phase3-77-v1): stop Chrome's "Translate page?" bar (notranslate).
                                       //
