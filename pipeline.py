@@ -588,6 +588,7 @@ def push_kind_for(sub: dict, item: dict) -> str | None:
 # Signed here with `cryptography` (already a dependency): an RS256 JWT exchanged for a one-hour OAuth token.
 FIREBASE_SERVICE_ACCOUNT = os.environ.get("FIREBASE_SERVICE_ACCOUNT", "").strip()
 _ADMIN_TOKEN = {"value": None, "expires": 0.0, "failed": False}
+PUSH_ISSUE = {"why": ""}     # why the latest notification check couldn't finish; written to state.json["push"]["diag"]
 
 
 def _service_account() -> dict | None:
@@ -595,11 +596,18 @@ def _service_account() -> dict | None:
     if not raw:
         return None
     try:
+        raw = raw.strip().strip("'\"").strip()
         if not raw.startswith("{"):            # also accept the JSON pasted base64-encoded
             raw = base64.b64decode(raw).decode()
         sa = json.loads(raw)
-        return sa if sa.get("client_email") and sa.get("private_key") else None
-    except Exception:  # noqa: BLE001
+        if isinstance(sa.get("private_key"), str):
+            sa["private_key"] = sa["private_key"].replace("\\n", "\n")
+        if sa.get("client_email") and sa.get("private_key"):
+            return sa
+        PUSH_ISSUE["why"] = "FIREBASE_SERVICE_ACCOUNT is missing client_email or private_key"
+        return None
+    except Exception as exc:  # noqa: BLE001
+        PUSH_ISSUE["why"] = f"FIREBASE_SERVICE_ACCOUNT can't be read as the key file ({type(exc).__name__})"
         return None
 
 
@@ -632,6 +640,7 @@ def firestore_admin_token() -> str | None:
         return _ADMIN_TOKEN["value"]
     except Exception as exc:  # noqa: BLE001
         _ADMIN_TOKEN["failed"] = True          # one clear log line per run, not one per request
+        PUSH_ISSUE["why"] = f"service-account sign-in failed: {str(exc)[:160]}"
         log(f"  ! FIREBASE_SERVICE_ACCOUNT is set but sign-in failed: {exc}")
         return None
 
@@ -658,6 +667,8 @@ def fetch_push_subscriptions() -> list[dict] | None:
     try:
         r = requests.post(url, json=body, headers=headers, timeout=15)
         if not r.ok:
+            PUSH_ISSUE["why"] = PUSH_ISSUE["why"] or (
+                "FIREBASE_SERVICE_ACCOUNT secret is empty" if not headers else f"Firestore refused the list: HTTP {r.status_code}")
             if r.status_code in (401, 403) and not headers:
                 log("  push: notification signups are private now and FIREBASE_SERVICE_ACCOUNT isn't set - "
                     "no notifications can be sent until it is (see the setup note in pipeline.yml)")
@@ -678,6 +689,7 @@ def fetch_push_subscriptions() -> list[dict] | None:
                              **parse_push_prefs(f)})
         return subs
     except Exception as exc:  # noqa: BLE001
+        PUSH_ISSUE["why"] = f"couldn't reach Firestore: {str(exc)[:120]}"
         log(f"  push subs unavailable ({exc}), skipping this run's notifications")
         return None
 
@@ -1020,11 +1032,16 @@ def run_push(new_items: list[dict], feed: dict, state: dict, now: dt.datetime) -
     # (A Critical story used to force an immediate check; it no longer jumps the slot limit, so it doesn't.)
     if now_ts - ps["last_eval"] < interval - 60:
         return                                   # stories stay pending; the next evaluation picks them up
+    diag = ps.setdefault("diag", {})
+    diag["checked_at"] = now.isoformat(timespec="seconds")
     if not VAPID_PRIVATE_KEY or not VAPID_PUBLIC_KEY:
+        diag["why"] = "VAPID_PRIVATE_KEY / VAPID_PUBLIC_KEY secrets are missing"
         log("  push: VAPID_PRIVATE_KEY/VAPID_PUBLIC_KEY not set, skipping (set them as GitHub Actions secrets to enable)")
         return
+    PUSH_ISSUE["why"] = ""
     subs = fetch_push_subscriptions()
     if subs is None:
+        diag["why"] = PUSH_ISSUE["why"] or "couldn't read the notification signups"
         return                                   # couldn't read the list: keep everything, retry next run
     # Watchlist alerts come from each signed-in person's own account. Read once per check, only for signups
     # that asked for them, one read per account (a phone and a laptop on the same account share it).
@@ -1040,6 +1057,8 @@ def run_push(new_items: list[dict], feed: dict, state: dict, now: dt.datetime) -
             # from a stale copy the phone may have sent long ago.
             s["watch"], s["inv_channels"] = [], set()
     ps["last_eval"] = now_ts
+    diag["why"] = ""
+    diag["signups"] = len(subs)
     ps["devices_n"] = len(subs) + len(uids)      # reads per check - a count only; sets the next interval
     interval = push_eval_interval(ps["devices_n"])
 
