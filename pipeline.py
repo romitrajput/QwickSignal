@@ -657,6 +657,16 @@ def device_key(doc_name: str) -> str:
     return hashlib.sha256((doc_name or "").encode()).hexdigest()[:16]
 
 
+def _why403(r) -> str:
+    """Google's own explanation of a refusal, plus which project/account the key belongs to (neither is secret)."""
+    try:
+        msg = (r.json().get("error") or {}).get("message", "")[:200]
+    except Exception:  # noqa: BLE001
+        msg = r.text[:120]
+    sa = _service_account() or {}
+    return f"- {msg} [key project={sa.get('project_id')}, app project={FIREBASE_PROJECT}, account={sa.get('client_email')}]"
+
+
 def fetch_push_subscriptions() -> list[dict] | None:
     """Every device subscribed for notifications, or None if the list couldn't be read (so a caller can
     tell "nobody subscribed" apart from "couldn't look"). Never raises."""
@@ -668,7 +678,7 @@ def fetch_push_subscriptions() -> list[dict] | None:
         r = requests.post(url, json=body, headers=headers, timeout=15)
         if not r.ok:
             PUSH_ISSUE["why"] = PUSH_ISSUE["why"] or (
-                "FIREBASE_SERVICE_ACCOUNT secret is empty" if not headers else f"Firestore refused the list: HTTP {r.status_code}")
+                "FIREBASE_SERVICE_ACCOUNT secret is empty" if not headers else f"Firestore refused the list: HTTP {r.status_code} {_why403(r)}")
             if r.status_code in (401, 403) and not headers:
                 log("  push: notification signups are private now and FIREBASE_SERVICE_ACCOUNT isn't set - "
                     "no notifications can be sent until it is (see the setup note in pipeline.yml)")
