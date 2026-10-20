@@ -1852,6 +1852,30 @@ if (typeof document !== 'undefined') (function () {
     return (data[0] || []).map(seg => seg[0]).join('');
   }
 
+  // Several strings in ONE request (the endpoint accepts repeated q=). Each string comes back as one or more
+  // [translated, original] segments, so the answer is matched to its string by rebuilding the original text
+  // piece by piece. If that does not add up exactly - or the endpoint ignores the extra strings - this throws
+  // 'MAPFAIL' and the caller falls back to one request per string, for good. It can never mix up two stories.
+  async function translateMany(texts, lang) {
+    const qs = texts.map(t => '&q=' + encodeURIComponent(t)).join('');
+    const r = await fetch(`${TR_ENDPOINT}?client=gtx&sl=auto&tl=${encodeURIComponent(lang)}&dt=t${qs}`);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const segs = ((await r.json())[0]) || [];
+    const outs = [];
+    let i = 0, orig = '', tr = '';
+    for (const seg of segs) {
+      if (i >= texts.length) throw new Error('MAPFAIL');
+      tr += seg[0] || ''; orig += seg[1] || '';
+      if (orig.length > texts[i].length) throw new Error('MAPFAIL');
+      if (orig.length === texts[i].length) {
+        if (orig !== texts[i]) throw new Error('MAPFAIL');
+        outs.push(tr); orig = ''; tr = ''; i++;
+      }
+    }
+    if (i !== texts.length) throw new Error('MAPFAIL');
+    return outs;
+  }
+
   // Swaps the translated text into cards already on screen, in place - no innerHTML rebuild, so nothing
   // flashes, replays its fade-in, loses scroll position, or drops an in-progress swipe/tap. This is what
   // actually fixes the "choppy, bouncy" feeling: a full renderList()/renderAll() used to run after every
@@ -1860,12 +1884,13 @@ if (typeof document !== 'undefined') (function () {
   // left completely alone.
   function patchTranslations() {
     if (currentLang === 'en') return;
+    const byId = new Map(all().map(x => [x.id, x]));
     $$('#list .entry[data-id], #savedList .entry[data-id], #savedInvestList .entry[data-id]').forEach(card => {
-      const it = all().find(x => x.id === card.dataset.id);
+      const it = byId.get(card.dataset.id);
       if (!it) return;
-      const hl = card.querySelector(':scope > .hl');
+      const hl = card.querySelector('.entry-text > .hl, :scope > .hl');
       if (hl && it.headline) { const v = trOf(it.headline); if (hl.textContent !== v) hl.textContent = v; }
-      const sum = card.querySelector(':scope > .sum');
+      const sum = card.querySelector('.entry-text > .sum, :scope > .sum');
       if (sum && it.summary) { const v = trOf(it.summary); if (sum.textContent !== v) sum.textContent = v; }
       // Only present when the card is open - still just a text swap, not a rebuild.
       const why = card.querySelector('.details .why');
@@ -1895,21 +1920,55 @@ if (typeof document !== 'undefined') (function () {
   // free endpoint above is unauthenticated, so this deliberately doesn't hammer it). Cards already show their
   // English text immediately; each one silently swaps in its translation as soon as it lands, via the
   // debounced re-render above - never a blocking spinner over the news itself.
-  let TR_CONCURRENCY = 4;   // briefly raised by QRGate while it prepares the first screen
+  // Concurrency adapts: a few requests at once normally, more while the QR gate is preparing the first screen,
+  // and fewer for a few seconds after any request fails (the free endpoint throttles bursts).
+  let TR_CONCURRENCY = 4;   // QRGate raises this while it prepares the first screen
+  let trThrottleUntil = 0;
+  const TR_FAILS = new Map();   // key -> failed attempts so far
+  const TR_MAX_TRIES = 6;
+  const TR_GAVE = new Set();    // strings that kept failing: left in English for now, tried again in 15s (never cached as English)
+  const trLimit = () => Date.now() < trThrottleUntil ? 2 : TR_CONCURRENCY;
   let trActive = 0;
   const trQueue = [];
+  let trBatchOK = true;          // turned off for good the first time a batched answer can't be matched up
+  const TR_BATCH_N = 6, TR_BATCH_CHARS = 1800;
   function trPump() {
-    while (trActive < TR_CONCURRENCY && trQueue.length) {
-      const text = trQueue.shift();
-      const key = trKey(text);
-      if (TR_CACHE.has(key) || TR_PENDING.has(key)) continue;
-      TR_PENDING.add(key);
+    while (trActive < trLimit() && trQueue.length) {
+      const group = [], keys = [];
+      let chars = 0;
+      while (trQueue.length && group.length < (trBatchOK ? TR_BATCH_N : 1)) {
+        const text = trQueue[0], key = trKey(text);
+        if (TR_CACHE.has(key) || TR_PENDING.has(key)) { trQueue.shift(); continue; }
+        if (group.length && chars + text.length > TR_BATCH_CHARS) break;
+        trQueue.shift(); group.push(text); keys.push(key); chars += text.length; TR_PENDING.add(key);
+      }
+      if (!group.length) continue;
       trActive++;
-      translateOne(text, currentLang)
-        .then(out => TR_CACHE.set(key, out || text))
-        .catch(() => TR_CACHE.set(key, text))   // give up quietly for this string - it just stays in English
-        .finally(() => { TR_PENDING.delete(key); trActive--; trRefreshSoon(); trPump(); });
+      const lang = currentLang;
+      (group.length > 1 ? translateMany(group, lang) : translateOne(group[0], lang).then(o => [o]))
+        .then(outs => group.forEach((text, i) => { TR_CACHE.set(keys[i], outs[i] || text); TR_FAILS.delete(keys[i]); }))
+        .catch(err => {
+          if (err && err.message === 'MAPFAIL') {            // batching doesn't work here: one by one from now on
+            trBatchOK = false;
+            for (let i = group.length - 1; i >= 0; i--) { TR_PENDING.delete(keys[i]); trQueue.unshift(group[i]); }
+            return;
+          }
+          // A hiccup (throttling, a dropped connection) must NOT leave the story in English for good: try again
+          // a little later, a few times, and only then give up on that string.
+          trThrottleUntil = Date.now() + 6000;
+          group.forEach((text, i) => {
+            const n = (TR_FAILS.get(keys[i]) || 0) + 1;
+            TR_FAILS.set(keys[i], n);
+            if (n < TR_MAX_TRIES) setTimeout(() => { if (!TR_CACHE.has(keys[i])) { trQueue.push(text); trPump(); } }, 1200 * n);
+            else {
+              TR_GAVE.add(keys[i]);
+              setTimeout(() => { TR_GAVE.delete(keys[i]); TR_FAILS.delete(keys[i]); if (!TR_CACHE.has(keys[i])) { trQueue.push(text); trPump(); } }, 15000);
+            }
+          });
+        })
+        .finally(() => { keys.forEach(k => TR_PENDING.delete(k)); trActive--; trRefreshSoon(); trPump(); });
     }
+    if (trQueue.length && trActive === 0) setTimeout(trPump, 500);   // everything paused by the throttle: look again
   }
   function ensureTranslated(texts) {
     if (currentLang === 'en') return;
@@ -7417,12 +7476,11 @@ Give a concise, event-specific analysis - decide for yourself which structure be
      Uses the same free translation path as Settings -> Language: no new service, no cost. */
   const QRGate = {
     active: /[?&]src=qr(&|$)/.test(location.search),
-    FIRST_SCREEN: 30,          // stories that must be translated before the news is shown
-    MAX_WAIT_MS: 30000,        // never trap someone behind the loader if translation is slow or blocked
+    MAX_WAIT_MS: 90000,        // never trap someone behind the loader if translation is slow or blocked
     TXT: {
-      hi: ['आपकी खबरें तैयार हो रही हैं', 'ताज़ा खबरों का हिंदी में अनुवाद हो रहा है', 'खबरें'],
-      mr: ['तुमच्या बातम्या तयार होत आहेत', 'ताज्या बातम्यांचे मराठीत भाषांतर सुरू आहे', 'बातम्या'],
-      gu: ['તમારા સમાચાર તૈયાર થઈ રહ્યા છે', 'તાજા સમાચારનો ગુજરાતીમાં અનુવાદ થઈ રહ્યો છે', 'સમાચાર']
+      hi: ['आपकी खबरें तैयार हो रही हैं', 'सभी खबरों का हिंदी में अनुवाद हो रहा है', 'खबरें'],
+      mr: ['तुमच्या बातम्या तयार होत आहेत', 'सर्व बातम्यांचे मराठीत भाषांतर सुरू आहे', 'बातम्या'],
+      gu: ['તમારા સમાચાર તૈયાર થઈ રહ્યા છે', 'બધા સમાચારનો ગુજરાતીમાં અનુવાદ થઈ રહ્યો છે', 'સમાચાર']
     },
     init(firstLoad) {
       if (!this.active) return;
@@ -7445,26 +7503,27 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       $('#qgPick').hidden = true; $('#qgLoad').hidden = false;
       const t0 = Date.now();
       await Promise.race([this.ready, new Promise(r => setTimeout(r, 15000))]);
-      let texts = [];
-      try {
-        const items = filtered().sort(byPriority).slice(0, this.FIRST_SCREEN);
-        texts = [...new Set(items.flatMap(it => [it.headline, it.summary]).filter(Boolean))];
-      } catch (e) { texts = []; }
-      TR_CONCURRENCY = 8;
-      const wait = texts.filter(t => !TR_CACHE.has(trKey(t)));
-      for (const t of wait.slice().reverse()) {          // these first, ahead of everything else queued
-        const i = trQueue.indexOf(t); if (i >= 0) trQueue.splice(i, 1);
-        if (!TR_PENDING.has(trKey(t))) trQueue.unshift(t);
+      // Every story the News list can show: headline + summary, in the order the list shows them.
+      let items = [];
+      try { items = filtered().sort(byPriority); } catch (e) { items = []; }
+      const pairs = items.map(it => [it.headline, it.summary].filter(Boolean)).filter(a => a.length);
+      const texts = [...new Set(pairs.flat())];
+      TR_CONCURRENCY = 6;
+      const settled = x => TR_CACHE.has(trKey(x)) || TR_GAVE.has(trKey(x));
+      const need = texts.filter(x => !TR_CACHE.has(trKey(x)));
+      for (const x of need.slice().reverse()) {          // these first, ahead of anything else queued
+        const i = trQueue.indexOf(x); if (i >= 0) trQueue.splice(i, 1);
+        if (!TR_PENDING.has(trKey(x))) trQueue.unshift(x);
       }
       trPump();
-      const total = texts.length;
+      const total = pairs.length;
       await new Promise(res => {
         const tick = () => {
-          const done = texts.filter(t => TR_CACHE.has(trKey(t))).length;
-          const pct = total ? Math.max(6, Math.round(done / total * 100)) : 100;
-          $('#qgFill').style.width = pct + '%';
+          const doneStr = texts.reduce((n, x) => n + (settled(x) ? 1 : 0), 0);
+          const done = pairs.reduce((n, a) => n + (a.every(settled) ? 1 : 0), 0);
+          $('#qgFill').style.width = (texts.length ? Math.max(6, Math.round(doneStr / texts.length * 100)) : 100) + '%';
           $('#qgCount').textContent = total ? `${done} / ${total} ${unit}` : '';
-          if (done >= total || Date.now() - t0 > this.MAX_WAIT_MS) { this.timedOut = done < total; res(); } else setTimeout(tick, 250);
+          if (doneStr >= texts.length || Date.now() - t0 > this.MAX_WAIT_MS) { this.timedOut = doneStr < texts.length; res(); } else setTimeout(tick, 250);
         };
         tick();
       });
@@ -7474,6 +7533,9 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     finish(slow) {
       document.documentElement.classList.remove('qr-entry');
       const g = $('#qrGate'); if (g) g.hidden = true;
+      // A QR visitor who isn't signed in goes straight in as a guest (same as tapping "Continue as guest"),
+      // instead of meeting the sign-in screen after having just chosen a language.
+      if (!Landing.seen()) { track('qr_guest'); Landing.dismiss(true); }
       renderAll(); renderCountryViewer();
       if (slow) toast('Some stories will switch to your language in a moment.');
     }
