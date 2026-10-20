@@ -1895,7 +1895,7 @@ if (typeof document !== 'undefined') (function () {
   // free endpoint above is unauthenticated, so this deliberately doesn't hammer it). Cards already show their
   // English text immediately; each one silently swaps in its translation as soon as it lands, via the
   // debounced re-render above - never a blocking spinner over the news itself.
-  const TR_CONCURRENCY = 4;
+  let TR_CONCURRENCY = 4;   // briefly raised by QRGate while it prepares the first screen
   let trActive = 0;
   const trQueue = [];
   function trPump() {
@@ -7409,6 +7409,76 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     setTimeout(() => el.remove(), 500);   // matches the CSS opacity transition, then drop it from the DOM
   }
 
+  /* ---------- QR entry gate (owner, 20 Oct) ----------
+     Only for people who arrive through the printed QR code, whose address carries ?src=qr. They are asked for a
+     news language first; a loading screen then holds until the first stories are translated, so the first thing
+     they see is readable news, not English cards swapping language one by one. Any other way in (a shared link,
+     the installed app, a bookmark) never carries ?src=qr, so none of this runs and nothing about it changes.
+     Uses the same free translation path as Settings -> Language: no new service, no cost. */
+  const QRGate = {
+    active: /[?&]src=qr(&|$)/.test(location.search),
+    FIRST_SCREEN: 30,          // stories that must be translated before the news is shown
+    MAX_WAIT_MS: 30000,        // never trap someone behind the loader if translation is slow or blocked
+    TXT: {
+      hi: ['आपकी खबरें तैयार हो रही हैं', 'ताज़ा खबरों का हिंदी में अनुवाद हो रहा है', 'खबरें'],
+      mr: ['तुमच्या बातम्या तयार होत आहेत', 'ताज्या बातम्यांचे मराठीत भाषांतर सुरू आहे', 'बातम्या'],
+      gu: ['તમારા સમાચાર તૈયાર થઈ રહ્યા છે', 'તાજા સમાચારનો ગુજરાતીમાં અનુવાદ થઈ રહ્યો છે', 'સમાચાર']
+    },
+    init(firstLoad) {
+      if (!this.active) return;
+      track('qr_entry');
+      // Drop the marker from the address so a refresh doesn't ask again; the page is already in QR mode.
+      try {
+        const u = new URL(location.href); u.searchParams.delete('src');
+        history.replaceState(null, '', u.pathname + (u.search || '') + u.hash);
+      } catch (e) { /* address bar left as is */ }
+      this.ready = Promise.resolve(firstLoad).catch(() => {});
+      $$('#qrGate [data-qlang]').forEach(b => b.addEventListener('click', () => this.pick(b.dataset.qlang)));
+    },
+    async pick(lang) {
+      if (this.busy) return; this.busy = true;
+      track('qr_language', { lang });
+      setLang(lang);
+      if (lang === 'en' || !this.TXT[lang]) return this.finish(false);
+      const [title, sub, unit] = this.TXT[lang];
+      $('#qgLoadTitle').textContent = title; $('#qgLoadSub').textContent = sub;
+      $('#qgPick').hidden = true; $('#qgLoad').hidden = false;
+      const t0 = Date.now();
+      await Promise.race([this.ready, new Promise(r => setTimeout(r, 15000))]);
+      let texts = [];
+      try {
+        const items = filtered().sort(byPriority).slice(0, this.FIRST_SCREEN);
+        texts = [...new Set(items.flatMap(it => [it.headline, it.summary]).filter(Boolean))];
+      } catch (e) { texts = []; }
+      TR_CONCURRENCY = 8;
+      const wait = texts.filter(t => !TR_CACHE.has(trKey(t)));
+      for (const t of wait.slice().reverse()) {          // these first, ahead of everything else queued
+        const i = trQueue.indexOf(t); if (i >= 0) trQueue.splice(i, 1);
+        if (!TR_PENDING.has(trKey(t))) trQueue.unshift(t);
+      }
+      trPump();
+      const total = texts.length;
+      await new Promise(res => {
+        const tick = () => {
+          const done = texts.filter(t => TR_CACHE.has(trKey(t))).length;
+          const pct = total ? Math.max(6, Math.round(done / total * 100)) : 100;
+          $('#qgFill').style.width = pct + '%';
+          $('#qgCount').textContent = total ? `${done} / ${total} ${unit}` : '';
+          if (done >= total || Date.now() - t0 > this.MAX_WAIT_MS) { this.timedOut = done < total; res(); } else setTimeout(tick, 250);
+        };
+        tick();
+      });
+      TR_CONCURRENCY = 4;
+      this.finish(this.timedOut);
+    },
+    finish(slow) {
+      document.documentElement.classList.remove('qr-entry');
+      const g = $('#qrGate'); if (g) g.hidden = true;
+      renderAll(); renderCountryViewer();
+      if (slow) toast('Some stories will switch to your language in a moment.');
+    }
+  };
+
   /* ---------- start ---------- */
   (async function start() {
     setTimeout(dismissSplash, SPLASH_MIN_MS);
@@ -7449,6 +7519,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     // moment that actually reflects the gap since the app was last in front of the user.
     const awaySince = Digest.consumeGap();
     const firstLoad = loadLive();
+    QRGate.init(firstLoad);   // no-op unless this visit came from the QR code
     firstLoad.then(() => { if (hashGotoId) gotoItem(hashGotoId); });
     // The default-channels list is public read, so it loads independently of sign-in - a guest should never
     // see a blank feed while waiting for anything auth-related.
