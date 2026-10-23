@@ -1733,7 +1733,7 @@ if (typeof document !== 'undefined') (function () {
     // manually-added one never "arrived" while they were away.
     const unread = S.live.filter(it => it.addedAt > awaySince && !S.reviewed.has(it.id)
       && itemStatus(it) !== 'dismissed'
-      && (invMode ? (it.companies || []).some(c => S.myCompanies.has(c)) : channelVisible(it)));
+      && (invMode ? isCompanyStory(it) : channelVisible(it)));
     if (!unread.length) { box.hidden = true; return; }
     const counts = { Critical: 0, High: 0, Medium: 0, Low: 0 };
     unread.forEach(it => { if (counts[it.importance] != null) counts[it.importance]++; });
@@ -1744,7 +1744,7 @@ if (typeof document !== 'undefined') (function () {
     box.hidden = false;
     box.innerHTML = `
       <div class="digest-head">
-        <h2>${unread.length} ${invMode ? (unread.length === 1 ? 'update on your stocks' : 'updates on your stocks') : (unread.length === 1 ? 'story' : 'stories')} since you left</h2>
+        <h2>${unread.length} ${invMode ? (unread.length === 1 ? 'company update' : 'company updates') : (unread.length === 1 ? 'story' : 'stories')} since you left</h2>
         <button type="button" class="digest-close" aria-label="Dismiss">&times;</button>
       </div>
       <div class="digest-rows">${rows}</div>
@@ -4555,6 +4555,7 @@ if (typeof document !== 'undefined') (function () {
   function channelVisible(it) {
     if (!it.live) return true;
     if (it.inv) return false;   // a post from a channel linked only for Investment: shown in the Investment tab, never in News
+    if (isCompanyStory(it)) return false;   // names a company: it lives in the Investment tab (owner, 24 Oct)
     const ch = itemChannel(it);
     if (!ch) return true;
     if (S.myChannels.size) return S.myChannels.has(ch);
@@ -4651,6 +4652,10 @@ if (typeof document !== 'undefined') (function () {
      Still excludes dismissed/expired exactly like the News tab (a dismissed story should stay dismissed
      everywhere), and still respects the current search/priority filters via filtered-style logic in
      renderList(), same as the News tab's By-country/By-sector grouping. */
+  // Owner, 24 Oct: every story that names a company belongs to the Investment tab, not News. A tracked
+  // company's stories open from its card's News button; stories about other companies are listed below the
+  // cards. The News tab keeps everything else (geopolitics, policy, and so on).
+  const isCompanyStory = it => !!(it && (it.companies || []).length);
   function investmentGroups() {
     const want = S.myCompanies;
     const bySector = new Map();   // sector -> Map(company -> stories[])
@@ -4739,6 +4744,8 @@ if (typeof document !== 'undefined') (function () {
   function renderCompanyBar() {
     const box = $('#companyStatus');
     if (!box) return;
+    box.hidden = true; box.innerHTML = '';      // removed from the Investment tab (owner, 24 Oct)
+    return;
     const groups = companyGroups();
     box.hidden = !groups.length;
     if (!groups.length) { box.innerHTML = ''; return; }
@@ -5839,7 +5846,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     const listed = new Set();
     groups.forEach(g => g.companies.forEach(c => c.stories.forEach(st => listed.add(st.id))));
     const stories = all().filter(it => {
-      if (!it.live || listed.has(it.id)) return false;
+      if (!it.live || listed.has(it.id) || isCompanyStory(it)) return false;   // company stories sit under their card or in "Other companies"
       const st = itemStatus(it);
       if (st === 'dismissed' || st === 'expired') return false;
       for (const ch of itemChannels(it)) if (S.myInvestChannels.has(ch)) return true;
@@ -5953,6 +5960,23 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     }
   };
 
+  // Stories about companies this person does not track, newest first, below their own company cards.
+  function otherCompanyNewsHTML() {
+    const want = S.myCompanies, sec = S.f.investSector;
+    const items = all().filter(it => {
+      const st = itemStatus(it);
+      if (st === 'dismissed' || st === 'expired' || !isCompanyStory(it)) return false;
+      if (it.companies.some(c => want.has(c))) return false;
+      if (sec) {
+        const k = E.COMPANIES.find(c => c.name === it.companies[0]);
+        if (((k && k.sector) || it.sector || 'Other') !== sec) return false;
+      }
+      return true;
+    }).sort((x, y) => y.addedAt - x.addedAt);
+    if (!items.length) return '';
+    return groupHead(esc('Other companies in the news'), items.length) + items.map(entryWrapHTML).join('');
+  }
+
   function renderInvestmentList() {
     // Same guard as renderList(): don't yank #list's DOM out from under an in-progress swipe gesture.
     if (SWIPE.active) { SWIPE.renderPending = true; return; }
@@ -5960,9 +5984,10 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     const allGroups = investmentGroups();
     const empty = $('#investEmpty');
     const channelHTML = investChannelSectionHTML(allGroups);
+    const otherHTML = otherCompanyNewsHTML();
     if (!S.myCompanies.size) {
       if (empty) empty.hidden = false;
-      box.innerHTML = channelHTML;     // linked channels still show, under the "track companies" prompt
+      box.innerHTML = otherHTML + channelHTML;     // other companies' news and linked channels still show, under the "track companies" prompt
       seenObserveVisible(box);
       return;
     }
@@ -5973,9 +5998,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     for (const g of groups) {
       const companyBlocks = g.companies.map(c => {
         const stories = c.stories;
-        const body = stories.length
-          ? stories.map(entryWrapHTML).join('')
-          : `<p class="empty-note">${esc(t('investNoNews'))}</p>`;
+        const body = '';
         return `<h3 class="grp-company" data-co="${esc(c.company)}" tabindex="0" aria-label="${esc(c.company)}. ${esc(t('lpHint'))}">
           <div class="gc-top">
             <span class="gc-ring">${companyLogoHTML(c.company, 'gc-ring-inner')}</span>
@@ -5994,7 +6017,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     }
     let lpUsed = false; try { lpUsed = !!localStorage.getItem('qs-lp-used-v1'); } catch (e) { /* storage blocked */ }
     const hint = html && !lpUsed ? `<p class="lp-tip">${esc(t('lpHint'))}</p>` : '';
-    box.innerHTML = hint + (html || `<div class="empty"><p>${esc(t('investNoNews'))}</p></div>`) + channelHTML;
+    box.innerHTML = hint + (html || `<div class="empty"><p>${esc(t('investNoNews'))}</p></div>`) + otherHTML + channelHTML;
     seenObserveVisible(box);
     // Sentiment pulse no longer renders inline here - per the user's explicit "Dedicated Pulse screen"
     // choice, it moved to its own Community tab (see renderCommunity()), which lists every tracked company
@@ -6571,7 +6594,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     if (!newsBox && !investBox) return;
     const items = savedItems();
     ensureTranslated(collectTranslatable(items));
-    const isInvestItem = it => (it.companies || []).some(c => S.myCompanies.has(c));
+    const isInvestItem = isCompanyStory;
     const newsItems = items.filter(it => !isInvestItem(it));
     const investItems = items.filter(isInvestItem);
     const head = (key, n) => `<h2 class="saved-head">${esc(t(key))} <span>${n}</span></h2>`;
@@ -8012,6 +8035,25 @@ Give a concise, event-specific analysis - decide for yourself which structure be
         if (co) { Board.open = Pulse.companySlug(Board.canon(co)); Board.pick = null; Board.draft = ''; Board.q = ''; }
         setTab('community');
       } else setTab('brief');
+      return;
+    }
+    // A company story lives in the Investment tab: a tracked company's opens in that company's story viewer,
+    // any other company's is shown in "Other companies in the news" below the cards.
+    const story = all().find(x => x.id === id);
+    if (story && isCompanyStory(story)) {
+      S.open.add(id);
+      setTab('investment');
+      const co = story.companies.find(c => S.myCompanies.has(c));
+      if (co && companyGroups().some(g => g.company === co && g.stories.some(s => s.id === id))) {
+        openCompany(co);
+        const gi = S.cv && S.cv.groups.findIndex(g => g.company === co);
+        if (S.cv && gi > -1) { const k = S.cv.groups[gi].stories.findIndex(s => s.id === id); if (k > -1) { S.cv.idx = k; renderCountryViewer(); markCurrentReviewed(); } }
+        return;
+      }
+      S.f.investSector = '';
+      renderInvestmentList();
+      const el = document.querySelector('#view-brief .entry[data-id="' + id + '"]');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
       return;
     }
     S.f = Object.assign(S.f, { country: '', sector: '', imp: '', q: '', range: 'all' }); $('#q').value = '';

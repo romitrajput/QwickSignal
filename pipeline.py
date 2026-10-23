@@ -580,8 +580,9 @@ def _watch_regex(sub: dict):
 
 
 def push_kind_for(sub: dict, item: dict) -> str | None:
-    """'invest' if the story mentions one of this device's tracked companies (when it opted in), 'news' if it
-    passes the device's news filters, otherwise None. A watchlist story deliberately skips the priority floor
+    """'invest' if the story mentions one of this device's tracked companies (when it opted in), or names any
+    other company and passes its filters; 'news' if it names no company and passes the device's news filters;
+    otherwise None. A watchlist story deliberately skips the priority floor
     and the country list: someone tracking a company wants its news even when it's rated Low."""
     if sub.get("invest"):
         if sub.get("inv_channels") and sub["inv_channels"] & item_channels(item):
@@ -592,6 +593,10 @@ def push_kind_for(sub: dict, item: dict) -> str | None:
             return "invest"
     if item.get("inv"):
         return None                              # from a channel linked only for Investment: never a News story
+    if names_a_company(item):
+        # Owner, 24 Oct: company stories live in the Investment tab, so they alert as Investment. A company this
+        # device doesn't track still has to pass its priority floor and country choice, like any News story.
+        return "invest" if sub.get("invest") and news_wanted(sub, item) else None
     return "news" if sub.get("news", True) and news_wanted(sub, item) else None
 
 
@@ -785,6 +790,26 @@ def company_index() -> dict:
         log(f"  ! couldn't read the company table from app.js ({exc}); matching tracked names as typed")
     _COMPANY_INDEX = index
     return index
+
+
+_ANY_COMPANY_RX = {"rx": None, "built": False}
+
+
+def names_a_company(item: dict) -> bool:
+    """True when the story names any company in the app's table - the same rule (findCompanies() in app.js:
+    exact-case name or alias, whole word, read from the excerpt or else the headline) that puts a story in the
+    Investment tab instead of News. Such a story is an Investment notification, never a News one."""
+    if item.get("companies"):
+        return True
+    if not _ANY_COMPANY_RX["built"]:
+        terms = sorted({t for ts in company_index().values() for t in ts if t.strip()}, key=len, reverse=True)
+        _ANY_COMPANY_RX["rx"] = re.compile(r"(?<![A-Za-z0-9_])(?:" + "|".join(re.escape(t) for t in terms) + r")(?![A-Za-z0-9_])") if terms else None
+        _ANY_COMPANY_RX["built"] = True
+    rx = _ANY_COMPANY_RX["rx"]
+    if not rx:
+        return False
+    text = (item.get("excerpt") or item.get("headline") or "") + "\n" + (item.get("headline") or "")
+    return bool(rx.search(text))
 
 
 def terms_for(companies: list[str]) -> list[str]:
