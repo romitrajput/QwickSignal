@@ -547,7 +547,7 @@ p.np-sub{margin-left:0}
 .co-page-title .n{font-weight:700;color:var(--ink2);font-variant-numeric:tabular-nums}
 /* "i" button with the share of users, Explore channels */
 .lp-chanrow{position:relative}
-.lc-info{display:inline-flex;vertical-align:middle;margin-left:4px}
+.lc-info{display:inline-flex;vertical-align:middle}
 .lc-info .info-pop{font-weight:500}
 .ex-filter{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .ex-chip{min-height:40px;padding:0 16px;border-radius:99px;border:1.5px solid var(--line);background:transparent;color:var(--ink);font:inherit;font-weight:700;font-size:14px;cursor:pointer}
@@ -566,7 +566,13 @@ p.np-sub{margin-left:0}
 .lp-row .name{min-width:0}
 /* Channel rows: let the name, category label and "i" wrap instead of being cut off with an ellipsis
    (the cut also clipped the "i" popup, which sits inside the name). */
-.lp-chanrow .name,#tgInvList .lp-row .name{white-space:normal;overflow:visible;display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;overflow-wrap:anywhere}
+/* Line 1: the full channel name across the row. Line 2: label / badge / i on the left, buttons on the right. */
+.lp-chanrow:has(.lc-main){display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"name name" "sub btns";align-items:center;gap:6px 10px;padding:12px 8px 10px 14px}
+.lc-main{display:contents}
+.lc-name{grid-area:name;font-weight:600;font-size:14.5px;overflow-wrap:anywhere;min-width:0}
+.lc-sub{grid-area:sub;display:flex;flex-wrap:wrap;align-items:center;gap:6px;min-width:0}
+.lp-chanrow .lp-rowbtns{grid-area:btns;justify-self:end}
+.lc-sub .lc-wait{white-space:normal}
 .lp-chanrow:has(.info-i[aria-expanded="true"]){z-index:5}
 .lc-info .info-pop{z-index:60}
 
@@ -1373,7 +1379,7 @@ body.pre-app .top, body.pre-app main, body.pre-app .tabs{display:none}
       <button type="button" class="settingspage-back" data-act="spback"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>Settings</button>
       <div class="lp-block lc-intro">
         <h2 class="lp-h">Explore channels</h2>
-        <p class="lp-sub">Every Telegram channel on QwickSignal. Tap i to see how many users have linked it. New channels people add appear here after the owner approves them.</p>
+        <p class="lp-sub">Every Telegram channel on QwickSignal. Tap i to see what share of users have linked it. New channels people add appear here after the owner approves them.</p>
         <div class="ex-filter" role="group" aria-label="Filter by category">
           <button type="button" class="ex-chip" data-act="exfilter" data-v="" aria-pressed="true">All</button>
           <button type="button" class="ex-chip" data-act="exfilter" data-v="news" aria-pressed="false">News</button>

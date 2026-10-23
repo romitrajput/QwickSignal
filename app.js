@@ -6755,10 +6755,17 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       return { n, total: this.data.accounts, p: n ? Math.max(1, Math.round(n / this.data.accounts * 100)) : 0 };
     },
     // The share of accounts that linked a channel, behind an "i" button (owner, 24 Oct) - Explore only.
-    info(name, key) {
-      const s = this.pct(name, key || 'users');
-      const txt = s ? (s.p ? s.p + '% of users have linked this channel (' + s.n + ' of ' + s.total + ' accounts).' : 'No users have linked this channel yet.') : 'Not counted yet. The figure updates every 30 minutes.';
-      return `<span class="lc-info"><button type="button" class="info-i" aria-label="How many users linked t/${esc(name)}" aria-expanded="false">i</button><span class="info-pop" role="tooltip">${esc(txt)}</span></span>`;
+    info(name) {
+      // Percentage only (owner, 24 Oct): never a count of users. "users" is once per account across both lists;
+      // an older stats file without it falls back to the larger of the two lists.
+      let txt = 'Not counted yet. The figure updates every 30 minutes.';
+      const d = this.data;
+      if (d && d.accounts) {
+        const c = d.channels[String(name).toLowerCase()] || {};
+        const n = c.users != null ? c.users : Math.max(c.news || 0, c.investment || 0);
+        txt = n ? Math.max(1, Math.round(n / d.accounts * 100)) + '% of users have linked this channel.' : 'Not linked by any users yet.';
+      }
+      return `<span class="lc-info"><button type="button" class="info-i" aria-label="Share of users who linked t/${esc(name)}" aria-expanded="false">i</button><span class="info-pop" role="tooltip">${esc(txt)}</span></span>`;
     },
     html(name, cat, key) {
       const s = this.pct(name, key || cat);
@@ -6773,7 +6780,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     const rows = d ? Object.entries(d.channels).map(([name, c]) => ({ name, n: c.investment || 0 }))
       .filter(r => r.n >= 2 && !S.myInvestChannels.has(r.name)).sort((x, y) => y.n - x.n).slice(0, 6) : [];
     wrap.hidden = !rows.length;
-    box.innerHTML = rows.map(r => `<div class="lp-row"><span class="name">t/${esc(r.name)} <span class="lc-cat inv">Investment</span></span>
+    box.innerHTML = rows.map(r => `<div class="lp-row lp-chanrow">${chanMain(r.name, '')}
       <div class="lp-rowbtns"><button class="follow" data-act="tginvlink" data-v="${esc(r.name)}">Link</button></div></div>`).join('');
   }
   function refreshChannelStats() {
@@ -6793,6 +6800,9 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     const c = catalogCache.find(x => x.channel === name);
     return c ? c.status : 'pending';
   }
+  // Channel rows (owner-approved layout A, 24 Oct): the full name on line 1, never cut off; line 2 holds the
+  // category label (only where it tells channels apart), the approval badge and, in Explore, the "i".
+  const chanMain = (name, line2) => `<div class="lc-main"><span class="lc-name">t/${esc(name)}</span>${line2 ? `<span class="lc-sub">${line2}</span>` : ''}</div>`;
   const waitingBadge = '<span class="lc-wait" title="The owner has not approved this channel yet, so nothing is fetched from it">Awaiting approval</span>';
 
   // Explore channels: everything on QwickSignal, with category and share of accounts. Tap Link to add one to
@@ -6819,7 +6829,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       box.innerHTML = approved.map(c => {
         const name = c.channel, inv = c.cat === 'investment';
         const linked = inv ? S.myInvestChannels.has(name) : (S.myChannels.has(name) && !S.hiddenChannels.has(name));
-        return `<div class="lp-row lp-chanrow"><span class="name">t/${esc(name)} ${catPill(c.cat)}${ChanStats.info(name)}</span>
+        return `<div class="lp-row lp-chanrow">${chanMain(name, (exploreFilter ? '' : catPill(c.cat)) + ChanStats.info(name))}
           <div class="lp-rowbtns"><button class="follow${linked ? ' on' : ''}" data-act="exlink" data-v="${esc(name)}" data-cat="${c.cat}" aria-pressed="${linked}" aria-label="${linked ? 'Unlink' : 'Link'} t/${esc(name)}">${linked ? 'Linked' : 'Link'}</button>
           ${owner ? `<button class="lp-more" data-act="tgmore" data-where="explore" data-cat="${c.cat}" data-v="${esc(name)}" data-default="${(defaultChannelsCache || []).includes(name) ? 1 : 0}" aria-label="${esc(t('moreOptions'))} t/${esc(name)}" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>` : ''}</div></div>`;
       }).join('');
@@ -6828,7 +6838,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     const pbox = $('#exPendingBox'), plist = $('#exPending');
     const pend = owner ? list.filter(c => c.status === 'pending') : [];
     if (pbox) pbox.hidden = !pend.length;
-    if (plist) plist.innerHTML = pend.map(c => `<div class="lp-row lp-chanrow"><span class="name">t/${esc(c.channel)} ${catPill(c.cat)}${ChanStats.info(c.channel)}</span>
+    if (plist) plist.innerHTML = pend.map(c => `<div class="lp-row lp-chanrow">${chanMain(c.channel, catPill(c.cat) + ChanStats.info(c.channel))}
       <div class="lp-rowbtns"><button class="follow on" data-act="exapprove" data-v="${esc(c.channel)}">Approve</button><button class="follow" data-act="exreject" data-v="${esc(c.channel)}">Reject</button></div></div>`).join('');
   }
 
@@ -6844,7 +6854,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     // Signed out: the owner-picked default channels only, read-only.
     if (!Auth.uid) {
       if (!defaults.length) { box.innerHTML = '<p class="lp-empty">' + esc(t('noChannelsYet')) + '</p>'; return; }
-      box.innerHTML = defaults.map(lower => `<div class="lp-row"><span class="name">t/${esc(lower)} <span class="lp-defaultbadge">${esc(t('defaultBadge'))}</span></span></div>`).join('');
+      box.innerHTML = defaults.map(lower => `<div class="lp-row lp-chanrow">${chanMain(lower, '<span class="lp-defaultbadge">' + esc(t('defaultBadge')) + '</span>')}</div>`).join('');
       return;
     }
     if (catalogCache === null) await Channels.catalog();
@@ -6857,7 +6867,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     }
     box.innerHTML = mine.map(name => {
       const isDefault = defaults.includes(name), st = channelStatus(name);
-      return `<div class="lp-row lp-chanrow"><span class="name">t/${esc(name)}${isDefault ? ' <span class="lp-defaultbadge">' + esc(t('defaultBadge')) + '</span>' : ''} ${catPill('news')}${st === 'pending' ? ' ' + waitingBadge : ''}</span>
+      return `<div class="lp-row lp-chanrow">${chanMain(name, (isDefault ? '<span class="lp-defaultbadge">' + esc(t('defaultBadge')) + '</span>' : '') + (st === 'pending' ? waitingBadge : ''))}
       <div class="lp-rowbtns"><button class="follow lp-remove" data-act="tgfollow" data-v="${esc(name)}" aria-label="${esc(t('remove'))} t/${esc(name)}">${esc(t('remove'))}</button>
       <button class="lp-more" data-act="tgmore" data-where="news" data-v="${esc(name)}" data-default="${isDefault ? 1 : 0}" aria-label="${esc(t('moreOptions'))} t/${esc(name)}" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button></div></div>`;
     }).join('');
@@ -7122,7 +7132,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       box.innerHTML = `<p class="lp-empty">${esc(t('noChannelsYet'))}</p>`;
     } else {
       box.innerHTML = [...S.myInvestChannels].sort((a, b) => a.localeCompare(b)).map(name => `<div class="lp-row">
-        <span class="name">t/${esc(name)} <span class="lc-cat inv">Investment</span>${channelStatus(name) === 'pending' ? ' ' + waitingBadge : ''}</span>
+        ${chanMain(name, channelStatus(name) === 'pending' ? waitingBadge : '')}
         <div class="lp-rowbtns">
           <button class="follow lp-remove" data-act="tginvremove" data-v="${esc(name)}" aria-label="${esc(t('remove'))} t/${esc(name)}">${esc(t('remove'))}</button>
           <button class="lp-more" data-act="tgmore" data-where="inv" data-v="${esc(name)}" data-default="${(defaultChannelsCache || []).includes(name) ? 1 : 0}" aria-label="${esc(t('moreOptions'))} t/${esc(name)}" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>
@@ -7244,7 +7254,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
   const SETTINGS_SECTIONS = [
     { id: 'appearance', mode: null, icon: 'theme', title: 'Appearance', subKey: () => themeActive() === 'dark' ? 'Dark mode' : 'Light mode', count: null },
     { id: 'language', mode: null, icon: 'globe', title: 'Language', subKey: () => LANG_NAMES[currentLang] || 'English', count: null },
-    { id: 'explore', mode: null, icon: 'compass', title: 'Explore channels', subKey: () => 'Every channel, with the share of users', count: null },
+    { id: 'explore', mode: null, icon: 'compass', title: 'Explore channels', subKey: () => 'Every channel on QwickSignal', count: null },
     { id: 'linkchannels', mode: null, icon: 'wifi', title: 'Linked news channels', subKey: () => S.myChannels.size + ' linked', count: () => S.myChannels.size },
     { id: 'investwatchlist', mode: null, icon: 'candle', title: 'Linked investment channels & watchlist', subKey: () => S.myInvestChannels.size + ' channels · ' + S.myCompanies.size + ' stocks', count: () => S.myInvestChannels.size + S.myCompanies.size },
     { id: 'saved', mode: null, icon: 'bookmark', title: 'Saved stories', subKey: () => S.saved.size + ' saved', count: () => S.saved.size },
