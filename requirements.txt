@@ -1,5 +1,5 @@
 anthropic>=0.60
-requests>=2.31
+requests>=2.34.2
 beautifulsoup4>=4.12
 PyYAML>=6.0
 pypdf>=4.0
