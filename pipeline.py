@@ -336,7 +336,7 @@ def jaccard(a: set, b: set) -> float:
 # Can be overridden with the FIREBASE_API_KEY / FIREBASE_PROJECT_ID repository variables (Settings -> Secrets
 # and variables -> Actions -> Variables) so the real project ID never has to be edited into this file by hand.
 FIREBASE_API_KEY = os.environ.get("FIREBASE_API_KEY", "AIzaSyExampleQwickSignalPublicWebConfig00")
-FIREBASE_PROJECT = os.environ.get("FIREBASE_PROJECT_ID", "qwicksignal-sync")
+FIREBASE_PROJECT = os.environ.get("FIREBASE_PROJECT_ID", "qwicksignal")
 
 
 def fetch_approved_channels() -> list[str]:
@@ -1282,8 +1282,13 @@ def market_note(feed: dict, now: dt.datetime) -> dict:
     return {"title": title, "body": body, "id": "qs:market", "kind": "market"}
 
 
-def vote_note(brokers: dict) -> dict:
+def vote_note(brokers: dict, sub: dict | None = None) -> dict:
+    """The 11:00 vote invitation. Owner, 24 Oct: it names only a stock on this device's own watchlist, since the
+    Sentiment board lists only the person's own stocks. No watchlist stock with a recent broker call: the general
+    wording, which opens the board without naming a stock."""
     calls = sorted((brokers or {}).get("calls", []), key=lambda c: c.get("at") or "", reverse=True)
+    rx = _watch_regex(sub) if sub is not None else None
+    calls = [c for c in calls if rx and rx.search(c.get("company") or "")] if sub is not None else calls
     calls = [c for c in calls if c.get("action") != "maintain"][:20] + [c for c in calls if c.get("action") == "maintain"][:20]
     for c in calls:
         if c.get("action") in _ACT_TEXT and (c.get("target") or c.get("rating")):
@@ -1313,9 +1318,14 @@ def send_extra_pushes(subs: list[dict], feed: dict, state: dict, now: dt.datetim
             mins = loc.hour * 60 + loc.minute - (hh * 60 + mm)
             if not (0 <= mins < PUSH_EXTRAS_WINDOW_MIN) or done.get(kind) == loc.date().isoformat():
                 continue
-            if kind not in notes:
-                notes[kind] = market_note(feed, now) if kind == "market" else vote_note(read_json(PATHS["brokers"], {"calls": []}))
-            n = notes[kind]
+            if kind == "vote":
+                if "_brokers" not in notes:
+                    notes["_brokers"] = read_json(PATHS["brokers"], {"calls": []})
+                n = vote_note(notes["_brokers"], sub)          # per device: only its own watchlist stocks
+            else:
+                if kind not in notes:
+                    notes[kind] = market_note(feed, now)
+                n = notes[kind]
             payload = {"id": n["id"], "title": n["title"], "body": n["body"], "n": 1, "kind": kind, "crit": False,
                        "nid": new_notification_id(), "d": key, "flag": "", "country": "", "sector": "", "headline": n["body"]}
             status = send_one_push(sub, payload)

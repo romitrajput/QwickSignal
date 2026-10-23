@@ -103,8 +103,12 @@ service cloud.firestore {
       // Hardening (v88): browsers can no longer create channel records. A channel a person links lives in their
       // own account; the pipeline (service account, which bypasses these rules) files it here as "pending",
       // and only the owner can approve it. Nothing is fetched from Telegram until it is approved.
-      allow create: if false;
-      allow update: if isOwner() && request.resource.data.status in ['approved', 'pending', 'rejected'];
+      // The owner may create a record only to set the category of a built-in channel (marked approved).
+      allow create: if isOwner() && name.matches('[a-z0-9_]{5,32}') &&
+        request.resource.data.channel == name && request.resource.data.status == 'approved' &&
+        request.resource.data.category in ['news', 'investment'];
+      allow update: if isOwner() && request.resource.data.status in ['approved', 'pending', 'rejected'] &&
+        (!('category' in request.resource.data) || request.resource.data.category in ['news', 'investment', '']);
       allow delete: if isOwner();
     }
 

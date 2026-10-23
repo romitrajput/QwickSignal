@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
+<title>QwickSignal account</title>
+<link rel="icon" href="icon-192.png">
+<meta name="theme-color" content="#F9ECDC" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#18140F" media="(prefers-color-scheme: dark)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F9ECDC; --surface:#FFF8EF; --ink:#241A12; --ink2:#6B5B49; --line:#E4D3B9;
+  --accent:#D3131E; --accent-ink:#FFFFFF; --ok:#23703E; --warn:#8A0A12; --focus:#241A12;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --paper:#18140F; --surface:#231D16; --ink:#F2ECE0; --ink2:#B8AD9A; --line:#3A3127;
+  --accent:#E0473A; --accent-ink:#18140F; --ok:#5CC283; --warn:#F08A80; --focus:#F2ECE0; color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:var(--paper);color:var(--ink);font:400 16px/1.5 "Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  display:flex;flex-direction:column;align-items:center;min-height:100vh;
+  padding:calc(env(safe-area-inset-top,0px) + 28px) 16px calc(env(safe-area-inset-bottom,0px) + 24px)}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:20px;letter-spacing:-0.01em;margin-bottom:28px;text-decoration:none;color:var(--ink)}
+.bars{display:inline-flex;align-items:flex-end;gap:2px;height:14px}
+.bars i{display:block;width:3px;border-radius:2px;background:var(--accent)}
+.bars i:nth-child(1){height:5px}.bars i:nth-child(2){height:8px}.bars i:nth-child(3){height:11px}.bars i:nth-child(4){height:14px}
+main{width:100%;max-width:420px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:28px 24px;display:flex;flex-direction:column;gap:20px}
+h1{margin:0;font-size:24px;line-height:1.2;font-weight:800;text-wrap:balance}
+.sub{margin:6px 0 0;color:var(--ink2);font-size:15px;overflow-wrap:anywhere}
+.sub b{color:var(--ink);font-weight:600}
+form{display:flex;flex-direction:column;gap:16px}
+label{display:block;font-weight:600;font-size:14px;margin-bottom:6px}
+.field{position:relative}
+input[type=password],input[type=text]{width:100%;min-height:50px;border-radius:12px;border:1.5px solid var(--line);background:var(--paper);
+  color:var(--ink);font:inherit;padding:0 64px 0 14px}
+input:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-color:var(--ink)}
+.show{position:absolute;right:6px;top:50%;transform:translateY(-50%);min-height:40px;padding:0 10px;border:0;background:none;
+  color:var(--ink2);font:600 13px "Public Sans",system-ui,sans-serif;cursor:pointer;border-radius:8px}
+.show:focus-visible{outline:2px solid var(--focus)}
+.rules{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--ink2)}
+.rules li{display:flex;align-items:center;gap:8px}
+.rules li::before{content:"";width:16px;height:16px;border-radius:50%;border:1.5px solid var(--line);flex:none}
+.rules li.met{color:var(--ink)}
+.rules li.met::before{border-color:var(--ok);background:var(--ok) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.3l2.5 2.4L12 5.5' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/16px no-repeat}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:52px;border-radius:14px;border:0;
+  background:var(--accent);color:var(--accent-ink);font:800 16px "Public Sans",system-ui,sans-serif;cursor:pointer;text-decoration:none}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn:focus-visible{outline:2px solid var(--focus);outline-offset:3px}
+.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.err{margin:0;color:var(--warn);font-size:14px;font-weight:600}
+.state{display:flex;flex-direction:column;gap:14px;align-items:flex-start}
+.badge{width:52px;height:52px;border-radius:50%;display:grid;place-items:center}
+.badge.ok{background:color-mix(in srgb,var(--ok) 16%,transparent);color:var(--ok)}
+.badge.no{background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent)}
+.badge svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.spin{width:22px;height:22px;border-radius:50%;border:2.5px solid var(--line);border-top-color:var(--accent);animation:r .8s linear infinite}
+@keyframes r{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin{animation-duration:2.4s}}
+.foot{margin-top:20px;color:var(--ink2);font-size:13px;line-height:1.5;max-width:420px;text-align:center}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<a class="brand" href="./" aria-label="QwickSignal home">QwickSignal <span class="bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span></a>
+<main>
+  <section class="card" id="loading" aria-live="polite">
+    <div class="state"><div class="spin" role="status" aria-label="Checking your link"></div><p class="sub" style="margin:0">Checking your link…</p></div>
+  </section>
+
+  <section class="card" id="reset" hidden>
+    <div>
+      <h1>Set a new password</h1>
+      <p class="sub">For <b id="who"></b></p>
+    </div>
+    <form id="form" novalidate>
+      <div>
+        <label for="pw">New password</label>
+        <div class="field"><input id="pw" type="password" autocomplete="new-password" required minlength="8" aria-describedby="rules">
+          <button type="button" class="show" data-for="pw" aria-pressed="false">Show</button></div>
+      </div>
+      <div>
+        <label for="pw2">Confirm new password</label>
+        <div class="field"><input id="pw2" type="password" autocomplete="new-password" required>
+          <button type="button" class="show" data-for="pw2" aria-pressed="false">Show</button></div>
+      </div>
+      <ul class="rules" id="rules">
+        <li id="rLen">At least 8 characters</li>
+        <li id="rMix">Includes a letter and a number</li>
+        <li id="rSame">Both passwords match</li>
+      </ul>
+      <p class="err" id="formErr" role="alert" hidden></p>
+      <button class="btn" id="save" type="submit" disabled>Update password</button>
+    </form>
+  </section>
+
+  <section class="card" id="done" hidden>
+    <div class="state">
+      <div class="badge ok"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+      <div><h1 id="doneTitle">Password updated</h1><p class="sub" id="doneText">Sign in to QwickSignal with your new password. Your other devices will ask you to sign in again.</p></div>
+    </div>
+    <a class="btn" href="./">Open QwickSignal</a>
+  </section>
+
+  <section class="card" id="bad" hidden>
+    <div class="state">
+      <div class="badge no"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7.5v6M12 16.8h.01"/><circle cx="12" cy="12" r="9.5"/></svg></div>
+      <div><h1 id="badTitle">This link has expired</h1><p class="sub" id="badText">Reset links work once and for one hour. Ask for a new one in QwickSignal: Settings, Account, Forgot password.</p></div>
+    </div>
+    <a class="btn ghost" href="./">Go to QwickSignal</a>
+  </section>
+</main>
+<p class="foot" id="foot">You received this link because someone asked to reset the password for this QwickSignal account. If that wasn’t you, close this page. Your password stays the same.</p>
+<script src="reset.js" defer></script>
+</body>
+</html>

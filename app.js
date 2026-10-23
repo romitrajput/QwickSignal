@@ -1131,7 +1131,7 @@ if (typeof document !== 'undefined') (function () {
       sbEmpty: 'No stocks yet. Add companies to your watchlist in Settings and they appear here for everyone to vote on.',
       sbMore: 'Show more',
       sbSearchPh: 'Search a stock',
-      sbNote: 'Today’s mood: votes from the last 24 hours, one per person per stock. Opinions of users, not investment advice.',
+      sbNote: 'The stocks on your watchlist. Today’s mood: votes from the last 24 hours, one per person per stock. Opinions of users, not investment advice.',
       sbPosted: 'Vote posted',
       sbFailed: 'Couldn’t post - check your connection and try again.',
       sbDeleteConfirm: 'Delete this reason? Your vote is removed with it.',
@@ -3671,6 +3671,23 @@ if (typeof document !== 'undefined') (function () {
       const c = await this.catalog();
       return c ? c.filter(x => x.status === 'approved').map(x => x.channel) : null;
     },
+    // Owner only (enforced by firestore.rules): the category every user sees for a channel in Explore. A built-in
+    // channel (sources.yml) has no record yet, so the first correction creates one, marked approved.
+    async setCategory(name, cat) {
+      if (!isOwner()) { toast('Only the owner account can change a channel\u2019s category for everyone.'); return false; }
+      const lower = name.toLowerCase();
+      try {
+        const have = (catalogCache || []).find(c => c.channel === lower);
+        const fields = have ? { category: toFsValue(cat) }
+          : { channel: toFsValue(lower), status: toFsValue('approved'), category: toFsValue(cat), added_by: toFsValue('owner'), added_at: toFsValue(new Date().toISOString()) };
+        const mask = Object.keys(fields).map(k => 'updateMask.fieldPaths=' + k).join('&');
+        const r = await fetch(`${FS_BASE}/qs_channels/${encodeURIComponent(lower)}?${mask}&key=${FIREBASE.apiKey}`, { method: 'PATCH', headers: Object.assign({ 'Content-Type': 'application/json' }, await Sync.authHeaders()), body: JSON.stringify({ fields }) });
+        if (!r.ok) { toast('Couldn\u2019t change t/' + lower + ': ' + await describeFailure(r, null)); return false; }
+        if (have) have.category = cat; else (catalogCache || (catalogCache = [])).push({ channel: lower, status: 'approved', category: cat });
+        toast('t/' + lower + ' now shows as ' + (cat === 'investment' ? 'Investment' : 'News') + ' for everyone (other users see it within about 30 minutes).');
+        return true;
+      } catch (e) { toast('Couldn\u2019t change t/' + lower + ': ' + await describeFailure(null, e)); return false; }
+    },
     // Owner only (enforced by firestore.rules): approve or reject a channel people have linked.
     async setStatus(name, status) {
       if (!isOwner()) { toast('Only the owner account can approve channels.'); return false; }
@@ -5977,10 +5994,33 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     return groupHead(esc('Other companies in the news'), items.length) + items.map(entryWrapHTML).join('');
   }
 
+  // A company's own news page (owner, 24 Oct): its stories as ordinary story cards, the same cards as the
+  // News tab, opened from the News button on the company's card. Drawn into #list so swiping, saving and
+  // skipping work exactly as they do everywhere else.
+  function companyPageHTML(co) {
+    const items = all().filter(it => {
+      const st = itemStatus(it);
+      return st !== 'dismissed' && st !== 'expired' && (it.companies || []).includes(co);
+    }).sort(byPriority);
+    return `<div class="co-page-head">
+        <button type="button" class="settingspage-back" data-act="coBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg><span>Investment</span></button>
+        <div class="co-page-title"><span class="gc-ring">${companyLogoHTML(co, 'gc-ring-inner')}</span><h2>${esc(co)}</h2><span class="n">${items.length}</span></div>
+      </div>` + (items.length ? items.map(entryWrapHTML).join('') : `<div class="empty"><p>${esc(t('investNoNews'))}</p></div>`);
+  }
+
   function renderInvestmentList() {
     // Same guard as renderList(): don't yank #list's DOM out from under an in-progress swipe gesture.
     if (SWIPE.active) { SWIPE.renderPending = true; return; }
     const box = $('#list');
+    const sectorSel = $('#investSectorFilter');
+    if (S.coPage) {
+      if (sectorSel) sectorSel.hidden = true;
+      const dg = $('#digestCard'); if (dg) dg.hidden = true;
+      box.innerHTML = companyPageHTML(S.coPage);
+      seenObserveVisible(box);
+      return;
+    }
+    if (sectorSel && S.mode === 'investment') sectorSel.hidden = false;
     const allGroups = investmentGroups();
     const empty = $('#investEmpty');
     const channelHTML = investChannelSectionHTML(allGroups);
@@ -6363,15 +6403,17 @@ Give a concise, event-specific analysis - decide for yourself which structure be
   function renderBoardBody() {
     const box = $('#sbBody');
     if (!box) return;
-    let entries = Board.entries();
+    // Owner, 24 Oct: the board shows only this person's own watchlist (still with how many people track each
+    // stock, the brokers' view, voting and reasons). Search narrows within that list only.
+    let entries = Board.entries().filter(e => e.mine);
+    const empty = $('#communityEmpty');
+    if (empty) empty.hidden = !!S.myCompanies.size;
+    const top = $('#communityList .sb-top'); if (top) top.hidden = !S.myCompanies.size;
+    if (!S.myCompanies.size) { box.innerHTML = ''; return; }
     const q = Board.q.trim().toLowerCase();
     if (q) {
       entries = entries.filter(e => e.name.toLowerCase().includes(q)
         || (Board.known(e.name) || { aliases: [] }).aliases.some(a => a.toLowerCase().includes(q)));
-      // Not on anyone's list yet: still let them find a known company and be the first to vote.
-      const k = Board.known(Board.q) || E.COMPANIES.find(c => c.name.toLowerCase().startsWith(q));
-      if (k && !entries.some(e => e.slug === Pulse.companySlug(k.name)))
-        entries.push({ name: k.name, slug: Pulse.companySlug(k.name), trackers: 0, mine: false, stats: Board.stats(Pulse.companySlug(k.name)) });
     }
     const shown = q ? entries : entries.slice(0, Board.shown);
     box.innerHTML = (Board.error && !Board.votes.size ? `<p class="lp-syncnote">${esc(t('sbOffline'))}</p>` : '')
@@ -6496,7 +6538,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     const box = $('#communityList');
     if (!box) return;
     const empty = $('#communityEmpty');
-    if (empty) empty.hidden = true;           // the board is never empty: everyone's stocks are on it
+    if (empty) empty.hidden = !!S.myCompanies.size;     // the board lists this person's own stocks only
     if (!$('#sbSearch')) {
       box.innerHTML = `<div class="sb-top">
           <input id="sbSearch" class="sb-search" type="search" autocomplete="off" placeholder="${esc(t('sbSearchPh'))}" aria-label="${esc(t('sbSearchPh'))}">
@@ -6712,6 +6754,12 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       const n = ((this.data.channels[String(name).toLowerCase()] || {})[cat]) || 0;
       return { n, total: this.data.accounts, p: n ? Math.max(1, Math.round(n / this.data.accounts * 100)) : 0 };
     },
+    // The share of accounts that linked a channel, behind an "i" button (owner, 24 Oct) - Explore only.
+    info(name, key) {
+      const s = this.pct(name, key || 'users');
+      const txt = s ? (s.p ? s.p + '% of users have linked this channel (' + s.n + ' of ' + s.total + ' accounts).' : 'No users have linked this channel yet.') : 'Not counted yet. The figure updates every 30 minutes.';
+      return `<span class="lc-info"><button type="button" class="info-i" aria-label="How many users linked t/${esc(name)}" aria-expanded="false">i</button><span class="info-pop" role="tooltip">${esc(txt)}</span></span>`;
+    },
     html(name, cat, key) {
       const s = this.pct(name, key || cat);
       if (!s) return '';
@@ -6725,7 +6773,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     const rows = d ? Object.entries(d.channels).map(([name, c]) => ({ name, n: c.investment || 0 }))
       .filter(r => r.n >= 2 && !S.myInvestChannels.has(r.name)).sort((x, y) => y.n - x.n).slice(0, 6) : [];
     wrap.hidden = !rows.length;
-    box.innerHTML = rows.map(r => `<div class="lp-row"><span class="name">t/${esc(r.name)} <span class="lc-cat inv">Investment</span>${ChanStats.html(r.name, 'investment')}</span>
+    box.innerHTML = rows.map(r => `<div class="lp-row"><span class="name">t/${esc(r.name)} <span class="lc-cat inv">Investment</span></span>
       <div class="lp-rowbtns"><button class="follow" data-act="tginvlink" data-v="${esc(r.name)}">Link</button></div></div>`).join('');
   }
   function refreshChannelStats() {
@@ -6771,16 +6819,16 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       box.innerHTML = approved.map(c => {
         const name = c.channel, inv = c.cat === 'investment';
         const linked = inv ? S.myInvestChannels.has(name) : (S.myChannels.has(name) && !S.hiddenChannels.has(name));
-        return `<div class="lp-row lp-chanrow"><span class="name">t/${esc(name)} ${catPill(c.cat)}${ChanStats.html(name, c.cat, 'users')}</span>
+        return `<div class="lp-row lp-chanrow"><span class="name">t/${esc(name)} ${catPill(c.cat)}${ChanStats.info(name)}</span>
           <div class="lp-rowbtns"><button class="follow${linked ? ' on' : ''}" data-act="exlink" data-v="${esc(name)}" data-cat="${c.cat}" aria-pressed="${linked}" aria-label="${linked ? 'Unlink' : 'Link'} t/${esc(name)}">${linked ? 'Linked' : 'Link'}</button>
-          ${owner ? `<button class="lp-more" data-act="tgmore" data-v="${esc(name)}" data-default="${(defaultChannelsCache || []).includes(name) ? 1 : 0}" aria-label="${esc(t('moreOptions'))} t/${esc(name)}" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>` : ''}</div></div>`;
+          ${owner ? `<button class="lp-more" data-act="tgmore" data-where="explore" data-cat="${c.cat}" data-v="${esc(name)}" data-default="${(defaultChannelsCache || []).includes(name) ? 1 : 0}" aria-label="${esc(t('moreOptions'))} t/${esc(name)}" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>` : ''}</div></div>`;
       }).join('');
     }
     // Owner: channels waiting for a decision.
     const pbox = $('#exPendingBox'), plist = $('#exPending');
     const pend = owner ? list.filter(c => c.status === 'pending') : [];
     if (pbox) pbox.hidden = !pend.length;
-    if (plist) plist.innerHTML = pend.map(c => `<div class="lp-row lp-chanrow"><span class="name">t/${esc(c.channel)} ${catPill(c.cat)}${ChanStats.html(c.channel, c.cat, 'users')}</span>
+    if (plist) plist.innerHTML = pend.map(c => `<div class="lp-row lp-chanrow"><span class="name">t/${esc(c.channel)} ${catPill(c.cat)}${ChanStats.info(c.channel)}</span>
       <div class="lp-rowbtns"><button class="follow on" data-act="exapprove" data-v="${esc(c.channel)}">Approve</button><button class="follow" data-act="exreject" data-v="${esc(c.channel)}">Reject</button></div></div>`).join('');
   }
 
@@ -6809,9 +6857,9 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     }
     box.innerHTML = mine.map(name => {
       const isDefault = defaults.includes(name), st = channelStatus(name);
-      return `<div class="lp-row lp-chanrow"><span class="name">t/${esc(name)}${isDefault ? ' <span class="lp-defaultbadge">' + esc(t('defaultBadge')) + '</span>' : ''} ${catPill('news')}${st === 'pending' ? ' ' + waitingBadge : ''}${ChanStats.html(name, 'news', 'users')}</span>
+      return `<div class="lp-row lp-chanrow"><span class="name">t/${esc(name)}${isDefault ? ' <span class="lp-defaultbadge">' + esc(t('defaultBadge')) + '</span>' : ''} ${catPill('news')}${st === 'pending' ? ' ' + waitingBadge : ''}</span>
       <div class="lp-rowbtns"><button class="follow lp-remove" data-act="tgfollow" data-v="${esc(name)}" aria-label="${esc(t('remove'))} t/${esc(name)}">${esc(t('remove'))}</button>
-      ${owner ? `<button class="lp-more" data-act="tgmore" data-v="${esc(name)}" data-default="${isDefault ? 1 : 0}" aria-label="${esc(t('moreOptions'))} t/${esc(name)}" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>` : ''}</div></div>`;
+      <button class="lp-more" data-act="tgmore" data-where="news" data-v="${esc(name)}" data-default="${isDefault ? 1 : 0}" aria-label="${esc(t('moreOptions'))} t/${esc(name)}" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button></div></div>`;
     }).join('');
   }
 
@@ -7074,9 +7122,10 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       box.innerHTML = `<p class="lp-empty">${esc(t('noChannelsYet'))}</p>`;
     } else {
       box.innerHTML = [...S.myInvestChannels].sort((a, b) => a.localeCompare(b)).map(name => `<div class="lp-row">
-        <span class="name">t/${esc(name)} <span class="lc-cat inv">Investment</span>${channelStatus(name) === 'pending' ? ' ' + waitingBadge : ''}${ChanStats.html(name, 'investment', 'users')}</span>
+        <span class="name">t/${esc(name)} <span class="lc-cat inv">Investment</span>${channelStatus(name) === 'pending' ? ' ' + waitingBadge : ''}</span>
         <div class="lp-rowbtns">
           <button class="follow lp-remove" data-act="tginvremove" data-v="${esc(name)}" aria-label="${esc(t('remove'))} t/${esc(name)}">${esc(t('remove'))}</button>
+          <button class="lp-more" data-act="tgmore" data-where="inv" data-v="${esc(name)}" data-default="${(defaultChannelsCache || []).includes(name) ? 1 : 0}" aria-label="${esc(t('moreOptions'))} t/${esc(name)}" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>
         </div>
       </div>`).join('');
     }
@@ -7296,6 +7345,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
   // separate thing a visitor could set out of step with which of the two tabs they're on.
   function setTab(name) {
     if (name === 'saved') { setTab('settings'); openSettingsPage('saved'); return; }   // Saved now lives in Settings
+    S.coPage = null;                     // a company's news page closes whenever the tab changes
     if (name !== S.tab) track('tab_view', { tab: name });
     S.tab = name;
     const screen = (name === 'investment') ? 'brief' : name;
@@ -7459,6 +7509,21 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       else if (act === 'tginvremove') { InvestChannels.remove(v); }
       else if (act === 'spopen') { openSettingsPage(v); }
       else if (act === 'spback') { closeSettingsPage(); }
+      else if (act === 'chmove') {
+        const [name, to] = String(v).split('|');
+        if (!Auth.uid) { openAuthGate('agAddChannelsTitle', 'agAddChannelsBody'); }
+        else {
+          if (to === 'investment') { S.myChannels.delete(name); S.myInvestChannels.add(name); }
+          else { S.myInvestChannels.delete(name); S.myChannels.add(name); S.hiddenChannels.delete(name); }
+          Sync.pushSoon(); track('channel_move', { channel: name, to });
+          toast('t/' + name + ' moved to your ' + (to === 'investment' ? 'Investment' : 'News') + ' channels.');
+          renderChannels(); renderInvestChannels(); renderExplore(); renderSettingsNav(); renderAll();
+        }
+      }
+      else if (act === 'chcat') {
+        const [name, to] = String(v).split('|');
+        if (await Channels.setCategory(name, to)) { renderExplore(); renderChannels(); renderInvestChannels(); }
+      }
       else if (act === 'exfilter') { exploreFilter = v || ''; renderExplore(); }
       else if (act === 'exlink') {
         const inv = el.dataset.cat === 'investment';
@@ -7482,8 +7547,13 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       else if (act === 'gotoWatchlist') { setTab('settings'); openSettingsPage('investwatchlist'); const inp = $('#invInput'); if (inp) inp.focus(); }
       else if (act === 'viewChart') { openChartModal(v, el, el.dataset.sector); }
       else if (act === 'viewNews') {
-        const g = companyGroups().find(x => x.company === v);
-        if (g && g.stories.length) openCompany(v); else toast(t('investNoNews'));
+        S.coPage = v; track('company_page', { company: v });
+        renderInvestmentList(); window.scrollTo(0, 0);
+      }
+      else if (act === 'coBack') {
+        const co = S.coPage; S.coPage = null; renderInvestmentList(); renderDigest();
+        const card = co && document.querySelector('#list .grp-company[data-co="' + CSS.escape(co) + '"]');
+        if (card) card.scrollIntoView({ block: 'center' }); else window.scrollTo(0, 0);
       }
       else if (act === 'viewSent') {
         if (S.bvOpen.has(v)) S.bvOpen.delete(v); else S.bvOpen.add(v);
@@ -7565,9 +7635,20 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       }
       else if (act === 'tkview') { clearTimeout(toastTimer); $('#toast').classList.remove('show'); setTab('settings'); openSettingsPage('feedback'); }
       else if (act === 'tgmore') {
-        const isDef = el.dataset.default === '1';
-        const items = [{ label: t('remove') + ' (' + t('justForMe') + ')', act: 'tghide', v }];
+        const isDef = el.dataset.default === '1', where = el.dataset.where || 'news';
+        const items = [];
+        // Anyone can move a channel between their own News and Investment lists (owner, 24 Oct).
+        if (where === 'news') {
+          items.push({ label: 'Move to my Investment channels', act: 'chmove', v: v + '|investment' });
+          items.push({ label: t('remove') + ' (' + t('justForMe') + ')', act: 'tghide', v });
+        } else if (where === 'inv') {
+          items.push({ label: 'Move to my News channels', act: 'chmove', v: v + '|news' });
+        }
         if (isOwner()) {
+          // The owner can also correct the category every user sees in Explore channels.
+          const cur = el.dataset.cat || channelCategory(Object.assign({ channel: v }, (catalogCache || []).find(c => c.channel === v) || {}));
+          const to = cur === 'investment' ? 'news' : 'investment';
+          items.push({ label: 'Show as ' + (to === 'investment' ? 'Investment' : 'News') + ' for everyone', act: 'chcat', v: v + '|' + to });
           items.push({ label: isDef ? t('removeDefault') : t('setDefault'), act: 'tgdefault', v });
           items.push({ label: t('removeShared'), act: 'tgremove', v, danger: true });
         }
@@ -8044,12 +8125,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       S.open.add(id);
       setTab('investment');
       const co = story.companies.find(c => S.myCompanies.has(c));
-      if (co && companyGroups().some(g => g.company === co && g.stories.some(s => s.id === id))) {
-        openCompany(co);
-        const gi = S.cv && S.cv.groups.findIndex(g => g.company === co);
-        if (S.cv && gi > -1) { const k = S.cv.groups[gi].stories.findIndex(s => s.id === id); if (k > -1) { S.cv.idx = k; renderCountryViewer(); markCurrentReviewed(); } }
-        return;
-      }
+      S.coPage = co || null;              // a tracked company's story opens on that company's news page
       S.f.investSector = '';
       renderInvestmentList();
       const el = document.querySelector('#view-brief .entry[data-id="' + id + '"]');
