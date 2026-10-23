@@ -497,13 +497,87 @@ p.np-sub{margin-left:0}
 .gc-name{font-size:15px;font-weight:700;color:var(--ink);line-height:1.3}
 .gc-top .n{margin-left:auto;flex:none;min-width:20px;padding:2px 7px;border-radius:999px;background:var(--paper);color:var(--ink2);font-weight:700;font-size:11.5px;text-align:center;font-variant-numeric:tabular-nums}
 .gc-actions{display:flex;align-items:center;gap:8px}
-.btn-chart{display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:0 14px;border-radius:999px;border:1.5px solid var(--accent);background:transparent;color:var(--accent);font-weight:700;font-size:12.5px;cursor:pointer;transition:background-color .15s var(--ease),color .15s var(--ease)}
-.btn-chart svg{width:14px;height:14px;flex:none}
-@media (hover:hover){.btn-chart:hover{background:var(--accent);color:var(--accent-ink)}}
-.gc-remove{flex:none;width:34px;height:34px;margin-left:auto;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;border:1.5px solid var(--line);background:transparent;color:var(--ink2);cursor:pointer;transition:border-color .15s var(--ease),color .15s var(--ease)}
+.gc-top .gc-remove{margin-left:auto}
+.gc-remove{flex:none;width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;border:1.5px solid var(--line);background:transparent;color:var(--ink2);cursor:pointer;transition:border-color .15s var(--ease),color .15s var(--ease)}
 .gc-remove svg{width:14px;height:14px}
 @media (hover:hover){.gc-remove:hover{border-color:var(--crit);color:var(--crit)}}
-.btn-chart:focus-visible,.gc-remove:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* Investment card: three tiles (chart / news / sentiment) and the inline broker panel */
+.gc-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.gc-tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-height:56px;padding:8px 6px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface2,transparent);color:var(--ink);font:inherit;font-weight:700;font-size:12.5px;cursor:pointer;transition:background-color .15s var(--ease),border-color .15s var(--ease),color .15s var(--ease)}
+.gc-tile svg{width:18px;height:18px;flex:none;color:var(--accent)}
+.gc-tile.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--accent)}
+@media (hover:hover){.gc-tile:hover{border-color:var(--accent)}}
+.bv{display:flex;flex-direction:column;gap:10px;padding:12px;border-radius:12px;border:1px solid var(--line);background:color-mix(in srgb,var(--ink) 3%,transparent);font-weight:400}
+.bv-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.bv-h{margin:0;font-size:13.5px;font-weight:800}
+.bv-note,.bv-foot{margin:0;font-size:12px;color:var(--ink2);line-height:1.45}
+.bk-chip{display:inline-block;margin-left:6px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;line-height:1.5;border:1px solid currentColor;color:var(--ink2);white-space:nowrap}
+.bk-chip.bull{color:var(--bull)}.bk-chip.bear{color:var(--bear)}.bk-chip.mix{color:var(--high)}
+.bv-head .bk-chip{margin-left:0}
+.bv-bar{display:flex;height:22px;border-radius:7px;overflow:hidden;gap:2px}
+.bv-bar span{display:flex;align-items:center;justify-content:center;min-width:26px;font-size:11px;font-weight:700;color:#fff}
+.bv-bar .b{background:var(--bull)}.bv-bar .h{background:var(--high)}.bv-bar .s{background:var(--bear)}
+.bv-legend{display:flex;flex-wrap:wrap;gap:4px 12px;margin:0;font-size:12px;color:var(--ink2)}
+.bv-legend .b{color:var(--bull);font-weight:700}.bv-legend .h{color:var(--high);font-weight:700}.bv-legend .s{color:var(--bear);font-weight:700}
+.bv-facts{display:flex;flex-wrap:wrap;gap:6px 22px;font-size:12px;color:var(--ink2)}
+.bv-facts>div{display:flex;flex-direction:column;gap:1px}
+.bv-facts b{font-size:13.5px;color:var(--ink)}
+.bv-facts i{font-style:normal}.bv-facts .up{color:var(--bull)}.bv-facts .dn{color:var(--bear)}
+.bv-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.bv-row{display:grid;grid-template-columns:1fr auto;grid-template-areas:"b r" "t a" "n n";gap:2px 10px;padding:9px 0;border-top:1px solid var(--line);font-size:12.5px}
+.bv-b{grid-area:b;font-weight:700;min-width:0;overflow-wrap:anywhere}
+.bv-r{grid-area:r;justify-self:end;font-weight:800;font-size:11.5px}
+.bv-r.buy{color:var(--bull)}.bv-r.hold{color:var(--high)}.bv-r.sell{color:var(--bear)}
+.bv-t{grid-area:t;color:var(--ink2);font-variant-numeric:tabular-nums}.bv-t b{color:var(--ink)}.bv-t s{opacity:.7}
+.bv-a{grid-area:a;justify-self:end;font-size:11.5px;color:var(--ink2);text-align:right}
+.bv-a.raised,.bv-a.upgrade{color:var(--bull);font-weight:700}.bv-a.cut,.bv-a.downgrade{color:var(--bear);font-weight:700}
+.bv-ago{display:none}
+.bv-n{grid-area:n;color:var(--ink2);font-size:12px;line-height:1.4}
+.bv-crowd{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;font-size:12.5px;padding-top:2px;border-top:1px solid var(--line)}
+.bv-crowd>span:first-child{color:var(--ink2)}.bv-crowd-n{color:var(--ink2);font-size:12px}
+.bv-crowd .link{margin-left:auto}
+
+.lc-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.lc-cat{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:700;line-height:1.5;border:1px solid currentColor;white-space:nowrap}
+.lc-cat.news{color:var(--accent)}.lc-cat.inv{color:var(--bull)}
+.lc-stat{display:flex;align-items:center;gap:8px;margin-top:5px;font-size:12px;color:var(--ink2);font-weight:400}
+.lc-stat .bar{flex:0 1 96px;height:6px;border-radius:99px;background:color-mix(in srgb,var(--ink) 10%,transparent);overflow:hidden}
+.lc-stat .bar i{display:block;height:100%;border-radius:99px;background:var(--accent)}
+.lc-stat.inv .bar i{background:var(--bull)}
+.lp-row .name{min-width:0}
+
+.asheet-title{background:var(--surface)}
+.imp{max-height:86vh}
+.imp-card{display:flex;flex-direction:column;gap:10px;padding:16px;border-radius:14px;background:var(--surface);max-height:84vh;overflow:hidden}
+.imp-h{margin:0;font-size:17px;font-weight:800}
+.imp-sub{margin:0;font-size:13px;color:var(--ink2);line-height:1.45}
+.imp-err{margin:0;font-size:12.5px;color:var(--bear)}
+.imp-list{display:flex;flex-direction:column;overflow-y:auto;min-height:0;border-top:1px solid var(--line)}
+.imp-row{display:flex;align-items:center;gap:12px;min-height:46px;padding:6px 2px;border-bottom:1px solid var(--line);cursor:pointer}
+.imp-row input{width:20px;height:20px;flex:none;accent-color:var(--accent)}
+.imp-n{font-size:14.5px;font-weight:600;min-width:0;overflow-wrap:anywhere}.imp-n em{display:block;font-style:normal;font-weight:400;font-size:12px;color:var(--ink2)}
+.imp-sec{margin:12px 0 2px;font-size:12.5px;color:var(--ink2)}
+.imp-actions{display:flex;gap:8px;justify-content:flex-end}
+.imp-input{min-height:46px;padding:0 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--paper);color:var(--ink);font:inherit;font-size:16px;text-transform:uppercase}
+.imp-how{margin-top:10px}
+.grp-company[data-co]{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.grp-company[data-co]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.lp-tip{margin:10px 2px 0;font-size:12.5px;color:var(--ink2)}
+.asheet-title{margin:0;padding:12px 16px 8px;text-align:center;font-size:13px;font-weight:700;color:var(--ink2)}
+.sb-mood{display:flex;flex-direction:column;gap:8px;padding:14px;border-radius:14px;border:1px solid var(--line);background:var(--surface);margin-bottom:12px}
+.sb-mood-h{font-size:13px;font-weight:700;color:var(--ink2)}
+.sb-mood-n{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.sb-mood-n b{font-size:38px;line-height:1;font-weight:800}.sb-mood-n span{font-size:16px;font-weight:700}.sb-mood-n em{margin-left:auto;font-style:normal;font-size:13px;color:var(--ink2)}
+.sb-mood-n .bull{color:var(--bull)}.sb-mood-n .bear{color:var(--bear)}.sb-mood-n .mix{color:var(--high)}
+.sb-mood-c{display:flex;justify-content:space-between;font-size:12.5px;font-weight:700}
+.sb-mood .pulse-bar{margin:0}
+.sb-split{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;margin-bottom:12px;border-radius:14px;background:color-mix(in srgb,var(--accent) 12%,var(--surface))}
+.sb-split svg{width:20px;height:20px;flex:none;margin-top:1px;color:var(--accent)}
+.sb-split p{margin:0;font-size:13.5px;line-height:1.4}
+.sb-by{margin:0 0 8px;font-size:12.5px;color:var(--ink2);overflow-wrap:anywhere}.sb-by b{color:var(--ink)}
+.sb-name .bk-chip{margin-left:8px;vertical-align:middle}
+
+.gc-tile:focus-visible,.gc-remove:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .empty-note{margin:0 0 10px;padding:0 0 0 14px;font-size:13px;color:var(--ink2);font-style:italic}
 .empty-note-hint{display:block;margin-top:2px;font-size:11.5px;font-style:normal;opacity:.75}
 .entry{--c:var(--low);background:var(--surface);border-left:5px solid var(--c);border-radius:0 8px 8px 0;padding:12px 14px;margin:0 0 10px;cursor:pointer}
@@ -1222,24 +1296,6 @@ body.pre-app .top, body.pre-app main, body.pre-app .tabs{display:none}
       </div>
     </div>
 
-    <!-- Signal (News) Telegram channels: only listed in the nav while the wifi-signal symbol is the active
-         mode - see setMode() in app.js, which now toggles #snNewsChannels (the nav row) the same way it
-         used to toggle #settingsSignalGroup. -->
-    <div class="settingspage sp-hidden" id="sp-newschannels">
-      <button type="button" class="settingspage-back" data-act="spback"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>Settings</button>
-      <div class="lp-block">
-        <h2 class="lp-h" data-i18n="telegram">Telegram channels for News</h2>
-        <p class="lp-sub" data-i18n="telegramNewsSub">Link Telegram channels to follow for your Signal/News feed.</p>
-        <div class="lp-add">
-          <input id="tgInput" type="text" inputmode="text" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="t/channelname" data-i18n-placeholder="tgPlaceholder">
-          <button id="tgAdd" class="btn primary" data-i18n="addBtn">+ Add</button>
-        </div>
-        <p id="tgGateNote" class="lp-syncnote" data-i18n="loginToLinkChannels" hidden>Log in to link Telegram channels.</p>
-        <div id="tgSyncNote" class="lp-syncnote"></div>
-        <div id="tgList" class="lp-list" aria-live="polite"></div>
-      </div>
-    </div>
-
     <!-- Investment watchlist + its own Telegram channels: only listed in the nav while the candlestick
          symbol is the active mode. Two blocks, same as before - the watchlist (which companies/tickers to
          track) and a SEPARATE Telegram channel list scoped to investment-related channels. -->
@@ -1261,13 +1317,48 @@ body.pre-app .top, body.pre-app main, body.pre-app .tabs{display:none}
       </div>
 
       <div class="lp-block">
-        <h2 class="lp-h has-info"><span data-i18n="telegramInvestHeading">Telegram channels for Investment</span><button type="button" class="info-i" aria-label="More info" aria-expanded="false">i</button><span class="info-pop" role="tooltip" data-i18n="telegramInvestSub">Link Telegram channels you follow specifically for investment/market news - kept separate from your News channels above. Their posts appear in your Investment tab within about 30 minutes.</span></h2>
+        <h2 class="lp-h" data-i18n="impTitle">Import from your broker</h2>
+        <p class="lp-sub" data-i18n="impSub">Download your holdings from your broker (CSV or Excel), or your depository statement (PDF), and add them in one go.</p>
+        <input id="impFile" type="file" accept=".csv,.xlsx,.xls,.pdf,text/csv,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden>
+        <button class="btn primary" data-act="impPick" data-i18n="impPick">Choose holdings file</button>
+        <p class="lp-syncnote" data-i18n="impPrivate">Read on your phone only. The file is never uploaded.</p>
+        <p class="lp-sub imp-how" data-i18n="impHow">Where to find it: Zerodha Console > Portfolio > Holdings > download. Groww > Profile > Reports > Stocks holdings. Upstox, ICICI Direct and others: Reports > Holdings. For all brokers at once, use your CDSL or NSDL statement.</p>
+      </div>
+
+    </div>
+
+    <!-- Link channels: every Telegram channel in one place, News and Investment, each row showing the share of
+         signed-in accounts that linked it (channel_stats.json, written by the pipeline). -->
+    <div class="settingspage sp-hidden" id="sp-linkchannels">
+      <button type="button" class="settingspage-back" data-act="spback"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>Settings</button>
+      <div class="lp-block lc-intro">
+        <h2 class="lp-h">Link channels</h2>
+        <p class="lp-sub">Follow Telegram channels for your News and Investment feeds. The bar shows how many QwickSignal accounts have linked each channel.</p>
+      </div>
+      <div class="lp-block">
+        <h2 class="lp-h lc-h"><span data-i18n="telegram">Telegram channels for News</span><span class="lc-cat news">News</span></h2>
+        <p class="lp-sub" data-i18n="telegramNewsSub">Link Telegram channels to follow for your Signal/News feed.</p>
+        <div class="lp-add">
+          <input id="tgInput" type="text" inputmode="text" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="t/channelname" data-i18n-placeholder="tgPlaceholder">
+          <button id="tgAdd" class="btn primary" data-i18n="addBtn">+ Add</button>
+        </div>
+        <p id="tgGateNote" class="lp-syncnote" data-i18n="loginToLinkChannels" hidden>Log in to link Telegram channels.</p>
+        <div id="tgSyncNote" class="lp-syncnote"></div>
+        <div id="tgList" class="lp-list" aria-live="polite"></div>
+      </div>
+      <div class="lp-block">
+        <h2 class="lp-h has-info lc-h"><span class="lc-cat inv">Investment</span><span data-i18n="telegramInvestHeading">Telegram channels for Investment</span><button type="button" class="info-i" aria-label="More info" aria-expanded="false">i</button><span class="info-pop" role="tooltip" data-i18n="telegramInvestSub">Link Telegram channels you follow specifically for investment/market news - kept separate from your News channels above. Their posts appear in your Investment tab within about 30 minutes.</span></h2>
         <div class="lp-add">
           <input id="tgInvInput" type="text" inputmode="text" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="t/channelname" data-i18n-placeholder="tgPlaceholder">
           <button id="tgInvAdd" class="btn primary" data-i18n="addBtn">+ Add</button>
         </div>
         <p id="tgInvGateNote" class="lp-syncnote" data-i18n="loginToLinkChannels" hidden>Log in to link Telegram channels.</p>
         <div id="tgInvList" class="lp-list" aria-live="polite"></div>
+      </div>
+      <div class="lp-block" id="lcPopularBox" hidden>
+        <h2 class="lp-h">Popular with other investors</h2>
+        <p class="lp-sub">Investment channels many accounts have linked, that you haven't.</p>
+        <div id="lcPopular" class="lp-list"></div>
       </div>
     </div>
 

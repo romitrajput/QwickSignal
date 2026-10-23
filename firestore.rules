@@ -69,7 +69,8 @@ service cloud.firestore {
 
       allow create, update: if
         request.auth != null && request.auth.uid == uid &&
-        request.resource.data.keys().hasOnly(['saved', 'dismissed', 'channels', 'reviewed', 'hiddenChannels', 'companies', 'investChannels']) &&
+        request.resource.data.keys().hasOnly(['saved', 'dismissed', 'channels', 'reviewed', 'hiddenChannels', 'companies', 'investChannels', 'dn']) &&
+        (!('dn' in request.resource.data) || (request.resource.data.dn is string && request.resource.data.dn.size() <= 24)) &&
         request.resource.data.saved is list && request.resource.data.saved.size() <= 5000 &&
         request.resource.data.dismissed is list && request.resource.data.dismissed.size() <= 5000 &&
         request.resource.data.channels is list && request.resource.data.channels.size() <= 200 &&

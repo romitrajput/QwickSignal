@@ -615,6 +615,7 @@ const Engine = (function () {
   const impRank = i => 3 - IMP_ORDER.indexOf(i); // Critical=3 … Low=0
 
   /* ---------- classification ---------- */
+  const INDIA_MARKET_CUES = /₹|\bRs\.?\s?\d|\b\d[\d,.]*\s?(?:cr|crore|lakh)\b|\b(?:NSE|BSE|Nifty|Sensex|SEBI|F&O|GIFT City)\b/gi;
   function classifyCountry(text, head, companies, headline) {
     const scores = new Map();
     COUNTRIES.forEach(c => {
@@ -631,6 +632,12 @@ const Engine = (function () {
       const n = COUNTRY_BY_CODE[co.code];
       if (n) scores.set(n, (scores.get(n) || 0) + 1);
     });
+    // Indian market posts (results, concalls, broker notes) are full of rupee amounts, "Cr" and Indian exchange
+    // words but rarely say "India" - and often mention US or other markets in passing ("US stocks: GIFT City
+    // approval"), which used to pull a story about an Indian company into United States or Global. Those
+    // markers are a strong sign the story is about India.
+    const inCues = (text.match(INDIA_MARKET_CUES) || []).length;
+    if (inCues) scores.set('India', (scores.get('India') || 0) + Math.min(10, 5 * inCues));
     const ranked = [...scores.entries()].sort((a, b) => b[1] - a[1]);
     const strong = ranked.filter(r => r[1] >= 2);
     const hl = headline || head.split('\n')[0];
@@ -1032,6 +1039,24 @@ if (typeof document !== 'undefined') (function () {
       investPlaceholder: 'Company name', loginToTrackCompanies: 'Log in to track companies.',
       agTrackCompanyTitle: 'Log in to track companies', agTrackCompanyBody: 'Creating a free account keeps your investment watchlist with you across devices.',
       investEmptyTitle: 'Track companies to see investment-related news.', investEmptyBtn: 'Add companies to track',
+      impTitle: 'Import from your broker', impPick: 'Choose holdings file', impSub: 'Download your holdings from your broker (CSV or Excel), or your depository statement (PDF), and add them in one go.',
+      impPrivate: 'Read on your phone only. The file is never uploaded.', impReading: 'Reading your file…', impNone: 'No stocks found in this file. Check it is a holdings report or a depository statement.',
+      impXls: 'Old .xls files cannot be read. Open it in Excel and save as .xlsx or CSV, then choose it again.', impFail: 'This file could not be read. Try the CSV or .xlsx holdings report.',
+      impPdfFail: 'This statement could not be read. Check the password, or use your broker holdings CSV instead.', impPassTitle: 'Enter the statement password',
+      impPassBody: 'Depository statements are locked. The password is usually your PAN in capital letters (some also add your date of birth).', impUnlock: 'Unlock', impPassWrong: 'That password did not work. Try again.',
+      impFound: '{n} stocks found', impReview: 'Tick the stocks to add to your watchlist.', impUnknown: 'Not in our company list yet. News and charts may be limited.', impHave: 'already on your list',
+      impAdd: 'Add to watchlist', impAdded: '{n} stocks added to your watchlist.', impNothing: 'Nothing new to add.', impDone: 'OK',
+      impHow: 'Where to find it: Zerodha Console > Portfolio > Holdings > download. Groww > Profile > Reports > Stocks holdings. Upstox, ICICI Direct and others: Reports > Holdings. For all brokers at once, use your CDSL or NSDL statement.',
+      sbCrowdToday: 'Retail investor mood today', bvDisagree: 'Brokers and retail investors disagree.', bvLeanBuy: 'Brokers lean Buy,', bvLeanSell: 'Brokers lean Sell,', bvLeanSplit: 'Brokers are split,',
+      bvCrowdBull: 'retail investors lean Bullish.', bvCrowdBear: 'retail investors lean Bearish.', bvCrowdMix: 'retail investors are split.',
+      sbTracker: 'person tracks this stock', sbTrackers: 'people track this stock',
+      lpHint: 'Press and hold a stock to remove it', removeStock: 'Remove stock',
+      tileChart: 'Chart', tileNews: 'News', tileSent: 'Sentiment',
+      bvTitle: 'Broker view', bvNone: 'No broker calls on this stock in the last 45 days. They appear here when a linked channel posts one.', bvLoading: 'Loading broker calls…',
+      bvConsensus: 'Consensus', bvBullish: 'Bullish', bvNeutral: 'Mixed', bvBearish: 'Cautious', bvBuy: 'Buy', bvHold: 'Hold', bvSell: 'Sell',
+      bvAvgTarget: 'Avg target', bvRaised: 'Target raised', bvCut: 'Target cut', bvUpgrade: 'Upgrade', bvDowngrade: 'Downgrade', bvInitiate: 'New coverage', bvMaintain: 'Reiterated',
+      bvMomentum: 'Last 30 days', bvMoves: 'raised', bvMovesDown: 'cut', bvBrokers: 'brokers', bvCrowd: 'Retail investors', bvOpenBoard: 'Open sentiment board', bvNoVotes: 'No votes yet',
+      bvFoot: 'Read from public broker-call posts on linked channels. Not investment advice.', bvSource: 'Source', bvOn: 'brokers on the board',
       investNoNews: 'No recent news for this company.', investRemove: 'Remove',
       investNoNewsHint: "This updates automatically as new stories come in - it's not a sign anything is wrong.",
       investAllSectors: 'All sectors',
@@ -1053,8 +1078,8 @@ if (typeof document !== 'undefined') (function () {
       notifNewsHint: 'Important stories from your News feed.',
       notifStockLabel: 'Stock notifications',
       notifStockHint: 'News about the companies you track and posts from your Investment channels. These come through even below your priority setting.',
-      notifSlotsLabel: 'Notifications each morning, afternoon and evening',
-      notifSlotsHint: 'Morning 8–11 am, afternoon 1–4 pm, evening 6–9 pm (your time). Each one rounds up what came in since the last, most important first.',
+      notifSlotsLabel: 'Notification times',
+      notifSlotsHint: 'News notifications arrive at 9 am, 1 pm, 4 pm, 7 pm and 10 pm (your time). Each one rounds up what came in since the last, most important first.',
       notifPerDay: 'Up to {n} notifications a day. Critical stories lead the next one.',
       notifBothOff: 'Both are off, so no notifications will be sent. Turn one on to get them.',
       sbNoVotes: 'No votes in the last 24 hours yet. Be the first.',
@@ -1110,6 +1135,7 @@ if (typeof document !== 'undefined') (function () {
       sbDeleteConfirm: 'Delete this reason? Your vote is removed with it.',
       agBoardTitle: 'Log in to vote',
       agBoardBody: 'A free account keeps it to one vote per person per stock each day. Reading the board needs no account.',
+      obStepRTitle: 'Refresh the news', obStepRBody: 'The five bars beside QwickSignal are the refresh button. Tap them any time to fetch the latest stories. They pulse while loading.',
       obStep0Title: 'While you were away',
       obStep0Body: 'When you come back, this card sums up what changed since your last visit - tap a line to jump to it.',
       obReplay: 'Replay the tour'
@@ -1203,8 +1229,8 @@ if (typeof document !== 'undefined') (function () {
       notifNewsHint: 'आपकी न्यूज़ फ़ीड की महत्वपूर्ण खबरें।',
       notifStockLabel: 'स्टॉक नोटिफिकेशन',
       notifStockHint: 'आपकी ट्रैक की गई कंपनियों की खबरें और आपके Investment चैनलों की पोस्ट। ये आपकी प्राथमिकता सेटिंग से नीचे होने पर भी आती हैं।',
-      notifSlotsLabel: 'हर सुबह, दोपहर और शाम नोटिफिकेशन',
-      notifSlotsHint: 'सुबह 8–11, दोपहर 1–4, शाम 6–9 (आपके समय के अनुसार)। हर नोटिफिकेशन पिछली बार के बाद आई खबरों को एक साथ लाता है, सबसे महत्वपूर्ण पहले।',
+      notifSlotsLabel: 'सूचना का समय',
+      notifSlotsHint: 'समाचार सूचनाएं सुबह 9, दोपहर 1, शाम 4, शाम 7 और रात 10 बजे (आपके समय के अनुसार) आती हैं। हर एक में पिछली सूचना के बाद की खबरें होती हैं, सबसे ज़रूरी पहले।',
       notifPerDay: 'दिन में अधिकतम {n} नोटिफिकेशन। क्रिटिकल खबरें अगले नोटिफिकेशन में सबसे ऊपर रहेंगी।',
       notifBothOff: 'दोनों बंद हैं, इसलिए कोई नोटिफिकेशन नहीं भेजा जाएगा। पाने के लिए एक चालू करें।',
       sbNoVotes: 'पिछले 24 घंटों में अभी कोई वोट नहीं। पहले आप वोट करें।',
@@ -1260,6 +1286,7 @@ if (typeof document !== 'undefined') (function () {
       sbDeleteConfirm: 'यह कारण हटाएं? इसके साथ आपका वोट भी हट जाएगा।',
       agBoardTitle: 'वोट करने के लिए साइन इन करें',
       agBoardBody: 'मुफ़्त खाता हर व्यक्ति को हर स्टॉक पर दिन में एक वोट तक सीमित रखता है। बोर्ड पढ़ने के लिए खाता ज़रूरी नहीं।',
+      obStepRTitle: 'न्यूज़ रिफ्रेश करें', obStepRBody: 'QwickSignal के बगल की पाँच पट्टियाँ रिफ्रेश बटन हैं। ताज़ा खबरें लाने के लिए कभी भी इन्हें दबाएँ। लोड होते समय ये चलती दिखती हैं।',
       obStep0Title: 'आपकी गैरमौजूदगी में',
       obStep0Body: 'लौटने पर यह कार्ड बताता है कि पिछली बार के बाद क्या बदला - किसी लाइन पर टैप करके सीधे वहां जाएं।',
       obReplay: 'टूर फिर से देखें'
@@ -1353,8 +1380,8 @@ if (typeof document !== 'undefined') (function () {
       notifNewsHint: 'तुमच्या न्यूज फीडमधील महत्त्वाच्या बातम्या.',
       notifStockLabel: 'स्टॉक नोटिफिकेशन',
       notifStockHint: 'तुम्ही ट्रॅक करत असलेल्या कंपन्यांच्या बातम्या आणि तुमच्या Investment चॅनेलवरील पोस्ट. या तुमच्या प्राधान्य सेटिंगपेक्षा कमी असल्या तरी येतात.',
-      notifSlotsLabel: 'दररोज सकाळ, दुपार आणि संध्याकाळ नोटिफिकेशन',
-      notifSlotsHint: 'सकाळी 8–11, दुपारी 1–4, संध्याकाळी 6–9 (तुमच्या वेळेनुसार). प्रत्येक नोटिफिकेशन मागच्या वेळेनंतर आलेल्या बातम्या एकत्र आणते, सर्वात महत्त्वाच्या आधी.',
+      notifSlotsLabel: 'सूचनांच्या वेळा',
+      notifSlotsHint: 'बातम्यांच्या सूचना सकाळी 9, दुपारी 1, दुपारी 4, संध्याकाळी 7 आणि रात्री 10 वाजता (तुमच्या वेळेनुसार) येतात. प्रत्येकामध्ये मागील सूचनेनंतरच्या बातम्या असतात, सर्वात महत्त्वाच्या आधी.',
       notifPerDay: 'दिवसाला जास्तीत जास्त {n} नोटिफिकेशन. क्रिटिकल बातम्या पुढच्या नोटिफिकेशनमध्ये सर्वात वर.',
       notifBothOff: 'दोन्ही बंद आहेत, त्यामुळे कोणतेही नोटिफिकेशन पाठवले जाणार नाही. मिळवण्यासाठी एक चालू करा.',
       sbNoVotes: 'गेल्या 24 तासांत अजून मत नाही. पहिले मत तुमचे द्या.',
@@ -1410,6 +1437,7 @@ if (typeof document !== 'undefined') (function () {
       sbDeleteConfirm: 'हे कारण हटवायचे? त्यासोबत तुमचे मतही हटेल.',
       agBoardTitle: 'मतदानासाठी साइन इन करा',
       agBoardBody: 'मोफत खाते प्रत्येक व्यक्तीला प्रत्येक स्टॉकवर दिवसाला एक मत इतके मर्यादित ठेवते. बोर्ड वाचण्यासाठी खाते लागत नाही.',
+      obStepRTitle: 'बातम्या रिफ्रेश करा', obStepRBody: 'QwickSignal शेजारील पाच पट्ट्या म्हणजे रिफ्रेश बटण. ताज्या बातम्या आणण्यासाठी केव्हाही दाबा. लोड होताना त्या हलतात.',
       obStep0Title: 'तुम्ही नसताना',
       obStep0Body: 'परत आल्यावर हे कार्ड मागच्या भेटीनंतर काय बदलले ते सांगते - थेट तिथे जाण्यासाठी ओळीवर टॅप करा.',
       obReplay: 'टूर पुन्हा पहा'
@@ -1503,8 +1531,8 @@ if (typeof document !== 'undefined') (function () {
       notifNewsHint: 'તમારી ન્યૂઝ ફીડના મહત્વના સમાચાર.',
       notifStockLabel: 'સ્ટોક નોટિફિકેશન',
       notifStockHint: 'તમે ટ્રેક કરો છો તે કંપનીઓના સમાચાર અને તમારી Investment ચેનલોની પોસ્ટ. તે તમારી પ્રાથમિકતા સેટિંગથી નીચે હોય તો પણ આવે છે.',
-      notifSlotsLabel: 'દરરોજ સવાર, બપોર અને સાંજે નોટિફિકેશન',
-      notifSlotsHint: 'સવારે 8–11, બપોરે 1–4, સાંજે 6–9 (તમારા સમય મુજબ). દરેક નોટિફિકેશન છેલ્લા પછી આવેલા સમાચાર એકસાથે લાવે છે, સૌથી મહત્વના પહેલા.',
+      notifSlotsLabel: 'સૂચનાનો સમય',
+      notifSlotsHint: 'સમાચારની સૂચનાઓ સવારે 9, બપોરે 1, સાંજે 4, સાંજે 7 અને રાત્રે 10 વાગ્યે (તમારા સમય મુજબ) આવે છે. દરેકમાં છેલ્લી સૂચના પછીના સમાચાર હોય છે, સૌથી મહત્વના પહેલાં.',
       notifPerDay: 'દિવસમાં વધુમાં વધુ {n} નોટિફિકેશન. ક્રિટિકલ સમાચાર આગામી નોટિફિકેશનમાં સૌથી ઉપર.',
       notifBothOff: 'બંને બંધ છે, તેથી કોઈ નોટિફિકેશન મોકલવામાં આવશે નહીં. મેળવવા માટે એક ચાલુ કરો.',
       sbNoVotes: 'છેલ્લા 24 કલાકમાં હજી કોઈ વોટ નથી. પહેલો વોટ તમારો આપો.',
@@ -1560,6 +1588,7 @@ if (typeof document !== 'undefined') (function () {
       sbDeleteConfirm: 'આ કારણ કાઢી નાખવું? તેની સાથે તમારો વોટ પણ દૂર થશે.',
       agBoardTitle: 'વોટ કરવા સાઇન ઇન કરો',
       agBoardBody: 'મફત ખાતું દરેક વ્યક્તિને દરેક સ્ટોક પર દિવસમાં એક વોટ સુધી મર્યાદિત રાખે છે. બોર્ડ વાંચવા ખાતાની જરૂર નથી.',
+      obStepRTitle: 'સમાચાર રિફ્રેશ કરો', obStepRBody: 'QwickSignal ની બાજુની પાંચ પટ્ટીઓ રિફ્રેશ બટન છે. તાજા સમાચાર લાવવા ગમે ત્યારે દબાવો. લોડ થતી વખતે તે હલે છે.',
       obStep0Title: 'તમારી ગેરહાજરીમાં',
       obStep0Body: 'પાછા આવો ત્યારે આ કાર્ડ છેલ્લી મુલાકાત પછી શું બદલાયું તે જણાવે છે - સીધા ત્યાં જવા લાઇન પર ટેપ કરો.',
       obReplay: 'ટૂર ફરી જુઓ'
@@ -1684,18 +1713,25 @@ if (typeof document !== 'undefined') (function () {
 
   // awaySince: the ms timestamp the user was last here, or 0 for "don't show this" (no real gap, or a
   // first-ever launch) - see Digest.consumeGap().
+  // News and Investment each get their own card, counting only their own stories, and each is dismissed
+  // separately. The moment the person was away is kept, so switching tabs redraws the right card.
+  let digestAwaySince = 0;
   function renderDigest(awaySince) {
     const box = $('#digestCard');
     if (!box) return;
+    if (awaySince !== undefined) digestAwaySince = awaySince;
+    awaySince = digestAwaySince;
+    const invMode = S.mode === 'investment', dismissKey = DIGEST_DISMISS_KEY + (invMode ? '-inv' : '-news');
     let dismissed = false;
-    try { dismissed = sessionStorage.getItem(DIGEST_DISMISS_KEY) === '1'; } catch (e) { /* ignore */ }
+    try { dismissed = sessionStorage.getItem(dismissKey) === '1'; } catch (e) { /* ignore */ }
     if (!awaySince || dismissed) { box.hidden = true; return; }
     // "Since you left" means both halves literally: published AFTER the moment they stopped looking (not
     // merely unread - a backlog they'd already scrolled past before closing the app isn't news to them),
     // and still worth showing (not dismissed/expired, in their channel selection). Live items only; a
     // manually-added one never "arrived" while they were away.
     const unread = S.live.filter(it => it.addedAt > awaySince && !S.reviewed.has(it.id)
-      && itemStatus(it) !== 'dismissed' && channelVisible(it));
+      && itemStatus(it) !== 'dismissed'
+      && (invMode ? (it.companies || []).some(c => S.myCompanies.has(c)) : channelVisible(it)));
     if (!unread.length) { box.hidden = true; return; }
     const counts = { Critical: 0, High: 0, Medium: 0, Low: 0 };
     unread.forEach(it => { if (counts[it.importance] != null) counts[it.importance]++; });
@@ -1708,18 +1744,22 @@ if (typeof document !== 'undefined') (function () {
     box.hidden = false;
     box.innerHTML = `
       <div class="digest-head">
-        <h2>${unread.length} ${unread.length === 1 ? 'story' : 'stories'} since you left</h2>
+        <h2>${unread.length} ${invMode ? (unread.length === 1 ? 'update on your stocks' : 'updates on your stocks') : (unread.length === 1 ? 'story' : 'stories')} since you left</h2>
         <button type="button" class="digest-close" aria-label="Dismiss">&times;</button>
       </div>
       <div class="digest-rows">${rows}</div>
       ${top ? `<div class="digest-headline"><button type="button" data-id="${esc(top.id)}">${esc(flagOf(top.country))} ${esc(top.headline)}</button></div>` : ''}
     `;
     box.querySelector('.digest-close').addEventListener('click', () => {
-      try { sessionStorage.setItem(DIGEST_DISMISS_KEY, '1'); } catch (e) { /* ignore */ }
+      try { sessionStorage.setItem(dismissKey, '1'); } catch (e) { /* ignore */ }
       box.hidden = true;
     });
     const hl = box.querySelector('.digest-headline button');
-    if (hl) hl.addEventListener('click', () => { box.hidden = true; gotoItem(hl.dataset.id); });
+    if (hl) hl.addEventListener('click', () => {
+      box.hidden = true;
+      if (invMode) { const it = S.live.find(x => x.id === hl.dataset.id), co = it && (it.companies || []).find(c => S.myCompanies.has(c)); if (co) openCompany(co); }
+      else gotoItem(hl.dataset.id);
+    });
   }
 
   /* ---------- Appetite: how much news this person actually wants ----------
@@ -1772,7 +1812,14 @@ if (typeof document !== 'undefined') (function () {
     // Stories per day by priority, for this visitor's channel selection.
     volume() {
       const v = { Critical: 0, High: 0, Medium: 0, Low: 0 };
-      visibleItems().forEach(it => { if (it.live && v[it.importance] != null) v[it.importance]++; });
+      // Counted over every story in scope INCLUDING ones the person has skipped. This used to count only what
+      // was still on screen, so skipping one story shrank the numbers, the cut-off priority moved to the next
+      // level, and a whole batch of other stories vanished at once - and Undo brought them all back, which
+      // looked like the page reloading.
+      all().forEach(it => {
+        if (!it.live || itemStatus(it) === 'expired' || !channelVisible(it)) return;
+        if (v[it.importance] != null) v[it.importance]++;
+      });
       return v;
     },
     // The four choosable floors with their cumulative daily counts, most important first.
@@ -2013,6 +2060,7 @@ if (typeof document !== 'undefined') (function () {
     myChannels: new Set(),   // Telegram channels this user has chosen to follow (empty = follow everything)
     hiddenChannels: new Set(), // channels this user has explicitly removed/hidden from their own Telegram list
     reviewed: new Set(),     // article ids the user has opened in the Country Status viewer (Phase C)
+    bvOpen: new Set(),       // companies whose broker-view panel is open on the Investment tab
     myCompanies: new Set(),  // companies this user is tracking (invested in / watching) - News/Investment toggle
     myInvestChannels: new Set(), // Telegram channels linked specifically for Investment mode - local/personal
                                   // only (unlike myChannels/Channels.*, there's no shared owner-curated pool
@@ -2461,7 +2509,17 @@ if (typeof document !== 'undefined') (function () {
       try {
         const fields = { saved: toFsValue(rec.saved), dismissed: toFsValue(rec.dismissed), channels: toFsValue(rec.channels), hiddenChannels: toFsValue(rec.hiddenChannels), reviewed: toFsValue(rec.reviewed), companies: toFsValue(rec.companies), investChannels: toFsValue(rec.investChannels) };
         const headers = Object.assign({ 'Content-Type': 'application/json' }, await this.authHeaders());
-        const r = await fetch(this.docUrl(), { method: 'PATCH', headers, body: JSON.stringify({ fields }) });
+        // The account's masked name ("raj•••") rides along so the Sentiment board can show who tracks a stock.
+        // If the published firestore.rules don't allow the field yet, the write is refused - then retry once
+        // without it and stop sending it, so sync itself is never affected.
+        let sendDn = false;
+        try { sendDn = !!Auth.uid && !!Auth.email && Date.now() - Number(localStorage.getItem('qs-nodn-v1') || 0) > 864e5; } catch (e) { sendDn = !!Auth.uid && !!Auth.email; }   // storage blocked: send; refused lately: retried after a day
+        const dnFields = sendDn ? Object.assign({}, fields, { dn: { stringValue: Board.maskedName() } }) : fields;
+        let r = await fetch(this.docUrl(), { method: 'PATCH', headers, body: JSON.stringify({ fields: dnFields }) });
+        if (!r.ok && sendDn && r.status >= 400 && r.status < 500) {
+          try { localStorage.setItem('qs-nodn-v1', String(Date.now())); } catch (e) { /* storage blocked */ }
+          r = await fetch(this.docUrl(), { method: 'PATCH', headers, body: JSON.stringify({ fields }) });
+        }
         if (!r.ok) {
           if (r.status >= 400 && r.status < 500) this.reportRejected(r.status, await r.text().catch(() => ''));
           throw new Error('HTTP ' + r.status);
@@ -2702,6 +2760,7 @@ if (typeof document !== 'undefined') (function () {
     seen() { try { return localStorage.getItem(ONBOARD_KEY) === '1'; } catch (e) { return false; } },
     markSeen() { try { localStorage.setItem(ONBOARD_KEY, '1'); } catch (e) { /* private browsing etc. */ } },
     steps: [
+      { anchor: '#liveBar .iconbtn', titleKey: 'obStepRTitle', bodyKey: 'obStepRBody' },
       { anchor: '#digestCard', titleKey: 'obStep0Title', bodyKey: 'obStep0Body' },
       { anchor: '#countryStatus', titleKey: 'obStep1Title', bodyKey: 'obStep1Body' },
       { anchor: '#q', titleKey: 'obStep2Title', bodyKey: 'obStep2Body' },
@@ -3114,6 +3173,8 @@ if (typeof document !== 'undefined') (function () {
         </div>
         <p class="np-hint">${canInvest ? t('notifStockHint') : t('notifInvestNeedCompanies')}</p>
         ${bothOff ? `<p class="np-warn" role="status">${t('notifBothOff')}</p>` : ''}
+        <div class="np-row"><span class="np-label">${t('notifSlotsLabel')}</span></div>
+        <p class="np-hint">${t('notifSlotsHint')}</p>
       </div>`;
     box.innerHTML = (on
       ? `<p class="lp-syncnote">${t('notifOn')}</p><button id="notifBtn" class="btn small">${t('notifDisable')}</button>`
@@ -4479,6 +4540,7 @@ if (typeof document !== 'undefined') (function () {
   // could show 80+ items while Signals (channel-filtered) showed only a handful for the same visitor.
   function channelVisible(it) {
     if (!it.live) return true;
+    if (it.inv) return false;   // a post from a channel linked only for Investment: shown in the Investment tab, never in News
     const ch = itemChannel(it);
     if (!ch) return true;
     if (S.myChannels.size) return S.myChannels.has(ch);
@@ -4868,7 +4930,6 @@ if (typeof document !== 'undefined') (function () {
     $('#cvPos').textContent = `${idx + 1} / ${stories.length}`;
     const headline = trOf(it.headline);
     const hlCls = headline.length > 130 ? ' cv-hl-l' : headline.length > 70 ? ' cv-hl-m' : '';
-    const summary = cvSummary(it, headline);
     const imp = (it.importance || '').toLowerCase();
     // A broken or expired photo link falls back to the cover instead of an empty frame.
     const cover = `<div class="cv-media cv-cover"><span class="cv-cover-glyph">${glyph}</span>
@@ -4879,7 +4940,7 @@ if (typeof document !== 'undefined') (function () {
     const body = $('#cvBody');
     body.innerHTML = `
       <h1 class="cv-headline${hlCls}">${esc(headline)}</h1>
-      ${summary ? `<p class="cv-summary">${esc(summary)}</p>` : ''}
+      ${''/* the summary under the headline was removed (owner, 22 Oct): the card shows the headline only */}
       ${''/* time, priority and sector were removed from the story card (owner, 14 Oct) */}
       ${CV_SHOW_MEDIA ? media : ''}
     `;
@@ -4952,7 +5013,7 @@ if (typeof document !== 'undefined') (function () {
     SavedStore.save();
     SavedCloud.put(all().find(it => it.id === id));
     Sync.pushSoon();
-    renderAll();
+    keepScroll(renderAll);
     toast('Saved. Find it any time under Saved.');
     track('save_story', { id });
   }
@@ -4978,11 +5039,48 @@ if (typeof document !== 'undefined') (function () {
   // Swiping a story away clears it from the feed. It used to also delete it from Saved, so saving a story
   // and then swiping it out of Signals silently lost it (owner's recording, 12 Oct). A saved story now
   // stays in Saved until "Remove from Saved" is tapped there.
-  function dismissItem(id) {
+  // Re-rendering the lists replaces their markup; without this the page can jump back toward the top, which on a
+  // long feed looked like the whole page reloading after Skip or Undo.
+  function keepScroll(fn) {
+    const el = document.scrollingElement || document.documentElement;
+    const y = el.scrollTop;
+    fn();
+    el.scrollTop = y;
+    requestAnimationFrame(() => { if (Math.abs(el.scrollTop - y) > 2) el.scrollTop = y; });
+  }
+  // Takes ONE card out of the News list in place - it folds away, its group heading count drops by one, and no
+  // other card is touched. Rebuilding the whole list for every skip made the page flash and (on a long feed)
+  // look like it was reloading.
+  function removeCardInPlace(wrap) {
+    let head = wrap.previousElementSibling;
+    while (head && !head.classList.contains('grp')) head = head.previousElementSibling;
+    if (head) {
+      const n = head.querySelector('.n');
+      if (n) n.textContent = String(Math.max(0, (parseInt(n.textContent, 10) || 1) - 1));
+    }
+    wrap.style.height = wrap.offsetHeight + 'px';
+    wrap.style.overflow = 'hidden';
+    wrap.style.transition = 'height .2s ease, margin .2s ease, opacity .2s ease';
+    void wrap.offsetHeight;                                  // lock in the starting height, then fold
+    wrap.style.height = '0'; wrap.style.marginBottom = '0'; wrap.style.opacity = '0';
+    setTimeout(() => {
+      const next = wrap.nextElementSibling;
+      wrap.remove();
+      if (head && !(next && next.classList.contains('entrywrap'))) {
+        const after = head.nextElementSibling;
+        if (!(after && after.classList.contains('entrywrap'))) head.remove();   // that group is now empty
+      }
+      if (!$('#list .entrywrap')) renderList();                                 // nothing left: show the empty message
+    }, 230);
+  }
+  function dismissItem(id, wrap) {
     const wasSaved = S.saved.has(id);
     S.dismissed.add(id);
     Sync.pushSoon();
-    renderAll();
+    if (wrap && wrap.isConnected && S.mode === 'news' && !SWIPE.active) {
+      removeCardInPlace(wrap);
+      renderCountryBar(); renderControls();
+    } else keepScroll(renderAll);
     toastAction((wasSaved ? 'Hidden from the feed. Still in Saved. ' : 'Dismissed. ')
       + '<button class="link inline" data-act="undo-dismiss" data-id="' + esc(id) + '">Undo</button>', 5000);
     track('dismiss_story', { id, saved: wasSaved });
@@ -4990,7 +5088,7 @@ if (typeof document !== 'undefined') (function () {
   function undoDismiss(id) {
     S.dismissed.delete(id);
     Sync.pushSoon();
-    renderAll();
+    keepScroll(renderAll);
     clearTimeout(toastTimer);
     $('#toast').classList.remove('show');
     track('undo_dismiss', { id });
@@ -5354,7 +5452,8 @@ if (typeof document !== 'undefined') (function () {
     card.style.opacity = '0';
     releaseCapture(card);
     SWIPE.active = null;
-    setTimeout(() => { if (dx < 0) dismissItem(id); else saveItem(id); }, 200);
+    const wrap = card.closest('.entrywrap');
+    setTimeout(() => { if (dx < 0) dismissItem(id, wrap); else saveItem(id); }, 200);
   }
 
   $('#list').addEventListener('pointerdown', onSwipeStart);
@@ -5727,6 +5826,109 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       : `<p class="empty-note">${esc(t('investChannelsEmpty'))}</p>`);
   }
 
+  /* ---------- Broker view ----------
+     brokers.json (written by the pipeline from the research-call posts on linked channels such as stocksresult)
+     holds one record per broker call: broker, company, rating (BUY/HOLD/SELL), target, action (raised / cut /
+     upgrade / downgrade / initiate / maintain) and when. This reads them into a per-stock consensus: how many
+     brokers say buy / hold / sell on their latest call, the average target, and the last 30 days' direction of
+     travel. Shown inline on the Investment card (Sentiment tile) and on the Sentiment board. */
+  const BROKER_TTL_MS = 10 * 60e3;
+  const Brokers = {
+    calls: [], at: 0, loading: null, ok: false,
+    norm(s) { return String(s || '').toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, ''); },
+    load(force) {
+      if (!force && this.ok && Date.now() - this.at < BROKER_TTL_MS) return Promise.resolve();
+      if (this.loading) return this.loading;
+      this.loading = getJSON('brokers.json').then(b => {
+        this.at = Date.now();
+        if (b && Array.isArray(b.calls)) { this.calls = b.calls.filter(c => c && c.company && c.broker); this.ok = true; }
+        else this.ok = true;        // file not published yet: behave as "no calls", try again after the TTL
+      }).catch(() => { /* leave as is */ }).finally(() => { this.loading = null; });
+      return this.loading;
+    },
+    keys(name) {
+      const k = Board.known(name), set = new Set([this.norm(name)]);
+      if (k) { set.add(this.norm(k.name)); (k.aliases || []).forEach(x => set.add(this.norm(x))); if (k.ticker) set.add(this.norm(k.ticker)); }
+      set.delete('');
+      return set;
+    },
+    forCompany(name) {
+      const keys = this.keys(name);
+      return this.calls.filter(c => keys.has(this.norm(c.company)) || (c.ticker && keys.has(this.norm(c.ticker))));
+    },
+    // Newest call per broker, plus the summary figures.
+    summary(name) {
+      const all = this.forCompany(name).slice().sort((x, y) => (y.at || '').localeCompare(x.at || ''));
+      const latest = [], seen = new Set();
+      all.forEach(c => { const k = this.norm(c.broker); if (!seen.has(k)) { seen.add(k); latest.push(c); } });
+      const n = { BUY: 0, HOLD: 0, SELL: 0 };
+      latest.forEach(c => { if (n[c.rating] != null) n[c.rating]++; });
+      const rated = n.BUY + n.HOLD + n.SELL;
+      const tps = latest.map(c => Number(c.target)).filter(x => x > 0);
+      const since = Date.now() - 30 * 864e5;
+      let up = 0, down = 0;
+      all.forEach(c => {
+        if ((Date.parse(c.at) || 0) < since) return;
+        if (c.action === 'raised' || c.action === 'upgrade') up++;
+        else if (c.action === 'cut' || c.action === 'downgrade') down++;
+      });
+      const score = rated ? (n.BUY - n.SELL) / rated : 0;
+      return { latest, n, rated, avg: tps.length ? tps.reduce((x, y) => x + y, 0) / tps.length : 0,
+        up, down, tone: !rated ? '' : score >= 0.34 ? 'bull' : score <= -0.34 ? 'bear' : 'mix', total: all.length };
+    },
+    money(x) { return '₹' + Math.round(Number(x)).toLocaleString('en-IN'); },
+    toneLabel(tone) { return t(tone === 'bull' ? 'bvBullish' : tone === 'bear' ? 'bvBearish' : 'bvNeutral'); },
+    actionLabel(a) {
+      return { raised: 'bvRaised', cut: 'bvCut', upgrade: 'bvUpgrade', downgrade: 'bvDowngrade', initiate: 'bvInitiate', maintain: 'bvMaintain' }[a] || '';
+    },
+    // Compact one-line verdict used on the Sentiment board row.
+    chipHTML(name) {
+      if (!this.ok) return '';
+      const s = this.summary(name);
+      if (!s.rated) return '';
+      return `<span class="bk-chip ${s.tone}" title="${esc(t('bvTitle'))}">${esc(this.toneLabel(s.tone))} · ${s.rated}</span>`;
+    },
+    panelHTML(name, inBoard) {
+      if (!this.ok) return `<div class="bv" data-bv="${esc(name)}"><p class="bv-note">${esc(t('bvLoading'))}</p></div>`;
+      const s = this.summary(name);
+      if (!s.rated) return `<div class="bv" data-bv="${esc(name)}"><h4 class="bv-h">${esc(t('bvTitle'))}</h4><p class="bv-note">${esc(t('bvNone'))}</p></div>`;
+      const pct = k => Math.round(s.n[k] / s.rated * 100);
+      const row = c => {
+        const act = this.actionLabel(c.action), rate = c.rating ? c.rating.toLowerCase() : '';
+        const prev = c.prev && c.target && c.prev !== c.target ? `<s>${esc(this.money(c.prev))}</s> → ` : '';
+        return `<li class="bv-row">
+          <span class="bv-b">${esc(c.broker)}</span>
+          <span class="bv-r ${rate}">${esc(c.rating ? t('bv' + c.rating.charAt(0) + c.rating.slice(1).toLowerCase()) : '–')}</span>
+          <span class="bv-t">${c.target ? prev + '<b>' + esc(this.money(c.target)) + '</b>' : ''}</span>
+          <span class="bv-a ${esc(c.action)}">${act ? esc(t(act)) : ''}</span>
+          <span class="bv-ago">${esc(ago(Date.parse(c.at) || Date.now()))}</span>
+          ${c.note ? `<span class="bv-n">${esc(c.note)}</span>` : ''}
+        </li>`;
+      };
+      const crowd = (() => {
+        const sl = Pulse.companySlug(Board.canon(name)), st = Board.stats(sl);
+        if (!st || !st.total) return `<span class="bv-crowd-n">${esc(t('bvNoVotes'))}</span>`;
+        const b = Math.round(st.bull / st.total * 100);
+        return `<b class="${b >= 50 ? 'pct-bull' : 'pct-bear'}">${b >= 50 ? '▲ ' + b + '% ' + esc(t('pulseBull')) : '▼ ' + (100 - b) + '% ' + esc(t('pulseBear'))}</b> <span class="bv-crowd-n">${st.total} ${esc(t(st.total === 1 ? 'sbVote' : 'sbVotes'))}</span>`;
+      })();
+      return `<div class="bv" data-bv="${esc(name)}">
+        <div class="bv-head"><h4 class="bv-h">${esc(t('bvTitle'))}</h4><span class="bk-chip ${s.tone}">${esc(this.toneLabel(s.tone))}</span></div>
+        <div class="bv-bar" role="img" aria-label="${s.n.BUY} ${esc(t('bvBuy'))}, ${s.n.HOLD} ${esc(t('bvHold'))}, ${s.n.SELL} ${esc(t('bvSell'))}">
+          ${s.n.BUY ? `<span class="b" style="flex:${s.n.BUY}">${pct('BUY')}%</span>` : ''}${s.n.HOLD ? `<span class="h" style="flex:${s.n.HOLD}">${pct('HOLD')}%</span>` : ''}${s.n.SELL ? `<span class="s" style="flex:${s.n.SELL}">${pct('SELL')}%</span>` : ''}
+        </div>
+        <p class="bv-legend"><span class="b">${s.n.BUY} ${esc(t('bvBuy'))}</span><span class="h">${s.n.HOLD} ${esc(t('bvHold'))}</span><span class="s">${s.n.SELL} ${esc(t('bvSell'))}</span><span>${s.rated} ${esc(t('bvBrokers'))}</span></p>
+        <div class="bv-facts">
+          ${s.avg ? `<div><span>${esc(t('bvAvgTarget'))}</span><b>${esc(this.money(s.avg))}</b></div>` : ''}
+          <div><span>${esc(t('bvMomentum'))}</span><b><i class="up">▲ ${s.up} ${esc(t('bvMoves'))}</i> <i class="dn">▼ ${s.down} ${esc(t('bvMovesDown'))}</i></b></div>
+        </div>
+        <ul class="bv-list">${s.latest.map(row).join('')}</ul>
+        <div class="bv-crowd"><span>${esc(t('bvCrowd'))}</span> ${crowd}
+          ${inBoard ? '' : `<button type="button" class="link" data-act="sbJump" data-v="${esc(name)}">${esc(t('bvOpenBoard'))}</button>`}</div>
+        <p class="bv-foot">${esc(t('bvFoot'))}</p>
+      </div>`;
+    }
+  };
+
   function renderInvestmentList() {
     // Same guard as renderList(): don't yank #list's DOM out from under an in-progress swipe gesture.
     if (SWIPE.active) { SWIPE.renderPending = true; return; }
@@ -5750,21 +5952,25 @@ Give a concise, event-specific analysis - decide for yourself which structure be
         const body = stories.length
           ? stories.map(entryWrapHTML).join('')
           : `<p class="empty-note">${esc(t('investNoNews'))}</p>`;
-        return `<h3 class="grp-company">
+        return `<h3 class="grp-company" data-co="${esc(c.company)}" tabindex="0" aria-label="${esc(c.company)}. ${esc(t('lpHint'))}">
           <div class="gc-top">
             <span class="gc-ring">${companyLogoHTML(c.company, 'gc-ring-inner')}</span>
             <span class="gc-name">${esc(c.company)}</span><span class="n">${stories.length}</span>
           </div>
-          <div class="gc-actions">
-            <button class="btn-chart" data-act="viewChart" data-v="${esc(c.company)}" data-sector="${esc(g.sector)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l5-5 4 4 8-9"/><path d="M15 7h5v5"/></svg>${esc(t('viewChart'))}</button>
-            <button class="gc-remove" data-act="untrack" data-v="${esc(c.company)}" aria-label="${esc(t('investRemove'))} ${esc(c.company)}" title="${esc(t('investRemove'))}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+          <div class="gc-tiles" role="group" aria-label="${esc(c.company)}">
+            <button class="gc-tile btn-chart" data-act="viewChart" data-v="${esc(c.company)}" data-sector="${esc(g.sector)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l5-5 4 4 8-9"/><path d="M15 7h5v5"/></svg><span>${esc(t('tileChart'))}</span></button>
+            <button class="gc-tile gc-news" data-act="viewNews" data-v="${esc(c.company)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h11a3 3 0 013 3v13H8a3 3 0 01-3-3z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg><span>${esc(t('tileNews'))}</span></button>
+            <button class="gc-tile gc-sent${S.bvOpen.has(c.company) ? ' on' : ''}" data-act="viewSent" data-v="${esc(c.company)}" aria-expanded="${S.bvOpen.has(c.company)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span>${esc(t('tileSent'))}</span></button>
           </div>
+          ${S.bvOpen.has(c.company) ? Brokers.panelHTML(c.company) : ''}
         </h3>${body}`;
       }).join('');
       const sectorTotal = g.companies.reduce((n, c) => n + c.stories.length, 0);
       html += groupHead(esc(g.sector), sectorTotal) + companyBlocks;
     }
-    box.innerHTML = (html || `<div class="empty"><p>${esc(t('investNoNews'))}</p></div>`) + channelHTML;
+    let lpUsed = false; try { lpUsed = !!localStorage.getItem('qs-lp-used-v1'); } catch (e) { /* storage blocked */ }
+    const hint = html && !lpUsed ? `<p class="lp-tip">${esc(t('lpHint'))}</p>` : '';
+    box.innerHTML = hint + (html || `<div class="empty"><p>${esc(t('investNoNews'))}</p></div>`) + channelHTML;
     seenObserveVisible(box);
     // Sentiment pulse no longer renders inline here - per the user's explicit "Dedicated Pulse screen"
     // choice, it moved to its own Community tab (see renderCommunity()), which lists every tracked company
@@ -5954,14 +6160,15 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     // before the next pipeline scan), and anything voted on recently.
     entries() {
       const by = new Map();
-      const add = (name, trackers) => {
+      const add = (name, trackers, who) => {
         const n = this.canon(name), slug = Pulse.companySlug(n);
         if (!n) return;
-        const e = by.get(slug) || { name: n, slug, trackers: 0, mine: false };
+        const e = by.get(slug) || { name: n, slug, trackers: 0, mine: false, by: [] };
         e.trackers = Math.max(e.trackers, trackers || 0);
+        if (who && who.length) e.by = [...new Set(e.by.concat(who))];
         by.set(slug, e);
       };
-      this.list.forEach(c => add(c.name, c.trackers));
+      this.list.forEach(c => add(c.name, c.trackers, c.by));
       this.pub.forEach(name => add(name, 0));
       S.myCompanies.forEach(n => add(n, 1));
       this.votes.forEach(v => add(v.company, 0));
@@ -6001,6 +6208,35 @@ Give a concise, event-specific analysis - decide for yourself which structure be
   };
   Board.restore();
 
+  // Crowd mood for an opened stock (design: big percentage, label, bar, bull/bear counts).
+  function crowdTone(st) {
+    if (!st || !st.total) return '';
+    const b = Math.round(st.bull / st.total * 100);
+    return b >= 55 ? 'bull' : b <= 45 ? 'bear' : 'mix';
+  }
+  function moodHTML(st) {
+    if (!st.total) return `<div class="sb-mood"><p class="sb-none">${esc(t('sbNoVotes'))}</p></div>`;
+    const bull = Math.round(st.bull / st.total * 100), tone = crowdTone(st);
+    return `<div class="sb-mood">
+      <div class="sb-mood-h">${esc(t('sbCrowdToday'))}</div>
+      <div class="sb-mood-n"><b class="${tone}">${bull}%</b><span class="${tone}">${esc(Brokers.toneLabel(tone))}</span><em>${st.total} ${esc(t(st.total === 1 ? 'sbVote' : 'sbVotes'))}</em></div>
+      <div class="pulse-bar"><span class="fill-bull" style="width:${bull}%"></span><span class="fill-bear" style="width:${100 - bull}%"></span></div>
+      <div class="sb-mood-c"><span class="pct-bull">${esc(t('pulseBull'))} ${st.bull}</span><span class="pct-bear">${esc(t('pulseBear'))} ${st.total - st.bull}</span></div>
+    </div>`;
+  }
+  // Shown when the brokers' verdict and the crowd's lean differ.
+  function disagreeHTML(e, st) {
+    if (!Brokers.ok || !st || st.total < 3) return '';
+    const s = Brokers.summary(e.name);
+    if (!s.rated) return '';
+    const ct = crowdTone(st);
+    if (!ct || ct === s.tone) return '';
+    const lean = tone => t(tone === 'bull' ? 'bvLeanBuy' : tone === 'bear' ? 'bvLeanSell' : 'bvLeanSplit');
+    const crowd = t(ct === 'bull' ? 'bvCrowdBull' : ct === 'bear' ? 'bvCrowdBear' : 'bvCrowdMix');
+    return `<div class="sb-split" role="note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18h.01"/></svg>
+      <p><b>${esc(t('bvDisagree'))}</b> ${esc(lean(s.tone))} ${esc(crowd)}</p></div>`;
+  }
+
   function boardBarHTML(st) {
     if (!st.total) return `<p class="sb-none">${esc(t('sbNoVotes'))}</p>`;
     const bull = Math.round((st.bull / st.total) * 100);
@@ -6013,7 +6249,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     const st = e.stats, mine = Board.mine(e.slug), isOpen = Board.open === e.slug;
     const head = `<button type="button" class="sb-row" data-act="sbOpen" data-v="${esc(e.slug)}" aria-expanded="${isOpen}">
         <span class="gc-ring">${isOpen || e.mine ? companyLogoHTML(e.name, 'gc-ring-inner') : `<span class="gc-ring-inner">${esc(e.name.charAt(0).toUpperCase())}</span>`}</span>
-        <span class="sb-name">${esc(e.name)}${e.mine ? ` <span class="sb-mine">${esc(t('sbYourList'))}</span>` : ''}</span>
+        <span class="sb-name">${esc(e.name)}${Brokers.chipHTML(e.name)}${e.mine ? ` <span class="sb-mine">${esc(t('sbYourList'))}</span>` : ''}</span>
         <span class="sb-mini">${st.total ? `<b class="pct-bull">▲${Math.round(st.bull / st.total * 100)}%</b> <span>${st.total}</span>` : '–'}</span>
         <span class="sb-chev" aria-hidden="true">${isOpen ? '−' : '+'}</span>
       </button>`;
@@ -6044,7 +6280,8 @@ Give a concise, event-specific analysis - decide for yourself which structure be
           : `<p class="sb-none">${esc(t('sbNoReasons'))}</p>`}
         ${all.length > 3 && !showAll ? `<button class="link" data-act="sbAll" data-v="${esc(e.slug)}">${esc(t('sbShowAll'))} (${all.length})</button>` : ''}
       </div>`;
-    return `<article class="sb-card open">${head}<div class="sb-body">${boardBarHTML(st)}${vote}${comments}</div></article>`;
+    const trk = e.trackers ? `<p class="sb-by"><b>${e.trackers}</b> ${esc(t(e.trackers === 1 ? 'sbTracker' : 'sbTrackers'))}${e.by && e.by.length ? ': ' + esc(e.by.slice(0, 8).join(', ')) + (e.trackers > Math.min(e.by.length, 8) ? ' +' + (e.trackers - Math.min(e.by.length, 8)) : '') : ''}</p>` : '';
+    return `<article class="sb-card open">${head}<div class="sb-body">${trk}${moodHTML(st)}${disagreeHTML(e, st)}${Brokers.ok && Brokers.summary(e.name).rated ? Brokers.panelHTML(e.name, true) : ''}${vote}${comments}</div></article>`;
   }
 
   function renderBoardBody() {
@@ -6078,7 +6315,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
   // items: [{ label, act, v, danger }] - each becomes a button that runs the normal data-act handler.
   const ActionSheet = {
     target: null,
-    open(target, items) {
+    open(target, items, title) {
       this.target = target;
       let el = $('#actionSheet');
       if (!el) {
@@ -6089,7 +6326,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       const list = items || [{ label: t('sbDelete'), act: 'sbSheetDel', danger: true }];
       el.innerHTML = `<div class="asheet-back" data-act="sbSheetCancel"></div>
         <div class="asheet" role="dialog" aria-modal="true" aria-label="${esc(typeof target === 'string' ? target : '')}">
-          <div class="asheet-group">${list.map(it => `<button type="button" class="asheet-btn${it.danger ? ' danger' : ''}" data-act="${esc(it.act)}"${it.v != null ? ` data-v="${esc(it.v)}"` : ''}>${esc(it.label)}</button>`).join('')}</div>
+          <div class="asheet-group">${title ? `<p class="asheet-title">${esc(title)}</p>` : ''}${list.map(it => `<button type="button" class="asheet-btn${it.danger ? ' danger' : ''}" data-act="${esc(it.act)}"${it.v != null ? ` data-v="${esc(it.v)}"` : ''}>${esc(it.label)}</button>`).join('')}</div>
           <button type="button" class="asheet-btn" data-act="sbSheetCancel">${esc(t('sbCancel'))}</button>
         </div>`;
       clearTimeout(toastTimer); $('#toast').classList.remove('show');   // an old message must not cover the sheet
@@ -6135,6 +6372,47 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       if (sheet && !sheet.hidden && ev.key === 'Escape') { ActionSheet.close(); return; }
       const c = ev.target.closest && ev.target.closest('#sbBody [data-del]');
       if (c && (ev.key === 'Enter' || ev.key === 'Delete' || ev.key === 'ContextMenu')) { ev.preventDefault(); ActionSheet.open(c.dataset.del); }
+    });
+  })();
+
+  /* Long press on a stock card (Investment tab) slides up a sheet with "Remove stock". Replaces the old X
+     button, which was too easy to hit by accident. Also opens from the keyboard (Enter / Menu key) and with a
+     right-click on a computer. */
+  (function wireStockLongPress() {
+    let timer = null, sx = 0, sy = 0, fired = false, firedAt = 0;
+    const card = ev => ev.target.closest && ev.target.closest('#list .grp-company[data-co]');
+    const cancel = () => { clearTimeout(timer); timer = null; };
+    const open = c => {
+      let first = true; try { first = !localStorage.getItem('qs-lp-used-v1'); localStorage.setItem('qs-lp-used-v1', '1'); } catch (e) { /* storage blocked */ }
+      if (first) $$('.lp-tip').forEach(el => el.remove());
+      ActionSheet.open(c.dataset.co, [{ label: t('removeStock'), act: 'untrack', v: c.dataset.co, danger: true }], c.dataset.co);
+    };
+    document.addEventListener('pointerdown', ev => {
+      const c = card(ev);
+      if (!c || ev.target.closest('.bv') || (ev.pointerType === 'mouse' && ev.button !== 0)) return;
+      fired = false; sx = ev.clientX; sy = ev.clientY; cancel();
+      timer = setTimeout(() => {
+        timer = null; fired = true; firedAt = Date.now();
+        if (navigator.vibrate) try { navigator.vibrate(15); } catch (e) { /* not supported */ }
+        open(c);
+      }, LONG_PRESS_MS);
+    });
+    document.addEventListener('pointermove', ev => { if (timer && Math.hypot(ev.clientX - sx, ev.clientY - sy) > 10) cancel(); });
+    ['pointerup', 'pointercancel'].forEach(n => document.addEventListener(n, cancel));
+    window.addEventListener('scroll', cancel, { passive: true });
+    // The finger lifting after a long press must not also press the tile underneath it.
+    document.addEventListener('click', ev => {
+      if (fired && Date.now() - firedAt < 800 && card(ev)) { ev.stopPropagation(); ev.preventDefault(); fired = false; }
+    }, true);
+    document.addEventListener('contextmenu', ev => {
+      const c = card(ev);
+      if (!c || ev.target.closest('.bv')) return;
+      ev.preventDefault(); cancel();
+      if (!fired) open(c);
+    });
+    document.addEventListener('keydown', ev => {
+      const c = ev.target.classList && ev.target.classList.contains('grp-company') ? ev.target : null;
+      if (c && (ev.key === 'Enter' || ev.key === 'ContextMenu' || ev.key === 'Delete')) { ev.preventDefault(); open(c); }
     });
   })();
 
@@ -6341,6 +6619,43 @@ Give a concise, event-specific analysis - decide for yourself which structure be
   }
 
   let approvedChannelsCache = null;   // re-fetched whenever a channel is linked, so the new one appears right away
+  /* ---------- Channel popularity ----------
+     channel_stats.json (pipeline): {accounts, channels:{name:{news:n, investment:n}}}. A channel's share is the
+     number of signed-in accounts that linked it in that category, out of all signed-in accounts. */
+  const ChanStats = {
+    data: null, at: 0, loading: null,
+    load() {
+      if (this.data && Date.now() - this.at < 10 * 60e3) return Promise.resolve();
+      if (this.loading) return this.loading;
+      this.loading = getJSON('channel_stats.json').then(d => { this.at = Date.now(); if (d && d.channels) this.data = d; })
+        .catch(() => { /* keep what we have */ }).finally(() => { this.loading = null; });
+      return this.loading;
+    },
+    pct(name, cat) {
+      if (!this.data || !this.data.accounts) return null;
+      const n = ((this.data.channels[String(name).toLowerCase()] || {})[cat]) || 0;
+      return { n, total: this.data.accounts, p: n ? Math.max(1, Math.round(n / this.data.accounts * 100)) : 0 };
+    },
+    html(name, cat) {
+      const s = this.pct(name, cat);
+      if (!s) return '';
+      return `<span class="lc-stat ${cat === 'investment' ? 'inv' : 'news'}" title="${s.n} of ${s.total} accounts"><span class="bar" aria-hidden="true"><i style="width:${s.p}%"></i></span><span>${s.p}% of users</span></span>`;
+    }
+  };
+  function renderPopularChannels() {
+    const box = $('#lcPopular'), wrap = $('#lcPopularBox');
+    if (!box || !wrap) return;
+    const d = ChanStats.data;
+    const rows = d ? Object.entries(d.channels).map(([name, c]) => ({ name, n: c.investment || 0 }))
+      .filter(r => r.n >= 2 && !S.myInvestChannels.has(r.name)).sort((x, y) => y.n - x.n).slice(0, 6) : [];
+    wrap.hidden = !rows.length;
+    box.innerHTML = rows.map(r => `<div class="lp-row"><span class="name">t/${esc(r.name)} <span class="lc-cat inv">Investment</span>${ChanStats.html(r.name, 'investment')}</span>
+      <div class="lp-rowbtns"><button class="follow" data-act="tginvlink" data-v="${esc(r.name)}">Link</button></div></div>`).join('');
+  }
+  function refreshChannelStats() {
+    ChanStats.load().then(() => { renderChannels(); renderInvestChannels(); renderPopularChannels(); });
+  }
+
   async function renderChannels() {
     const box = $('#tgList'), note = $('#tgSyncNote');
     if (!box) return;
@@ -6399,7 +6714,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       // everyday action - Follow - and a "..." that opens a sheet with the rest (Remove, and for the owner
       // Set/Remove default and Remove for everyone).
       return `<div class="lp-row lp-chanrow">
-      <span class="name">t/${esc(name)}${isDefault ? ' <span class="lp-defaultbadge">' + esc(t('defaultBadge')) + '</span>' : ''}</span>
+      <span class="name">t/${esc(name)}${isDefault ? ' <span class="lp-defaultbadge">' + esc(t('defaultBadge')) + '</span>' : ''} <span class="lc-cat news">News</span>${ChanStats.html(name, 'news')}</span>
       <div class="lp-rowbtns">
         ${mineBtn}
         <button class="lp-more" data-act="tgmore" data-v="${esc(name)}" data-default="${isDefault ? 1 : 0}" aria-label="${esc(t('moreOptions'))} t/${esc(name)}" aria-haspopup="dialog">
@@ -6408,6 +6723,228 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     </div>`;
     }).join('');
   }
+
+  document.addEventListener('change', ev => { if (ev.target && ev.target.id === 'impFile') HoldingsImport.handle(ev.target.files && ev.target.files[0]); });
+
+  /* ---------- Import holdings from a broker ----------
+     Brokers don't offer a free way to read a portfolio directly, so this reads what the person downloads from
+     them, entirely on this device (nothing is uploaded):
+       - CSV or Excel (.xlsx) holdings reports: Zerodha, Groww, Upstox, ICICI Direct, HDFC Securities, Angel One...
+       - a depository statement (CDSL / NSDL "CAS", PDF), which lists every broker's holdings at once.
+     Every company found is matched to the app's company list; the person reviews the list and confirms before
+     anything is added. */
+  const HoldingsImport = {
+    found: [], busy: false, pdfPass: null, pdfBuf: null,
+    norm(s) {
+      return String(s || '').toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9 ]+/g, ' ')
+        .replace(/\b(limited|ltd|inc|corporation|corp|company|co|the|eq|new)\b/g, ' ').replace(/\s+/g, '');
+    },
+    index() {
+      if (this._idx) return this._idx;
+      const m = new Map();
+      E.COMPANIES.forEach(c => {
+        [c.name, ...(c.aliases || []), c.ticker].filter(Boolean).forEach(k => { const n = this.norm(k); if (n && !m.has(n)) m.set(n, c.name); });
+      });
+      return (this._idx = m);
+    },
+    match(raw) {
+      let s = String(raw || '').trim().replace(/-(BE|EQ|BL|BZ|SM|ST|X1|N\d)$/i, '').replace(/\s+/g, ' ');
+      if (!s || s.length < 2 || /^[\d.,\-\s%]+$/.test(s)) return null;
+      const hit = this.index().get(this.norm(s));
+      return hit ? { raw: s, name: hit, known: true } : { raw: s, name: s.replace(/\b([A-Za-z])([A-Za-z]*)/g, (x, f, r) => f.toUpperCase() + r.toLowerCase()), known: false };
+    },
+    csvRows(text) {
+      const rows = []; let row = [], cell = '', q = false;
+      const delim = (text.split('\n', 1)[0].match(/;/g) || []).length > (text.split('\n', 1)[0].match(/,/g) || []).length ? ';' : ',';
+      for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        if (q) { if (ch === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += ch; }
+        else if (ch === '"') q = true;
+        else if (ch === delim) { row.push(cell); cell = ''; }
+        else if (ch === '\n') { row.push(cell); rows.push(row); row = []; cell = ''; }
+        else if (ch !== '\r') cell += ch;
+      }
+      if (cell || row.length) { row.push(cell); rows.push(row); }
+      return rows;
+    },
+    // .xlsx is a zip of XML files; read it with the browser's own inflate so no library is needed.
+    async xlsxRows(buf) {
+      const dv = new DataView(buf), u8 = new Uint8Array(buf);
+      let eocd = -1;
+      for (let i = u8.length - 22; i >= Math.max(0, u8.length - 70000); i--) if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+      if (eocd < 0) throw new Error('not a zip');
+      const n = dv.getUint16(eocd + 10, true); let p = dv.getUint32(eocd + 16, true);
+      const files = {};
+      for (let k = 0; k < n; k++) {
+        const method = dv.getUint16(p + 10, true), csize = dv.getUint32(p + 20, true);
+        const nl = dv.getUint16(p + 28, true), el = dv.getUint16(p + 30, true), cl = dv.getUint16(p + 32, true), off = dv.getUint32(p + 42, true);
+        const name = new TextDecoder().decode(u8.subarray(p + 46, p + 46 + nl));
+        files[name] = { method, csize, off };
+        p += 46 + nl + el + cl;
+      }
+      const read = async name => {
+        const f = files[name]; if (!f) return null;
+        const o = f.off, ln = dv.getUint16(o + 26, true), le = dv.getUint16(o + 28, true);
+        const data = u8.subarray(o + 30 + ln + le, o + 30 + ln + le + f.csize);
+        if (f.method === 0) return new TextDecoder().decode(data);
+        const ds = new DecompressionStream('deflate-raw');
+        const out = await new Response(new Blob([data]).stream().pipeThrough(ds)).arrayBuffer();
+        return new TextDecoder().decode(out);
+      };
+      const xml = s => new DOMParser().parseFromString(s, 'application/xml');
+      const sst = [];
+      const ss = await read('xl/sharedStrings.xml');
+      if (ss) xml(ss).querySelectorAll('si').forEach(si => sst.push([...si.querySelectorAll('t')].map(t => t.textContent).join('')));
+      const sheetName = Object.keys(files).filter(f => /^xl\/worksheets\/sheet\d+\.xml$/.test(f)).sort((x, y) => parseInt(x.match(/\d+/)[0]) - parseInt(y.match(/\d+/)[0]))[0];
+      if (!sheetName) throw new Error('no sheet');
+      const doc = xml(await read(sheetName)), rows = [];
+      doc.querySelectorAll('sheetData > row').forEach(r => {
+        const cells = [];
+        r.querySelectorAll('c').forEach(c => {
+          const ref = (c.getAttribute('r') || '').match(/^([A-Z]+)/); if (!ref) return;
+          let col = 0; for (const ch of ref[1]) col = col * 26 + ch.charCodeAt(0) - 64;
+          const t = c.getAttribute('t'), v = c.querySelector('v');
+          cells[col - 1] = t === 's' ? (sst[+v.textContent] || '') : t === 'inlineStr' ? [...c.querySelectorAll('t')].map(x => x.textContent).join('') : (v ? v.textContent : '');
+        });
+        rows.push(Array.from(cells, x => x == null ? '' : x));
+      });
+      return rows;
+    },
+    // Names of companies from rows of a holdings table.
+    fromRows(rows) {
+      const HEAD = /^(instrument|symbol|trading symbol|scrip( name)?|scrip symbol|stock( name)?|stock symbol|company( name)?|security( name)?|name of the (instrument|security)|name|ticker)$/i;
+      let hi = -1, cols = [];
+      for (let i = 0; i < Math.min(rows.length, 60) && hi < 0; i++) {
+        const c = (rows[i] || []).map((x, j) => HEAD.test(String(x).trim()) ? j : -1).filter(j => j >= 0);
+        if (c.length) { hi = i; cols = c; }
+      }
+      const out = [];
+      if (hi >= 0) {
+        const nameCol = cols.find(j => /name/i.test(rows[hi][j])) ?? cols[0];
+        for (let i = hi + 1; i < rows.length; i++) {
+          const r = rows[i] || [];
+          const cell = String(r[nameCol] || '').trim();
+          if (!cell || /^(total|grand total|note|disclaimer)/i.test(cell)) continue;
+          out.push(cell);
+        }
+        return out;
+      }
+      rows.forEach(r => (r || []).forEach(c => { const s = String(c || '').trim(); if (s.length >= 2 && s.length <= 60 && /[A-Za-z]/.test(s)) out.push(s); }));
+      return out;
+    },
+    // Depository statement text: "INE002A01018 RELIANCE INDUSTRIES LIMITED 10 ..."
+    fromCAS(text) {
+      const out = [], rx = /\b(INE[0-9A-Z]{9})\s+([A-Z][A-Z0-9 &.\-\/()']{2,70}?)(?=\s+(?:\d|-\s*\d|NIL)|\s{2,}|$)/g;
+      let m;
+      while ((m = rx.exec(text.replace(/\s+/g, ' '))) !== null) out.push(m[2].replace(/\s*\b(EQUITY SHARES?|EQ|EQUITY)\b.*$/i, '').replace(/ - .*$/, '').replace(/[\s\-]+$/, '').trim());
+      return out;
+    },
+    build(names) {
+      const seen = new Set(), list = [];
+      names.forEach(raw => {
+        const m = this.match(raw); if (!m) return;
+        const key = m.name.toLowerCase();
+        if (seen.has(key)) return; seen.add(key); list.push(m);
+      });
+      return list.sort((x, y) => (y.known - x.known) || x.name.localeCompare(y.name));
+    },
+    async loadPdfJs() {
+      if (window.pdfjsLib) return window.pdfjsLib;
+      const BASE = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+      await new Promise((res, rej) => { const s = document.createElement('script'); s.src = BASE + 'pdf.min.js'; s.onload = res; s.onerror = () => rej(new Error('load')); document.head.appendChild(s); });
+      // A worker must come from this page's own origin: fetch the library's worker and serve it from a blob.
+      const w = await (await fetch(BASE + 'pdf.worker.min.js')).text();
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(new Blob([w], { type: 'text/javascript' }));
+      return window.pdfjsLib;
+    },
+    async pdfText(buf, password) {
+      const lib = await this.loadPdfJs();
+      const doc = await lib.getDocument({ data: buf.slice(0), password: password || undefined }).promise;
+      let text = '';
+      for (let i = 1; i <= doc.numPages; i++) {
+        const pg = await doc.getPage(i), tc = await pg.getTextContent();
+        text += tc.items.map(x => x.str).join(' ') + '\n';
+      }
+      return text;
+    },
+    // ---- screen ----
+    sheet() {
+      let el = $('#impSheet');
+      if (!el) { el = document.createElement('div'); el.id = 'impSheet'; el.className = 'asheet-wrap'; el.hidden = true; document.body.appendChild(el); }
+      return el;
+    },
+    show(inner) {
+      const el = this.sheet();
+      el.innerHTML = `<div class="asheet-back" data-act="impClose"></div><div class="asheet imp" role="dialog" aria-modal="true" aria-label="${esc(t('impTitle'))}">${inner}</div>`;
+      el.hidden = false; requestAnimationFrame(() => el.classList.add('show'));
+    },
+    close() { const el = $('#impSheet'); if (!el) return; el.classList.remove('show'); setTimeout(() => { if (!el.classList.contains('show')) el.hidden = true; }, 200); },
+    pick() {
+      if (!Auth.uid) { openAuthGate('agTrackCompanyTitle', 'agTrackCompanyBody'); return; }
+      const inp = $('#impFile'); if (inp) { inp.value = ''; inp.click(); }
+    },
+    reading() { this.show(`<div class="imp-card"><h3 class="imp-h">${esc(t('impReading'))}</h3><p class="imp-sub">${esc(t('impPrivate'))}</p></div>`); },
+    async handle(file) {
+      if (!file) return;
+      this.reading();
+      const name = file.name.toLowerCase();
+      try {
+        let names = [];
+        if (/\.pdf$/.test(name)) { this.pdfBuf = await file.arrayBuffer(); this.pdfPass = null; return await this.runPdf(''); }
+        if (/\.xlsx$/.test(name)) names = this.fromRows(await this.xlsxRows(await file.arrayBuffer()));
+        else if (/\.xls$/.test(name)) return this.fail(t('impXls'));
+        else names = this.fromRows(this.csvRows(await file.text()));
+        this.review(this.build(names));
+      } catch (e) { this.fail(t('impFail')); }
+    },
+    async runPdf(password) {
+      try {
+        const text = await this.pdfText(this.pdfBuf, password);
+        const names = this.fromCAS(text);
+        this.review(this.build(names));
+      } catch (e) {
+        if (e && (e.name === 'PasswordException' || /password/i.test(e.message || ''))) {
+          this.show(`<div class="imp-card"><h3 class="imp-h">${esc(t('impPassTitle'))}</h3><p class="imp-sub">${esc(t('impPassBody'))}</p>
+            <input id="impPass" class="imp-input" type="password" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="${esc(t('impPassTitle'))}">
+            ${password ? `<p class="imp-err">${esc(t('impPassWrong'))}</p>` : ''}
+            <div class="imp-actions"><button class="btn small" data-act="impClose">${esc(t('sbCancel'))}</button><button class="btn primary small" data-act="impPass">${esc(t('impUnlock'))}</button></div></div>`);
+          const i = $('#impPass'); if (i) i.focus();
+        } else this.fail(t('impPdfFail'));
+      }
+    },
+    fail(msg) {
+      this.show(`<div class="imp-card"><h3 class="imp-h">${esc(t('impTitle'))}</h3><p class="imp-sub">${esc(msg)}</p>
+        <div class="imp-actions"><button class="btn primary small" data-act="impClose">${esc(t('impDone'))}</button></div></div>`);
+    },
+    review(list) {
+      this.found = list;
+      if (!list.length) return this.fail(t('impNone'));
+      const have = S.myCompanies;
+      const row = (c, i) => `<label class="imp-row"><input type="checkbox" data-imp="${i}" ${have.has(c.name) ? 'disabled' : (c.known ? 'checked' : '')}>
+        <span class="imp-n">${esc(c.name)}${have.has(c.name) ? `<em>${esc(t('impHave'))}</em>` : ''}</span></label>`;
+      const known = list.map((c, i) => [c, i]).filter(([c]) => c.known), other = list.map((c, i) => [c, i]).filter(([c]) => !c.known);
+      const fresh = known.filter(([c]) => !have.has(c.name)).length;
+      this.show(`<div class="imp-card"><h3 class="imp-h">${esc(t('impFound').replace('{n}', list.length))}</h3>
+        <p class="imp-sub">${esc(t('impReview'))}</p>
+        <div class="imp-list">
+          ${known.map(([c, i]) => row(c, i)).join('')}
+          ${other.length ? `<p class="imp-sec">${esc(t('impUnknown'))}</p>${other.map(([c, i]) => row(c, i)).join('')}` : ''}
+        </div>
+        <div class="imp-actions"><button class="btn small" data-act="impClose">${esc(t('sbCancel'))}</button>
+          <button class="btn primary small" data-act="impAdd" id="impAddBtn">${esc(t('impAdd'))} (${fresh})</button></div></div>`);
+      const box = $('#impSheet');
+      box.addEventListener('change', () => { const n = box.querySelectorAll('input[data-imp]:checked').length; const b = $('#impAddBtn'); if (b) b.textContent = t('impAdd') + ' (' + n + ')'; });
+    },
+    add() {
+      const picks = [...document.querySelectorAll('#impSheet input[data-imp]:checked')].map(i => this.found[+i.dataset.imp]).filter(Boolean);
+      const room = 300 - S.myCompanies.size;
+      let added = 0;
+      picks.forEach(c => { if (added < room && !S.myCompanies.has(c.name) && COMPANY_NAME_RX.test(c.name)) { S.myCompanies.add(c.name); added++; } });
+      if (added) { Sync.pushSoon(); Board.publishMine(); track('import_holdings', { n: added }); renderInvestmentBox(); renderAll(); }
+      this.close();
+      toast(added ? t('impAdded').replace('{n}', added) : t('impNothing'));
+    }
+  };
 
   // Investment watchlist (Settings). Much simpler than renderChannels(): purely personal data, no shared
   // pool/owner-approval step, just this account's own S.myCompanies - see the Companies module above.
@@ -6446,7 +6983,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       box.innerHTML = `<p class="lp-empty">${esc(t('noChannelsYet'))}</p>`;
     } else {
       box.innerHTML = [...S.myInvestChannels].sort((a, b) => a.localeCompare(b)).map(name => `<div class="lp-row">
-        <span class="name">t/${esc(name)}</span>
+        <span class="name">t/${esc(name)} <span class="lc-cat inv">Investment</span>${ChanStats.html(name, 'investment')}</span>
         <div class="lp-rowbtns">
           <button class="follow lp-remove" data-act="tginvremove" data-v="${esc(name)}" aria-label="${esc(t('remove'))} t/${esc(name)}">${esc(t('remove'))}</button>
         </div>
@@ -6504,6 +7041,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
   function setMode(mode) {
     if (mode === S.mode) return;
     S.mode = mode;
+    renderDigest();      // the "since you left" card belongs to the tab being shown
     track('mode_view', { mode });
     // The News-only chrome (country status ring, country/sector/priority dropdown filters) has no meaning in
     // Investment mode, which has its own sector dropdown instead (#investSectorFilter, swapped in below) -
@@ -6566,8 +7104,8 @@ Give a concise, event-specific analysis - decide for yourself which structure be
   const SETTINGS_SECTIONS = [
     { id: 'appearance', mode: null, icon: 'theme', title: 'Appearance', subKey: () => themeActive() === 'dark' ? 'Dark mode' : 'Light mode', count: null },
     { id: 'language', mode: null, icon: 'globe', title: 'Language', subKey: () => LANG_NAMES[currentLang] || 'English', count: null },
-    { id: 'newschannels', mode: 'news', icon: 'wifi', title: 'Telegram channels for News', subKey: () => S.myChannels.size + ' linked', count: () => S.myChannels.size },
-    { id: 'investwatchlist', mode: 'investment', icon: 'candle', title: 'Investment watchlist & channels', subKey: () => S.myCompanies.size + ' tracked · ' + S.myInvestChannels.size + ' channels', count: () => S.myCompanies.size + S.myInvestChannels.size },
+    { id: 'linkchannels', mode: null, icon: 'wifi', title: 'Link channels', subKey: () => S.myChannels.size + ' news · ' + S.myInvestChannels.size + ' investment', count: () => S.myChannels.size + S.myInvestChannels.size },
+    { id: 'investwatchlist', mode: 'investment', icon: 'candle', title: 'Investment watchlist', subKey: () => S.myCompanies.size + ' tracked', count: () => S.myCompanies.size },
     { id: 'appetite', mode: null, icon: 'gauge', title: 'Daily appetite', subKey: () => Appetite.on() ? Appetite.target() + ' stories a day' : 'Everything', count: null },
     { id: 'notifications', mode: null, icon: 'bell', title: 'Notifications', subKey: () => 'New story alerts', count: null },
     { id: 'export', mode: null, icon: 'export', title: 'Export', subKey: () => 'Save a report or the raw table', count: null },
@@ -6642,6 +7180,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     if (id === 'appearance') Theme.apply();
     if (id === 'appetite') renderAppetiteBox();
     if (id === 'pushstats') renderPushStats();
+    if (id === 'linkchannels') refreshChannelStats();
   }
   function closeSettingsPage() {
     $$('.settingspage').forEach(p => p.classList.add('sp-hidden'));
@@ -6673,7 +7212,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       if (S.mode === 'investment') { renderInvestmentList(); renderCompanyBar(); } else { renderControls(); renderList(); }
     }
     if (name === 'saved') renderSaved();
-    if (name === 'community') renderCommunity();
+    if (name === 'community') { renderCommunity(); Brokers.load().then(() => { if (S.tab === 'community' && !Board.pick) renderBoardBody(); }); }
     // Settings used to be the app's default first screen ("Link Pages"), so its Account/Telegram/Appearance
     // blocks were always rendered on load regardless of which tab was showing. Now that it's reached only via
     // the Settings tab, re-render its dynamic bits on every visit so they're never stale (e.g. after signing
@@ -6823,8 +7362,27 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       else if (act === 'tginvremove') { InvestChannels.remove(v); }
       else if (act === 'spopen') { openSettingsPage(v); }
       else if (act === 'spback') { closeSettingsPage(); }
+      else if (act === 'tginvlink') { if (InvestChannels.add(v)) renderPopularChannels(); }
+      else if (act === 'impPick') { HoldingsImport.pick(); }
+      else if (act === 'impClose') { HoldingsImport.close(); }
+      else if (act === 'impAdd') { HoldingsImport.add(); }
+      else if (act === 'impPass') { const i = $('#impPass'); if (i && i.value) HoldingsImport.runPdf(i.value.trim()); }
       else if (act === 'gotoWatchlist') { setTab('settings'); openSettingsPage('investwatchlist'); const inp = $('#invInput'); if (inp) inp.focus(); }
       else if (act === 'viewChart') { openChartModal(v, el, el.dataset.sector); }
+      else if (act === 'viewNews') {
+        const g = companyGroups().find(x => x.company === v);
+        if (g && g.stories.length) openCompany(v); else toast(t('investNoNews'));
+      }
+      else if (act === 'viewSent') {
+        if (S.bvOpen.has(v)) S.bvOpen.delete(v); else S.bvOpen.add(v);
+        renderInvestmentList();
+        if (S.bvOpen.has(v)) Brokers.load().then(() => { if (S.bvOpen.has(v) && S.mode === 'investment' && S.tab !== 'community') renderInvestmentList(); });
+      }
+      else if (act === 'sbJump') {
+        const slug = Pulse.companySlug(Board.canon(v));
+        Board.open = slug; Board.pick = null; Board.draft = ''; Board.q = '';
+        setTab('community');
+      }
       else if (act === 'cmclose') { closeChartModal(); }
       else if (act === 'cmSeg') { setChartSeg(v); }
       else if (act === 'ai') {
@@ -7149,6 +7707,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       date: (x.published || '').slice(0, 10), text: x.excerpt || '', addedAt: t,
       sources: (x.sources || []).map(s => ({ name: s.name, url: s.url, at: Date.parse(s.at) || t })), related: [],
       video: x.video || null,
+      inv: !!x.inv,   // posted only in channels linked for Investment: kept out of News (see channelVisible)
       // Every story in today's feed takes this path (ai:false), and it never carried the headline photo
       // over - so a photo found by the image step could not show anywhere. Same rule as mapLive().
       image: (x.image && x.image.status === 'found' && x.image.url) ? { url: x.image.url, source: x.image.source || '' } : null
@@ -7168,6 +7727,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       sources: (x.sources || []).map(s => ({ name: s.name, url: s.url, at: Date.parse(s.at) || t })),
       related: (x.related || []).map(r => 'L' + r),
       video: x.video || null,
+      inv: !!x.inv,
       // Headline images (image_intel.py): a real news photo Google's Custom Search index returned for this
       // headline, or null if none was found (or none was searched for yet - only Critical/High stories get
       // searched, see image_max_per_run/image_importance in sources.yml). Never re-hosted, just linked.
@@ -7356,6 +7916,15 @@ Give a concise, event-specific analysis - decide for yourself which structure be
   // Jumps to a specific item's card in the Signals list - same behaviour the "goto" tap action and the AI
   // briefing's inline links use, factored out so the story-arrival notification can reuse it too.
   function gotoItem(id) {
+    // Deep links from the market / vote notifications (no story id): "qs:market", "qs:board", "qs:board:<Company>"
+    if (/^qs:/.test(id)) {
+      const parts = id.split(':'), co = parts.slice(2).join(':');
+      if (parts[1] === 'board') {
+        if (co) { Board.open = Pulse.companySlug(Board.canon(co)); Board.pick = null; Board.draft = ''; Board.q = ''; }
+        setTab('community');
+      } else setTab('brief');
+      return;
+    }
     S.f = Object.assign(S.f, { country: '', sector: '', imp: '', q: '', range: 'all' }); $('#q').value = '';
     S.open.add(id);
     if (S.tab !== 'brief') setTab('brief');

@@ -44,6 +44,8 @@ PATHS = {
     "feed": ROOT / "feed.json",
     "briefing": ROOT / "briefing.json",
     "state": ROOT / "state.json",
+    "chanstats": ROOT / "channel_stats.json",   # % of signed-in accounts that linked each Telegram channel
+    "brokers": ROOT / "brokers.json",   # broker rating / target-price calls - see update_brokers()
     "board": ROOT / "board.json",     # the Sentiment board's stock list - see refresh_portfolio_union()
     "sources": ROOT / "sources.yml",
 }
@@ -153,6 +155,11 @@ def push_flag(country: str) -> str:
     return "".join(chr(127397 + ord(ch)) for ch in code.upper())
 
 
+INDIA_MARKET_CUES = re.compile(
+    r"₹|\bRs\.?\s?\d|\b\d[\d,.]*\s?(?:cr|crore|lakh)\b|\b(?:NSE|BSE|Nifty|Sensex|SEBI|F&O|GIFT City)\b",
+    re.I)
+
+
 def classify_country_rules(headline: str, excerpt: str) -> str:
     """Python port of app.js's classifyCountry(), for free-mode push notifications only (see the note
     above classify_importance_rules - the app's own rendering always reclassifies fresh and never reads
@@ -174,6 +181,11 @@ def classify_country_rules(headline: str, excerpt: str) -> str:
             s += min(in_body, 4)
         if s:
             scores[name] = s
+    # Rupee amounts, "Cr" and Indian exchange words mark a story as about India even when it never says "India"
+    # (and mentions the US or another market in passing) - same rule as classifyCountry() in app.js.
+    in_cues = len(INDIA_MARKET_CUES.findall(text))
+    if in_cues:
+        scores["India"] = scores.get("India", 0) + min(10, 5 * in_cues)
     if not scores:
         return "Global"
     ranked = sorted(scores.items(), key=lambda kv: -kv[1])
@@ -385,16 +397,15 @@ PUSH_EVAL_FAST_MAX_DEVICES = 60
 PUSH_QUEUE_MAX = 60          # per device; if a device is held for a long time the oldest stories drop off
 # 14h, not 12: stories that arrive after the evening slot wait overnight for the morning one (21:00 -> 08:00+).
 PUSH_ITEM_MAX_AGE_H = 14     # a queued story older than this isn't news any more - dropped rather than sent
-# TIME SLOTS (owner, 13 Oct): notifications only go out in three daytime windows, in each device's own local
-# time - morning, afternoon, evening - and at most 1 or 2 in each (the person's choice, per_slot). Each one
-# bundles everything queued since the last, most important first; news and stock stories share the same
-# count, and Critical stories do NOT jump the limit (they lead the next notification instead). This replaces
-# the 20-40 minute gaps, quiet hours (the slots are all daytime) and the daily/weekly digest (the slots are
-# the roundups). The first notification of a slot goes out at a random moment in its first 45 minutes, so
-# phones don't all buzz at 8:00 sharp; a second one waits 75-105 minutes after the first.
-PUSH_SLOTS = (("morning", 8, 11), ("afternoon", 13, 16), ("evening", 18, 21))
-PUSH_FIRST_DELAY_MAX_S = 45 * 60
-PUSH_SECOND_GAP_MIN_S, PUSH_SECOND_GAP_MAX_S = 75 * 60, 105 * 60
+# FIXED TIMES (owner, 22 Oct): news notifications go out at 9 am, 1 pm, 4 pm, 7 pm and 10 pm, in each device's own
+# local time - five a day, one at each time. Each bundles everything queued since the last, most important first;
+# news and stock stories share the same notification, and Critical stories do NOT jump the schedule (they lead
+# the next bundle instead). GitHub only starts this pipeline roughly every 5 minutes and sometimes much less
+# often, so a time is a window: the notification goes out on the first check at or after the time, and is
+# still sent for PUSH_WINDOW_MIN minutes after it (not at all later - the next time's bundle carries the news).
+PUSH_TIMES_H = (9, 13, 16, 19, 22)
+PUSH_WINDOW_MIN = 150
+PUSH_SLOTS = tuple((f"t{h:02d}", h, h + PUSH_WINDOW_MIN // 60) for h in PUSH_TIMES_H)   # kept for older callers
 
 
 def _b64u(data: bytes) -> str:
@@ -577,6 +588,8 @@ def push_kind_for(sub: dict, item: dict) -> str | None:
         text = " ".join(str(item.get(k) or "") for k in ("headline", "excerpt", "summary"))
         if rx and rx.search(text):
             return "invest"
+    if item.get("inv"):
+        return None                              # from a channel linked only for Investment: never a News story
     return "news" if sub.get("news", True) and news_wanted(sub, item) else None
 
 
@@ -863,30 +876,48 @@ def refresh_portfolio_union(state: dict, now: dt.datetime) -> list[str]:
         return list(cache.get("names") or [])     # without the key, keep using the last list known
     base = f"projects/{FIREBASE_PROJECT}/databases/(default)/documents"
     body = {"structuredQuery": {"from": [{"collectionId": "qs_users"}],
-                                "select": {"fields": [{"fieldPath": "investChannels"}, {"fieldPath": "companies"}]}}}
+                                "select": {"fields": [{"fieldPath": "investChannels"}, {"fieldPath": "companies"},
+                                                      {"fieldPath": "channels"}, {"fieldPath": "dn"}]}}}
     try:
         r = requests.post(f"https://firestore.googleapis.com/v1/{base}:runQuery", json=body,
                           headers=fs_admin_headers(), timeout=20)
         if not r.ok:
             log(f"  portfolio scan: HTTP {r.status_code}, keeping the last lists")
             return list(cache.get("names") or [])
-        names, trackers = set(), {}
+        names, trackers, who = set(), {}, {}
+        accounts, news_n, inv_n = 0, {}, {}
         for row in r.json():
+            if not row.get("document"):
+                continue
+            accounts += 1
             f = (row.get("document") or {}).get("fields") or {}
+            dn = ((f.get("dn") or {}).get("stringValue") or "").strip()[:24]      # masked display name, e.g. "raj•••"
             for c in _fs_strings(f, "investChannels"):
                 c = c.strip().lower()
                 if re.fullmatch(r"[a-z0-9_]{5,32}", c):
                     names.add(c)
+                    inv_n[c] = inv_n.get(c, 0) + 1
+            for c in {x.strip().lower() for x in _fs_strings(f, "channels")}:
+                if re.fullmatch(r"[a-z0-9_]{5,32}", c):
+                    news_n[c] = news_n.get(c, 0) + 1
             for co in {canonical_company(x) for x in _fs_strings(f, "companies") if x.strip()}:
                 if 2 <= len(co) <= 60:
                     trackers[co] = trackers.get(co, 0) + 1     # once per account, however many devices
+                    if dn:
+                        who.setdefault(co, []).append(dn)
         cache.update(at=now.timestamp(), names=sorted(names))
         board = {"updated_at": iso(now),
-                 "companies": [{"name": n, "trackers": k} for n, k in
-                               sorted(trackers.items(), key=lambda kv: (-kv[1], kv[0].lower()))]}
+                 "companies": [{"name": n, "trackers": k, **({"by": sorted(set(who[n]), key=str.lower)[:12]} if who.get(n) else {})}
+                               for n, k in sorted(trackers.items(), key=lambda kv: (-kv[1], kv[0].lower()))]}
         if read_json(PATHS["board"], {}).get("companies") != board["companies"]:
             write_json(PATHS["board"], board)                    # only rewritten when the list changed
             log(f"  sentiment board: {len(board['companies'])} stocks across all watchlists")
+        stats = {"accounts": accounts,
+                 "channels": {c: {k: v for k, v in (("news", news_n.get(c, 0)), ("investment", inv_n.get(c, 0))) if v}
+                              for c in sorted(set(news_n) | set(inv_n))}}
+        if read_json(PATHS["chanstats"], {}).get("channels") != stats["channels"] or read_json(PATHS["chanstats"], {}).get("accounts") != accounts:
+            write_json(PATHS["chanstats"], {"updated_at": iso(now), **stats})
+            log(f"  channel stats: {len(stats['channels'])} channels across {accounts} accounts")
         return sorted(names)
     except Exception as exc:  # noqa: BLE001
         log(f"  portfolio scan unavailable ({exc}), keeping the last lists")
@@ -989,14 +1020,18 @@ def bundle_payload(batch: list, index: dict, devkey: str) -> dict:
 
 
 def current_slot(sub: dict, now: dt.datetime):
-    """(slot_key, start_ts, end_ts) for the device's local time slot happening now, or None between slots."""
+    """(slot_key, start_ts, end_ts) for the fixed notification time this device is inside right now (the time
+    itself through PUSH_WINDOW_MIN minutes later, in the device's local time), or None between those windows."""
     local = sub_local_time(sub, now)
-    for name, h1, h2 in PUSH_SLOTS:
-        if h1 <= local.hour < h2:
-            start_local = local.replace(hour=h1, minute=0, second=0, microsecond=0)
-            offset = dt.timedelta(minutes=sub.get("tz_min", 0))
-            start = start_local - offset
-            return f"{local.date().isoformat()}:{name}", start.timestamp(), (start + dt.timedelta(hours=h2 - h1)).timestamp()
+    offset = dt.timedelta(minutes=sub.get("tz_min", 0))
+    for day_back in (0, 1):                      # the 10 pm window runs past midnight
+        day = local - dt.timedelta(days=day_back)
+        for h in PUSH_TIMES_H:
+            start_local = day.replace(hour=h, minute=0, second=0, microsecond=0)
+            if start_local <= local < start_local + dt.timedelta(minutes=PUSH_WINDOW_MIN):
+                start = start_local - offset
+                return (f"{start_local.date().isoformat()}:t{h:02d}", start.timestamp(),
+                        (start + dt.timedelta(minutes=PUSH_WINDOW_MIN)).timestamp())
     return None
 
 
@@ -1016,6 +1051,114 @@ def next_gap_seconds(interval: int) -> float:
     left only two possible gaps (30 or 40 min) - a regular beat, the opposite of what was asked for."""
     steps = list(range(PUSH_GAP_MIN_S, PUSH_GAP_MAX_S + 1, interval)) or [PUSH_GAP_MIN_S]
     return random.choice(steps) - 60      # a minute's slack: the run landing on that boundary should send
+
+
+# ---------------------------------------------------------------------------------------------------------
+# Two extra daily notifications - wording approved by the owner (market C, vote B); PUSH_EXTRAS_ENABLED switches them off.
+#   market  11:00 (device's local time): one market-specific note, led by the biggest Indian market story
+#   vote    17:30 (device's local time): invites people to check/vote on the Sentiment board, led by the stock
+#           with the freshest broker call
+# One of each per device per day, inside a 2-hour window after the time, daytime only so quiet hours never
+# apply. They go to every device that already receives news notifications.
+PUSH_EXTRAS_ENABLED = True
+PUSH_EXTRAS = (("market", 11, 0), ("vote", 17, 30))          # (kind, hour, minute) in the device's local time
+PUSH_EXTRAS_WINDOW_MIN = 120
+MARKET_WORDING = "C"
+VOTE_WORDING = "B"
+# {head} = the lead story, {n} = how many other market stories, {co} = company, {broker}/{act}/{tp} = the call.
+MARKET_COPY = {
+    "A": ("Market check · 11:00", "{head}"),
+    "B": ("Mid-morning on Dalal Street", "{head} - plus {n} more market stories"),
+    "C": ("What's moving the market?", "{head} - tap to read more."),
+}
+MARKET_COPY_QUIET = {
+    "A": ("Market check · 11:00", "Markets are steady - no big movers in the last few hours."),
+    "B": ("Mid-morning on Dalal Street", "A calm morning. Tap to see what's on your watchlist."),
+    "C": ("What's moving the market?", "Nothing major yet. Tap to check your stocks."),
+}
+VOTE_COPY = {
+    "A": ("Bull or Bear? {co}", "{broker} {act}. Where do you stand? Cast your vote."),
+    "B": ("Today's mood on the board", "How do you feel about {co}? See the brokers' view and vote."),
+    "C": ("Brokers vs retail investors", "{broker} {act} on {co}. Do you agree? Vote on the Sentiment board."),
+}
+VOTE_COPY_QUIET = {
+    "A": ("Bull or Bear?", "Check today's mood on your stocks and cast your vote."),
+    "B": ("Today's mood on the board", "See what retail investors think of your stocks and cast your vote."),
+    "C": ("Brokers vs retail investors", "See how brokers and investors feel about your stocks."),
+}
+_ACT_TEXT = {"raised": "raised the target to {tp}", "cut": "cut the target to {tp}", "upgrade": "upgraded to {rt}",
+             "downgrade": "downgraded to {rt}", "initiate": "started coverage with {rt}", "maintain": "rates it {rt}"}
+
+
+def market_note(feed: dict, now: dt.datetime) -> dict:
+    cutoff = now - dt.timedelta(hours=14)
+    pool = []
+    for it in feed.get("items", []):
+        if it.get("inv"):
+            continue
+        txt = (it.get("headline") or "") + " " + (it.get("excerpt") or "")
+        if not INDIA_MARKET_CUES.search(txt) and not re.search(r"\b(?:stock market|markets?|shares?|rupee|RBI|crude)\b", txt, re.I):
+            continue
+        try:
+            pub = dt.datetime.fromisoformat((it.get("published") or "").replace("Z", "+00:00"))
+        except ValueError:
+            continue
+        if pub.tzinfo is None:
+            pub = pub.replace(tzinfo=dt.timezone.utc)
+        if pub >= cutoff and (it.get("country") or "") in ("India", ""):
+            pool.append(it)
+    pool.sort(key=lambda i: (-RANK.get(i.get("importance"), 0), i.get("published") or ""), reverse=False)
+    pool.sort(key=lambda i: -RANK.get(i.get("importance"), 0))
+    if pool:
+        title, body = MARKET_COPY[MARKET_WORDING]
+        head = (pool[0].get("headline") or "").strip()[:140].rstrip(" .!?:;,-")
+        return {"title": title, "body": body.format(head=head, n=len(pool) - 1), "id": "L" + pool[0]["id"], "kind": "market"}
+    title, body = MARKET_COPY_QUIET[MARKET_WORDING]
+    return {"title": title, "body": body, "id": "qs:market", "kind": "market"}
+
+
+def vote_note(brokers: dict) -> dict:
+    calls = sorted((brokers or {}).get("calls", []), key=lambda c: c.get("at") or "", reverse=True)
+    calls = [c for c in calls if c.get("action") != "maintain"][:20] + [c for c in calls if c.get("action") == "maintain"][:20]
+    for c in calls:
+        if c.get("action") in _ACT_TEXT and (c.get("target") or c.get("rating")):
+            tp = ("₹" + format(int(c["target"]), ",")) if c.get("target") else ""
+            act = _ACT_TEXT[c["action"]].format(tp=tp, rt=(c.get("rating") or "").title())
+            title, body = VOTE_COPY[VOTE_WORDING]
+            return {"title": title.format(co=c["company"]), "kind": "vote", "id": "qs:board:" + c["company"],
+                    "body": body.format(co=c["company"], broker=c["broker"], act=act)}
+    title, body = VOTE_COPY_QUIET[VOTE_WORDING]
+    return {"title": title, "body": body, "id": "qs:board", "kind": "vote"}
+
+
+def send_extra_pushes(subs: list[dict], feed: dict, state: dict, now: dt.datetime, stats: dict) -> None:
+    """The 11:00 market note and the 17:30 vote note. Inert while PUSH_EXTRAS_ENABLED is False."""
+    if not PUSH_EXTRAS_ENABLED:
+        return
+    ps = state.setdefault("push", {})
+    notes: dict[str, dict] = {}
+    for sub in subs:
+        loc = sub_local_time(sub, now)
+        key = device_key(sub["name"])
+        dv = ps.setdefault("devices", {}).setdefault(key, {"next": 0, "q": []})
+        done = dv.setdefault("extra", {})
+        for kind, hh, mm in PUSH_EXTRAS:
+            mins = loc.hour * 60 + loc.minute - (hh * 60 + mm)
+            if not (0 <= mins < PUSH_EXTRAS_WINDOW_MIN) or done.get(kind) == loc.date().isoformat():
+                continue
+            if kind not in notes:
+                notes[kind] = market_note(feed, now) if kind == "market" else vote_note(read_json(PATHS["brokers"], {"calls": []}))
+            n = notes[kind]
+            payload = {"id": n["id"], "title": n["title"], "body": n["body"], "n": 1, "kind": kind, "crit": False,
+                       "nid": new_notification_id(), "d": key, "flag": "", "country": "", "sector": "", "headline": n["body"]}
+            status = send_one_push(sub, payload)
+            if status in (200, 201, 204):
+                done[kind] = loc.date().isoformat()
+                stats["sent_" + kind] = stats.get("sent_" + kind, 0) + 1
+            elif status in (404, 410):
+                delete_push_subscription(sub["name"])
+                ps["devices"].pop(key, None)
+                break
 
 
 def run_push(new_items: list[dict], feed: dict, state: dict, now: dt.datetime) -> None:
@@ -1101,8 +1244,8 @@ def run_push(new_items: list[dict], feed: dict, state: dict, now: dt.datetime) -
         slot_key, slot_start, slot_end = slot
         if dv.get("slot") != slot_key:           # first look at this device in a new slot
             dv["slot"], dv["sent"] = slot_key, 0
-            dv["next"] = slot_start + _random_step(0, PUSH_FIRST_DELAY_MAX_S, interval) - 60
-        if dv.get("sent", 0) >= sub.get("per_slot", 2) or now_ts < dv.get("next", 0) or now_ts >= slot_end:
+            dv["next"] = slot_start - 60
+        if dv.get("sent", 0) >= 1 or now_ts < dv.get("next", 0) or now_ts >= slot_end:
             waiting += 1
             continue
         batch = dv["q"]
@@ -1112,7 +1255,7 @@ def run_push(new_items: list[dict], feed: dict, state: dict, now: dt.datetime) -
             sent_ids = {q[0] for q in batch}
             dv["q"] = [q for q in dv["q"] if q[0] not in sent_ids]
             dv["sent"] = dv.get("sent", 0) + 1
-            dv["next"] = now_ts + _random_step(PUSH_SECOND_GAP_MIN_S, PUSH_SECOND_GAP_MAX_S, interval) - 60
+            dv["next"] = slot_end
             for k in ("sent", "sent_" + payload["kind"]) + (("sent_critical",) if payload["crit"] else ()):
                 stats[k] = stats.get(k, 0) + 1
         elif status in (404, 410):
@@ -1127,6 +1270,10 @@ def run_push(new_items: list[dict], feed: dict, state: dict, now: dt.datetime) -
 
     # The daily/weekly digest is no longer sent: the morning/afternoon/evening roundups replaced it, and a
     # separate digest would break the "never more than I chose" limit. send_digests() is kept for reference.
+    try:
+        send_extra_pushes(subs, feed, state, now, stats)
+    except Exception as exc:  # noqa: BLE001
+        log(f"  ! extra notifications skipped: {exc}")
     record_push_stats(stats, now)
     log(f"  push: {len(subs)} device(s), {len(pending)} new stor{'y' if len(pending) == 1 else 'ies'} to place, "
         f"{stats.get('sent', 0)} sent, {waiting} waiting in their slot, "
@@ -2156,10 +2303,189 @@ def collect(cfg: dict, state: dict, now: dt.datetime) -> tuple[list[dict], dict]
     return posts, status
 
 
+# ---------------------------------------------------------------------------------------------------------
+# Broker calls (rating / target-price changes) -> brokers.json
+# The stocksresult-style channels post research calls as "CITI ON HINDUSTAN ZINC / Rating: SELL / Target Price
+# raised to Rs 495 ...". Each is parsed into one record per (broker, company); the app turns the records into
+# the "Broker view" panel and the broker chip on the Sentiment board. History is kept ~45 days so a later call
+# can show the move against the broker's previous target.
+BROKER_KEEP_DAYS = 45
+BROKER_NAMES = [
+    "Goldman Sachs", "Morgan Stanley", "JP Morgan", "JPMorgan", "Jefferies", "Nomura", "Citi", "Citigroup", "HSBC",
+    "Investec", "Macquarie", "CLSA", "UBS", "BofA", "Bank of America", "Bernstein", "Barclays", "Deutsche Bank",
+    "Kotak Institutional Equities", "Kotak Securities", "Kotak", "Motilal Oswal", "Emkay", "ICICI Securities",
+    "ICICI Direct", "Axis Securities", "Axis Capital", "Nuvama", "Elara", "Systematix", "Prabhudas Lilladher",
+    "Antique", "IIFL", "Sharekhan", "HDFC Securities", "Ambit", "Mirae Asset", "Choice", "Anand Rathi", "Equirus",
+    "Dolat", "PL Capital", "Phillip Capital", "YES Securities", "Centrum", "Geojit", "SBI Securities",
+    "Religare", "InCred", "Batlivala", "Arihant", "Ventura", "Monarch", "Intensive", "Pantomath", "BNP Paribas", "Credit Suisse",
+]
+_BROKER_ALT = "|".join(sorted((re.escape(b) for b in BROKER_NAMES), key=len, reverse=True))
+BROKER_ON = re.compile(r"(?:^|\n)\W*(" + _BROKER_ALT + r")\s+(?:ON|ON:|-|:)\s+([^\n•|]{2,80})", re.I)
+BROKER_BY = re.compile(r"(?:^|\n)\W*([^\n•|]{2,80}?)\s+(?:BY|FROM)\s+(" + _BROKER_ALT + r")\b", re.I)
+RATING_RE = re.compile(r"(?:rating\s*[:\-]?\s*|maintains?(?:\s+an?)?\s+|retains?\s+|reiterates?\s+|upgrades?\s+to\s+|downgrades?\s+to\s+|initiates?\s+(?:coverage\s+)?(?:with\s+(?:an?\s+)?)?)"
+                       r"(strong\s+buy|outperform|overweight|accumulate|add|buy|reduce|underperform|underweight|neutral|hold|sell|equal[- ]weight|market\s*perform|sector\s*perform|in-?line)\b", re.I)
+TARGET_RE = re.compile(r"(?:target(?:\s+price)?|tp|pt)\s*(?:(raised|cut|lowered|increased|hiked|reduced|trimmed|boosted|slashed)\s+(?:to|at)|:|-|at|of|to)?\s*(?:(?:INR|Rs\.?|₹)\s*)?([\d][\d,]*(?:\.\d+)?)", re.I)
+TARGET_VERB_RE = re.compile(r"(?:raises?|hikes?|lifts?|increases?|boosts?|cuts?|lowers?|trims?|slashes?|reduces?)\s+(?:its\s+)?target(?:\s+price)?\s+(?:to|at)\s*(?:(?:INR|Rs\.?|₹)\s*)?([\d][\d,]*(?:\.\d+)?)", re.I)
+BROKER_ALIASES = {"ltts": "L&T Technology Services", "l&t technology services": "L&T Technology Services",
+                  "hul": "Hindustan Unilever", "m&m": "Mahindra & Mahindra", "l&t": "Larsen & Toubro"}
+_UP_WORDS = ("raised", "increased", "hiked", "boosted", "raises", "hikes", "lifts", "increases", "boosts")
+_DOWN_WORDS = ("cut", "lowered", "reduced", "trimmed", "slashed", "cuts", "lowers", "trims", "slashes", "reduces")
+_RATING_SCORE = {"strong buy": 2, "outperform": 1, "overweight": 1, "accumulate": 1, "add": 1, "buy": 1.5, "neutral": 0, "hold": 0,
+                 "equal-weight": 0, "equal weight": 0, "market perform": 0, "sector perform": 0, "inline": 0, "in-line": 0,
+                 "reduce": -1, "underperform": -1, "underweight": -1, "sell": -1.5}
+
+
+def _rating_norm(raw: str) -> tuple[str, str]:
+    """('BUY'|'HOLD'|'SELL', original wording in capitals)."""
+    k = re.sub(r"\s+", " ", raw.strip().lower())
+    sc = _RATING_SCORE.get(k, 0)
+    return ("BUY" if sc > 0 else "SELL" if sc < 0 else "HOLD"), k.upper()
+
+
+def _clean_company(raw: str) -> str:
+    s = re.sub(r"[\U00010000-\U0010ffff☀-➿️]", "", raw)           # emoji
+    s = re.sub(r"\(.*?\)", " ", s)                                                 # "(LTTS)" tickers
+    s = re.split(r"\s+(?:–|—|-)\s+|\s*:\s*", s)[0]
+    return re.sub(r"\s+", " ", s).strip(" .,-")
+
+
+def parse_broker_call(text: str) -> dict | None:
+    """One research call from a post, or None when the post isn't one. Needs a recognisable broker, a company
+    and a rating or a target price."""
+    if not text:
+        return None
+    text = text.replace("\r", "")
+    head = text[:600]
+    broker = company = None
+    ticker = ""
+    m = BROKER_ON.search(head)
+    if m:
+        broker, company = m.group(1), m.group(2)
+    else:
+        m = BROKER_BY.search(head)
+        if m:
+            company, broker = m.group(1), m.group(2)
+    if not broker or not company:
+        return None
+    tickers = re.findall(r"\(([A-Z][A-Z0-9&.\-]{1,14})\)", company)
+    ticker = tickers[0] if tickers else ""
+    company = _clean_company(company)
+    if not company:
+        return None
+    rm = RATING_RE.search(text)
+    rating = _rating_norm(rm.group(1)) if rm else None
+    tp = move = None
+    tm = TARGET_RE.search(text)
+    vm0 = TARGET_VERB_RE.search(text)
+    if vm0:
+        tp = float(vm0.group(1).replace(",", ""))
+        move = "up" if re.match(r"(?:raise|hike|lift|increase|boost)", vm0.group(0), re.I) else "down"
+    elif tm:
+        tp = float(tm.group(2).replace(",", ""))
+        if tm.group(1):
+            move = "up" if tm.group(1).lower() in _UP_WORDS else "down"
+    if tp is not None and not (1 <= tp < 10_000_000):
+        tp = None
+    if rating is None and tp is None:
+        return None
+    low = text.lower()
+    action = "maintain"
+    if re.search(r"\bupgrad", low):
+        action = "upgrade"
+    elif re.search(r"\bdowngrad", low):
+        action = "downgrade"
+    elif re.search(r"\binitiat|\bcoverage\b", low):
+        action = "initiate"
+    elif move == "up":
+        action = "raised"
+    elif move == "down":
+        action = "cut"
+    brokers_canon = broker.strip()
+    brokers_canon = {"citigroup": "Citi", "jpmorgan": "JP Morgan"}.get(brokers_canon.lower(), brokers_canon)
+    brokers_canon = next((b for b in BROKER_NAMES if b.lower() == brokers_canon.lower()), brokers_canon)
+    # the first non-header bullet is a good one-line reason
+    reasons = [re.sub(r"^[\s•\-–*]+", "", ln).strip() for ln in re.split(r"[\n•]", text)]
+    reasons = [r for r in reasons if len(r) > 25 and not RATING_RE.search(r) and not re.search(r"target", r, re.I)
+               and not BROKER_ON.search(r) and not BROKER_BY.search(r)]
+    note = reasons[0][:200] if reasons else ""
+    company = BROKER_ALIASES.get(company.lower(), company)
+    if company.isupper() and len(company) > 5:
+        company = " ".join(w if len(w) <= 3 else w.title() for w in company.split())
+    return {"broker": brokers_canon, "company": canonical_company(company), "ticker": ticker,
+            "rating": rating[0] if rating else "", "ratingRaw": rating[1] if rating else "",
+            "target": tp, "move": move or "", "action": action, "note": note}
+
+
+def update_brokers(feed: dict, now: dt.datetime) -> int:
+    """Adds the broker calls found in the feed to brokers.json (rolling BROKER_KEEP_DAYS) and works out each
+    call's change against the same broker's earlier target. Returns the number of records now held."""
+    path = PATHS["brokers"]
+    held = read_json(path, {"calls": []}).get("calls", [])
+    seen = {c.get("id") for c in held}
+    added = 0
+    for it in feed.get("items", []):
+        srcs = [s for s in (it.get("sources") or []) if (s.get("type") == "telegram")]
+        if not srcs:
+            continue
+        text = it.get("excerpt") or it.get("headline") or ""
+        call = parse_broker_call(text)
+        if not call:
+            continue
+        cid = hashlib.sha1((srcs[0].get("url") or it.get("id", "")).encode()).hexdigest()[:12]
+        if cid in seen:
+            continue
+        call.update({"id": cid, "at": it.get("published") or srcs[0].get("at") or iso(now), "url": srcs[0].get("url", "")})
+        held.append(call)
+        seen.add(cid)
+        added += 1
+    cutoff = iso(now - dt.timedelta(days=BROKER_KEEP_DAYS))
+    held = [c for c in held if (c.get("at") or "") >= cutoff]
+    held.sort(key=lambda c: c.get("at") or "")
+    last: dict[tuple, dict] = {}
+    for c in held:                                    # oldest -> newest, so "prev" is that broker's earlier call
+        key = (c["broker"].lower(), c["company"].lower())
+        p = last.get(key)
+        if p and c.get("target") and p.get("target"):
+            c["prev"] = p["target"]
+            if c["action"] in ("maintain", "raised", "cut"):
+                c["action"] = "raised" if c["target"] > p["target"] else "cut" if c["target"] < p["target"] else "maintain"
+        if p and c.get("rating") and p.get("rating") and c["rating"] != p["rating"] and c["action"] not in ("initiate",):
+            order = {"SELL": 0, "HOLD": 1, "BUY": 2}
+            c["action"] = "upgrade" if order[c["rating"]] > order[p["rating"]] else "downgrade"
+            c["prevRating"] = p["rating"]
+        last[key] = c
+    held.sort(key=lambda c: c.get("at") or "", reverse=True)
+    write_json(path, {"generated_at": iso(now), "calls": held})
+    if added:
+        log(f"  broker calls: {added} new, {len(held)} held")
+    return len(held)
+
+
+def tag_invest_only(feed: dict, invest_only: set[str]) -> int:
+    """Marks every story whose Telegram sources are ALL channels linked only under Investment (not a News
+    channel) with inv=true, and clears the mark on the rest, so the app keeps them out of News and the
+    notifications treat them as stock posts. Recomputed on every run, so a channel that later becomes a News
+    channel is released. Returns how many stories carry the mark."""
+    n = 0
+    for it in feed.get("items", []):
+        chans = []
+        for src in it.get("sources") or []:
+            m = re.match(r"^Telegram:\s*(.+)$", src.get("name") or "", re.I)
+            if m:
+                chans.append(m.group(1).strip().lower())
+        if chans and all(c in invest_only for c in chans):
+            it["inv"] = True
+            n += 1
+        else:
+            it.pop("inv", None)
+    return n
+
+
 def cmd_fetch(client=None) -> int:
     cfg, state = load_config(), load_state()
     existing = {(e["channel"] if isinstance(e, dict) else str(e)).lower() for e in cfg["telegram_public"]}
     added = [ch for ch in fetch_approved_channels() if ch.lower() not in existing]
+    news_channel_names = existing | {a.lower() for a in added}      # channels that count as News
     # Channels people linked under Investment - never fetched before this, so their posts never reached
     # anyone. Added alongside the shared pool; the app keeps them out of News (see itemChannel()/
     # channelVisible() in app.js) and shows them in the Investment tab of the people who linked them.
@@ -2227,6 +2553,15 @@ def cmd_fetch(client=None) -> int:
         if stats["failed_batches"] or stats["not_news"] or primaries:
             log(f"Result: {stats['new']} new stories, {stats['merged']} merged into existing, {stats['not_news']} not news")
     prune(feed, s, now)
+    # Posts from channels linked only under Investment are marked so the app keeps them out of News.
+    invest_only = {c.lower() for c in (state.get("invest_channels") or {}).get("names", [])} - news_channel_names
+    n_inv = tag_invest_only(feed, invest_only)
+    if n_inv:
+        log(f"  {n_inv} stories from Investment-only channels marked (kept out of News)")
+    try:
+        update_brokers(feed, now)
+    except Exception as exc:  # noqa: BLE001
+        log(f"  ! broker calls skipped, not fatal to the run: {exc}")
     feed["generated_at"] = iso(now)
     feed["stats"] = {**stats, "sources_ok": status["ok"], "sources_failed": status["failed"], "items": len(feed["items"])}
     write_json(PATHS["feed"], feed)
