@@ -47,6 +47,7 @@ PATHS = {
     "chanstats": ROOT / "channel_stats.json",   # % of signed-in accounts that linked each Telegram channel
     "brokers": ROOT / "brokers.json",   # broker rating / target-price calls - see update_brokers()
     "board": ROOT / "board.json",     # the Sentiment board's stock list - see refresh_portfolio_union()
+    "votes": ROOT / "votes.json",     # the last 7 days of board votes, so browsers don't each read them from the database
     "sources": ROOT / "sources.yml",
 }
 IST = dt.timezone(dt.timedelta(hours=5, minutes=30))
@@ -339,16 +340,17 @@ FIREBASE_PROJECT = os.environ.get("FIREBASE_PROJECT_ID", "qwicksignal-sync")
 
 
 def fetch_approved_channels() -> list[str]:
-    """Telegram channels linked from the app's Link Pages screen (see app.js: Channels.propose). A channel is
-    written straight to Firestore with status "approved" - there is no manual review step - so this simply
-    returns every channel currently marked approved, and the next pipeline run starts fetching it for everyone.
+    """Telegram channels the owner has approved in the app's Explore channels screen (qs_channels, status
+    "approved"). People's own links are filed as "pending" by refresh_portfolio_union() and are never fetched
+    until approved.
     Never raises: if the sync service can't be reached, the pipeline simply uses sources.yml alone, as before."""
+    adm = fs_admin_headers()          # the service account when set, so the browser key can be locked to the website
     url = (f"https://firestore.googleapis.com/v1/projects/{FIREBASE_PROJECT}/databases/(default)/documents:runQuery"
-           f"?key={FIREBASE_API_KEY}")
+           + ("" if adm else f"?key={FIREBASE_API_KEY}"))
     body = {"structuredQuery": {"from": [{"collectionId": "qs_channels"}],
                                 "where": {"fieldFilter": {"field": {"fieldPath": "status"}, "op": "EQUAL", "value": {"stringValue": "approved"}}}}}
     try:
-        r = requests.post(url, json=body, timeout=15)
+        r = requests.post(url, json=body, headers=adm, timeout=15)
         if not r.ok:
             log(f"  channel sync: HTTP {r.status_code}, using sources.yml only")
             return []
@@ -676,17 +678,16 @@ def _why403(r) -> str:
         msg = (r.json().get("error") or {}).get("message", "")[:200]
     except Exception:  # noqa: BLE001
         msg = r.text[:120]
-    sa = _service_account() or {}
-    return f"- {msg} [key project={sa.get('project_id')}, app project={FIREBASE_PROJECT}, account={sa.get('client_email')}]"
+    return f"- {msg}"
 
 
 def fetch_push_subscriptions() -> list[dict] | None:
     """Every device subscribed for notifications, or None if the list couldn't be read (so a caller can
     tell "nobody subscribed" apart from "couldn't look"). Never raises."""
-    url = (f"https://firestore.googleapis.com/v1/projects/{FIREBASE_PROJECT}/databases/(default)/documents:runQuery"
-           f"?key={FIREBASE_API_KEY}")
-    body = {"structuredQuery": {"from": [{"collectionId": "qs_push_subs"}]}}
     headers = fs_admin_headers()
+    url = (f"https://firestore.googleapis.com/v1/projects/{FIREBASE_PROJECT}/databases/(default)/documents:runQuery"
+           + ("" if headers else f"?key={FIREBASE_API_KEY}"))
+    body = {"structuredQuery": {"from": [{"collectionId": "qs_push_subs"}]}}
     try:
         r = requests.post(url, json=body, headers=headers, timeout=15)
         if not r.ok:
@@ -722,8 +723,7 @@ def delete_push_subscription(doc_name: str) -> None:
     if not doc_name:
         return
     try:
-        requests.delete(f"https://firestore.googleapis.com/v1/{doc_name}?key={FIREBASE_API_KEY}",
-                        headers=fs_admin_headers(), timeout=15)
+        requests.delete(f"https://firestore.googleapis.com/v1/{doc_name}", headers=fs_admin_headers(), timeout=15)
     except Exception:  # noqa: BLE001
         pass  # best-effort cleanup only; a dead subscription left behind just fails silently next time too
 
@@ -867,6 +867,68 @@ def canonical_company(name: str) -> str:
     return terms[0] if terms else name.strip()
 
 
+MAX_NEW_PENDING_PER_SCAN = 25
+MAX_INVEST_ONLY_CHANNELS = 80
+
+
+def channel_registry() -> tuple[dict[str, str], dict[str, str]] | None:
+    """({channel: status}, {channel: category}) for every doc in qs_channels, read with the service account.
+    None if unreadable."""
+    try:
+        base = f"projects/{FIREBASE_PROJECT}/databases/(default)/documents"
+        r = requests.post(f"https://firestore.googleapis.com/v1/{base}:runQuery",
+                          json={"structuredQuery": {"from": [{"collectionId": "qs_channels"}]}},
+                          headers=fs_admin_headers(), timeout=20)
+        if not r.ok:
+            return None
+        status, cats = {}, {}
+        for row in r.json():
+            d = row.get("document")
+            if d:
+                f = d.get("fields") or {}
+                ch = ((f.get("channel") or {}).get("stringValue") or d["name"].rsplit("/", 1)[-1]).lower()
+                status[ch] = ((f.get("status") or {}).get("stringValue") or "pending")
+                cats[ch] = ((f.get("category") or {}).get("stringValue") or "")
+        return status, cats
+    except Exception as exc:  # noqa: BLE001
+        log(f"  channel registry unavailable ({exc})")
+        return None
+
+
+def fetch_default_channels() -> list[str] | None:
+    """The owner's default News channels (qs_config/defaults), so the app can read them from a static file."""
+    try:
+        r = requests.get(f"https://firestore.googleapis.com/v1/projects/{FIREBASE_PROJECT}/databases/(default)/documents/qs_config/defaults",
+                         headers=fs_admin_headers(), timeout=15)
+        if r.status_code == 404:
+            return []
+        if not r.ok:
+            return None
+        vals = (((r.json().get("fields") or {}).get("channels") or {}).get("arrayValue") or {}).get("values") or []
+        return sorted({v.get("stringValue", "").lower() for v in vals if re.fullmatch(r"[A-Za-z0-9_]{5,32}", v.get("stringValue", ""))})
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def register_pending_channels(news_n: dict, inv_n: dict, known: set[str], registry: dict[str, str]) -> None:
+    """Channels people linked that nobody has approved yet are filed as 'pending' (written by the pipeline, never
+    by a browser), so the owner can review them in Explore channels. Nothing is fetched until it is approved."""
+    new = [c for c in sorted(set(news_n) | set(inv_n), key=lambda c: -(news_n.get(c, 0) + inv_n.get(c, 0)))
+           if c not in registry and c not in known][:MAX_NEW_PENDING_PER_SCAN]
+    base = f"https://firestore.googleapis.com/v1/projects/{FIREBASE_PROJECT}/databases/(default)/documents/qs_channels"
+    for c in new:
+        cat = "news" if news_n.get(c) else "investment"
+        fields = {"channel": {"stringValue": c}, "status": {"stringValue": "pending"}, "category": {"stringValue": cat},
+                  "added_by": {"stringValue": "users"}, "added_at": {"stringValue": iso(utcnow())}}
+        try:
+            requests.patch(f"{base}/{c}", json={"fields": fields}, headers=fs_admin_headers(), timeout=15)
+            registry[c] = "pending"
+        except Exception as exc:  # noqa: BLE001
+            log(f"  ! could not file pending channel {c}: {exc}")
+    if new:
+        log(f"  channels awaiting owner approval: {len(new)} new")
+
+
 def refresh_portfolio_union(state: dict, now: dt.datetime) -> list[str]:
     """Returns the linked-channel list (cached between scans) and, on a scan, rewrites board.json."""
     cache = state.setdefault("invest_channels", {"at": 0, "names": []})
@@ -885,26 +947,47 @@ def refresh_portfolio_union(state: dict, now: dt.datetime) -> list[str]:
             log(f"  portfolio scan: HTTP {r.status_code}, keeping the last lists")
             return list(cache.get("names") or [])
         names, trackers, who = set(), {}, {}
-        accounts, news_n, inv_n = 0, {}, {}
+        accounts, news_n, inv_n, any_n = 0, {}, {}, {}
         for row in r.json():
             if not row.get("document"):
                 continue
             accounts += 1
             f = (row.get("document") or {}).get("fields") or {}
             dn = ((f.get("dn") or {}).get("stringValue") or "").strip()[:24]      # masked display name, e.g. "raj•••"
-            for c in _fs_strings(f, "investChannels"):
-                c = c.strip().lower()
+            mine = set()
+            for c in {x.strip().lower() for x in _fs_strings(f, "investChannels")}:
                 if re.fullmatch(r"[a-z0-9_]{5,32}", c):
                     names.add(c)
                     inv_n[c] = inv_n.get(c, 0) + 1
+                    mine.add(c)
             for c in {x.strip().lower() for x in _fs_strings(f, "channels")}:
                 if re.fullmatch(r"[a-z0-9_]{5,32}", c):
                     news_n[c] = news_n.get(c, 0) + 1
+                    mine.add(c)
+            for c in mine:
+                any_n[c] = any_n.get(c, 0) + 1          # once per account, whichever list(s) it is in
             for co in {canonical_company(x) for x in _fs_strings(f, "companies") if x.strip()}:
                 if 2 <= len(co) <= 60:
                     trackers[co] = trackers.get(co, 0) + 1     # once per account, however many devices
                     if dn:
                         who.setdefault(co, []).append(dn)
+        reg = channel_registry()
+        catalog, defaults = None, None
+        if reg is not None:
+            registry, cats = reg
+            known = {(e["channel"] if isinstance(e, dict) else str(e)).lower() for e in load_config()["telegram_public"]}
+            register_pending_channels(news_n, inv_n, known, registry)
+            # What every browser may list in Explore, published as a static file so 10,000 people opening the
+            # screen cost no database reads: approved channels plus the built-in ones. Pending ones stay private.
+            catalog = [{"c": c, **({"k": cats[c]} if cats.get(c) else {})}
+                       for c in sorted({c for c, s in registry.items() if s == "approved"} | known)]
+            defaults = fetch_default_channels()
+            # Only owner-approved (or built-in) channels are ever fetched; a self-linked one waits for approval.
+            names = {c for c in names if registry.get(c) == "approved" or c in known}
+            if len(names) > MAX_INVEST_ONLY_CHANNELS:
+                names = set(sorted(names, key=lambda c: -inv_n.get(c, 0))[:MAX_INVEST_ONLY_CHANNELS])
+        else:
+            names = set(cache.get("names") or [])      # registry unreadable: keep the last known list
         cache.update(at=now.timestamp(), names=sorted(names))
         board = {"updated_at": iso(now),
                  "companies": [{"name": n, "trackers": k, **({"by": sorted(set(who[n]), key=str.lower)[:12]} if who.get(n) else {})}
@@ -912,16 +995,73 @@ def refresh_portfolio_union(state: dict, now: dt.datetime) -> list[str]:
         if read_json(PATHS["board"], {}).get("companies") != board["companies"]:
             write_json(PATHS["board"], board)                    # only rewritten when the list changed
             log(f"  sentiment board: {len(board['companies'])} stocks across all watchlists")
-        stats = {"accounts": accounts,
-                 "channels": {c: {k: v for k, v in (("news", news_n.get(c, 0)), ("investment", inv_n.get(c, 0))) if v}
+        stats = {"accounts": accounts, "catalog": catalog, "defaults": defaults,
+                 "channels": {c: {k: v for k, v in (("users", any_n.get(c, 0)), ("news", news_n.get(c, 0)), ("investment", inv_n.get(c, 0))) if v}
                               for c in sorted(set(news_n) | set(inv_n))}}
-        if read_json(PATHS["chanstats"], {}).get("channels") != stats["channels"] or read_json(PATHS["chanstats"], {}).get("accounts") != accounts:
+        prev = read_json(PATHS["chanstats"], {})
+        if catalog is None:
+            stats["catalog"], stats["defaults"] = prev.get("catalog"), prev.get("defaults")     # registry unreadable: keep the last
+        elif defaults is None:
+            stats["defaults"] = prev.get("defaults")
+        stats = {k: v for k, v in stats.items() if v is not None}
+        if any(prev.get(k) != stats.get(k) for k in ("channels", "accounts", "catalog", "defaults")):
             write_json(PATHS["chanstats"], {"updated_at": iso(now), **stats})
             log(f"  channel stats: {len(stats['channels'])} channels across {accounts} accounts")
         return sorted(names)
     except Exception as exc:  # noqa: BLE001
         log(f"  portfolio scan unavailable ({exc}), keeping the last lists")
         return list(cache.get("names") or [])
+
+
+VOTES_KEEP_S = 7 * 86400
+
+
+def _vote_row(doc: dict) -> dict | None:
+    f = doc.get("fields") or {}
+    s = lambda k: (f.get(k) or {}).get("stringValue", "")
+    try:
+        at = int(dt.datetime.fromisoformat(((f.get("at") or {}).get("timestampValue") or "").replace("Z", "+00:00")).timestamp() * 1000)
+    except ValueError:
+        return None
+    v = {"id": doc["name"].rsplit("/", 1)[-1], "slug": s("slug"), "company": s("company"), "uid": s("uid"),
+         "choice": s("choice"), "reason": s("reason"), "name": s("name"), "at": at}
+    return v if v["slug"] and v["choice"] in ("bull", "bear") else None
+
+
+def refresh_votes(now: dt.datetime) -> None:
+    """Publishes the last 7 days of Sentiment-board votes as votes.json. Browsers read this static file and only
+    ask the database for votes newer than it, so 10,000 people opening the board cost a handful of reads instead
+    of thousands each (the free Firestore plan allows 50,000 reads a day in total). Reads only what is new each
+    run; rebuilds in full now and then so votes their authors deleted drop out."""
+    if not firestore_admin_token():
+        return
+    cur = read_json(PATHS["votes"], {})
+    byid = {v["id"]: v for v in cur.get("votes", []) if isinstance(v, dict) and "id" in v}
+    full = now.timestamp() - cur.get("full_at", 0) > (1800 if len(byid) <= 400 else 10800)
+    since_ms = int((now.timestamp() - VOTES_KEEP_S) * 1000) if full else max(int(cur.get("max_at", 0)) - 300000, int((now.timestamp() - VOTES_KEEP_S) * 1000))
+    since = dt.datetime.fromtimestamp(since_ms / 1000, dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    body = {"structuredQuery": {"from": [{"collectionId": "qs_sent_votes"}],
+                                "where": {"fieldFilter": {"field": {"fieldPath": "at"}, "op": "GREATER_THAN_OR_EQUAL", "value": {"timestampValue": since}}},
+                                "orderBy": [{"field": {"fieldPath": "at"}, "direction": "ASCENDING"}], "limit": 5000}}
+    r = requests.post(f"https://firestore.googleapis.com/v1/projects/{FIREBASE_PROJECT}/databases/(default)/documents:runQuery",
+                      json=body, headers=fs_admin_headers(), timeout=25)
+    if not r.ok:
+        log(f"  votes snapshot: HTTP {r.status_code}, keeping the last file")
+        return
+    rows = [x for x in (_vote_row(row["document"]) for row in r.json() if row.get("document")) if x]
+    if full:
+        byid = {}
+    for v in rows:
+        byid[v["id"]] = v
+    floor = int((now.timestamp() - VOTES_KEEP_S) * 1000)
+    votes = sorted((v for v in byid.values() if v["at"] >= floor), key=lambda v: v["at"])
+    out = {"generated_at": iso(now), "full_at": now.timestamp() if full else cur.get("full_at", 0),
+           "max_at": max([v["at"] for v in votes] + [int(cur.get("max_at", 0))]), "votes": votes}
+    if cur.get("votes") != votes or full and not cur:
+        write_json(PATHS["votes"], out)
+        log(f"  votes snapshot: {len(votes)} votes")
+    elif full:
+        write_json(PATHS["votes"], {**out, "generated_at": cur.get("generated_at", out["generated_at"])})   # only the rebuild time moved
 
 
 def fetch_investment_channels(state: dict, now: dt.datetime) -> list[str]:
@@ -973,8 +1113,8 @@ def write_archive(item: dict, now: dt.datetime) -> None:
         companies = [smart_truncate(c, 60) for c in (item.get("companies") or []) if str(c).strip()][:8]
         if companies:
             fields["companies"] = {"arrayValue": {"values": [{"stringValue": c} for c in companies]}}
-        url = f"https://firestore.googleapis.com/v1/projects/{FIREBASE_PROJECT}/databases/(default)/documents/qs_archive/{item['id']}?key={FIREBASE_API_KEY}"
-        requests.patch(url, json={"fields": fields}, timeout=15)
+        url = f"https://firestore.googleapis.com/v1/projects/{FIREBASE_PROJECT}/databases/(default)/documents/qs_archive/{item['id']}"
+        requests.patch(url, json={"fields": fields}, headers=fs_admin_headers(), timeout=15)
     except Exception as exc:  # noqa: BLE001
         log(f"  ! archive write failed for {item.get('id', '?')}: {exc}")
 
@@ -1056,12 +1196,12 @@ def next_gap_seconds(interval: int) -> float:
 # ---------------------------------------------------------------------------------------------------------
 # Two extra daily notifications - wording approved by the owner (market C, vote B); PUSH_EXTRAS_ENABLED switches them off.
 #   market  11:00 (device's local time): one market-specific note, led by the biggest Indian market story
-#   vote    17:30 (device's local time): invites people to check/vote on the Sentiment board, led by the stock
+#   vote    11:00 (device's local time): invites people to check/vote on the Sentiment board, led by the stock
 #           with the freshest broker call
 # One of each per device per day, inside a 2-hour window after the time, daytime only so quiet hours never
 # apply. They go to every device that already receives news notifications.
 PUSH_EXTRAS_ENABLED = True
-PUSH_EXTRAS = (("market", 11, 0), ("vote", 17, 30))          # (kind, hour, minute) in the device's local time
+PUSH_EXTRAS = (("market", 11, 0), ("vote", 11, 0))          # (kind, hour, minute) in the device's local time
 PUSH_EXTRAS_WINDOW_MIN = 120
 MARKET_WORDING = "C"
 VOTE_WORDING = "B"
@@ -1132,12 +1272,14 @@ def vote_note(brokers: dict) -> dict:
 
 
 def send_extra_pushes(subs: list[dict], feed: dict, state: dict, now: dt.datetime, stats: dict) -> None:
-    """The 11:00 market note and the 17:30 vote note. Inert while PUSH_EXTRAS_ENABLED is False."""
+    """The 11:00 market note and the 11:00 vote note. Inert while PUSH_EXTRAS_ENABLED is False."""
     if not PUSH_EXTRAS_ENABLED:
         return
     ps = state.setdefault("push", {})
     notes: dict[str, dict] = {}
     for sub in subs:
+        if not (sub.get("news") or sub.get("invest")):
+            continue                      # both alert switches off = this person wants no notifications at all
         loc = sub_local_time(sub, now)
         key = device_key(sub["name"])
         dv = ps.setdefault("devices", {}).setdefault(key, {"next": 0, "q": []})
@@ -2562,6 +2704,10 @@ def cmd_fetch(client=None) -> int:
         update_brokers(feed, now)
     except Exception as exc:  # noqa: BLE001
         log(f"  ! broker calls skipped, not fatal to the run: {exc}")
+    try:
+        refresh_votes(now)
+    except Exception as exc:  # noqa: BLE001
+        log(f"  ! votes snapshot skipped, not fatal to the run: {exc}")
     feed["generated_at"] = iso(now)
     feed["stats"] = {**stats, "sources_ok": status["ok"], "sources_failed": status["failed"], "items": len(feed["items"])}
     write_json(PATHS["feed"], feed)

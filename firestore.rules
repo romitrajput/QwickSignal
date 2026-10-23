@@ -34,7 +34,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     function isOwner() {
-      return request.auth != null && request.auth.token.email == 'rrrajput2101@gmail.com';
+      return request.auth != null && request.auth.token.email == 'rrrajput2101@gmail.com' && request.auth.token.email_verified == true;
     }
 
     // BUG FIX: app.js has sent an investChannels field (linked company-news channels) on every save since
@@ -100,18 +100,11 @@ service cloud.firestore {
     match /qs_channels/{name} {
       allow get, list: if true;
 
-      // Security review (14 Oct): adding a channel for everyone now needs a signed-in account (it used to be
-      // open to anyone on the internet, which let a script flood the pipeline with junk channels).
-      allow create: if
-        request.auth != null &&
-        name.matches('[a-z0-9_]{5,32}') &&
-        request.resource.data.channel is string &&
-        request.resource.data.channel.lower() == name &&
-        request.resource.data.status == 'approved' &&
-        request.resource.data.added_by is string && request.resource.data.added_by.size() <= 128 &&
-        request.resource.data.added_at is string;
-
-      allow update: if false;
+      // Hardening (v88): browsers can no longer create channel records. A channel a person links lives in their
+      // own account; the pipeline (service account, which bypasses these rules) files it here as "pending",
+      // and only the owner can approve it. Nothing is fetched from Telegram until it is approved.
+      allow create: if false;
+      allow update: if isOwner() && request.resource.data.status in ['approved', 'pending', 'rejected'];
       allow delete: if isOwner();
     }
 
@@ -239,17 +232,7 @@ service cloud.firestore {
     match /qs_archive/{id} {
       allow get, list: if true;
 
-      allow create: if
-        id.matches('s[a-z0-9]{6,40}') &&
-        request.resource.data.keys().hasOnly(['headline', 'excerpt', 'importance', 'country', 'companies', 'published', 'archived_at']) &&
-        request.resource.data.headline is string && request.resource.data.headline.size() <= 300 &&
-        request.resource.data.excerpt is string && request.resource.data.excerpt.size() <= 600 &&
-        request.resource.data.importance in ['Critical', 'High', 'Medium', 'Low'] &&
-        request.resource.data.country is string && request.resource.data.country.size() <= 64 &&
-        request.resource.data.published is string &&
-        request.resource.data.archived_at is string &&
-        (!('companies' in request.resource.data) ||
-          (request.resource.data.companies is list && request.resource.data.companies.size() <= 8));
+      allow create: if false;  // written only by the pipeline (service account)
 
       allow update: if false;
       allow delete: if isOwner();

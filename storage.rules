@@ -24,7 +24,7 @@ service firebase.storage {
   match /b/{bucket}/o {
 
     function isOwner() {
-      return request.auth != null && request.auth.token.email == 'rrrajput2101@gmail.com';
+      return request.auth != null && request.auth.token.email == 'rrrajput2101@gmail.com' && request.auth.token.email_verified == true;
     }
 
     // ticket_attachments/{uid}/{ticketId}/{filename}
