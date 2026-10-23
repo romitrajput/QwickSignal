@@ -564,6 +564,11 @@ p.np-sub{margin-left:0}
 .lc-stat .bar i{display:block;height:100%;border-radius:99px;background:var(--accent)}
 .lc-stat.inv .bar i{background:var(--bull)}
 .lp-row .name{min-width:0}
+/* Channel rows: let the name, category label and "i" wrap instead of being cut off with an ellipsis
+   (the cut also clipped the "i" popup, which sits inside the name). */
+.lp-chanrow .name,#tgInvList .lp-row .name{white-space:normal;overflow:visible;display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;overflow-wrap:anywhere}
+.lp-chanrow:has(.info-i[aria-expanded="true"]){z-index:5}
+.lc-info .info-pop{z-index:60}
 
 .asheet-title{background:var(--surface)}
 .imp{max-height:86vh}
