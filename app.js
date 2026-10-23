@@ -936,6 +936,8 @@ if (typeof document !== 'undefined') (function () {
   const E = Engine;
   const $ = (s, r) => (r || document).querySelector(s);
   const $$ = (s, r) => [...(r || document).querySelectorAll(s)];
+  // Links that come from the data files must be plain http(s); anything else (javascript:, data:) becomes '#'.
+  const safeUrl = u => /^https?:\/\//i.test(String(u || '').trim()) ? String(u).trim() : '#';
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
   /* ---------- usage tracking (GA4) ----------
@@ -1069,7 +1071,7 @@ if (typeof document !== 'undefined') (function () {
       obStep4Title: 'A news card', obStep4Body: 'Tap a story to read more, swipe right to save it, or swipe left to dismiss it.',
       obStep5Title: 'Saved', obStep5Body: 'Swipe a story right, or tap Save, to keep it here. Saved stories stay with your account until you remove them, even after signing out.',
       obStep6Title: 'Investment', obStep6Body: 'News for the companies in your watchlist, with their logos. Link a company’s Telegram channels in Settings to pull in more.',
-      obStep7Title: 'Settings', obStep7Body: 'Appearance, channels, your watchlist, Daily appetite (how many stories a day), Notifications (news and investment alerts, bundled every 20-40 min, with quiet hours), Export and Feedback.',
+      obStep7Title: 'Settings', obStep7Body: 'Explore and link channels, your watchlist, Saved stories, Appearance, Daily appetite (how many stories a day), Notifications (news and investment alerts, bundled every 20-40 min, with quiet hours), Export and Feedback.',
       obStep8Title: 'Sentiment board', obStep8Body: 'Every stock users track, with today’s bullish/bearish mood. Vote once a day per stock, add your reason, and search any stock.',
       pulseLabel: 'Sentiment of the Users:', pulseBull: 'Bullish', pulseBear: 'Bearish',
       communityPending: 'Votes will appear here shortly.',
@@ -1735,10 +1737,8 @@ if (typeof document !== 'undefined') (function () {
     if (!unread.length) { box.hidden = true; return; }
     const counts = { Critical: 0, High: 0, Medium: 0, Low: 0 };
     unread.forEach(it => { if (counts[it.importance] != null) counts[it.importance]++; });
-    const top = unread.slice().sort(byPriority)[0];
     const rows = ['Critical', 'High', 'Medium', 'Low']
-      .filter(k => counts[k])
-      .map(k => `<div class="digest-row ${k.toLowerCase() === 'critical' ? 'crit' : k.toLowerCase()}">
+      .map(k => `<div class="digest-row ${k.toLowerCase() === 'critical' ? 'crit' : k.toLowerCase()}${counts[k] ? '' : ' none'}">
           <span class="dg-count">${counts[k]}</span><span class="dg-label">${esc(k)}</span>
         </div>`).join('');
     box.hidden = false;
@@ -1748,17 +1748,10 @@ if (typeof document !== 'undefined') (function () {
         <button type="button" class="digest-close" aria-label="Dismiss">&times;</button>
       </div>
       <div class="digest-rows">${rows}</div>
-      ${top ? `<div class="digest-headline"><button type="button" data-id="${esc(top.id)}">${esc(flagOf(top.country))} ${esc(top.headline)}</button></div>` : ''}
     `;
     box.querySelector('.digest-close').addEventListener('click', () => {
       try { sessionStorage.setItem(dismissKey, '1'); } catch (e) { /* ignore */ }
       box.hidden = true;
-    });
-    const hl = box.querySelector('.digest-headline button');
-    if (hl) hl.addEventListener('click', () => {
-      box.hidden = true;
-      if (invMode) { const it = S.live.find(x => x.id === hl.dataset.id), co = it && (it.companies || []).find(c => S.myCompanies.has(c)); if (co) openCompany(co); }
-      else gotoItem(hl.dataset.id);
     });
   }
 
@@ -2767,7 +2760,6 @@ if (typeof document !== 'undefined') (function () {
       { anchor: '#countryFilter', titleKey: 'obStep3Title', bodyKey: 'obStep3Body' },
       { anchor: '#list .entry', titleKey: 'obStep4Title', bodyKey: 'obStep4Body' },
       { anchor: '[data-tab="investment"]', titleKey: 'obStep6Title', bodyKey: 'obStep6Body' },
-      { anchor: '[data-tab="saved"]', titleKey: 'obStep5Title', bodyKey: 'obStep5Body' },
       { anchor: '[data-tab="community"]', titleKey: 'obStep8Title', bodyKey: 'obStep8Body' },
       { anchor: '[data-tab="settings"]', titleKey: 'obStep7Title', bodyKey: 'obStep7Body' }
     ],
@@ -2979,8 +2971,18 @@ if (typeof document !== 'undefined') (function () {
     if (!box) return;
     if (Auth.uid) {
       box.innerHTML = `<p class="acct-signed">${t('signedInAs')} <b>${esc(Auth.email || '')}</b></p>
+        <form id="nickForm" class="acct-nick">
+          <label for="nickInput" class="acct-nicklbl">Nickname on the Sentiment board</label>
+          <div class="lp-add"><input id="nickInput" type="text" maxlength="16" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Investor ${esc(Board.maskedName().slice(-4))}" value="${esc(Board.nick())}"><button type="submit" class="btn small">Save</button></div>
+          <p class="lp-sub">Shown beside your votes and stocks instead of your email. 3 to 16 letters, numbers, spaces, _ . -. Leave empty to stay anonymous.</p>
+        </form>
         <button id="signOutBtn" class="btn small">${t('signOut')}</button>`;
       $('#signOutBtn').addEventListener('click', signOut);
+      $('#nickForm').addEventListener('submit', ev => {
+        ev.preventDefault();
+        if (!Board.setNick($('#nickInput').value)) { toast('Use 3 to 16 letters, numbers, spaces, _ . -'); return; }
+        toast(Board.nick() ? 'Nickname saved.' : 'Nickname cleared. You will show as ' + Board.maskedName() + '.');
+      });
       $('#syncBlock').hidden = true;     // the account is now this device's identity; the manual code is redundant
     } else {
       box.innerHTML = `
@@ -3598,6 +3600,7 @@ if (typeof document !== 'undefined') (function () {
   // Set whenever a Firestore call fails, so the UI can show *why* instead of just "check your connection" -
   // check the browser console (F12) for the full detail this only summarises.
   let lastChannelError = null;
+  let catalogCache = null;      // every qs_channels record, see Channels.catalog()
   async function describeFailure(r, e) {
     if (r) {
       let body = '';
@@ -3614,65 +3617,71 @@ if (typeof document !== 'undefined') (function () {
   }
   const Channels = {
     async propose(raw) {
-      // Linking a NEW channel now requires an account - guests can still follow/unfollow whatever is already
-      // in the shared pool (see follow()/unfollow() below and the default-channel model), but adding a fresh
-      // one is gated on sign-in, per the owner's request. Enforced here (not just in the UI) so this can't be
-      // bypassed by calling propose() some other way; there is no further Firestore-side check for this,
-      // since qs_channels stays an open-create collection for any signed-in identity (see firestore.rules).
+      // Linking a channel needs an account. The link itself lives in the person's own account (Sync); the
+      // pipeline then files any channel nobody has approved yet as "pending" in qs_channels, and the owner
+      // approves it in Explore channels. Browsers can no longer write to qs_channels (see firestore.rules),
+      // so nobody can flood the shared list or make the pipeline fetch an arbitrary channel.
       if (!Auth.uid) { openAuthGate('agAddChannelsTitle', 'agAddChannelsBody'); return false; }
       const name = normalizeChannel(raw);
       if (!CHANNEL_RX.test(name)) { toast('Use the form t/channelname \u2013 letters, numbers and underscores only.'); return false; }
-      try {
-        const url = `${FS_BASE}/qs_channels/${encodeURIComponent(name.toLowerCase())}?key=${FIREBASE.apiKey}`;
-        const existing = await fetch(url, { cache: 'no-store' });
-        if (existing.ok) {
-          // Already linked by someone (or by this device, previously): just follow it, no need to write again.
-          // If this account had previously hidden/removed this exact channel, typing it into +Add again is
-          // how the user asked to bring it back (confirmed: "could still bring it back later via +Add") - so
-          // clear it from hiddenChannels here too, or it would keep disappearing from renderChannels().
-          S.myChannels.add(name.toLowerCase()); S.hiddenChannels.delete(name.toLowerCase()); Sync.pushSoon(); renderChannels();
-          toast('t/' + name + ' is already linked \u2014 added it to your feed.');
-          return true;
-        }
-        // Recorded for humans reading the Firebase console, not for access control (qs_channels stays a
-        // shared, unauthenticated collection - see firestore.rules). Prefers the signed-in account's email
-        // so a real identity shows up here once Phase E accounts are in use, falling back to the guest code.
-        const fields = { channel: toFsValue(name), status: toFsValue('approved'), added_by: toFsValue((Auth.uid && Auth.email) || Sync.code || ''), added_at: toFsValue(new Date().toISOString()) };
-        const r = await fetch(url, { method: 'PATCH', headers: Object.assign({ 'Content-Type': 'application/json' }, await Sync.authHeaders()), body: JSON.stringify({ fields }) });
-        if (!r.ok) { const why = await describeFailure(r, null); toast('Couldn\u2019t link that channel: ' + why); return false; }
-        approvedChannelsCache = null;        // force the next channel-list render to pick up the new one
-        S.myChannels.add(name.toLowerCase());
-        S.hiddenChannels.delete(name.toLowerCase());
-        Sync.pushSoon();
-        toast('t/' + name + ' linked. The next pipeline run (within ~5 min) will start fetching it for everyone.');
-        renderChannels();
-        return true;
-      } catch (e) {
-        const why = await describeFailure(null, e);
-        toast('Couldn\u2019t link that channel: ' + why);
-        return false;
-      }
+      const lower = name.toLowerCase();
+      if (S.myChannels.size >= 200) { toast('You can link up to 200 channels.'); return false; }
+      if (S.myChannels.has(lower)) { toast('t/' + lower + ' is already in your News channels.'); return false; }
+      S.myChannels.add(lower); S.hiddenChannels.delete(lower); Sync.pushSoon();
+      track('add_channel', { channel: lower });
+      const known = ((catalogCache || []).find(c => c.channel === lower) || {}).status === 'approved' || (defaultChannelsCache || []).includes(lower);
+      toast(known ? 't/' + lower + ' added to your News channels.' : 't/' + lower + ' added. It shows up once the owner approves it.');
+      renderChannels(); renderExplore(); renderSettingsNav();
+      return true;
     },
 
-    async listApproved() {
+    // Every record in qs_channels: {channel, status, category}. listApproved() keeps its old meaning (names of
+    // the approved ones) for the callers that only need that.
+    async catalog() {
+      // Everyone but the owner reads the list from channel_stats.json (published by the pipeline), so opening
+      // Explore costs no database reads however many people do it. The owner reads the live records, which
+      // also include the channels still waiting for approval.
+      if (!isOwner()) {
+        await ChanStats.load();
+        const d = ChanStats.data;
+        if (d && Array.isArray(d.catalog)) {
+          catalogCache = d.catalog.filter(x => x && CHANNEL_RX.test(String(x.c))).map(x => ({ channel: String(x.c).toLowerCase(), status: 'approved', category: x.k || '' }));
+          return catalogCache;
+        }
+      }
       try {
-        // The Firestore REST runQuery endpoint is POST {parent}:runQuery where {parent} is the "...documents"
-        // path itself (not the path with "/documents" stripped off) - FS_BASE already ends in "/documents", so
-        // appending ":runQuery" directly is correct. An earlier .replace() here used to strip that segment out,
-        // producing a malformed URL that Firestore could never resolve - every "Couldn't load the channel list"
-        // error traced back to this.
         const r = await fetch(`${FS_BASE}:runQuery?key=${FIREBASE.apiKey}`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ structuredQuery: { from: [{ collectionId: 'qs_channels' }], where: { fieldFilter: { field: { fieldPath: 'status' }, op: 'EQUAL', value: toFsValue('approved') } } } })
+          body: JSON.stringify({ structuredQuery: { from: [{ collectionId: 'qs_channels' }], limit: 1000 } })
         });
         if (!r.ok) { lastChannelError = await describeFailure(r, null); return null; }
         lastChannelError = null;
         const rows = await r.json();
-        return rows.filter(x => x.document).map(x => fsFieldsToObject(x.document.fields).channel).filter(Boolean);
+        catalogCache = rows.filter(x => x.document).map(x => {
+          const f = fsFieldsToObject(x.document.fields);
+          return { channel: String(f.channel || '').toLowerCase(), status: f.status || 'pending', category: f.category || '' };
+        }).filter(c => CHANNEL_RX.test(c.channel));
+        return catalogCache;
       } catch (e) {
         lastChannelError = await describeFailure(null, e);
-        return null;      // unknown: the UI treats this as "couldn't load the list", not as "no channels"
+        return null;
       }
+    },
+    async listApproved() {
+      const c = await this.catalog();
+      return c ? c.filter(x => x.status === 'approved').map(x => x.channel) : null;
+    },
+    // Owner only (enforced by firestore.rules): approve or reject a channel people have linked.
+    async setStatus(name, status) {
+      if (!isOwner()) { toast('Only the owner account can approve channels.'); return false; }
+      try {
+        const url = `${FS_BASE}/qs_channels/${encodeURIComponent(name.toLowerCase())}?updateMask.fieldPaths=status&key=${FIREBASE.apiKey}`;
+        const r = await fetch(url, { method: 'PATCH', headers: Object.assign({ 'Content-Type': 'application/json' }, await Sync.authHeaders()), body: JSON.stringify({ fields: { status: toFsValue(status) } }) });
+        if (!r.ok) { const why = await describeFailure(r, null); toast('Couldn\u2019t update t/' + name + ': ' + why); return false; }
+        approvedChannelsCache = null; catalogCache = null;
+        toast('t/' + name + (status === 'approved' ? ' approved. It will be fetched on the next pipeline run.' : ' rejected.'));
+        return true;
+      } catch (e) { toast('Couldn\u2019t update t/' + name + ': ' + await describeFailure(null, e)); return false; }
     },
 
     // Unlinks a channel for everyone: the pipeline stops fetching it on its next run. Restricted to the
@@ -3685,7 +3694,7 @@ if (typeof document !== 'undefined') (function () {
         const url = `${FS_BASE}/qs_channels/${encodeURIComponent(name.toLowerCase())}?key=${FIREBASE.apiKey}`;
         const r = await fetch(url, { method: 'DELETE', headers: await Sync.authHeaders() });
         if (!r.ok && r.status !== 404) { const why = await describeFailure(r, null); toast('Couldn’t remove t/' + name + ': ' + why); return false; }
-        approvedChannelsCache = null;   // force the next channel-list render to drop it
+        approvedChannelsCache = null; catalogCache = null;   // force the next channel-list render to drop it
         S.myChannels.delete(name.toLowerCase());
         Sync.pushSoon();
         toast('t/' + name + ' removed — the pipeline will stop fetching it on its next run.');
@@ -4343,6 +4352,11 @@ if (typeof document !== 'undefined') (function () {
   const DefaultChannels = {
     async load() {
       try {
+        if (!isOwner()) {                       // the pipeline publishes the defaults too: no database read per visitor
+          await ChanStats.load();
+          const d = ChanStats.data;
+          if (d && Array.isArray(d.defaults)) { defaultChannelsCache = d.defaults.map(c => String(c).toLowerCase()); return; }
+        }
         const r = await fetch(`${FS_BASE}/qs_config/defaults?key=${FIREBASE.apiKey}`, { cache: 'no-store' });
         if (r.status === 404) { defaultChannelsCache = []; return; }
         if (!r.ok) return;   // leave defaultChannelsCache as null - try again on next call
@@ -4935,7 +4949,7 @@ if (typeof document !== 'undefined') (function () {
     const cover = `<div class="cv-media cv-cover"><span class="cv-cover-glyph">${glyph}</span>
         <span class="cv-cover-name">${esc(name)}</span>${it.sector && it.sector !== 'Other' ? `<span class="cv-cover-sect">${esc(it.sector)}</span>` : ''}</div>`;
     const media = it.image
-      ? `<div class="cv-media"><img src="${esc(it.image.url)}" alt="" loading="lazy" onerror="this.parentNode.outerHTML=this.parentNode.dataset.fallback" ></div>`
+      ? `<div class="cv-media"><img src="${esc(it.image.url)}" alt="" loading="lazy" data-onerr="cover" ></div>`
       : cover;
     const body = $('#cvBody');
     body.innerHTML = `
@@ -5130,7 +5144,7 @@ if (typeof document !== 'undefined') (function () {
     const label = esc('Watch video: ' + (v.title || it.headline));
     const btn = info.kind === 'watch'
       ? `<button class="btn-watch" data-act="watch" data-id="${esc(it.id)}" aria-label="${label}">${tri}Watch news</button>`
-      : `<a class="btn-watch" href="${esc(info.url)}" target="_blank" rel="noopener noreferrer" aria-label="${label}">${tri}Watch on ${v.platform === 'youtube' ? 'YouTube' : 'original source'}</a>`;
+      : `<a class="btn-watch" href="${esc(safeUrl(info.url))}" target="_blank" rel="noopener noreferrer" aria-label="${label}">${tri}Watch on ${v.platform === 'youtube' ? 'YouTube' : 'original source'}</a>`;
     return `<div class="vid">${btn}${meta ? `<span class="vmeta">${meta}</span>` : ''}</div>`;
   }
 
@@ -5149,7 +5163,7 @@ if (typeof document !== 'undefined') (function () {
     frame.appendChild(f);
     $('#vmTitle').textContent = info.v.title || it.headline;
     $('#vmMeta').textContent = [info.v.publisher, 'YouTube', info.v.duration].filter(Boolean).join(' \u2022 ');
-    $('#vmOpen').href = info.url;
+    $('#vmOpen').href = safeUrl(info.url);
     vmOpener = opener || document.activeElement;
     box.hidden = false;
     document.body.classList.add('noscroll');
@@ -5299,7 +5313,7 @@ if (typeof document !== 'undefined') (function () {
     // a real headline photo from image_intel.py when one was found, otherwise nothing is rendered at all
     // rather than a placeholder box, so stories without a match just keep today's clean text-only look.
     const thumb = (!open && it.image && it.image.url)
-      ? `<div class="entry-thumb"><img src="${esc(it.image.url)}" alt="" loading="lazy" onerror="this.closest('.entry-thumb').remove()"></div>` : '';
+      ? `<div class="entry-thumb"><img src="${esc(it.image.url)}" alt="" loading="lazy" data-onerr="thumb"></div>` : '';
     return `<article class="entry imp-${it.importance.toLowerCase()}${open ? ' open' : ''}" data-id="${it.id}">
       <div class="entry-top">
         <div class="entry-text">
@@ -5335,7 +5349,7 @@ if (typeof document !== 'undefined') (function () {
     const open = S.open.has(it.id);
     const n = (it.sources || []).length;
     const thumb = (!open && it.image && it.image.url)
-      ? `<div class="entry-thumb"><img src="${esc(it.image.url)}" alt="" loading="lazy" onerror="this.closest('.entry-thumb').remove()"></div>` : '';
+      ? `<div class="entry-thumb"><img src="${esc(it.image.url)}" alt="" loading="lazy" data-onerr="thumb"></div>` : '';
     return `<article class="entry imp-${it.importance.toLowerCase()}${open ? ' open' : ''}" data-id="${it.id}">
       <div class="entry-top">
         <div class="entry-text">
@@ -5654,11 +5668,21 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     const lq = entry.w < LOGO_HQ_PX ? ` ${cls}-lq` : '';
     return `<span class="${cls} ${cls}-logo${lq}"><img src="${esc(entry.u)}" alt="" decoding="async" referrerpolicy="no-referrer"
       data-logo-domain="${esc(domain)}" data-logo-cls="${esc(cls)}" data-logo-initial="${esc(initial)}"
-      onerror="window.__qsLogoFail&&window.__qsLogoFail(this)"></span>`;
+      data-onerr="logo"></span>`;
   }
   // A cached logo URL that has since stopped working (the site moved its icon): drop the cache entry and
   // fall back to the initial. The next render probes again. Global because inline onerror="" runs outside
   // this closure; it only reads values back from data-* attributes, never from interpolated strings.
+  // (Pages are served with a Content-Security-Policy that forbids inline handlers, so images mark themselves
+  // with data-onerr and this one capturing listener handles the failure.)
+  document.addEventListener('error', ev => {
+    const img = ev.target;
+    if (!img || img.tagName !== 'IMG' || !img.dataset || !img.dataset.onerr) return;
+    const kind = img.dataset.onerr;
+    if (kind === 'logo') window.__qsLogoFail(img);
+    else if (kind === 'thumb') { const w = img.closest('.entry-thumb'); if (w) w.remove(); }
+    else if (kind === 'cover') { const w = img.parentNode; if (w && w.dataset.fallback) w.outerHTML = w.dataset.fallback; }
+  }, true);
   window.__qsLogoFail = img => {
     img.onerror = null;
     Logos.forget(img.dataset.logoDomain);
@@ -5750,7 +5774,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
 
 
         ${row('Source date', esc(it.date || dayISO(it.addedAt)))}
-        ${row('Sources', (it.sources || []).map(s => s.url ? `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)}</a>` : esc(s.name)).join(', '))}
+        ${row('Sources', (it.sources || []).map(s => s.url ? `<a href="${esc(safeUrl(s.url))}" target="_blank" rel="noopener">${esc(s.name)}</a>` : esc(s.name)).join(', '))}
       </dl>
       ${rel.length ? `<div class="rel"><b>Related stories</b>${rel.map(r => `<button class="link" data-act="goto" data-id="${r.id}">${flagOf(r.country)} ${esc(r.headline)}</button>`).join('')}</div>` : ''}
       ${threadHTML(it)}
@@ -6040,9 +6064,20 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     slug(name) { return Pulse.companySlug(this.canon(name)); },
     // The day a vote belongs to, in Indian time - the "one vote per stock per day" bucket.
     istDay() { return new Date(Date.now() + 330 * 60e3).toISOString().slice(0, 10); },
+    // What other people see next to a vote or a tracked stock. Never derived from the email address: it is the
+    // nickname the person chose in Account, or a neutral "Investor 4F2A" built from a hash of their account id.
+    nick() { try { return (localStorage.getItem('qs-nick-v1') || '').trim(); } catch (e) { return ''; } },
+    setNick(v) {
+      const s = String(v || '').replace(/\s+/g, ' ').trim();
+      if (s && !/^[\p{L}\p{N} _.-]{3,16}$/u.test(s)) return false;
+      try { s ? localStorage.setItem('qs-nick-v1', s) : localStorage.removeItem('qs-nick-v1'); } catch (e) { /* storage blocked */ }
+      Sync.pushSoon(); return true;
+    },
     maskedName() {
-      const local = String(Auth.email || '').split('@')[0].replace(/[^A-Za-z0-9]/g, '');
-      return (local.slice(0, 4) || 'user') + '•••';
+      const n = this.nick(); if (n) return n;
+      let h = 0; const u = String(Auth.uid || 'x');
+      for (let i = 0; i < u.length; i++) h = (h * 31 + u.charCodeAt(i)) >>> 0;
+      return 'Investor ' + h.toString(16).toUpperCase().padStart(4, '0').slice(-4);
     },
 
     async loadList() {
@@ -6051,7 +6086,20 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     },
     async loadVotes() {
       const full = !this.fullAt || Date.now() - this.fullAt > BOARD_FULL_EVERY_MS;
-      const since = full ? Date.now() - BOARD_KEEP_MS : this.maxAt - 5000;
+      // A full load starts from votes.json (the pipeline's snapshot of the last 7 days, a static file) and only
+      // asks the database for votes newer than that, so a crowd opening the board doesn't each read thousands
+      // of documents. If the snapshot isn't there, it falls back to reading the whole window directly.
+      let snapMax = 0, snapVotes = null;
+      if (full) {
+        try {
+          const snap = await getJSON('votes.json');
+          if (snap && Array.isArray(snap.votes)) {
+            snapVotes = snap.votes.filter(v => v && v.slug && (v.choice === 'bull' || v.choice === 'bear') && typeof v.at === 'number');
+            snapMax = Math.max(0, ...snapVotes.map(v => v.at));
+          }
+        } catch (e) { /* fall back to the database */ }
+      }
+      const since = full ? (snapVotes ? Math.max(snapMax - 5000, Date.now() - BOARD_KEEP_MS) : Date.now() - BOARD_KEEP_MS) : this.maxAt - 5000;
       const query = { structuredQuery: {
         from: [{ collectionId: 'qs_sent_votes' }],
         where: { fieldFilter: { field: { fieldPath: 'at' }, op: 'GREATER_THAN_OR_EQUAL',
@@ -6062,7 +6110,11 @@ Give a concise, event-specific analysis - decide for yourself which structure be
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(query) });
       if (!r.ok) throw new Error('HTTP ' + r.status);
       const rows = (await r.json()).filter(x => x.document);
-      if (full) this.votes = new Map();
+      if (full) {
+        this.votes = new Map();
+        (snapVotes || []).forEach(v => this.votes.set(String(v.id), { id: String(v.id), slug: String(v.slug), company: String(v.company || ''), uid: String(v.uid || ''),
+          choice: v.choice, reason: String(v.reason || ''), name: String(v.name || ''), at: v.at }));
+      }
       rows.forEach(x => {
         const f = x.document.fields || {}, s = k => (f[k] && f[k].stringValue) || '';
         const v = { id: x.document.name.split('/').pop(), slug: s('slug'), company: s('company'), uid: s('uid'),
@@ -6080,6 +6132,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
        so nothing says who tracks it. Read incrementally like the votes; a full re-read once a day. */
     pub: new Map(), pubAt: 0, pubFullAt: 0,
     async loadPublic() {
+      if (this.list && this.list.length) return;       // the pipeline's board.json already lists every tracked stock: no database read
       const full = !this.pubFullAt || Date.now() - this.pubFullAt > 864e5;
       const sq = { from: [{ collectionId: 'qs_board_stocks' }], limit: 3000 };
       if (!full && this.pubAt) sq.where = { fieldFilter: { field: { fieldPath: 'at' }, op: 'GREATER_THAN_OR_EQUAL', value: { timestampValue: new Date(this.pubAt - 5000).toISOString() } } };
@@ -6636,8 +6689,8 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       const n = ((this.data.channels[String(name).toLowerCase()] || {})[cat]) || 0;
       return { n, total: this.data.accounts, p: n ? Math.max(1, Math.round(n / this.data.accounts * 100)) : 0 };
     },
-    html(name, cat) {
-      const s = this.pct(name, cat);
+    html(name, cat, key) {
+      const s = this.pct(name, key || cat);
       if (!s) return '';
       return `<span class="lc-stat ${cat === 'investment' ? 'inv' : 'news'}" title="${s.n} of ${s.total} accounts"><span class="bar" aria-hidden="true"><i style="width:${s.p}%"></i></span><span>${s.p}% of users</span></span>`;
     }
@@ -6653,9 +6706,62 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       <div class="lp-rowbtns"><button class="follow" data-act="tginvlink" data-v="${esc(r.name)}">Link</button></div></div>`).join('');
   }
   function refreshChannelStats() {
-    ChanStats.load().then(() => { renderChannels(); renderInvestChannels(); renderPopularChannels(); });
+    Promise.all([ChanStats.load(), Channels.catalog()]).then(() => { renderChannels(); renderInvestChannels(); renderPopularChannels(); renderExplore(); });
   }
 
+  // Which list a channel belongs in: what the record says, else whichever list more accounts put it in.
+  function channelCategory(c) {
+    if (c && (c.category === 'news' || c.category === 'investment')) return c.category;
+    const st = (ChanStats.data && ChanStats.data.channels[c.channel]) || {};
+    return (st.investment || 0) > (st.news || 0) ? 'investment' : 'news';
+  }
+  const catPill = cat => `<span class="lc-cat ${cat === 'investment' ? 'inv' : 'news'}">${cat === 'investment' ? 'Investment' : 'News'}</span>`;
+  function channelStatus(name) {       // 'approved' | 'pending' | null (unknown: catalog not loaded)
+    if ((defaultChannelsCache || []).includes(name)) return 'approved';
+    if (!catalogCache) return null;
+    const c = catalogCache.find(x => x.channel === name);
+    return c ? c.status : 'pending';
+  }
+  const waitingBadge = '<span class="lc-wait" title="The owner has not approved this channel yet, so nothing is fetched from it">Awaiting approval</span>';
+
+  // Explore channels: everything on QwickSignal, with category and share of accounts. Tap Link to add one to
+  // your own News or Investment list (it goes to the list matching its category).
+  let exploreFilter = '';
+  async function renderExplore() {
+    const box = $('#exList'); if (!box) return;
+    if (catalogCache === null) await Channels.catalog();
+    if (defaultChannelsCache === null) await DefaultChannels.load();
+    const owner = isOwner();
+    const rows = new Map();
+    (defaultChannelsCache || []).forEach(n => rows.set(n, { channel: n, status: 'approved', category: '' }));
+    (catalogCache || []).forEach(c => { if (c.status === 'approved' || owner) rows.set(c.channel, Object.assign({}, rows.get(c.channel), c)); });
+    const users = n => ((ChanStats.data && ChanStats.data.channels[n]) || {}).users || 0;
+    const list = [...rows.values()].map(c => Object.assign(c, { cat: channelCategory(c) }));
+    const approved = list.filter(c => c.status === 'approved' && (!exploreFilter || c.cat === exploreFilter))
+      .sort((x, y) => users(y.channel) - users(x.channel) || x.channel.localeCompare(y.channel));
+    $$('.ex-chip').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === exploreFilter)));
+    if (catalogCache === null && !approved.length) {
+      box.innerHTML = '<p class="lp-empty">' + esc(t('couldntLoadChannels')) + (lastChannelError ? ' <br><span class="lp-errdetail">' + esc(lastChannelError) + '</span>' : '') + '</p>';
+    } else if (!approved.length) {
+      box.innerHTML = '<p class="lp-empty">No channels here yet.</p>';
+    } else {
+      box.innerHTML = approved.map(c => {
+        const name = c.channel, inv = c.cat === 'investment';
+        const linked = inv ? S.myInvestChannels.has(name) : (S.myChannels.has(name) && !S.hiddenChannels.has(name));
+        return `<div class="lp-row lp-chanrow"><span class="name">t/${esc(name)} ${catPill(c.cat)}${ChanStats.html(name, c.cat, 'users')}</span>
+          <div class="lp-rowbtns"><button class="follow${linked ? ' on' : ''}" data-act="exlink" data-v="${esc(name)}" data-cat="${c.cat}" aria-pressed="${linked}" aria-label="${linked ? 'Unlink' : 'Link'} t/${esc(name)}">${linked ? 'Linked' : 'Link'}</button>
+          ${owner ? `<button class="lp-more" data-act="tgmore" data-v="${esc(name)}" data-default="${(defaultChannelsCache || []).includes(name) ? 1 : 0}" aria-label="${esc(t('moreOptions'))} t/${esc(name)}" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>` : ''}</div></div>`;
+      }).join('');
+    }
+    // Owner: channels waiting for a decision.
+    const pbox = $('#exPendingBox'), plist = $('#exPending');
+    const pend = owner ? list.filter(c => c.status === 'pending') : [];
+    if (pbox) pbox.hidden = !pend.length;
+    if (plist) plist.innerHTML = pend.map(c => `<div class="lp-row lp-chanrow"><span class="name">t/${esc(c.channel)} ${catPill(c.cat)}${ChanStats.html(c.channel, c.cat, 'users')}</span>
+      <div class="lp-rowbtns"><button class="follow on" data-act="exapprove" data-v="${esc(c.channel)}">Approve</button><button class="follow" data-act="exreject" data-v="${esc(c.channel)}">Reject</button></div></div>`).join('');
+  }
+
+  // Linked news channels: the channels this account follows for the News tab.
   async function renderChannels() {
     const box = $('#tgList'), note = $('#tgSyncNote');
     if (!box) return;
@@ -6664,63 +6770,25 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     if (defaultChannelsCache === null) await DefaultChannels.load();
     const defaults = defaultChannelsCache || [];
 
-    // Signed out: read-only view of the owner-curated default channels only - no Follow/Add/Remove, since
-    // managing channel preferences requires an account (see the login-gate on Channels.propose() above, and
-    // the user's own architecture: "In case if user have not logged in, he/she will see only the information
-    // of the channels linked by default and is managed by owner"). Signing back out returns here automatically,
-    // since this whole branch is keyed off Auth.uid rather than any locally-cached list.
+    // Signed out: the owner-picked default channels only, read-only.
     if (!Auth.uid) {
-      if (!defaults.length) {
-        box.innerHTML = '<p class="lp-empty">' + esc(t('noChannelsYet')) + '</p>';
-        return;
-      }
-      box.innerHTML = defaults.map(lower => `<div class="lp-row">
-      <span class="name">t/${esc(lower)} <span class="lp-defaultbadge">${esc(t('defaultBadge'))}</span></span>
-    </div>`).join('');
+      if (!defaults.length) { box.innerHTML = '<p class="lp-empty">' + esc(t('noChannelsYet')) + '</p>'; return; }
+      box.innerHTML = defaults.map(lower => `<div class="lp-row"><span class="name">t/${esc(lower)} <span class="lp-defaultbadge">${esc(t('defaultBadge'))}</span></span></div>`).join('');
       return;
     }
-
-    // Signed in: the full shared pool, with this account's own follow/unfollow plus (owner only) the
-    // curation controls.
-    if (approvedChannelsCache === null) approvedChannelsCache = await Channels.listApproved();
-    // A channel this account has hidden (see the always-visible "Remove" button below) is left out of this
-    // account's own list entirely - it stays in the shared pool untouched for every other user, and this
-    // person can bring it back later by typing it into +Add again (see Channels.propose()'s un-hide step).
-    const linked = (approvedChannelsCache || []).filter(name => !S.hiddenChannels.has(name.toLowerCase()));
-    if (approvedChannelsCache === null) {
-      box.innerHTML = '<p class="lp-empty">' + esc(t('couldntLoadChannels')) +
-        (lastChannelError ? ' <br><span class="lp-errdetail">' + esc(lastChannelError) + '</span>' : ' ' + esc(t('checkConnection'))) + '</p>';
-      return;
-    }
-    if (!linked.length) {
-      box.innerHTML = '<p class="lp-empty">' + esc(t('noChannelsYet')) + '</p>';
-      return;
-    }
+    if (catalogCache === null) await Channels.catalog();
     const owner = isOwner();
-    box.innerHTML = linked.map(name => {
-      const lower = name.toLowerCase();
-      const following = S.myChannels.has(lower);
-      const isDefault = defaults.includes(lower);
-      // Follow/Following is a plain toggle again - it only ever adds or drops this channel from this
-      // account's OWN feed, and never removes the row itself. The always-visible "Remove" button below is
-      // the separate, personal delink/hide action: visible on every row regardless of follow state, so a
-      // user can get a channel out of their own list ("in case if the user don't want it") without first
-      // having to follow it. This is distinct from the owner-only button further right, which deletes the
-      // channel from the shared pool for every user.
-      const mineBtn = following
-        ? `<button class="follow on" data-act="tgfollow" data-v="${esc(name)}">${esc(t('following'))}</button>`
-        : `<button class="follow" data-act="tgfollow" data-v="${esc(name)}">${esc(t('follow'))}</button>`;
-      // Redesigned (owner, 14 Oct): four buttons per row ran off the screen. Now each row shows the one
-      // everyday action - Follow - and a "..." that opens a sheet with the rest (Remove, and for the owner
-      // Set/Remove default and Remove for everyone).
-      return `<div class="lp-row lp-chanrow">
-      <span class="name">t/${esc(name)}${isDefault ? ' <span class="lp-defaultbadge">' + esc(t('defaultBadge')) + '</span>' : ''} <span class="lc-cat news">News</span>${ChanStats.html(name, 'news')}</span>
-      <div class="lp-rowbtns">
-        ${mineBtn}
-        <button class="lp-more" data-act="tgmore" data-v="${esc(name)}" data-default="${isDefault ? 1 : 0}" aria-label="${esc(t('moreOptions'))} t/${esc(name)}" aria-haspopup="dialog">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>
-      </div>
-    </div>`;
+    const mine = [...S.myChannels].filter(n => !S.hiddenChannels.has(n)).sort((a, b) => a.localeCompare(b));
+    if (!mine.length) {
+      box.innerHTML = '<p class="lp-empty">You have not picked any channels yet' + (defaults.length ? ', so News shows the ' + defaults.length + ' default channels.' : '.') +
+        ' Open <button type="button" class="lc-linkbtn" data-act="spopen" data-v="explore">Explore channels</button> to choose.</p>';
+      return;
+    }
+    box.innerHTML = mine.map(name => {
+      const isDefault = defaults.includes(name), st = channelStatus(name);
+      return `<div class="lp-row lp-chanrow"><span class="name">t/${esc(name)}${isDefault ? ' <span class="lp-defaultbadge">' + esc(t('defaultBadge')) + '</span>' : ''} ${catPill('news')}${st === 'pending' ? ' ' + waitingBadge : ''}${ChanStats.html(name, 'news', 'users')}</span>
+      <div class="lp-rowbtns"><button class="follow lp-remove" data-act="tgfollow" data-v="${esc(name)}" aria-label="${esc(t('remove'))} t/${esc(name)}">${esc(t('remove'))}</button>
+      ${owner ? `<button class="lp-more" data-act="tgmore" data-v="${esc(name)}" data-default="${isDefault ? 1 : 0}" aria-label="${esc(t('moreOptions'))} t/${esc(name)}" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>` : ''}</div></div>`;
     }).join('');
   }
 
@@ -6983,7 +7051,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       box.innerHTML = `<p class="lp-empty">${esc(t('noChannelsYet'))}</p>`;
     } else {
       box.innerHTML = [...S.myInvestChannels].sort((a, b) => a.localeCompare(b)).map(name => `<div class="lp-row">
-        <span class="name">t/${esc(name)} <span class="lc-cat inv">Investment</span>${ChanStats.html(name, 'investment')}</span>
+        <span class="name">t/${esc(name)} <span class="lc-cat inv">Investment</span>${channelStatus(name) === 'pending' ? ' ' + waitingBadge : ''}${ChanStats.html(name, 'investment', 'users')}</span>
         <div class="lp-rowbtns">
           <button class="follow lp-remove" data-act="tginvremove" data-v="${esc(name)}" aria-label="${esc(t('remove'))} t/${esc(name)}">${esc(t('remove'))}</button>
         </div>
@@ -7020,9 +7088,9 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     $('#exportCount').textContent = c + (c === 1 ? ' item' : ' items') + ' in this period' + (S.mode === 'investment' ? ' (Investment)' : '');
   }
   function renderAll() {
-    if (S.mode === 'investment') { renderList(); renderCompanyBar(); if (S.tab === 'saved') renderSaved(); return; }
+    if (S.mode === 'investment') { renderList(); renderCompanyBar(); if (S.tab === 'settings' && S.settingsPage === 'saved') renderSaved(); return; }
     renderControls(); renderList(); renderExport(); renderCountryBar();
-    if (S.tab === 'saved') renderSaved();
+    if (S.tab === 'settings' && S.settingsPage === 'saved') renderSaved();
     // keep the just-added cards in sync when they are toggled
   }
 
@@ -7085,7 +7153,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     // Saved: swap which saved-items list shows, re-render if that tab happens to be open already.
     // Saved now always shows BOTH groups (News, then Investment). It used to show only the group matching
     // the last mode, so arriving at Saved from the Investment tab hid every saved news story (owner, 14 Oct).
-    if (S.tab === 'saved') renderSaved();
+    if (S.tab === 'settings' && S.settingsPage === 'saved') renderSaved();
     // Export: the item count shown there (and what Download PDF/CSV will actually pull - see
     // exportItems()) depends on mode, so refresh it if that settings sub-page happens to be open already
     // (Export now lives under Settings, not its own tab - see SETTINGS_SECTIONS/openSettingsPage()).
@@ -7104,8 +7172,10 @@ Give a concise, event-specific analysis - decide for yourself which structure be
   const SETTINGS_SECTIONS = [
     { id: 'appearance', mode: null, icon: 'theme', title: 'Appearance', subKey: () => themeActive() === 'dark' ? 'Dark mode' : 'Light mode', count: null },
     { id: 'language', mode: null, icon: 'globe', title: 'Language', subKey: () => LANG_NAMES[currentLang] || 'English', count: null },
-    { id: 'linkchannels', mode: null, icon: 'wifi', title: 'Link channels', subKey: () => S.myChannels.size + ' news · ' + S.myInvestChannels.size + ' investment', count: () => S.myChannels.size + S.myInvestChannels.size },
-    { id: 'investwatchlist', mode: 'investment', icon: 'candle', title: 'Investment watchlist', subKey: () => S.myCompanies.size + ' tracked', count: () => S.myCompanies.size },
+    { id: 'explore', mode: null, icon: 'compass', title: 'Explore channels', subKey: () => 'Every channel, with the share of users', count: null },
+    { id: 'linkchannels', mode: null, icon: 'wifi', title: 'Linked news channels', subKey: () => S.myChannels.size + ' linked', count: () => S.myChannels.size },
+    { id: 'investwatchlist', mode: null, icon: 'candle', title: 'Linked investment channels & watchlist', subKey: () => S.myInvestChannels.size + ' channels · ' + S.myCompanies.size + ' stocks', count: () => S.myInvestChannels.size + S.myCompanies.size },
+    { id: 'saved', mode: null, icon: 'bookmark', title: 'Saved stories', subKey: () => S.saved.size + ' saved', count: () => S.saved.size },
     { id: 'appetite', mode: null, icon: 'gauge', title: 'Daily appetite', subKey: () => Appetite.on() ? Appetite.target() + ' stories a day' : 'Everything', count: null },
     { id: 'notifications', mode: null, icon: 'bell', title: 'Notifications', subKey: () => 'New story alerts', count: null },
     { id: 'export', mode: null, icon: 'export', title: 'Export', subKey: () => 'Save a report or the raw table', count: null },
@@ -7120,6 +7190,8 @@ Give a concise, event-specific analysis - decide for yourself which structure be
   const SN_ICON = {
     theme: '<circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor" stroke="none"/>',
     globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/>',
+    compass: '<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>',
+    bookmark: '<path d="M6 3h12v18l-6-4-6 4z"/>',
     wifi: '<path d="M2 8.5a19 19 0 0 1 20 0M5.5 12.5a13.5 13.5 0 0 1 13 0M9 16.5a7.5 7.5 0 0 1 6 0"/><circle cx="12" cy="20" r="1.2" fill="currentColor" stroke="none"/>',
     candle: '<circle cx="10.5" cy="10.5" r="7.25"/><path d="M15.8 15.8 21 21" stroke-width="2.6"/><path d="M7 14v-1.6M9.5 14v-3.1M12 14v-2.2M14.5 14v-4.6" stroke-width="1.5"/><path d="M6.6 9.6l2.6-2.4 2.1 1.7 3.4-3.1M13.3 5.6h2.1v2.1" stroke-width="1.4"/>',
     bell: '<path d="M12 2a7 7 0 0 1 7 7c0 5 2 7 2 7H3s2-2 2-7a7 7 0 0 1 7-7z"/><path d="M9.5 19a2.5 2.5 0 0 0 5 0"/>',
@@ -7180,7 +7252,8 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     if (id === 'appearance') Theme.apply();
     if (id === 'appetite') renderAppetiteBox();
     if (id === 'pushstats') renderPushStats();
-    if (id === 'linkchannels') refreshChannelStats();
+    if (id === 'linkchannels' || id === 'investwatchlist' || id === 'explore') refreshChannelStats();
+    if (id === 'saved') renderSaved();
   }
   function closeSettingsPage() {
     $$('.settingspage').forEach(p => p.classList.add('sp-hidden'));
@@ -7188,6 +7261,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
     if (home) home.classList.remove('sp-hidden');
     $('#view-settings').classList.remove('sp-open');
     S.settingsPage = null;
+    renderSettingsNav();
     window.scrollTo(0, 0);
   }
 
@@ -7198,6 +7272,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
   // switching to either tab both shows #view-brief AND pins S.mode to match, rather than leaving mode as a
   // separate thing a visitor could set out of step with which of the two tabs they're on.
   function setTab(name) {
+    if (name === 'saved') { setTab('settings'); openSettingsPage('saved'); return; }   // Saved now lives in Settings
     if (name !== S.tab) track('tab_view', { tab: name });
     S.tab = name;
     const screen = (name === 'investment') ? 'brief' : name;
@@ -7211,7 +7286,6 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       // screen is never stale on a tab switch that didn't also cross a mode boundary.
       if (S.mode === 'investment') { renderInvestmentList(); renderCompanyBar(); } else { renderControls(); renderList(); }
     }
-    if (name === 'saved') renderSaved();
     if (name === 'community') { renderCommunity(); Brokers.load().then(() => { if (S.tab === 'community' && !Board.pick) renderBoardBody(); }); }
     // Settings used to be the app's default first screen ("Link Pages"), so its Account/Telegram/Appearance
     // blocks were always rendered on load regardless of which tab was showing. Now that it's reached only via
@@ -7362,6 +7436,21 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       else if (act === 'tginvremove') { InvestChannels.remove(v); }
       else if (act === 'spopen') { openSettingsPage(v); }
       else if (act === 'spback') { closeSettingsPage(); }
+      else if (act === 'exfilter') { exploreFilter = v || ''; renderExplore(); }
+      else if (act === 'exlink') {
+        const inv = el.dataset.cat === 'investment';
+        const was = inv ? S.myInvestChannels.has(v) : S.myChannels.has(v);
+        if (!Auth.uid) { openAuthGate('agAddChannelsTitle', 'agAddChannelsBody'); }
+        else {
+          if (inv) { was ? InvestChannels.remove(v) : InvestChannels.add(v); }
+          else if (was) { Channels.unfollow(v); toast('t/' + v + ' removed from your News channels.'); }
+          else { await Channels.propose(v); }
+          renderExplore(); renderChannels(); renderInvestChannels(); renderSettingsNav(); renderAll();
+        }
+      }
+      else if (act === 'exapprove' || act === 'exreject') {
+        if (await Channels.setStatus(v, act === 'exapprove' ? 'approved' : 'rejected')) { await Channels.catalog(); renderExplore(); }
+      }
       else if (act === 'tginvlink') { if (InvestChannels.add(v)) renderPopularChannels(); }
       else if (act === 'impPick') { HoldingsImport.pick(); }
       else if (act === 'impClose') { HoldingsImport.close(); }
