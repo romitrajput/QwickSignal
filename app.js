@@ -1071,7 +1071,15 @@ if (typeof document !== 'undefined') (function () {
       obStep4Title: 'A news card', obStep4Body: 'Tap a story to read more, swipe right to save it, or swipe left to dismiss it.',
       obStep5Title: 'Saved', obStep5Body: 'Swipe a story right, or tap Save, to keep it here. Saved stories stay with your account until you remove them, even after signing out.',
       obStep6Title: 'Investment', obStep6Body: 'News for the companies in your watchlist, with their logos. Link a company’s Telegram channels in Settings to pull in more.',
-      obStep7Title: 'Settings', obStep7Body: 'Explore and link channels, your watchlist, Saved stories, Appearance, Daily appetite (how many stories a day), Notifications (news and investment alerts, bundled every 20-40 min, with quiet hours), Export and Feedback.',
+      obInvCardTitle: 'Your stocks in one place', obInvCardBody: 'Each stock you track has a card. Chart shows its price chart, News opens every story about the company, and Sentiment shows what brokers rate it and their target prices.',
+      obInvEmptyTitle: 'Investment', obInvEmptyBody: 'Add the stocks you own or follow. Each gets a card with its chart, its news, and broker ratings and target prices.',
+      obInvOtherTitle: 'Other companies in the news', obInvOtherBody: 'News about companies you don’t track is listed here, below your own stocks.',
+      obBoardTitle: 'Sentiment board', obBoardBody: 'The mood on your stocks: broker ratings, how many people track each one, and today’s Bull or Bear votes. Vote once a day and add a comment with your reason.',
+      obBoardEmptyTitle: 'Sentiment board', obBoardEmptyBody: 'Once you track stocks, see broker ratings and other investors’ votes on them here, and vote and comment yourself.',
+      obExploreTitle: 'Explore channels', obExploreBody: 'Every Telegram channel on QwickSignal. Link the ones you want to your News or Investment feed, and tap i to see what share of users follow each.',
+      obImportTitle: 'Your watchlist and channels', obImportBody: 'Add stocks by name, or import your holdings file from Zerodha, Groww or another broker to add them all at once. Investment channels are linked here too.',
+      obSavedTitle: 'Saved stories', obSavedBody: 'Stories you save are kept here, with News and Investment shown separately.',
+      obStep7Title: 'Settings', obStep7Body: 'Also here: Appearance, Language, Daily appetite (how many stories a day), Notifications, Export, Feedback, and Replay the tour any time.',
       obStep8Title: 'Sentiment board', obStep8Body: 'Every stock users track, with today’s bullish/bearish mood. Vote once a day per stock, add your reason, and search any stock.',
       pulseLabel: 'Sentiment of the Users:', pulseBull: 'Bullish', pulseBear: 'Bearish',
       communityPending: 'Votes will appear here shortly.',
@@ -2600,6 +2608,7 @@ if (typeof document !== 'undefined') (function () {
     TicketNews.rows = null; setTimeout(() => { TicketNews.check(); Board.publishMine(); }, 1500);
     renderAccount(); renderAll(); renderChannels(); renderInvestChannels(); renderSyncCode(); renderTicketBox(); renderTicketAdmin(); renderInvestmentBox();
     resumeAfterSignIn();
+    Onboarding.afterSignIn();
   }
 
   // BUG FIX: signing out used to clear the device's copy of the account's data immediately, without first
@@ -2752,17 +2761,26 @@ if (typeof document !== 'undefined') (function () {
   const Onboarding = {
     seen() { try { return localStorage.getItem(ONBOARD_KEY) === '1'; } catch (e) { return false; } },
     markSeen() { try { localStorage.setItem(ONBOARD_KEY, '1'); } catch (e) { /* private browsing etc. */ } },
+    // Owner, 24 Oct: the tour walks through every tab, opening each one as it goes (go), so it can point at the
+    // real controls there. A step whose control isn't on screen (e.g. no tracked stocks yet) is skipped.
     steps: [
-      { anchor: '#liveBar .iconbtn', titleKey: 'obStepRTitle', bodyKey: 'obStepRBody' },
-      { anchor: '#digestCard', titleKey: 'obStep0Title', bodyKey: 'obStep0Body' },
-      { anchor: '#countryStatus', titleKey: 'obStep1Title', bodyKey: 'obStep1Body' },
-      { anchor: '#q', titleKey: 'obStep2Title', bodyKey: 'obStep2Body' },
-      { anchor: '#countryFilter', titleKey: 'obStep3Title', bodyKey: 'obStep3Body' },
-      { anchor: '#list .entry', titleKey: 'obStep4Title', bodyKey: 'obStep4Body' },
-      { anchor: '[data-tab="investment"]', titleKey: 'obStep6Title', bodyKey: 'obStep6Body' },
-      { anchor: '[data-tab="community"]', titleKey: 'obStep8Title', bodyKey: 'obStep8Body' },
-      { anchor: '[data-tab="settings"]', titleKey: 'obStep7Title', bodyKey: 'obStep7Body' }
+      { sec: 'News', anchor: '#liveBar .iconbtn', titleKey: 'obStepRTitle', bodyKey: 'obStepRBody', go: () => setTab('brief') },
+      { sec: 'News', anchor: '#digestCard', titleKey: 'obStep0Title', bodyKey: 'obStep0Body' },
+      { sec: 'News', anchor: '#countryStatus', titleKey: 'obStep1Title', bodyKey: 'obStep1Body' },
+      { sec: 'News', anchor: '#q', titleKey: 'obStep2Title', bodyKey: 'obStep2Body' },
+      { sec: 'News', anchor: '#countryFilter', titleKey: 'obStep3Title', bodyKey: 'obStep3Body' },
+      { sec: 'News', anchor: '#list .entry', titleKey: 'obStep4Title', bodyKey: 'obStep4Body' },
+      { sec: 'Investment', anchor: '#list .grp-company', titleKey: 'obInvCardTitle', bodyKey: 'obInvCardBody', go: () => setTab('investment') },
+      { sec: 'Investment', anchor: '#investEmpty .btn', titleKey: 'obInvEmptyTitle', bodyKey: 'obInvEmptyBody', go: () => setTab('investment') },
+      { sec: 'Investment', anchor: '#otherCoHead', titleKey: 'obInvOtherTitle', bodyKey: 'obInvOtherBody' },
+      { sec: 'Sentiment board', anchor: '#sbBody .sb-card, #sbBody .sb-row', titleKey: 'obBoardTitle', bodyKey: 'obBoardBody', go: () => setTab('community') },
+      { sec: 'Sentiment board', anchor: '#communityEmpty .btn', titleKey: 'obBoardEmptyTitle', bodyKey: 'obBoardEmptyBody', go: () => setTab('community') },
+      { sec: 'Settings', anchor: '.settingsnav-item[data-v="explore"]', titleKey: 'obExploreTitle', bodyKey: 'obExploreBody', go: () => setTab('settings') },
+      { sec: 'Settings', anchor: '.settingsnav-item[data-v="investwatchlist"]', titleKey: 'obImportTitle', bodyKey: 'obImportBody', go: () => setTab('settings') },
+      { sec: 'Settings', anchor: '.settingsnav-item[data-v="saved"]', titleKey: 'obSavedTitle', bodyKey: 'obSavedBody', go: () => setTab('settings') },
+      { sec: 'Settings', anchor: '[data-tab="settings"]', titleKey: 'obStep7Title', bodyKey: 'obStep7Body', go: () => setTab('settings') }
     ],
+    running: false,
     _idx: 0,
     _visibleAnchor(sel) {
       const el = $(sel);
@@ -2778,6 +2796,18 @@ if (typeof document !== 'undefined') (function () {
       }
       return -1;
     },
+    // Opens the tab a step needs, then finds the first step from `from` whose control is really on screen.
+    async _seek(from) {
+      for (let i = from; i < this.steps.length; i++) {
+        const st = this.steps[i];
+        if (st.go) { try { st.go(); } catch (e) { /* ignore */ } window.scrollTo(0, 0); await new Promise(r => setTimeout(r, 350)); }
+        const el = this._visibleAnchor(st.anchor);
+        if (el) { el.scrollIntoView({ block: 'center' }); await new Promise(r => setTimeout(r, 120)); return i; }
+      }
+      return -1;
+    },
+    // A fresh sign-in shows the tour (owner, 24 Oct), even if this device has seen it before.
+    afterSignIn() { setTimeout(() => { if (!this.running) this.replay(); }, 1500); },
     // Called once at boot, after Landing has already been dismissed (or skipped because this device already
     // had a reason to skip it) - see Landing.dismiss()'s call site. Does nothing if already seen, or if the
     // tab bar itself isn't present for some reason (defensive - should always be there). Waits briefly for
@@ -2786,14 +2816,15 @@ if (typeof document !== 'undefined') (function () {
     // a typical connection; on a slow/offline device this gives up and starts anyway, skipping whichever of
     // those two steps still has nothing to show (see _nextVisibleIdx()) rather than hanging indefinitely.
     async maybeStart() {
-      if (this.seen()) return;
+      if (this.seen() || this.running) return;
       if (!$('.tabs')) return;
       for (let waited = 0; waited < 2500; waited += 150) {
         if (this._visibleAnchor('#list .entry')) break;
         await new Promise(r => setTimeout(r, 150));
       }
-      const start = this._nextVisibleIdx(0);
-      if (start < 0) { this.markSeen(); return; }   // nothing at all to point at - don't show an empty tour
+      this.running = true;
+      const start = await this._seek(0);
+      if (start < 0) { this._finish(); return; }   // nothing at all to point at - don't show an empty tour
       this._idx = start;
       track('onboarding_start');
       this._renderStep();
@@ -2804,9 +2835,10 @@ if (typeof document !== 'undefined') (function () {
       setTab('brief');
       window.scrollTo(0, 0);
       track('onboarding_replay');
-      setTimeout(() => {
-        const start = this._nextVisibleIdx(0);
-        if (start < 0) return;
+      this.running = true;
+      setTimeout(async () => {
+        const start = await this._seek(0);
+        if (start < 0) { this._finish(); return; }
         this._idx = start;
         this._renderStep();
       }, 250);
@@ -2830,9 +2862,9 @@ if (typeof document !== 'undefined') (function () {
       hole.style.width = (rect.width + pad * 2) + 'px';
       hole.style.height = (rect.height + pad * 2) + 'px';
       const card = $('#obCard', overlay);
-      const isLast = this._nextVisibleIdx(this._idx + 1) < 0;
+      const isLast = this._idx >= this.steps.length - 1;
       card.innerHTML = `
-        <div class="ob-dots">${this.steps.map((s, i) => i === this._idx || this._visibleAnchor(s.anchor) ? `<span class="ob-dot${i === this._idx ? ' on' : ''}"></span>` : '').join('')}</div>
+        <p class="ob-sec">${esc(step.sec || '')}</p>
         <h3 class="ob-title">${esc(t(step.titleKey))}</h3>
         <p class="ob-body">${esc(t(step.bodyKey))}</p>
         <div class="ob-actions">
@@ -2860,8 +2892,9 @@ if (typeof document !== 'undefined') (function () {
       left = Math.max(12, Math.min(left, window.innerWidth - cardW - 12));
       card.style.left = left + 'px';
       $('#obSkipBtn', card).addEventListener('click', () => { track('onboarding_skip', { step: this._idx }); this._finish(); });
-      $('#obNextBtn', card).addEventListener('click', () => {
-        const next = this._nextVisibleIdx(this._idx + 1);
+      $('#obNextBtn', card).addEventListener('click', async () => {
+        $('#obNextBtn', card).disabled = true;
+        const next = await this._seek(this._idx + 1);
         if (next < 0) { track('onboarding_complete'); this._finish(); return; }
         this._idx = next;
         this._renderStep();
@@ -2872,6 +2905,7 @@ if (typeof document !== 'undefined') (function () {
       if (overlay) overlay.hidden = true;
       document.body.classList.remove('ob-active');
       this.markSeen();
+      if (this.running) { this.running = false; setTab('brief'); window.scrollTo(0, 0); }   // end where the app starts
     }
   };
 
@@ -5991,7 +6025,7 @@ Give a concise, event-specific analysis - decide for yourself which structure be
       return true;
     }).sort((x, y) => y.addedAt - x.addedAt);
     if (!items.length) return '';
-    return groupHead(esc('Other companies in the news'), items.length) + items.map(entryWrapHTML).join('');
+    return '<div id="otherCoHead">' + groupHead(esc('Other companies in the news'), items.length) + '</div>' + items.map(entryWrapHTML).join('');
   }
 
   // A company's own news page (owner, 24 Oct): its stories as ordinary story cards, the same cards as the

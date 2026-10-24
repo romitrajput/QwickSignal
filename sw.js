@@ -1,7 +1,7 @@
 /* Service worker: keeps the app working offline.
    Own files: network first (so updates arrive), cache as fallback.
    Libraries and fonts from a short list of hosts: cache first. Everything else is not touched. */
-const VERSION = 'gni-phase3-96-v1';  // This round (owner's 20-point list, 14 Oct): Language moved into  // 20 Oct: QR entry gate (language choice + loading screen for ?src=qr only). 21 Oct: QR visitors continue as guest; all stories translate (cards now update when late translations arrive). 22 Oct: Investment posts out of News, India labelling, skip/undo fix, story card headline only.
+const VERSION = 'gni-phase3-97-v1';  // This round (owner's 20-point list, 14 Oct): Language moved into  // 20 Oct: QR entry gate (language choice + loading screen for ?src=qr only). 21 Oct: QR visitors continue as guest; all stories translate (cards now update when late translations arrive). 22 Oct: Investment posts out of News, India labelling, skip/undo fix, story card headline only.
                                       // Settings, Appearance is one Dark mode switch, tabs reordered (News,
                                       // Investment, Saved, Sentiment, Settings), Saved shows News and
                                       // Investment groups, "i" info tips, appetite slider, channel rows with a
